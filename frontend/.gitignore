@@ -1,0 +1,6 @@
+# Build files
+/build*
+
+# Temporary files
+*.swp
+

@@ -1,0 +1,28 @@
+cmake_minimum_required (VERSION 3.8.0)
+
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt. ")
+endif()
+
+# If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their
+# definition and dump it in the cache along with proper documentation, otherwise
+# set MAKE_BUILD_TYPE to Debug prior to calling PROJECT()
+if (NOT DEFINED CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
+endif()
+message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+project ("ultimate-hindsight"
+    LANGUAGES)
+
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
+set (UH_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+
+add_subdirectory ("uh")
+
+# Workaround because uic generates headers into CMAKE_CURRENT_BINARY_DIR and
+# we want to include them from <uh/ui_*.h>
+target_include_directories (ultimate-hindsight
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+
