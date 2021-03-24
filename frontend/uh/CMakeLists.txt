@@ -9,9 +9,11 @@ find_package (Qt5Gui REQUIRED)
 find_package (Qt5LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
-    "include/uh/views/MainWindow.hpp")
+    "include/uh/views/MainWindow.hpp"
+    "include/uh/views/ConnectView.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
-    "forms/MainWindow.ui")
+    "forms/MainWindow.ui"
+    "forms/ConnectView.ui")
 qt5_add_resources (UH_RESOURCES_GEN
     "")
 qt5_add_translation (UH_QM_FILES
@@ -23,6 +25,7 @@ add_executable (ultimate-hindsight
     ${UH_RESOURCES_GEN}
     ${UH_QM_FILES}
     "src/main.cpp"
+    "src/views/ConnectView.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -36,4 +39,3 @@ target_link_libraries (ultimate-hindsight
 set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_RUNTIME_DIR})
-

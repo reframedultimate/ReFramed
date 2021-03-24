@@ -16,6 +16,9 @@ public:
     explicit MainWindow(QWidget* parent=nullptr);
     ~MainWindow();
 
+private slots:
+    void onConnectActionTriggered();
+
 private:
     Ui::MainWindow* ui_;
 };
