@@ -6,20 +6,92 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1326</width>
-    <height>954</height>
+    <width>1284</width>
+    <height>903</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QTreeWidget" name="treeWidget_categories">
+       <property name="alternatingRowColors">
+        <bool>false</bool>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="allColumnsShowFocus">
+        <bool>false</bool>
+       </property>
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
+       <column>
+        <property name="text">
+         <string/>
+        </property>
+       </column>
+       <item>
+        <property name="text">
+         <string>Analyzers</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Recording Groups</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>By Date</string>
+         </property>
+        </item>
+       </item>
+       <item>
+        <property name="text">
+         <string>Recording Sources</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </item>
+       </item>
+       <item>
+        <property name="text">
+         <string>Replay Sources</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Active Recording</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QStackedWidget" name="stackedWidget">
+       <widget class="QWidget" name="page_activeRecording"/>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1326</width>
+     <width>1284</width>
      <height>39</height>
     </rect>
    </property>
