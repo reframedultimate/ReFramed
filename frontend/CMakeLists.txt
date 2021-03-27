@@ -19,6 +19,7 @@ list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 set (UH_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 
+add_subdirectory ("thirdparty/qwt-6.1.6")
 add_subdirectory ("uh")
 
 # Workaround because uic generates headers into CMAKE_CURRENT_BINARY_DIR and

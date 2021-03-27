@@ -4,16 +4,24 @@ project ("uh-application"
 
 include (GNUInstallDirs)
 
-find_package (Qt5Widgets REQUIRED)
-find_package (Qt5Gui REQUIRED)
-find_package (Qt5Network REQUIRED)
-find_package (Qt5LinguistTools REQUIRED)
+#find_package (Qt5Widgets REQUIRED)
+#find_package (Qt5Gui REQUIRED)
+#find_package (Qt5Network REQUIRED)
+#find_package (Qt5LinguistTools REQUIRED)
+find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/models/Protocol.hpp"
+    "include/uh/models/Recorder.hpp"
+    "include/uh/plot/DeltaPlotPicker.hpp"
+    "include/uh/plot/Panner.hpp"
+    "include/uh/plot/RectangleZoomer.hpp"
+    "include/uh/plot/Zoomer.hpp"
     "include/uh/views/ActiveRecordingView.hpp"
     "include/uh/views/ConnectView.hpp"
+    "include/uh/views/DamagePlot.hpp"
     "include/uh/views/MainWindow.hpp"
+    "include/uh/views/RealtimePlot.hpp"
     "include/uh/views/RecordingView.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
@@ -39,11 +47,21 @@ add_executable (ultimate-hindsight
     "src/models/PlayerInfo.cpp"
     "src/models/PlayerState.cpp"
     "src/models/Protocol.cpp"
+    "src/models/Recorder.cpp"
     "src/models/Recording.cpp"
     "src/models/Settings.cpp"
     "src/platform/tcp_socket.c"
+    "src/plot/AutoScaler.cpp"
+    "src/plot/ColorPalette.cpp"
+    "src/plot/DeltaPlotPicker.cpp"
+    "src/plot/MousePlotPickerMachine.cpp"
+    "src/plot/Panner.cpp"
+    "src/plot/RectangleZoomer.cpp"
+    "src/plot/Zoomer.cpp"
     "src/views/ActiveRecordingView.cpp"
     "src/views/ConnectView.cpp"
+    "src/views/DamagePlot.cpp"
+    "src/views/RealtimePlot.cpp"
     "src/views/RecordingView.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight
@@ -54,8 +72,9 @@ target_compile_options (ultimate-hindsight
 target_link_libraries (ultimate-hindsight
     PRIVATE Qt5::Core
     PRIVATE Qt5::Gui
-    PRIVATE Qt5::Network
-    PRIVATE Qt5::Widgets)
+    PRIVATE Qt5::Widgets
+    PRIVATE qwtinternal)
 set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_RUNTIME_DIR})
+

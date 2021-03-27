@@ -1,5 +1,6 @@
-#include "uh/views/ActiveRecordingView.hpp"
 #include "uh/ui_ActiveRecordingView.h"
+#include "uh/views/ActiveRecordingView.hpp"
+#include "uh/views/DamagePlot.hpp"
 
 namespace uh {
 
@@ -9,6 +10,12 @@ ActiveRecordingView::ActiveRecordingView(QWidget* parent)
     , ui_(new Ui::ActiveRecordingView)
 {
     ui_->setupUi(this);
+
+    plot_ = new DamagePlot;
+    ui_->tab_damagePlot->layout()->addWidget(plot_);
+    ui_->lineEdit_formatOther->setVisible(false);
+
+    setActive();
 }
 
 // ----------------------------------------------------------------------------
@@ -52,7 +59,7 @@ void ActiveRecordingView::setPlayerCount(int count)
 {
     // Clear layout
     QLayoutItem* item;
-    while ((item = ui_->groupBox_playerInfo->layout()->takeAt(0)) != nullptr)
+    while ((item = ui_->layout_playerInfo->takeAt(0)) != nullptr)
     {
         if (item->layout() != nullptr)
             item->layout()->deleteLater();
@@ -66,6 +73,7 @@ void ActiveRecordingView::setPlayerCount(int count)
     fighterDamage_.resize(count);
     fighterStocks_.resize(count);
 
+    // Create player UIs
     for (int i = 0; i != count; ++i)
     {
         tags_[i] = new QGroupBox;
@@ -89,14 +97,17 @@ void ActiveRecordingView::setPlayerCount(int count)
             fighterStocks_[i]);
 
         tags_[i]->setLayout(layout);
-        ui_->groupBox_playerInfo->layout()->addWidget(tags_[i]);
+        ui_->layout_playerInfo->addWidget(tags_[i]);
     }
+
+    plot_->resetPlot(count);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::setPlayerTag(int index, const QString& tag)
 {
     tags_[index]->setTitle(tag);
+    plot_->setPlayerTag(index, tag);
 }
 
 // ----------------------------------------------------------------------------
@@ -110,13 +121,15 @@ void ActiveRecordingView::setPlayerStatus(unsigned int frame, int index, unsigne
 {
     (void)frame;
     fighterStatus_[index]->setText(QString::number(status));
+    ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(frame / 60.0).toString());
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::setPlayerDamage(unsigned int frame, int index, float damage)
 {
-    (void)frame;
     fighterDamage_[index]->setText(QString::number(damage));
+    plot_->addPlayerDamageValue(index, frame, damage);
+    plot_->replotAndAutoScale();
 }
 
 // ----------------------------------------------------------------------------

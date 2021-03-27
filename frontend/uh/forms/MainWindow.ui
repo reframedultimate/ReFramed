@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1284</width>
+    <width>1278</width>
     <height>903</height>
    </rect>
   </property>
@@ -21,6 +21,18 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QTreeWidget" name="treeWidget_categories">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="alternatingRowColors">
         <bool>false</bool>
        </property>
@@ -40,7 +52,7 @@
        </column>
        <item>
         <property name="text">
-         <string>Analyzers</string>
+         <string>Analysis</string>
         </property>
        </item>
        <item>
@@ -70,7 +82,7 @@
        </item>
        <item>
         <property name="text">
-         <string>Replay Sources</string>
+         <string>Video Replay Sources</string>
         </property>
        </item>
        <item>
@@ -91,7 +103,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1284</width>
+     <width>1278</width>
      <height>39</height>
     </rect>
    </property>
@@ -99,9 +111,10 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_Connect"/>
+    <addaction name="action_connect"/>
+    <addaction name="action_disconnect"/>
     <addaction name="separator"/>
-    <addaction name="action_Quit"/>
+    <addaction name="action_quit"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -112,12 +125,12 @@
    <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action_Quit">
+  <action name="action_quit">
    <property name="text">
     <string>&amp;Quit</string>
    </property>
   </action>
-  <action name="action_Connect">
+  <action name="action_connect">
    <property name="text">
     <string>&amp;Connect...</string>
    </property>
@@ -125,11 +138,19 @@
     <string>Connect to a Nintendo Switch</string>
    </property>
   </action>
+  <action name="action_disconnect">
+   <property name="text">
+    <string>&amp;Disconnect</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>action_Quit</sender>
+   <sender>action_quit</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>close()</slot>

@@ -19,6 +19,7 @@ class GameInfo;
 class MappingInfo;
 class PlayerInfo;
 class PlayerState;
+class DamagePlot;
 
 class ActiveRecordingView : public QWidget
 {
@@ -26,6 +27,12 @@ class ActiveRecordingView : public QWidget
 public:
     ActiveRecordingView(QWidget* parent=nullptr);
     ~ActiveRecordingView();
+
+signals:
+    void gameFormatChanged(const QString& format);
+    void gameIndexChanged(int index);
+    void player1NameChanged(const QString& name);
+    void player2NameChanged(const QString& name);
 
 public slots:
     void setWaitingForGame();
@@ -42,8 +49,12 @@ public slots:
     void setPlayerDamage(unsigned int frame, int index, float damage);
     void setPlayerStockCount(unsigned int frame, int index, unsigned char stocks);
 
+private slots:
+    //void onComboBoxFormatIndexChanged(int index);
+
 private:
     Ui::ActiveRecordingView* ui_;
+    DamagePlot* plot_;
     QVector<QGroupBox*> tags_;
     QVector<QLabel*> fighterName_;
     QVector<QLabel*> fighterStatus_;

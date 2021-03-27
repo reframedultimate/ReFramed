@@ -37,6 +37,18 @@ public:
     explicit Protocol(tcp_socket socket, QObject* parent=nullptr);
     ~Protocol();
 
+    /*!
+     * \brief Transfers ownership of the recording to the caller. This should
+     * be called in response to the matchEnded() signal in order to extract
+     * the current recording. It's *technically* possible that a matchStarted()
+     * event will occur before the caller can grab the recording, but in all
+     * real life scenarios that will never happen so we don't need to protect
+     * for this.
+     * \return The last recording. Can be null if no recording took place, or
+     * if something else took it.
+     */
+    QSharedDataPointer<Recording> takeRecording();
+
 signals:
     void dateChanged(const QDateTime& date);
     void stageChanged(const QString& name);
@@ -48,7 +60,7 @@ signals:
     void playerStatusChanged(unsigned int frame, int index, unsigned int status);
     void playerDamageChanged(unsigned int frame, int index, float damage);
     void playerStockCountChanged(unsigned int frame, int index, unsigned char stocks);
-    void matchEnded(Recording* recording);
+    void matchEnded();
 
     void connectionClosed();
 
