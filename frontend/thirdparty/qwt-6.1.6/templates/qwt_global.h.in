@@ -1,0 +1,28 @@
+#ifndef QWT_GLOBAL_H
+#define QWT_GLOBAL_H
+
+// QWT_VERSION is (major << 16) + (minor << 8) + patch
+
+#define QWT_VERSION     ((${PROJECT_VERSION_MAJOR} << 16) + (${PROJECT_VERSION_MINOR} << 8) + ${PROJECT_VERSION_PATCH})
+#define QWT_VERSION_STR "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+
+#if defined(_MSC_VER)  // MSVC compiler
+    // template-class specialization 'identifier' is already instantiated
+#   pragma warning(disable: 4660)
+    // inherits via domincne
+#   pragma warning(disable: 4250)
+#endif
+
+#define QWT_${QWT_LIB_TYPE}
+#if defined(QWT_SHARED)
+#   if defined(QWT_BUILDING)
+#       define QWT_EXPORT ${QWT_API_EXPORT}
+#   else
+#       define QWT_EXPORT ${QWT_API_IMPORT}
+#   endif
+#else
+#   define QWT_EXPORT
+#endif
+
+#endif
+
