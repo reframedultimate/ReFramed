@@ -69,7 +69,6 @@ private:
 
 private:
     tcp_socket socket_;
-    QScopedPointer<MappingInfo> mapping_;
     QSharedDataPointer<Recording> recording_;
     QMutex mutex_;
     bool requestShutdown_ = false;

@@ -5,7 +5,7 @@
 #include "uh/models/PlayerInfo.hpp"
 #include "uh/models/PlayerState.hpp"
 #include <QSharedData>
-#include <QScopedPointer>
+#include <QDir>
 
 namespace uh {
 
@@ -13,6 +13,9 @@ class Recording : public QSharedData
 {
 public:
     Recording(const MappingInfo& mapping);
+
+    static Recording* load(const QString& fileName);
+    bool save(const QDir& path);
 
     void setGameInfo(const GameInfo& gameInfo);
     void addPlayer(const PlayerInfo& playerInfo);

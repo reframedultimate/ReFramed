@@ -1,12 +1,15 @@
 #include "uh/models/Protocol.hpp"
 #include "uh/models/Settings.hpp"
 #include "uh/ui_MainWindow.h"
+#include "uh/views/ActiveRecordingView.hpp"
+#include "uh/views/CategoryView.hpp"
 #include "uh/views/ConnectView.hpp"
 #include "uh/views/MainWindow.hpp"
-#include "uh/views/ActiveRecordingView.hpp"
+#include "uh/views/RecordingView.hpp"
 
 #include <QStackedWidget>
-#include <QVBoxLayout>
+#include <QDockWidget>
+#include <QStackedWidget>
 
 namespace uh {
 
@@ -18,10 +21,22 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui_->setupUi(this);
 
+    categoryView_ = new CategoryView;
     activeRecordingView_ = new ActiveRecordingView;
-    QVBoxLayout* activeRecordingLayout = new QVBoxLayout;
-    activeRecordingLayout->addWidget(activeRecordingView_);
-    ui_->page_activeRecording->setLayout(activeRecordingLayout);
+    RecordingView* recordingView = new RecordingView;
+
+    mainView_ = new QStackedWidget;
+    mainView_->addWidget(recordingView);
+    mainView_->addWidget(activeRecordingView_);
+    setCentralWidget(mainView_);
+
+    QDockWidget* categoryDock = new QDockWidget(this);
+    categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    categoryDock->setWidget(categoryView_);
+    categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
+
+    connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
 
     connect(ui_->action_connect, SIGNAL(triggered(bool)), this, SLOT(onConnectActionTriggered()));
     connect(ui_->action_disconnect, SIGNAL(triggered(bool)), this, SLOT(onDisconnectActionTriggered()));
@@ -37,7 +52,7 @@ MainWindow::~MainWindow()
 void MainWindow::setStateConnected()
 {
     // Be (hopefully) helpful and switch to the active recording view
-    ui_->stackedWidget->setCurrentWidget(ui_->page_activeRecording);
+    mainView_->setCurrentIndex(1);
 
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
@@ -77,7 +92,7 @@ void MainWindow::transferSocketOwnership(tcp_socket socket)
 
     // Protocol will emit a Recording instance of all of the data from a single match
     // when each match ends
-    connect(protocol_.get(), SIGNAL(matchEnded()), this, SLOT(onNewRecordingAvailable()));
+    connect(protocol_.get(), SIGNAL(matchEnded()), this, SLOT(onProtocolFinishedARecording()));
 
     setStateConnected();
 
@@ -91,6 +106,7 @@ void MainWindow::onProtocolFinishedARecording()
         return;
 
     QSharedDataPointer<Recording> recording = protocol_->takeRecording();
+    recording->save(QDir("bin"));
 }
 
 // ----------------------------------------------------------------------------
@@ -130,6 +146,20 @@ void MainWindow::onConnectActionTriggered()
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
     c->setGeometry(calculatePopupGeometry(this, c));
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onCategoryChanged(CategoryType category)
+{
+    switch (category)
+    {
+        case CategoryType::ANALYSIS          : mainView_->setCurrentIndex(0); break;
+        case CategoryType::RECORDING_GROUPS  : break;
+        case CategoryType::RECORDING_SOURCES : break;
+        case CategoryType::VIDEO_SOURCES     : break;
+        case CategoryType::ACTIVE_RECORDING  : mainView_->setCurrentIndex(1); break;
+        case CategoryType::TOP_LEVEL : /* should never happen */ break;
+    }
 }
 
 }

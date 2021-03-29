@@ -1,7 +1,11 @@
 #pragma once
 
-#include <QMainWindow>
+#include "uh/models/CategoryType.hpp"
 #include "uh/listeners/ConnectedListener.hpp"
+#include <QMainWindow>
+
+class QStackedWidget;
+class QTreeWidgetItem;
 
 namespace Ui {
     class MainWindow;
@@ -10,6 +14,7 @@ namespace Ui {
 namespace uh {
 
 class ActiveRecordingView;
+class CategoryView;
 class Protocol;
 class Recording;
 class Settings;
@@ -34,10 +39,13 @@ private slots:
     void onDisconnectActionTriggered();
     void onConnectionLost();
     void onProtocolFinishedARecording();
+    void onCategoryChanged(CategoryType category);
 
 private:
-    Ui::MainWindow* ui_ = nullptr;
-    ActiveRecordingView* activeRecordingView_ = nullptr;
+    Ui::MainWindow* ui_;
+    CategoryView* categoryView_;
+    QStackedWidget* mainView_;
+    ActiveRecordingView* activeRecordingView_;
     QSharedDataPointer<Settings> settings_;
     QScopedPointer<Protocol> protocol_;
 };

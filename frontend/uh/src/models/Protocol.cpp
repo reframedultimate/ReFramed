@@ -18,7 +18,6 @@ enum MessageType
 Protocol::Protocol(tcp_socket socket, QObject* parent)
     : QThread(parent)
     , socket_(socket)
-    , mapping_(new MappingInfo)
 {
 }
 
@@ -49,6 +48,9 @@ QSharedDataPointer<Recording> Protocol::takeRecording()
 // ----------------------------------------------------------------------------
 void Protocol::run()
 {
+    QVector<uint8_t> entryIDs;
+    MappingInfo mappingInfo;
+
     while (true)
     {
         mutex_.lock();
@@ -72,7 +74,7 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, name, len) != len) break;
             name[(int)len] = '\0';
 
-            mapping_->fighterID.add(fighterID, name);
+            mappingInfo.fighterID.add(fighterID, name);
         }
         else if (msg == StageKinds)
         {
@@ -86,7 +88,7 @@ void Protocol::run()
 
             uint16_t stageID = (stageID_h << 8)
                              | (stageID_l << 0);
-            mapping_->stageID.add(stageID, name);
+            mappingInfo.stageID.add(stageID, name);
         }
         else if (msg == MatchStart)
         {
@@ -98,12 +100,15 @@ void Protocol::run()
             uint16_t stageID = (stageID_h << 8)
                              | (stageID_l << 0);
 
-            const QString* stageNamePtr = mapping_->stageID.map(stageID);
+            const QString* stageNamePtr = mappingInfo.stageID.map(stageID);
             QString stageName = stageNamePtr ? *stageNamePtr : "(Unknown Stage)";
 
-            QVector<uint8_t> entryIDs(playerCount);
+            GameInfo gameInfo(stageID, QDateTime::currentDateTime());
+            gameInfo.setFormat(GameInfo::FRIENDLIES);  // TODO: Hardcode this for now, should be set according to the UI later
+
             QVector<uint8_t> fighterIDs(playerCount);
             QVector<QString> tags(playerCount);
+            entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
                 uint8_t id;
@@ -127,21 +132,21 @@ void Protocol::run()
             }
 
             mutex_.lock();
-            recording_ = new Recording(*mapping_);
-            recording_->setGameInfo(GameInfo(stageID, QDateTime::currentDateTime()));
+            recording_ = new Recording(mappingInfo);
+            recording_->setGameInfo(gameInfo);
             emit dateChanged(recording_->gameInfo().timeStarted());
             emit stageChanged(stageName);
 
             emit playerCountChanged(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
-                recording_->addPlayer(PlayerInfo(tags[i], fighterIDs[i], entryIDs[i]));
+                recording_->addPlayer(PlayerInfo(tags[i], fighterIDs[i]));
             }
             mutex_.unlock();
 
             for (int i = 0; i < playerCount; ++i)
             {
-                const QString* fighterNamePtr = mapping_->fighterID.map(fighterIDs[i]);
+                const QString* fighterNamePtr = mappingInfo.fighterID.map(fighterIDs[i]);
                 QString fighterName = fighterNamePtr ? *fighterNamePtr : "(Unknown character)";
                 emit playerTagChanged(i, tags[i]);
                 emit playerFighterChanged(i, fighterName);
@@ -181,7 +186,7 @@ void Protocol::run()
             // Map the entry ID to an index
             mutex_.lock();
             for (int i = 0; i != recording_->playerCount(); ++i)
-                if (recording_->playerInfo(i).entryID() == entryID)
+                if (entryIDs[i] == entryID)
                 {
                     recording_->addPlayerState(i, PlayerState(frame, status, damage, stocks));
                     mutex_.unlock();
