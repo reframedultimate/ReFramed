@@ -1,6 +1,9 @@
 #include "uh/ui_ActiveRecordingView.h"
 #include "uh/views/ActiveRecordingView.hpp"
 #include "uh/views/DamagePlot.hpp"
+#include "uh/models/Recording.hpp"
+
+#include <QVBoxLayout>
 
 namespace uh {
 
@@ -12,8 +15,17 @@ ActiveRecordingView::ActiveRecordingView(QWidget* parent)
     ui_->setupUi(this);
 
     plot_ = new DamagePlot;
-    ui_->tab_damagePlot->layout()->addWidget(plot_);
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(plot_);
+    ui_->tab_damagePlot->setLayout(layout);
+
     ui_->lineEdit_formatOther->setVisible(false);
+
+    connect(ui_->comboBox_format, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboBoxFormatIndexChanged(int)));
+    connect(ui_->lineEdit_formatOther, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditFormatChanged(const QString&)));
+    connect(ui_->spinBox_gameNumber, SIGNAL(valueChanged(int)), this, SLOT(onSpinBoxGameNumberChanged(int)));
+    connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
+    connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
 
     setActive();
 }
@@ -117,26 +129,144 @@ void ActiveRecordingView::setPlayerFighterName(int index, const QString& fighter
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerStatus(unsigned int frame, int index, unsigned int status)
+void ActiveRecordingView::onRecordingStarted(Recording* recording)
 {
-    (void)frame;
-    fighterStatus_[index]->setText(QString::number(status));
-    ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(frame / 60.0).toString());
+    setPlayerCount(recording->playerCount());
+
+    uint16_t stageID = recording->gameInfo().stageID();
+    const QString* stageStr = recording->mappingInfo().stageID.map(stageID);
+
+    setTimeStarted(recording->gameInfo().timeStarted());
+    setStageName(stageStr? *stageStr : "(Unknown Stage)");
+    setPlayerCount(recording->playerCount());
+
+    switch (recording->gameInfo().format())
+    {
+    case GameInfo::FRIENDLIES: break;
+    }
+
+    if (recording->playerCount() == 2)
+    {
+        PlayerInfo& info1 = recording->playerInfo(0);
+        PlayerInfo& info2 = recording->playerInfo(1);
+
+        // If the player tag changed from the last recording, then we should
+        // clear any custom tag entered into the textbox so the tag that got
+        // sent to us is the one that gets saved
+        if (lastP1Tag_.length() && lastP1Tag_ != info1.tag())
+            ui_->lineEdit_player1->setText("");
+        if (lastP2Tag_.length() && lastP2Tag_ != info2.tag())
+            ui_->lineEdit_player1->setText("");
+        lastP1Tag_ = info1.tag();
+        lastP2Tag_ = info2.tag();
+
+        ui_->lineEdit_player1->setPlaceholderText(info1.tag());
+        ui_->lineEdit_player2->setPlaceholderText(info2.tag());
+
+        // If custom tags are set, then those have precedence
+        if (ui_->lineEdit_player1->text().length() > 0)
+            info1.setTag(ui_->lineEdit_player1->text());
+        if (ui_->lineEdit_player2->text().length() > 0)
+            info2.setTag(ui_->lineEdit_player2->text());
+    }
+    else
+    {
+        ui_->lineEdit_player1->setPlaceholderText("");
+        ui_->lineEdit_player2->setPlaceholderText("");
+        ui_->lineEdit_player1->setEnabled(false);
+        ui_->lineEdit_player2->setEnabled(false);
+    }
+
+    for (int i = 0; i != recording->playerCount(); ++i)
+    {
+        const PlayerInfo& info = recording->playerInfo(i);
+        const QString* fighterStr = recording->mappingInfo().fighterID.map(info.fighterID());
+
+        setPlayerTag(i, info.tag());
+        setPlayerFighterName(i, fighterStr? *fighterStr : "(Unknown Fighter)");
+    }
+
+    setActive();
+    activeRecording_ = recording;
+    recording->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerDamage(unsigned int frame, int index, float damage)
+void ActiveRecordingView::onRecordingEnded(Recording* recording)
 {
-    fighterDamage_[index]->setText(QString::number(damage));
-    plot_->addPlayerDamageValue(index, frame, damage);
+    recording->dispatcher.removeListener(this);
+    activeRecording_= nullptr;
+
+    ui_->lineEdit_player1->setEnabled(true);
+    ui_->lineEdit_player2->setEnabled(true);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onRecordingPlayerStateAdded(int playerID, const PlayerState& state)
+{
+    fighterStatus_[playerID]->setText(QString::number(state.status()));
+    fighterDamage_[playerID]->setText(QString::number(state.damage()));
+    fighterStocks_[playerID]->setText(QString::number(state.stocks()));
+
+    ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(state.frame() / 60.0).toString());
+
+    plot_->addPlayerDamageValue(playerID, state.frame(), state.damage());
     plot_->replotAndAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerStockCount(unsigned int frame, int index, unsigned char stocks)
+void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
 {
-    (void)frame;
-    fighterStocks_[index]->setText(QString::number(stocks));
+    if (index == GameInfo::OTHER)
+        ui_->lineEdit_formatOther->setVisible(true);
+    else
+        ui_->lineEdit_formatOther->setVisible(false);
+
+    if (index > GameInfo::OTHER)
+        return;
+    if (activeRecording_ == nullptr)
+        return;
+
+    if (index == GameInfo::OTHER)
+        activeRecording_->gameInfo().setFormat(static_cast<GameInfo::Format>(index), ui_->lineEdit_formatOther->text());
+    else
+        activeRecording_->gameInfo().setFormat(static_cast<GameInfo::Format>(index));
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
+{
+    if (activeRecording_ == nullptr)
+        return;
+    activeRecording_->gameInfo().setFormat(activeRecording_->gameInfo().format(), ui_->lineEdit_formatOther->text());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onSpinBoxGameNumberChanged(int value)
+{
+    if (activeRecording_ == nullptr)
+        return;
+    activeRecording_->gameInfo().setGameNumber(value);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditP1TextChanged(const QString& name)
+{
+    if (activeRecording_ == nullptr)
+        return;
+    if (activeRecording_->playerCount() != 2)
+        return;
+    activeRecording_->playerInfo(0).setTag(name);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditP2TextChanged(const QString& name)
+{
+    if (activeRecording_ == nullptr)
+        return;
+    if (activeRecording_->playerCount() != 2)
+        return;
+    activeRecording_->playerInfo(1).setTag(name);
 }
 
 }

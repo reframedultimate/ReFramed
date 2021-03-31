@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
+      <widget class="QComboBox" name="comboBox_format">
        <item>
         <property name="text">
          <string>Friendlies</string>
@@ -82,7 +82,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox_gameIndex">
+      <widget class="QSpinBox" name="spinBox_gameNumber">
        <property name="minimum">
         <number>1</number>
        </property>
@@ -196,7 +196,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLabel" name="label_date">
+             <widget class="QLabel" name="label_timeRemaining">
               <property name="text">
                <string>Unknown</string>
               </property>
@@ -210,7 +210,7 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLabel" name="label_timeRemaining">
+             <widget class="QLabel" name="label_date">
               <property name="text">
                <string>Unknown</string>
               </property>
@@ -233,11 +233,10 @@
           <attribute name="title">
            <string>Damage</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_3"/>
          </widget>
          <widget class="QWidget" name="tab_decisionGraph">
           <attribute name="title">
-           <string>Decision Graph</string>
+           <string>Recording</string>
           </attribute>
          </widget>
         </widget>

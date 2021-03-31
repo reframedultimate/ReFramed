@@ -37,40 +37,27 @@ public:
     explicit Protocol(tcp_socket socket, QObject* parent=nullptr);
     ~Protocol();
 
-    /*!
-     * \brief Transfers ownership of the recording to the caller. This should
-     * be called in response to the matchEnded() signal in order to extract
-     * the current recording. It's *technically* possible that a matchStarted()
-     * event will occur before the caller can grab the recording, but in all
-     * real life scenarios that will never happen so we don't need to protect
-     * for this.
-     * \return The last recording. Can be null if no recording took place, or
-     * if something else took it.
-     */
-    QSharedDataPointer<Recording> takeRecording();
-
 signals:
-    void dateChanged(const QDateTime& date);
-    void stageChanged(const QString& name);
-    void playerCountChanged(int count);
-    void playerTagChanged(int index, const QString& tag);
-    void playerFighterChanged(int index, const QString& fighterName);
+    void _receiveMatchStarted(Recording* newRecording);
+    void _receivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
+    void _receiveMatchEnded();
 
-    void matchStarted();
-    void playerStatusChanged(unsigned int frame, int index, unsigned int status);
-    void playerDamageChanged(unsigned int frame, int index, float damage);
-    void playerStockCountChanged(unsigned int frame, int index, unsigned char stocks);
-    void matchEnded();
+    void recordingStarted(Recording* recording);
+    void recordingEnded(Recording* recording);
+    void serverClosedConnection();
 
-    void connectionClosed();
+private slots:
+    void onReceiveMatchStarted(Recording* newRecording);
+    void onReceivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
+    void onReceiveMatchEnded();
 
 private:
     void run() override;
 
 private:
     tcp_socket socket_;
-    QSharedDataPointer<Recording> recording_;
     QMutex mutex_;
+    QSharedDataPointer<Recording> recording_;
     bool requestShutdown_ = false;
 };
 

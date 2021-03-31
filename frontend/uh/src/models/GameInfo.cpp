@@ -1,4 +1,5 @@
 #include "uh/models/GameInfo.hpp"
+#include "uh/listeners/GameInfoListener.hpp"
 
 namespace uh {
 
@@ -42,6 +43,7 @@ QString GameInfo::formatDesc() const
 void GameInfo::setGameNumber(uint8_t number)
 {
     gameNumber_ = number;
+    dispatcher.dispatch(&GameInfoListener::onGameInfoNumberChanged, *this);
 }
 
 // ----------------------------------------------------------------------------
@@ -50,6 +52,7 @@ void GameInfo::setFormat(Format format, const QString& formatDesc)
     format_ = format;
     if (format == OTHER)
         formatDesc_ = formatDesc;
+    dispatcher.dispatch(&GameInfoListener::onGameInfoFormatChanged, *this);
 }
 
 }

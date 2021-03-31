@@ -1,9 +1,12 @@
 #pragma once
 
+#include "uh/listeners/ListenerDispatcher.hpp"
 #include <QString>
 #include <QDateTime>
 
 namespace uh {
+
+class GameInfoListener;
 
 class GameInfo
 {
@@ -31,6 +34,8 @@ public:
 
     void setGameNumber(uint8_t number);
     void setFormat(Format format, const QString& formatDesc="");
+
+    ListenerDispatcher<GameInfoListener> dispatcher;
 
 private:
     QDateTime timeStarted_;

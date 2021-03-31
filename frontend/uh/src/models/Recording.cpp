@@ -1,3 +1,4 @@
+#include "uh/listeners/RecordingListener.hpp"
 #include "uh/models/Recording.hpp"
 #include "uh/models/PlayerState.hpp"
 #include <QFile>
@@ -9,43 +10,26 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-Recording::Recording(const MappingInfo& mapping)
+Recording::Recording(const MappingInfo& mapping,
+                     const GameInfo& gameInfo,
+                     QVector<PlayerInfo>&& playerInfos)
     : mappingInfo_(mapping)
+    , gameInfo_(gameInfo)
+    , playerInfo_(playerInfos)
+    , playerStates_(playerInfos.size())
 {
 }
 
 // ----------------------------------------------------------------------------
 Recording* Recording::load(const QString& fileName)
 {
-
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
-bool Recording::save(const QDir& path)
+bool Recording::saveTo(const QDir& path)
 {
-    QString date = gameInfo_.timeStarted().toString("yyyy-MM-dd");
-    QString formatDesc = gameInfo_.formatDesc();
-    QStringList playerList;
-    for (const auto& info : playerInfo_)
-    {
-        const QString* fighterName = mappingInfo_.fighterID.map(info.fighterID());
-        if (fighterName)
-            playerList.append(info.tag() + " (" + *fighterName + ")");
-        else
-            playerList.append(info.tag());
-    }
-    QString players = playerList.join(" vs ");
-
-    QString fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
-    for (int i = 2; QFileInfo::exists(path.absoluteFilePath(fileName)); ++i)
-    {
-        if (gameInfo_.format() == GameInfo::FRIENDLIES)
-            fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(i) + ".uhr";
-        else
-            fileName = date + " - " + formatDesc + "(" + i + ")" + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
-    }
-
-    QFile f(path.absoluteFilePath(fileName));
+    QFile f(findNonExistingFileName(path));
     if (!f.open(QIODevice::WriteOnly))
         return false;
 
@@ -56,9 +40,36 @@ bool Recording::save(const QDir& path)
     gameInfo["number"] = gameInfo_.gameNumber();
 
     QJsonObject fighterStatusMapping;
-    const auto& fighterStatusMap = mappingInfo_.fighterStatus.get();
-    for (auto it = fighterStatusMap.begin(); it != fighterStatusMap.end(); ++it)
-        fighterStatusMapping[QString::number(it.key())] = it.value();
+    const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
+    for (auto it = baseEnumNames.begin(); it != baseEnumNames.end(); ++it)
+    {
+        /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
+        const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
+
+        QJsonArray mappings;
+        mappings.append(it.value());
+        mappings.append(/*shortName ? *shortName :*/ QString());
+        mappings.append(/*customName ? *customName :*/ QString());
+        fighterStatusMapping[QString::number(it.key())] = mappings;
+    }
+
+    const auto& specificEnumNames = mappingInfo_.fighterStatus.fighterSpecificEnumNames();
+    for (auto fighter = specificEnumNames.begin(); fighter != specificEnumNames.end(); ++fighter)
+    {
+        QJsonObject specificMapping;
+        for (auto it = fighter.value().begin(); it != fighter.value().end(); ++it)
+        {
+            /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
+            const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
+
+            QJsonArray mappings;
+            mappings.append(it.value());
+            mappings.append(/*shortName ? *shortName :*/ QString());
+            mappings.append(/*customName ? *customName :*/ QString());
+            specificMapping[QString::number(it.key())] = mappings;
+        }
+        fighterStatusMapping[QString::number(fighter.key())] = specificMapping;
+    }
 
     QJsonObject fighterIDMapping;
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
@@ -111,22 +122,46 @@ bool Recording::save(const QDir& path)
 }
 
 // ----------------------------------------------------------------------------
-void Recording::setGameInfo(const GameInfo& gameInfo)
+QString Recording::findNonExistingFileName(const QDir &path)
 {
-    gameInfo_ = gameInfo;
+    QString date = gameInfo_.timeStarted().toString("yyyy-MM-dd");
+    QString formatDesc = gameInfo_.formatDesc();
+    QStringList playerList;
+    for (const auto& info : playerInfo_)
+    {
+        const QString* fighterName = mappingInfo_.fighterID.map(info.fighterID());
+        if (fighterName)
+            playerList.append(info.tag() + " (" + *fighterName + ")");
+        else
+            playerList.append(info.tag());
+    }
+    QString players = playerList.join(" vs ");
+
+    QString fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
+    for (int i = 2; QFileInfo::exists(path.absoluteFilePath(fileName)); ++i)
+    {
+        if (gameInfo_.format() == GameInfo::FRIENDLIES)
+            fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(i) + ".uhr";
+        else
+            fileName = date + " - " + formatDesc + "(" + i + ")" + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
+    }
+
+    return path.absoluteFilePath(fileName);
 }
 
 // ----------------------------------------------------------------------------
-void Recording::addPlayer(const PlayerInfo& playerInfo)
+void Recording::addPlayerState(int index, PlayerState&& state)
 {
-    playerInfo_.push_back(playerInfo);
-    playerStates_.push_back(QVector<PlayerState>());
-}
-
-// ----------------------------------------------------------------------------
-void Recording::addPlayerState(int index, const PlayerState& state)
-{
-    playerStates_[index].push_back(state);
+    // Only add a new state if the previous one was different
+    if (playerStates_[index].count() == 0 || playerStates_[index].back().status() != state.status())
+    {
+        playerStates_[index].push_back(std::move(state));
+        dispatcher.dispatch(&RecordingListener::onRecordingPlayerStateAdded, index, playerStates_[index].back());
+    }
+    else
+    {
+        dispatcher.dispatch(&RecordingListener::onRecordingPlayerStateAdded, index, state);
+    }
 }
 
 }

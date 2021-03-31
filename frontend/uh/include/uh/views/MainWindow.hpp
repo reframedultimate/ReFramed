@@ -2,6 +2,7 @@
 
 #include "uh/models/CategoryType.hpp"
 #include "uh/listeners/ConnectedListener.hpp"
+#include "uh/listeners/RecordingListener.hpp"
 #include <QMainWindow>
 
 class QStackedWidget;
@@ -19,7 +20,8 @@ class Protocol;
 class Recording;
 class Settings;
 
-class MainWindow : public QMainWindow, public ConnectedListener
+class MainWindow : public QMainWindow
+                 , public ConnectedListener
 {
     Q_OBJECT
 
@@ -37,8 +39,8 @@ private:
 private slots:
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
-    void onConnectionLost();
-    void onProtocolFinishedARecording();
+    void onServerConnectionLost();
+    void onProtocolRecordingEnded(Recording* recording);
     void onCategoryChanged(CategoryType category);
 
 private:

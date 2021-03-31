@@ -1,13 +1,12 @@
 #include "uh/models/Protocol.hpp"
 #include "uh/models/PlayerState.hpp"
 
-#include "QDebug"
-
 namespace uh {
 
 enum MessageType
 {
     FighterKinds,
+    FighterStatusKinds,
     StageKinds,
     MatchStart,
     MatchEnd,
@@ -19,6 +18,14 @@ Protocol::Protocol(tcp_socket socket, QObject* parent)
     : QThread(parent)
     , socket_(socket)
 {
+    // These signals are used to transfer data from the listener thread to the
+    // main thread
+    connect(this, SIGNAL(_receiveMatchStarted(Recording*)),
+            this, SLOT(onReceiveMatchStarted(Recording*)));
+    connect(this, SIGNAL(_receivePlayerState(unsigned int, int, unsigned int, float, unsigned int)),
+            this, SLOT(onReceivePlayerState(unsigned int, int, unsigned int, float, unsigned int)));
+    connect(this, SIGNAL(_receiveMatchEnded()),
+            this, SLOT(onReceiveMatchEnded()));
 }
 
 // ----------------------------------------------------------------------------
@@ -27,22 +34,13 @@ Protocol::~Protocol()
     tcp_socket_shutdown(&socket_);
 
     mutex_.lock();
-    requestShutdown_ = true;
+        requestShutdown_ = true;
     mutex_.unlock();
     wait();
 
     tcp_socket_close(&socket_);
-}
-
-// ----------------------------------------------------------------------------
-QSharedDataPointer<Recording> Protocol::takeRecording()
-{
-    QSharedDataPointer<Recording> result;
-    mutex_.lock();
-    result = recording_;
-    recording_ = nullptr;
-    mutex_.unlock();
-    return result;
+    if (recording_)
+        emit recordingEnded(recording_);
 }
 
 // ----------------------------------------------------------------------------
@@ -54,11 +52,11 @@ void Protocol::run()
     while (true)
     {
         mutex_.lock();
-        if (requestShutdown_)
-        {
-            mutex_.unlock();
-            break;
-        }
+            if (requestShutdown_)
+            {
+                mutex_.unlock();
+                break;
+            }
         mutex_.unlock();
 
         uint8_t msg;
@@ -75,6 +73,25 @@ void Protocol::run()
             name[(int)len] = '\0';
 
             mappingInfo.fighterID.add(fighterID, name);
+        }
+        else if (msg == FighterStatusKinds)
+        {
+            uint8_t fighterID, statusID_l, statusID_h, len;
+            char name[256];
+            if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &statusID_h, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &statusID_l, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &len, 1) != 1) break;
+            if (tcp_socket_read(&socket_, name, len) != len) break;
+            name[(int)len] = '\0';
+
+            uint16_t statusID = (statusID_h << 8)
+                              | (statusID_l << 0);
+
+            if (fighterID == 255)
+                mappingInfo.fighterStatus.addBaseEnumName(statusID, name);
+            else
+                mappingInfo.fighterStatus.addFighterSpecificEnumName(statusID, fighterID, name);
         }
         else if (msg == StageKinds)
         {
@@ -100,14 +117,12 @@ void Protocol::run()
             uint16_t stageID = (stageID_h << 8)
                              | (stageID_l << 0);
 
-            const QString* stageNamePtr = mappingInfo.stageID.map(stageID);
-            QString stageName = stageNamePtr ? *stageNamePtr : "(Unknown Stage)";
-
             GameInfo gameInfo(stageID, QDateTime::currentDateTime());
             gameInfo.setFormat(GameInfo::FRIENDLIES);  // TODO: Hardcode this for now, should be set according to the UI later
 
             QVector<uint8_t> fighterIDs(playerCount);
             QVector<QString> tags(playerCount);
+            QVector<PlayerInfo> playerInfos;
             entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
@@ -131,35 +146,17 @@ void Protocol::run()
                 tags[i] = tag;
             }
 
-            mutex_.lock();
-            recording_ = new Recording(mappingInfo);
-            recording_->setGameInfo(gameInfo);
-            emit dateChanged(recording_->gameInfo().timeStarted());
-            emit stageChanged(stageName);
-
-            emit playerCountChanged(playerCount);
             for (int i = 0; i < playerCount; ++i)
-            {
-                recording_->addPlayer(PlayerInfo(tags[i], fighterIDs[i]));
-            }
-            mutex_.unlock();
+                playerInfos.push_back(PlayerInfo(tags[i], fighterIDs[i]));
 
-            for (int i = 0; i < playerCount; ++i)
-            {
-                const QString* fighterNamePtr = mappingInfo.fighterID.map(fighterIDs[i]);
-                QString fighterName = fighterNamePtr ? *fighterNamePtr : "(Unknown character)";
-                emit playerTagChanged(i, tags[i]);
-                emit playerFighterChanged(i, fighterName);
-            }
-
-            emit matchStarted();
+            emit _receiveMatchStarted(new Recording(mappingInfo, gameInfo, std::move(playerInfos)));
             continue;
 
             fail: break;
         }
         else if (msg == MatchEnd)
         {
-            emit matchEnded();
+            emit _receiveMatchEnded();
         }
         else if (msg == FighterState)
         {
@@ -184,25 +181,43 @@ void Protocol::run()
             float damage = (((uint16_t)damage_h << 8) | ((uint16_t)damage_l << 0)) * 0.01;
 
             // Map the entry ID to an index
-            mutex_.lock();
-            for (int i = 0; i != recording_->playerCount(); ++i)
+            for (int i = 0; i != entryIDs.size(); ++i)
                 if (entryIDs[i] == entryID)
                 {
-                    recording_->addPlayerState(i, PlayerState(frame, status, damage, stocks));
-                    mutex_.unlock();
-                    emit playerStatusChanged(frame, i, status);
-                    emit playerDamageChanged(frame, i, damage);
-                    emit playerStockCountChanged(frame, i, stocks);
-                    goto noUnlock;
+                    emit _receivePlayerState(frame, i, status, damage, stocks);
+                    break;
                 }
-            mutex_.unlock();
-
-            noUnlock:;
         }
     }
 
     tcp_socket_shutdown(&socket_);
-    emit connectionClosed();
+    emit serverClosedConnection();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onReceiveMatchStarted(Recording* recording)
+{
+    recording_ = recording;
+    emit recordingStarted(recording_);
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onReceivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks)
+{
+    if (recording_ == nullptr)
+        return;
+
+    recording_->addPlayerState(playerID, PlayerState(frame, status, damage, stocks));
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onReceiveMatchEnded()
+{
+    if (recording_ == nullptr)
+        return;
+
+    emit recordingEnded(recording_);
+    recording_ = nullptr;
 }
 
 }

@@ -8,7 +8,7 @@ namespace uh {
 
 // ----------------------------------------------------------------------------
 ConnectView::ConnectView(Settings* settings, ConnectedListener* listener, Qt::WindowFlags flags)
-    : QWidget(nullptr, flags)
+    : QDialog(nullptr, flags)
     , ui_(new Ui::ConnectView)
     , listener_(listener)
     , settings_(settings)

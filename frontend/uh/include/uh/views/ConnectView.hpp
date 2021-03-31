@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QWidget>
+#include <QDialog>
 
 class QTcpSocket;
 
@@ -13,7 +13,7 @@ namespace uh {
 class Settings;
 class ConnectedListener;
 
-class ConnectView : public QWidget
+class ConnectView : public QDialog
 {
     Q_OBJECT
 public:

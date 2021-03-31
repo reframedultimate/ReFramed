@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include "uh/listeners/RecordingListener.hpp"
 #include "uh/models/GameInfo.hpp"
 #include "uh/models/PlayerInfo.hpp"
 #include "uh/models/PlayerState.hpp"
@@ -20,8 +21,10 @@ class MappingInfo;
 class PlayerInfo;
 class PlayerState;
 class DamagePlot;
+class Recording;
 
 class ActiveRecordingView : public QWidget
+                          , public RecordingListener
 {
     Q_OBJECT
 public:
@@ -45,21 +48,31 @@ public slots:
     void setPlayerTag(int index, const QString& tag);
     void setPlayerFighterName(int index, const QString& fighterName);
 
-    void setPlayerStatus(unsigned int frame, int index, unsigned int status);
-    void setPlayerDamage(unsigned int frame, int index, float damage);
-    void setPlayerStockCount(unsigned int frame, int index, unsigned char stocks);
-
 private slots:
-    //void onComboBoxFormatIndexChanged(int index);
+    void onRecordingStarted(Recording* recording);
+    void onRecordingEnded(Recording* recording);
+
+    void onComboBoxFormatIndexChanged(int index);
+    void onLineEditFormatChanged(const QString& formatDesc);
+    void onSpinBoxGameNumberChanged(int value);
+    void onLineEditP1TextChanged(const QString& name);
+    void onLineEditP2TextChanged(const QString& name);
+
+private:
+    void onRecordingPlayerStateAdded(int playerID, const PlayerState& state);
 
 private:
     Ui::ActiveRecordingView* ui_;
     DamagePlot* plot_;
+    Recording* activeRecording_ = nullptr;
     QVector<QGroupBox*> tags_;
     QVector<QLabel*> fighterName_;
     QVector<QLabel*> fighterStatus_;
     QVector<QLabel*> fighterDamage_;
     QVector<QLabel*> fighterStocks_;
+
+    QString lastP1Tag_;
+    QString lastP2Tag_;
 };
 
 }

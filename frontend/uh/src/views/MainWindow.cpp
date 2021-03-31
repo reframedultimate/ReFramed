@@ -75,24 +75,16 @@ void MainWindow::transferSocketOwnership(tcp_socket socket)
     // Connect all protocol signals to active recording view so it updates as
     // data comes in
     activeRecordingView_->setWaitingForGame();
-    connect(protocol_.get(), SIGNAL(dateChanged(const QDateTime&)), activeRecordingView_, SLOT(setTimeStarted(const QDateTime&)));
-    connect(protocol_.get(), SIGNAL(stageChanged(const QString&)), activeRecordingView_, SLOT(setStageName(const QString&)));
-    connect(protocol_.get(), SIGNAL(playerCountChanged(int)), activeRecordingView_, SLOT(setPlayerCount(int)));
-    connect(protocol_.get(), SIGNAL(playerTagChanged(int, const QString&)), activeRecordingView_, SLOT(setPlayerTag(int, const QString&)));
-    connect(protocol_.get(), SIGNAL(playerFighterChanged(int, const QString&)), activeRecordingView_, SLOT(setPlayerFighterName(int, const QString&)));
-    connect(protocol_.get(), SIGNAL(matchStarted()), activeRecordingView_, SLOT(setActive()));
-    connect(protocol_.get(), SIGNAL(playerStatusChanged(unsigned int, int, unsigned int)), activeRecordingView_, SLOT(setPlayerStatus(unsigned int, int, unsigned int)));
-    connect(protocol_.get(), SIGNAL(playerDamageChanged(unsigned int, int, float)), activeRecordingView_, SLOT(setPlayerDamage(unsigned int, int, float)));
-    connect(protocol_.get(), SIGNAL(playerStockCountChanged(unsigned int, int, unsigned char)), activeRecordingView_, SLOT(setPlayerStockCount(unsigned int, int, unsigned char)));
-    connect(protocol_.get(), SIGNAL(connectionClosed()), activeRecordingView_, SLOT(setDisconnected()));
+    connect(protocol_.get(), SIGNAL(recordingStarted(Recording*)), activeRecordingView_, SLOT(onRecordingStarted(Recording*)));
+    connect(protocol_.get(), SIGNAL(recordingEnded(Recording*)), activeRecordingView_, SLOT(onRecordingEnded(Recording*)));
+    connect(protocol_.get(), SIGNAL(serverClosedConnection()), activeRecordingView_, SLOT(setDisconnected()));
 
     // If the protocol loses connection for any reason, we have to delete it and
     // reset the UI
-    connect(protocol_.get(), SIGNAL(connectionClosed()), this, SLOT(onConnectionLost()));
+    connect(protocol_.get(), SIGNAL(serverClosedConnection()), this, SLOT(onServerConnectionLost()));
 
-    // Protocol will emit a Recording instance of all of the data from a single match
-    // when each match ends
-    connect(protocol_.get(), SIGNAL(matchEnded()), this, SLOT(onProtocolFinishedARecording()));
+    // For now, we're the ones to save a recording when it completes
+    connect(protocol_.get(), SIGNAL(recordingEnded(Recording*)), this, SLOT(onProtocolRecordingEnded(Recording*)));
 
     setStateConnected();
 
@@ -100,17 +92,13 @@ void MainWindow::transferSocketOwnership(tcp_socket socket)
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onProtocolFinishedARecording()
+void MainWindow::onProtocolRecordingEnded(Recording* recording)
 {
-    if (protocol_.isNull())
-        return;
-
-    QSharedDataPointer<Recording> recording = protocol_->takeRecording();
-    recording->save(QDir("bin"));
+    recording->saveTo(QDir("."));
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onConnectionLost()
+void MainWindow::onServerConnectionLost()
 {
     // Let the listening thread join and close the underlying socket
     setStateDisconnected();
