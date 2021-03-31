@@ -7,6 +7,7 @@
 #include "uh/models/PlayerState.hpp"
 #include <QSharedData>
 #include <QDir>
+#include <QVector>
 
 namespace uh {
 

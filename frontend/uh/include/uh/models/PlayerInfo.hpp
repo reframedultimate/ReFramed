@@ -2,6 +2,7 @@
 
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include <QString>
+#include <QVector>
 
 namespace uh {
 
@@ -20,6 +21,9 @@ public:
     ListenerDispatcher<PlayerInfoListener> dispatcher;
 
 private:
+    PlayerInfo() {}
+    friend class QVector<PlayerInfo>;
+
     QString tag_;
     uint8_t fighterID_;
 };

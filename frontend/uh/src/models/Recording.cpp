@@ -6,6 +6,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QMessageBox>
+#include <QFileDialog>
 
 namespace uh {
 
@@ -29,10 +31,6 @@ Recording* Recording::load(const QString& fileName)
 // ----------------------------------------------------------------------------
 bool Recording::saveTo(const QDir& path)
 {
-    QFile f(findNonExistingFileName(path));
-    if (!f.open(QIODevice::WriteOnly))
-        return false;
-
     QJsonObject gameInfo;
     gameInfo["stageid"] = gameInfo_.stageID();
     gameInfo["date"] = gameInfo_.timeStarted().toUTC().toString();
@@ -95,17 +93,8 @@ bool Recording::saveTo(const QDir& path)
         playerInfo.append(player);
     }
 
-    QJsonObject json;
-    json["version"] = "1.0";
-    json["date"] = gameInfo_.timeStarted().toUTC().toString();
-    json["mappinginfo"] = mappingInfo;
-    json["gameinfo"] = gameInfo;
-    json["playerinfo"] = playerInfo;
-
-    f.write(QJsonDocument(json).toJson());
-    f.write("\n");
-
-    QDataStream stream(&f);
+    QByteArray stream_data;
+    QDataStream stream(&stream_data, QIODevice::WriteOnly);
     for (const auto& states : playerStates_)
     {
         stream << static_cast<quint32>(states.size());
@@ -117,6 +106,25 @@ bool Recording::saveTo(const QDir& path)
             stream << static_cast<quint8>(state.stocks());
         }
     }
+
+    QJsonObject json;
+    json["version"] = "1.0";
+    json["date"] = gameInfo_.timeStarted().toUTC().toString();
+    json["mappinginfo"] = mappingInfo;
+    json["gameinfo"] = gameInfo;
+    json["playerinfo"] = playerInfo;
+    json["playerstates"] = QString::fromUtf8(stream_data.toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals));
+
+    QFile f(findNonExistingFileName(path));
+    if (!f.open(QIODevice::WriteOnly))
+    {/*
+        if (QMessageBox::warning(nullptr, "Failed to save recording", QString("Failed to open file for writing: ") + f.fileName() + "\n\nWould you like to save the file manually?", QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
+        {
+            QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
+        }*/
+        return false;
+    }
+    f.write(QJsonDocument(json).toJson());
 
     return true;
 }

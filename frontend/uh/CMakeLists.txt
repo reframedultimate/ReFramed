@@ -33,7 +33,7 @@ qt5_add_resources (UH_RESOURCES_GEN
 qt5_add_translation (UH_QM_FILES
     "")
 
-add_executable (ultimate-hindsight
+add_executable (ultimate-hindsight WIN32
     ${UH_SOURCES_MOC}
     ${UH_FORMS_MOC}
     ${UH_RESOURCES_GEN}
@@ -81,3 +81,30 @@ set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_RUNTIME_DIR})
 
+if (WIN32)
+	target_link_libraries (ultimate-hindsight
+		PRIVATE wsock32
+		PRIVATE ws2_32)
+endif()
+
+# output qwt dll to bin directory
+set_target_properties (qwtinternal
+	PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY ${UH_RUNTIME_DIR})
+
+###############################################################################
+# DLLs need to be copied to the runtime directory on Windows
+###############################################################################
+
+if (WIN32 OR CYGWIN)
+    add_custom_command (TARGET ultimate-hindsight POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${UH_RUNTIME_DIR}/$<CONFIG>/platforms
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${UH_RUNTIME_DIR}/$<CONFIG>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${UH_RUNTIME_DIR}/$<CONFIG>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${UH_RUNTIME_DIR}/$<CONFIG>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${UH_RUNTIME_DIR}/$<CONFIG>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${UH_RUNTIME_DIR}/$<CONFIG>/platforms
+
+        COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${UH_RUNTIME_DIR}/$<CONFIG>'"
+        VERBATIM)
+endif ()

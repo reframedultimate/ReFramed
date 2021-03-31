@@ -1083,8 +1083,8 @@ void QwtPicker::widgetMouseDoubleClickEvent( QMouseEvent *mouseEvent )
 */
 void QwtPicker::widgetWheelEvent( QWheelEvent *wheelEvent )
 {
-    if ( pickArea().contains( wheelEvent->position() ) )
-        d_data->trackerPosition = wheelEvent->position().toPoint();
+    if ( pickArea().contains( wheelEvent->pos() ) )
+        d_data->trackerPosition = wheelEvent->pos();
     else
         d_data->trackerPosition = QPoint( -1, -1 );
 

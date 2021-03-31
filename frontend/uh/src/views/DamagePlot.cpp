@@ -77,7 +77,7 @@ void DamagePlot::resetPlot(int playerCount)
     for (int i = 0; i != playerCount; ++i)
     {
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(ColorPalette::getColor(i)));
+        curve->setPen(QPen(ColorPalette::getColor(i), 2.0));
         curve->setData(new CurveData);
         curve->attach(this);
         curves_.push_back(curve);

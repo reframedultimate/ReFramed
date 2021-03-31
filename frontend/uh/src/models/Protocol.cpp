@@ -197,6 +197,10 @@ void Protocol::run()
 // ----------------------------------------------------------------------------
 void Protocol::onReceiveMatchStarted(Recording* recording)
 {
+    // Handle case where match end is not sent (should never happen but you never know)
+    if (recording_ != nullptr)
+        emit recordingEnded(recording_);
+
     recording_ = recording;
     emit recordingStarted(recording_);
 }

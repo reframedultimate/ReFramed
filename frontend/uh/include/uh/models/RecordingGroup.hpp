@@ -3,6 +3,7 @@
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include <QString>
 #include <QDir>
+#include <QVector>
 
 namespace uh {
 
@@ -21,6 +22,10 @@ public:
     bool removeFile(const QDir& pathToFile);
 
     ListenerDispatcher<RecordingGroupListener> dispatcher;
+
+private:
+    RecordingGroup() {}
+    friend class QVector<RecordingGroup>;
 
 private:
     QString name_;

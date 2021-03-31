@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <QVector>
 
 namespace uh {
 
@@ -17,6 +18,10 @@ public:
     uint16_t status() const { return status_; }
     float damage() const { return damage_; }
     uint8_t stocks() const { return stocks_; }
+
+private:
+    PlayerState() {}
+    friend class QVector<PlayerState>;
 
 private:
     float damage_;
