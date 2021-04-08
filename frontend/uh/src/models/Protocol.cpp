@@ -1,5 +1,8 @@
 #include "uh/models/Protocol.hpp"
 #include "uh/models/PlayerState.hpp"
+#include "uh/models/ActiveRecording.hpp"
+
+#include <QDebug>
 
 namespace uh {
 
@@ -20,8 +23,8 @@ Protocol::Protocol(tcp_socket socket, QObject* parent)
 {
     // These signals are used to transfer data from the listener thread to the
     // main thread
-    connect(this, SIGNAL(_receiveMatchStarted(Recording*)),
-            this, SLOT(onReceiveMatchStarted(Recording*)));
+    connect(this, SIGNAL(_receiveMatchStarted(ActiveRecording*)),
+            this, SLOT(onReceiveMatchStarted(ActiveRecording*)));
     connect(this, SIGNAL(_receivePlayerState(unsigned int, int, unsigned int, float, unsigned int)),
             this, SLOT(onReceivePlayerState(unsigned int, int, unsigned int, float, unsigned int)));
     connect(this, SIGNAL(_receiveMatchEnded()),
@@ -40,7 +43,7 @@ Protocol::~Protocol()
 
     tcp_socket_close(&socket_);
     if (recording_)
-        emit recordingEnded(recording_);
+        emit recordingEnded(recording_.data());
 }
 
 // ----------------------------------------------------------------------------
@@ -117,12 +120,8 @@ void Protocol::run()
             uint16_t stageID = (stageID_h << 8)
                              | (stageID_l << 0);
 
-            GameInfo gameInfo(stageID, QDateTime::currentDateTime());
-            gameInfo.setFormat(GameInfo::FRIENDLIES);  // TODO: Hardcode this for now, should be set according to the UI later
-
             QVector<uint8_t> fighterIDs(playerCount);
             QVector<QString> tags(playerCount);
-            QVector<PlayerInfo> playerInfos;
             entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
@@ -146,10 +145,12 @@ void Protocol::run()
                 tags[i] = tag;
             }
 
-            for (int i = 0; i < playerCount; ++i)
-                playerInfos.push_back(PlayerInfo(tags[i], fighterIDs[i]));
-
-            emit _receiveMatchStarted(new Recording(mappingInfo, gameInfo, std::move(playerInfos)));
+            emit _receiveMatchStarted(new ActiveRecording(
+                mappingInfo,
+                std::move(fighterIDs),
+                std::move(tags),
+                stageID
+            ));
             continue;
 
             fail: break;
@@ -195,14 +196,14 @@ void Protocol::run()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceiveMatchStarted(Recording* recording)
+void Protocol::onReceiveMatchStarted(ActiveRecording* recording)
 {
     // Handle case where match end is not sent (should never happen but you never know)
     if (recording_ != nullptr)
-        emit recordingEnded(recording_);
+        emit recordingEnded(recording_.data());
 
     recording_ = recording;
-    emit recordingStarted(recording_);
+    emit recordingStarted(recording_.data());
 }
 
 // ----------------------------------------------------------------------------
@@ -220,8 +221,8 @@ void Protocol::onReceiveMatchEnded()
     if (recording_ == nullptr)
         return;
 
-    emit recordingEnded(recording_);
-    recording_ = nullptr;
+    emit recordingEnded(recording_.data());
+    recording_.reset();
 }
 
 }

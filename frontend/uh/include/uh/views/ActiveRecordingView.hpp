@@ -1,11 +1,7 @@
 #pragma once
 
 #include <QWidget>
-#include "uh/listeners/RecordingListener.hpp"
-#include "uh/models/GameInfo.hpp"
-#include "uh/models/PlayerInfo.hpp"
-#include "uh/models/PlayerState.hpp"
-#include "uh/models/MappingInfo.hpp"
+#include "uh/listeners/ActiveRecordingManagerListener.hpp"
 
 class QGroupBox;
 class QLabel;
@@ -16,63 +12,48 @@ namespace Ui {
 
 namespace uh {
 
-class GameInfo;
-class MappingInfo;
-class PlayerInfo;
-class PlayerState;
+class ActiveRecordingManager;
 class DamagePlot;
-class Recording;
+class PlayerState;
 
 class ActiveRecordingView : public QWidget
-                          , public RecordingListener
+                          , public ActiveRecordingManagerListener
 {
     Q_OBJECT
 public:
-    ActiveRecordingView(QWidget* parent=nullptr);
+    ActiveRecordingView(ActiveRecordingManager* model, QWidget* parent=nullptr);
     ~ActiveRecordingView();
 
-signals:
-    void gameFormatChanged(const QString& format);
-    void gameIndexChanged(int index);
-    void player1NameChanged(const QString& name);
-    void player2NameChanged(const QString& name);
-
-public slots:
-    void setWaitingForGame();
-    void setActive();
-    void setDisconnected();
-
-    void setTimeStarted(const QDateTime& date);
-    void setStageName(const QString& stage);
-    void setPlayerCount(int count);
-    void setPlayerTag(int index, const QString& tag);
-    void setPlayerFighterName(int index, const QString& fighterName);
-
 private slots:
-    void onRecordingStarted(Recording* recording);
-    void onRecordingEnded(Recording* recording);
-
     void onComboBoxFormatIndexChanged(int index);
     void onLineEditFormatChanged(const QString& formatDesc);
     void onSpinBoxGameNumberChanged(int value);
     void onLineEditP1TextChanged(const QString& name);
     void onLineEditP2TextChanged(const QString& name);
 
+private slots:
+    void onActiveRecordingManagerConnectedToServer();
+    void onActiveRecordingManagerDisconnectedFromServer();
+
 private:
-    void onRecordingPlayerStateAdded(int playerID, const PlayerState& state);
+    void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override;
+    void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override;
+    void onActiveRecordingManagerP1NameChanged(const QString& name) override;
+    void onActiveRecordingManagerP2NameChanged(const QString& name) override;
+    void onActiveRecordingManagerFormatChanged(SetFormat format, const QString& otherFormatDesc) override;
+    void onActiveRecordingManagerSetNumberChanged(int number) override;
+    void onActiveRecordingManagerGameNumberChanged(int number) override;
+    void onActiveRecordingManagerPlayerStateAdded(int playerID, const PlayerState& state) override;
 
 private:
     Ui::ActiveRecordingView* ui_;
     DamagePlot* plot_;
-    Recording* activeRecording_ = nullptr;
-    QVector<QGroupBox*> tags_;
+    ActiveRecordingManager* model_;
+    QVector<QGroupBox*> names_;
     QVector<QLabel*> fighterName_;
     QVector<QLabel*> fighterStatus_;
     QVector<QLabel*> fighterDamage_;
     QVector<QLabel*> fighterStocks_;
-
-    QString lastP1Tag_;
-    QString lastP2Tag_;
 };
 
 }

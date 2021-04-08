@@ -17,7 +17,7 @@ public:
 public slots:
     void resetPlot(int numPlayers);
     void addPlayerDamageValue(int idx, uint32_t frame, float damage);
-    void setPlayerTag(int idx, const QString& tag);
+    void setPlayerName(int idx, const QString& tag);
     void replotAndAutoScale();
 
 private:

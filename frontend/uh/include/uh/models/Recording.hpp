@@ -2,58 +2,110 @@
 
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include "uh/models/MappingInfo.hpp"
-#include "uh/models/GameInfo.hpp"
-#include "uh/models/PlayerInfo.hpp"
-#include "uh/models/PlayerState.hpp"
+#include "uh/models/SetFormat.hpp"
 #include <QSharedData>
-#include <QDir>
 #include <QVector>
+#include <QDateTime>
 
 namespace uh {
 
-class RecordingListener;
+class PlayerState;
 
 class Recording : public QSharedData
 {
 public:
     Recording(const MappingInfo& mapping,
-              const GameInfo& gameInfo,
-              QVector<PlayerInfo>&& playerInfos);
+              QVector<uint8_t>&& playerFighterIDs,
+              QVector<QString>&& playerTags,
+              uint16_t stageID);
 
-    static Recording* load(const QString& fileName);
-
-    /*!
-     * \brief Saves this recording into the specified directory. A filename is
-     * automatically created based on metadata.
-     * \param path The path to save to.
-     * \return Returns true if the file was saved successfully, false if otherwise.
-     */
-    bool saveTo(const QDir& path);
+    bool saveAs(const QString& fileName);
 
     /*!
-     * \brief Composes a filename based on metadata, and makes sure the filename
-     * does not exist in the specified path. A game number will be inserted
-     * into the filename to ensure it can be unique.
-     * \param path A path where you'd like to save the recording to.
-     * \return Returns the absolve path + filename to a file that does not exist
-     * yet.
+     * \brief Returns information on how to map fighter/stage/state IDs to
+     * strings.
      */
-    QString findNonExistingFileName(const QDir& path);
+    const MappingInfo& mappingInfo() const { return mappingInfo_; }
 
-    void addPlayerState(int index, PlayerState&& state);
+    /*!
+     * \brief Gets the number of players
+     */
+    int playerCount() const { return static_cast<int>(playerTags_.size()); }
 
-    MappingInfo& mappingInfo() { return mappingInfo_; }
-    GameInfo& gameInfo() { return gameInfo_; }
-    PlayerInfo& playerInfo(int index) { return playerInfo_[index]; }
-    int playerCount() const { return (int)playerInfo_.size(); }
+    /*!
+     * \brief Gets the tag used by the player. This is the string that appears
+     * above the player in-game and is created when the player sets their controls.
+     * \param index Which player to get
+     */
+    const QString& playerTag(int index) const { return playerTags_[index]; }
 
-    ListenerDispatcher<RecordingListener> dispatcher;
+    /*!
+     * \brief Gets the name of the player. By default this will be the same as
+     * the tag, but many players like to create tags that are shorter or a
+     * variation of their real name. This string is their real name.
+     * Unlike tags, there is also no character limit to a player's name.
+     * \param index Which player to get
+     */
+    const QString& playerName(int index) const { return playerNames_[index]; }
 
-private:
+    /*!
+     * \brief Gets the fighter ID being used by the specified player.
+     * \param index The player to get
+     */
+    uint8_t playerFighterID(int index) const { return playerFighterIDs_[index]; }
+
+    /*!
+     * \brief Gets the stage ID being played on.
+     */
+    uint16_t stageID() const { return stageID_; }
+
+    /*!
+     * \brief Gets the current game number. Starts at 1 and counts upwards as
+     * sets progress.
+     */
+    int gameNumber() const { return gameNumber_; }
+
+    /*!
+     * \brief Gets the set number. Usually 1. This number is used to disambiguate
+     * sets where the same two players play the same characters on the same day.
+     */
+    int setNumber() const { return setNumber_; }
+
+    /*!
+     * \brief Returns the player index of the player that won.
+     */
+    int winner() const { return winner_; }
+
+    /*!
+     * \brief Gets the format of the set, @see Recording::Format
+     */
+    SetFormat format() const { return format_; }
+
+    /*!
+     * \brief Returns a string representation of the format.
+     */
+    QString formatDesc() const;
+
+    /*!
+     * \brief Gets the datetime of when the match started. This marks the first
+     * frame of gameplay, immediately after the 3-2-1-Go countdown completes.
+     * May be slightly off by a few frames depending on latency.
+     */
+    const QDateTime& timeStarted() const { return timeStarted_; }
+
+protected:
     MappingInfo mappingInfo_;
-    GameInfo gameInfo_;
-    QVector<PlayerInfo> playerInfo_;
+    QDateTime timeStarted_;
+    QVector<QString> playerTags_;
+    QVector<QString> playerNames_;
+    QVector<uint8_t> playerFighterIDs_;
     QVector<QVector<PlayerState>> playerStates_;
+    SetFormat format_ = SetFormat::FRIENDLIES;
+    QString otherFormatDesc_;
+    int gameNumber_ = 1;
+    int setNumber_ = 1;
+    int winner_ = 0;
+    uint16_t stageID_;
 };
 
 }

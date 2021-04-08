@@ -115,7 +115,7 @@ void DamagePlot::addPlayerDamageValue(int idx, uint32_t frame, float damage)
 }
 
 // ----------------------------------------------------------------------------
-void DamagePlot::setPlayerTag(int idx, const QString& tag)
+void DamagePlot::setPlayerName(int idx, const QString& tag)
 {
     curves_[idx]->setTitle(tag);
 }

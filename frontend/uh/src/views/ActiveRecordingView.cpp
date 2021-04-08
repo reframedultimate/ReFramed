@@ -1,16 +1,19 @@
+#include "uh/Util.hpp"
 #include "uh/ui_ActiveRecordingView.h"
 #include "uh/views/ActiveRecordingView.hpp"
 #include "uh/views/DamagePlot.hpp"
-#include "uh/models/Recording.hpp"
+#include "uh/models/ActiveRecordingManager.hpp"
+#include "uh/models/ActiveRecording.hpp"
 
 #include <QVBoxLayout>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-ActiveRecordingView::ActiveRecordingView(QWidget* parent)
+ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* model, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::ActiveRecordingView)
+    , model_(model)
 {
     ui_->setupUi(this);
 
@@ -21,78 +24,98 @@ ActiveRecordingView::ActiveRecordingView(QWidget* parent)
 
     ui_->lineEdit_formatOther->setVisible(false);
 
+    // Initial page should show "disconnected"
+    ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
+
     connect(ui_->comboBox_format, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboBoxFormatIndexChanged(int)));
     connect(ui_->lineEdit_formatOther, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditFormatChanged(const QString&)));
     connect(ui_->spinBox_gameNumber, SIGNAL(valueChanged(int)), this, SLOT(onSpinBoxGameNumberChanged(int)));
     connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
     connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
 
-    setActive();
+    connect(model_, SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
+    connect(model_, SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
+
+    model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 ActiveRecordingView::~ActiveRecordingView()
 {
+    model_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setWaitingForGame()
+void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
+{
+    if (static_cast<SetFormat>(index) == SetFormat::OTHER)
+        ui_->lineEdit_formatOther->setVisible(true);
+    else
+        ui_->lineEdit_formatOther->setVisible(false);
+    model_->setFormat(static_cast<SetFormat>(index), ui_->lineEdit_formatOther->text());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
+{
+    model_->setFormat(SetFormat::OTHER, formatDesc);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onSpinBoxGameNumberChanged(int value)
+{
+    model_->setGameNumber(value);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditP1TextChanged(const QString& name)
+{
+    model_->setP1Name(name);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onLineEditP2TextChanged(const QString& name)
+{
+    model_->setP2Name(name);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerConnectedToServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_waiting);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setActive()
-{
-    ui_->stackedWidget->setCurrentWidget(ui_->page_active);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::setDisconnected()
+void ActiveRecordingView::onActiveRecordingManagerDisconnectedFromServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setTimeStarted(const QDateTime& date)
+void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecording* recording)
 {
-    ui_->label_date->setText(date.toString());
-}
+    clearLayout(ui_->layout_playerInfo);
 
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::setStageName(const QString& stage)
-{
-    ui_->label_stage->setText(stage);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerCount(int count)
-{
-    // Clear layout
-    QLayoutItem* item;
-    while ((item = ui_->layout_playerInfo->takeAt(0)) != nullptr)
-    {
-        if (item->layout() != nullptr)
-            item->layout()->deleteLater();
-        if (item->widget() != nullptr)
-            item->widget()->deleteLater();
-    }
-
-    tags_.resize(count);
+    // Create individual player UIs
+    int count = recording->playerCount();
+    names_.resize(count);
     fighterName_.resize(count);
     fighterStatus_.resize(count);
     fighterDamage_.resize(count);
     fighterStocks_.resize(count);
-
-    // Create player UIs
     for (int i = 0; i != count; ++i)
     {
-        tags_[i] = new QGroupBox;
         fighterName_[i] = new QLabel();
+        const QString* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
+        fighterName_[i]->setText(fighterNameStr ? *fighterNameStr : "(Unknown Fighter)");
+
         fighterStatus_[i] = new QLabel();
         fighterDamage_[i] = new QLabel();
         fighterStocks_[i] = new QLabel();
+
+        names_[i] = new QGroupBox;
+        names_[i]->setTitle(recording->playerName(i));
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
@@ -107,103 +130,94 @@ void ActiveRecordingView::setPlayerCount(int count)
         layout->addRow(
             new QLabel("<html><head/><body><p><span style=\" font-weight:600;\">Stocks:</span></p></body></html>"),
             fighterStocks_[i]);
-
-        tags_[i]->setLayout(layout);
-        ui_->layout_playerInfo->addWidget(tags_[i]);
+        names_[i]->setLayout(layout);
+        ui_->layout_playerInfo->addWidget(names_[i]);
     }
 
+    // Set game info
+    const QString* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
+    ui_->label_stage->setText(stageStr ? *stageStr : "(Unknown Stage)");
+    ui_->label_date->setText(recording->timeStarted().toString());
+    ui_->label_timeRemaining->setText("");
+
+    // Prepare plot for new game
     plot_->resetPlot(count);
+    for (int i = 0; i != count; ++i)
+        plot_->setPlayerName(i, recording->playerName(i));
+
+    // Show active page, if not already
+    ui_->stackedWidget->setCurrentWidget(ui_->page_active);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerTag(int index, const QString& tag)
+void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording* recording)
 {
-    tags_[index]->setTitle(tag);
-    plot_->setPlayerTag(index, tag);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::setPlayerFighterName(int index, const QString& fighterName)
-{
-    fighterName_[index]->setText(fighterName);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onRecordingStarted(Recording* recording)
-{
-    setPlayerCount(recording->playerCount());
-
-    uint16_t stageID = recording->gameInfo().stageID();
-    const QString* stageStr = recording->mappingInfo().stageID.map(stageID);
-
-    setTimeStarted(recording->gameInfo().timeStarted());
-    setStageName(stageStr? *stageStr : "(Unknown Stage)");
-    setPlayerCount(recording->playerCount());
-
-    switch (recording->gameInfo().format())
+    int winner = recording->winner();
+    for (int i = 0; i != names_.size(); ++i)
     {
-    case GameInfo::FRIENDLIES: break;
+        if (i == winner)
+            names_[i]->setStyleSheet("background-color: rgb(211, 249, 216)");
+        else
+            names_[i]->setStyleSheet("background-color: rgb(249, 214, 211)");
     }
-
-    if (recording->playerCount() == 2)
-    {
-        PlayerInfo& info1 = recording->playerInfo(0);
-        PlayerInfo& info2 = recording->playerInfo(1);
-
-        // If the player tag changed from the last recording, then we should
-        // clear any custom tag entered into the textbox so the tag that got
-        // sent to us is the one that gets saved
-        if (lastP1Tag_.length() && lastP1Tag_ != info1.tag())
-            ui_->lineEdit_player1->setText("");
-        if (lastP2Tag_.length() && lastP2Tag_ != info2.tag())
-            ui_->lineEdit_player1->setText("");
-        lastP1Tag_ = info1.tag();
-        lastP2Tag_ = info2.tag();
-
-        ui_->lineEdit_player1->setPlaceholderText(info1.tag());
-        ui_->lineEdit_player2->setPlaceholderText(info2.tag());
-
-        // If custom tags are set, then those have precedence
-        if (ui_->lineEdit_player1->text().length() > 0)
-            info1.setTag(ui_->lineEdit_player1->text());
-        if (ui_->lineEdit_player2->text().length() > 0)
-            info2.setTag(ui_->lineEdit_player2->text());
-    }
-    else
-    {
-        ui_->lineEdit_player1->setPlaceholderText("");
-        ui_->lineEdit_player2->setPlaceholderText("");
-        ui_->lineEdit_player1->setEnabled(false);
-        ui_->lineEdit_player2->setEnabled(false);
-    }
-
-    for (int i = 0; i != recording->playerCount(); ++i)
-    {
-        const PlayerInfo& info = recording->playerInfo(i);
-        const QString* fighterStr = recording->mappingInfo().fighterID.map(info.fighterID());
-
-        setPlayerTag(i, info.tag());
-        setPlayerFighterName(i, fighterStr? *fighterStr : "(Unknown Fighter)");
-    }
-
-    setActive();
-    activeRecording_ = recording;
-    recording->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onRecordingEnded(Recording* recording)
+void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& name)
 {
-    recording->dispatcher.removeListener(this);
-    activeRecording_= nullptr;
+    if (0 >= names_.size())
+        return;
 
-    ui_->lineEdit_player1->setEnabled(true);
-    ui_->lineEdit_player2->setEnabled(true);
+    const QSignalBlocker blocker(ui_->lineEdit_player1);
+
+    names_[0]->setTitle(name);
+    plot_->setPlayerName(0, name);
+    ui_->lineEdit_player1->setText(name);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onRecordingPlayerStateAdded(int playerID, const PlayerState& state)
+void ActiveRecordingView::onActiveRecordingManagerP2NameChanged(const QString& name)
 {
+    if (1 >= names_.size())
+        return;
+
+    const QSignalBlocker blocker(ui_->lineEdit_player2);
+
+    names_[1]->setTitle(name);
+    plot_->setPlayerName(1, name);
+    ui_->lineEdit_player2->setText(name);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerFormatChanged(SetFormat format, const QString& otherFormatDesc)
+{
+    const QSignalBlocker blocker1(ui_->comboBox_format);
+    const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
+
+    ui_->comboBox_format->setCurrentIndex(static_cast<int>(format));
+
+    if (format == SetFormat::OTHER)
+        ui_->lineEdit_formatOther->setText(otherFormatDesc);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerSetNumberChanged(int number)
+{
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerGameNumberChanged(int number)
+{
+    const QSignalBlocker blocker2(ui_->spinBox_gameNumber);
+    ui_->spinBox_gameNumber->setValue(number);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int playerID, const PlayerState& state)
+{
+    if (playerID >= fighterStatus_.size())
+        return;
+
     fighterStatus_[playerID]->setText(QString::number(state.status()));
     fighterDamage_[playerID]->setText(QString::number(state.damage()));
     fighterStocks_[playerID]->setText(QString::number(state.stocks()));
@@ -212,61 +226,6 @@ void ActiveRecordingView::onRecordingPlayerStateAdded(int playerID, const Player
 
     plot_->addPlayerDamageValue(playerID, state.frame(), state.damage());
     plot_->replotAndAutoScale();
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
-{
-    if (index == GameInfo::OTHER)
-        ui_->lineEdit_formatOther->setVisible(true);
-    else
-        ui_->lineEdit_formatOther->setVisible(false);
-
-    if (index > GameInfo::OTHER)
-        return;
-    if (activeRecording_ == nullptr)
-        return;
-
-    if (index == GameInfo::OTHER)
-        activeRecording_->gameInfo().setFormat(static_cast<GameInfo::Format>(index), ui_->lineEdit_formatOther->text());
-    else
-        activeRecording_->gameInfo().setFormat(static_cast<GameInfo::Format>(index));
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
-{
-    if (activeRecording_ == nullptr)
-        return;
-    activeRecording_->gameInfo().setFormat(activeRecording_->gameInfo().format(), ui_->lineEdit_formatOther->text());
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onSpinBoxGameNumberChanged(int value)
-{
-    if (activeRecording_ == nullptr)
-        return;
-    activeRecording_->gameInfo().setGameNumber(value);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditP1TextChanged(const QString& name)
-{
-    if (activeRecording_ == nullptr)
-        return;
-    if (activeRecording_->playerCount() != 2)
-        return;
-    activeRecording_->playerInfo(0).setTag(name);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditP2TextChanged(const QString& name)
-{
-    if (activeRecording_ == nullptr)
-        return;
-    if (activeRecording_->playerCount() != 2)
-        return;
-    activeRecording_->playerInfo(1).setTag(name);
 }
 
 }

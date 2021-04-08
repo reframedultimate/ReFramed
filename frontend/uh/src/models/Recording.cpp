@@ -1,4 +1,3 @@
-#include "uh/listeners/RecordingListener.hpp"
 #include "uh/models/Recording.hpp"
 #include "uh/models/PlayerState.hpp"
 #include <QFile>
@@ -13,29 +12,30 @@ namespace uh {
 
 // ----------------------------------------------------------------------------
 Recording::Recording(const MappingInfo& mapping,
-                     const GameInfo& gameInfo,
-                     QVector<PlayerInfo>&& playerInfos)
+                     QVector<uint8_t>&& playerFighterIDs,
+                     QVector<QString>&& playerTags,
+                     uint16_t stageID)
     : mappingInfo_(mapping)
-    , gameInfo_(gameInfo)
-    , playerInfo_(playerInfos)
-    , playerStates_(playerInfos.size())
+    , timeStarted_(QDateTime::currentDateTime())
+    , playerTags_(playerTags)
+    , playerNames_(playerTags)
+    , playerFighterIDs_(playerFighterIDs)
+    , playerStates_(playerTags.size())
+    , stageID_(stageID)
 {
+    assert(playerTags_.size() == playerNames_.size());
+    assert(playerTags_.size() == playerFighterIDs_.size());
+    assert(playerStates_.size() == playerFighterIDs_.size());
 }
 
 // ----------------------------------------------------------------------------
-Recording* Recording::load(const QString& fileName)
-{
-    return nullptr;
-}
-
-// ----------------------------------------------------------------------------
-bool Recording::saveTo(const QDir& path)
+bool Recording::saveAs(const QString& fileName)
 {
     QJsonObject gameInfo;
-    gameInfo["stageid"] = gameInfo_.stageID();
-    gameInfo["date"] = gameInfo_.timeStarted().toUTC().toString();
-    gameInfo["format"] = gameInfo_.formatDesc();
-    gameInfo["number"] = gameInfo_.gameNumber();
+    gameInfo["stageid"] = stageID_;
+    gameInfo["date"] = timeStarted_.toUTC().toString();
+    gameInfo["format"] = setFormatDesc(format_, otherFormatDesc_);
+    gameInfo["number"] = gameNumber_;
 
     QJsonObject fighterStatusMapping;
     const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
@@ -85,11 +85,12 @@ bool Recording::saveTo(const QDir& path)
     mappingInfo["stageid"] = stageIDMapping;
 
     QJsonArray playerInfo;
-    for (const auto& info : playerInfo_)
+    for (int i = 0; i < playerCount(); ++i)
     {
         QJsonObject player;
-        player["tag"] = info.tag();
-        player["fighterid"] = info.fighterID();
+        player["tag"] = playerTags_[i];
+        player["name"] = playerNames_[i];
+        player["fighterid"] = playerFighterIDs_[i];
         playerInfo.append(player);
     }
 
@@ -109,13 +110,12 @@ bool Recording::saveTo(const QDir& path)
 
     QJsonObject json;
     json["version"] = "1.0";
-    json["date"] = gameInfo_.timeStarted().toUTC().toString();
     json["mappinginfo"] = mappingInfo;
     json["gameinfo"] = gameInfo;
     json["playerinfo"] = playerInfo;
     json["playerstates"] = QString::fromUtf8(stream_data.toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals));
 
-    QFile f(findNonExistingFileName(path));
+    QFile f(fileName);
     if (!f.open(QIODevice::WriteOnly))
     {/*
         if (QMessageBox::warning(nullptr, "Failed to save recording", QString("Failed to open file for writing: ") + f.fileName() + "\n\nWould you like to save the file manually?", QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
@@ -130,46 +130,9 @@ bool Recording::saveTo(const QDir& path)
 }
 
 // ----------------------------------------------------------------------------
-QString Recording::findNonExistingFileName(const QDir &path)
+QString Recording::formatDesc() const
 {
-    QString date = gameInfo_.timeStarted().toString("yyyy-MM-dd");
-    QString formatDesc = gameInfo_.formatDesc();
-    QStringList playerList;
-    for (const auto& info : playerInfo_)
-    {
-        const QString* fighterName = mappingInfo_.fighterID.map(info.fighterID());
-        if (fighterName)
-            playerList.append(info.tag() + " (" + *fighterName + ")");
-        else
-            playerList.append(info.tag());
-    }
-    QString players = playerList.join(" vs ");
-
-    QString fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
-    for (int i = 2; QFileInfo::exists(path.absoluteFilePath(fileName)); ++i)
-    {
-        if (gameInfo_.format() == GameInfo::FRIENDLIES)
-            fileName = date + " - " + formatDesc + " - " + players + " Game " + QString::number(i) + ".uhr";
-        else
-            fileName = date + " - " + formatDesc + "(" + i + ")" + " - " + players + " Game " + QString::number(gameInfo_.gameNumber()) + ".uhr";
-    }
-
-    return path.absoluteFilePath(fileName);
-}
-
-// ----------------------------------------------------------------------------
-void Recording::addPlayerState(int index, PlayerState&& state)
-{
-    // Only add a new state if the previous one was different
-    if (playerStates_[index].count() == 0 || playerStates_[index].back().status() != state.status())
-    {
-        playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&RecordingListener::onRecordingPlayerStateAdded, index, playerStates_[index].back());
-    }
-    else
-    {
-        dispatcher.dispatch(&RecordingListener::onRecordingPlayerStateAdded, index, state);
-    }
+    return setFormatDesc(format_, otherFormatDesc_);
 }
 
 }

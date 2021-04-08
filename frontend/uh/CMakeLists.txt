@@ -11,6 +11,7 @@ include (GNUInstallDirs)
 find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
+    "include/uh/models/ActiveRecordingManager.hpp"
     "include/uh/models/Protocol.hpp"
     "include/uh/plot/DeltaPlotPicker.hpp"
     "include/uh/plot/Panner.hpp"
@@ -39,17 +40,20 @@ add_executable (ultimate-hindsight WIN32
     ${UH_RESOURCES_GEN}
     ${UH_QM_FILES}
     "src/main.cpp"
+    "src/Util.cpp"
+    "src/models/ActiveRecordingManager.cpp"
+    "src/models/ActiveRecording.cpp"
     "src/models/DecisionGraph.cpp"
     "src/models/FighterStatusMapping.cpp"
     "src/models/FighterIDMapping.cpp"
-    "src/models/GameInfo.cpp"
     "src/models/MappingInfo.cpp"
-    "src/models/PlayerInfo.cpp"
     "src/models/PlayerState.cpp"
     "src/models/Protocol.cpp"
     "src/models/Recording.cpp"
     "src/models/RecordingGroup.cpp"
     "src/models/RecordingManager.cpp"
+    "src/models/SavedRecording.cpp"
+    "src/models/SetFormat.cpp"
     "src/models/Settings.cpp"
     "src/models/StageIDMapping.cpp"
     "src/platform/tcp_socket.c"

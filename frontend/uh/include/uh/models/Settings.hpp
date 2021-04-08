@@ -1,11 +1,11 @@
 #pragma once
 
 #include <QString>
-#include <QSharedData>
+#include <QDir>
 
 namespace uh {
 
-class Settings : public QSharedData
+class Settings
 {
 public:
     Settings();
@@ -13,6 +13,7 @@ public:
 
     QString connectIPAddress = "";
     uint16_t connectPort = 42069;
+    QDir activeRecordingSavePath = QDir(".");
 
 private:
     void writeSettings();

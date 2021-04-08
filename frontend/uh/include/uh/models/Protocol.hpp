@@ -1,12 +1,12 @@
 #pragma once
 
 #include "uh/platform/tcp_socket.h"
-#include "uh/models/Recording.hpp"
+#include "uh/models/ActiveRecording.hpp"
 
 #include <QVector>
 #include <QThread>
 #include <QMutex>
-#include <QSharedDataPointer>
+#include <QExplicitlySharedDataPointer>
 
 namespace uh {
 
@@ -38,18 +38,21 @@ public:
     ~Protocol();
 
 signals:
-    void _receiveMatchStarted(Recording* newRecording);
+    // emitted from the listener thread
+    void _receiveMatchStarted(ActiveRecording* newRecording);
     void _receivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
     void _receiveMatchEnded();
 
-    void recordingStarted(Recording* recording);
-    void recordingEnded(Recording* recording);
-    void serverClosedConnection();
-
 private slots:
-    void onReceiveMatchStarted(Recording* newRecording);
+    // catch signals from listener thread so we have them in the main thread
+    void onReceiveMatchStarted(ActiveRecording* newRecording);
     void onReceivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
     void onReceiveMatchEnded();
+
+signals:
+    void recordingStarted(ActiveRecording* recording);
+    void recordingEnded(ActiveRecording* recording);
+    void serverClosedConnection();
 
 private:
     void run() override;
@@ -57,7 +60,7 @@ private:
 private:
     tcp_socket socket_;
     QMutex mutex_;
-    QSharedDataPointer<Recording> recording_;
+    QExplicitlySharedDataPointer<ActiveRecording> recording_;
     bool requestShutdown_ = false;
 };
 

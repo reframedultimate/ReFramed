@@ -1,5 +1,5 @@
-#include "uh/models/Protocol.hpp"
 #include "uh/models/Settings.hpp"
+#include "uh/models/ActiveRecordingManager.hpp"
 #include "uh/ui_MainWindow.h"
 #include "uh/views/ActiveRecordingView.hpp"
 #include "uh/views/CategoryView.hpp"
@@ -22,12 +22,14 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->setupUi(this);
 
     categoryView_ = new CategoryView;
-    activeRecordingView_ = new ActiveRecordingView;
+
+    activeRecordingManager_ = new ActiveRecordingManager(settings_.get());
+    ActiveRecordingView* activeRecordingView = new ActiveRecordingView(activeRecordingManager_);
     RecordingView* recordingView = new RecordingView;
 
     mainView_ = new QStackedWidget;
     mainView_->addWidget(recordingView);
-    mainView_->addWidget(activeRecordingView_);
+    mainView_->addWidget(activeRecordingView);
     setCentralWidget(mainView_);
 
     QDockWidget* categoryDock = new QDockWidget(this);
@@ -35,6 +37,9 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setWidget(categoryView_);
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
+
+    connect(activeRecordingManager_, SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
+    connect(activeRecordingManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
 
     connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
 
@@ -68,48 +73,15 @@ void MainWindow::setStateDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::transferSocketOwnership(tcp_socket socket)
+void MainWindow::onActiveRecordingManagerConnectedToServer()
 {
-    protocol_.reset(new Protocol(socket));
-
-    // Connect all protocol signals to active recording view so it updates as
-    // data comes in
-    activeRecordingView_->setWaitingForGame();
-    connect(protocol_.get(), SIGNAL(recordingStarted(Recording*)), activeRecordingView_, SLOT(onRecordingStarted(Recording*)));
-    connect(protocol_.get(), SIGNAL(recordingEnded(Recording*)), activeRecordingView_, SLOT(onRecordingEnded(Recording*)));
-    connect(protocol_.get(), SIGNAL(serverClosedConnection()), activeRecordingView_, SLOT(setDisconnected()));
-
-    // If the protocol loses connection for any reason, we have to delete it and
-    // reset the UI
-    connect(protocol_.get(), SIGNAL(serverClosedConnection()), this, SLOT(onServerConnectionLost()));
-
-    // For now, we're the ones to save a recording when it completes
-    connect(protocol_.get(), SIGNAL(recordingEnded(Recording*)), this, SLOT(onProtocolRecordingEnded(Recording*)));
-
     setStateConnected();
-
-    protocol_->start();
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onProtocolRecordingEnded(Recording* recording)
+void MainWindow::onActiveRecordingManagerDisconnectedFromServer()
 {
-    recording->saveTo(QDir("."));
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onServerConnectionLost()
-{
-    // Let the listening thread join and close the underlying socket
     setStateDisconnected();
-    protocol_.reset();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onDisconnectActionTriggered()
-{
-    // Closes the socket and joins the listening thread
-    protocol_.reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -129,11 +101,22 @@ static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup)
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
-    ConnectView* c = new ConnectView(settings_, this, Qt::Popup | Qt::Dialog);
-    c->setWindowModality(Qt::WindowModal);
+    ConnectView* c = new ConnectView(settings_.get(), Qt::Popup | Qt::Dialog);
+
+    connect(c, SIGNAL(connectRequest(const QString&,uint16_t)), activeRecordingManager_, SLOT(tryConnectToServer(const QString&, uint16_t)));
+    connect(activeRecordingManager_, SIGNAL(connectedToServer()), c, SLOT(close()));
+    connect(activeRecordingManager_, SIGNAL(failedToConnectToServer()), c, SLOT(setConnectFailed()));
+
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
     c->setGeometry(calculatePopupGeometry(this, c));
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onDisconnectActionTriggered()
+{
+    // Should also trigger onActiveRecordingManagerDisconnectedFromServer()
+    activeRecordingManager_->disconnectFromServer();
 }
 
 // ----------------------------------------------------------------------------
