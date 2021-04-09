@@ -11,15 +11,15 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-Recording::Recording(const MappingInfo& mapping,
+Recording::Recording(MappingInfo&& mapping,
                      QVector<uint8_t>&& playerFighterIDs,
                      QVector<QString>&& playerTags,
                      uint16_t stageID)
-    : mappingInfo_(mapping)
+    : mappingInfo_(std::move(mapping))
     , timeStarted_(QDateTime::currentDateTime())
     , playerTags_(playerTags)
     , playerNames_(playerTags)
-    , playerFighterIDs_(playerFighterIDs)
+    , playerFighterIDs_(std::move(playerFighterIDs))
     , playerStates_(playerTags.size())
     , stageID_(stageID)
 {
@@ -31,16 +31,30 @@ Recording::Recording(const MappingInfo& mapping,
 // ----------------------------------------------------------------------------
 bool Recording::saveAs(const QString& fileName)
 {
+    QSet<uint16_t> usedStatuses;
+    for (const auto& player : playerStates_)
+        for (const auto& state : player)
+            usedStatuses.insert(state.status());
+
+    QSet<uint8_t> usedFighterIDs;
+    for (const auto& fighterID : playerFighterIDs_)
+        usedFighterIDs.insert(fighterID);
+
     QJsonObject gameInfo;
     gameInfo["stageid"] = stageID_;
     gameInfo["date"] = timeStarted_.toUTC().toString();
     gameInfo["format"] = setFormatDesc(format_, otherFormatDesc_);
     gameInfo["number"] = gameNumber_;
+    gameInfo["set"] = setNumber_;
 
-    QJsonObject fighterStatusMapping;
+    QJsonObject fighterBaseStatusMapping;
     const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
     for (auto it = baseEnumNames.begin(); it != baseEnumNames.end(); ++it)
     {
+        // Skip saving enums that aren't actually used in the set of player states
+        if (usedStatuses.contains(it.key()) == false)
+            continue;
+
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
@@ -48,15 +62,24 @@ bool Recording::saveAs(const QString& fileName)
         mappings.append(it.value());
         mappings.append(/*shortName ? *shortName :*/ QString());
         mappings.append(/*customName ? *customName :*/ QString());
-        fighterStatusMapping[QString::number(it.key())] = mappings;
+        fighterBaseStatusMapping[QString::number(it.key())] = mappings;
     }
 
+    QJsonObject fighterSpecificStatusMapping;
     const auto& specificEnumNames = mappingInfo_.fighterStatus.fighterSpecificEnumNames();
     for (auto fighter = specificEnumNames.begin(); fighter != specificEnumNames.end(); ++fighter)
     {
+        // Skip saving enums for fighters that aren't being used
+        if (usedFighterIDs.contains(fighter.key()) == false)
+            continue;
+
         QJsonObject specificMapping;
         for (auto it = fighter.value().begin(); it != fighter.value().end(); ++it)
         {
+            // Skip saving enums that aren't actually used in the set of player states
+            if (usedStatuses.contains(it.key()) == false)
+                continue;
+
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
@@ -66,18 +89,26 @@ bool Recording::saveAs(const QString& fileName)
             mappings.append(/*customName ? *customName :*/ QString());
             specificMapping[QString::number(it.key())] = mappings;
         }
-        fighterStatusMapping[QString::number(fighter.key())] = specificMapping;
+
+        if (specificMapping.size() > 0)
+            fighterSpecificStatusMapping[QString::number(fighter.key())] = specificMapping;
     }
+
+    QJsonObject fighterStatusMapping;
+    fighterStatusMapping["base"] = fighterBaseStatusMapping;
+    fighterStatusMapping["specific"] = fighterSpecificStatusMapping;
 
     QJsonObject fighterIDMapping;
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
     for (auto it = fighterIDMap.begin(); it != fighterIDMap.end(); ++it)
-        fighterIDMapping[QString::number(it.key())] = it.value();
+        if (usedFighterIDs.contains(it.key()))
+            fighterIDMapping[QString::number(it.key())] = it.value();
 
     QJsonObject stageIDMapping;
     const auto& stageIDMap = mappingInfo_.stageID.get();
     for (auto it = stageIDMap.begin(); it != stageIDMap.end(); ++it)
-        stageIDMapping[QString::number(it.key())] = it.value();
+        if (it.key() == stageID_)
+            stageIDMapping[QString::number(it.key())] = it.value();
 
     QJsonObject mappingInfo;
     mappingInfo["fighterstatus"] = fighterStatusMapping;
@@ -109,7 +140,7 @@ bool Recording::saveAs(const QString& fileName)
     }
 
     QJsonObject json;
-    json["version"] = "1.0";
+    json["version"] = "1.1";
     json["mappinginfo"] = mappingInfo;
     json["gameinfo"] = gameInfo;
     json["playerinfo"] = playerInfo;

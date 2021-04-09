@@ -21,5 +21,7 @@ enum class SetFormat : unsigned char
  */
 QString setFormatDesc(SetFormat format, const QString& otherDesc);
 
+SetFormat descToSetFormat(const QString& desc);
+
 }
 

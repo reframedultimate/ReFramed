@@ -14,7 +14,7 @@ class PlayerState;
 class Recording : public QSharedData
 {
 public:
-    Recording(const MappingInfo& mapping,
+    Recording(MappingInfo&& mapping,
               QVector<uint8_t>&& playerFighterIDs,
               QVector<QString>&& playerTags,
               uint16_t stageID);

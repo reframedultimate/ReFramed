@@ -11,7 +11,7 @@ class PlayerState;
 class ActiveRecording : public Recording
 {
 public:
-    ActiveRecording(const MappingInfo& mapping,
+    ActiveRecording(MappingInfo&& mapping,
                     QVector<uint8_t>&& playerFighterIDs,
                     QVector<QString>&& playerTags,
                     uint16_t stageID);

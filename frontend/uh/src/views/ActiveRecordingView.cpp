@@ -163,6 +163,12 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording
 }
 
 // ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerRecordingSaved(const QString& fileName)
+{
+    (void)fileName;
+}
+
+// ----------------------------------------------------------------------------
 void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& name)
 {
     if (0 >= names_.size())
@@ -203,6 +209,7 @@ void ActiveRecordingView::onActiveRecordingManagerFormatChanged(SetFormat format
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onActiveRecordingManagerSetNumberChanged(int number)
 {
+    (void)number;
 }
 
 // ----------------------------------------------------------------------------

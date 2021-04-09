@@ -180,7 +180,9 @@ void ActiveRecordingManager::onProtocolRecordingEnded(ActiveRecording* recording
 {
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingEnded, recording);
 
-    recording->saveAs(savePath_.absoluteFilePath(composeFileName(recording)));
+    QString fileName = savePath_.absoluteFilePath(composeFileName(recording));
+    recording->saveAs(fileName);
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingSaved, fileName);
 
     format_ = recording->format();
     gameNumber_ = recording->gameNumber();

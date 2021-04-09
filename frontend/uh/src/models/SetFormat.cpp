@@ -20,4 +20,17 @@ QString setFormatDesc(SetFormat format, const QString& otherDesc)
     return "";
 }
 
+// ----------------------------------------------------------------------------
+SetFormat descToSetFormat(const QString& desc)
+{
+    if (desc == "Friendlies") return SetFormat::FRIENDLIES;
+    if (desc == "Practice")   return SetFormat::PRACTICE;
+    if (desc == "Bo3")        return SetFormat::BO3;
+    if (desc == "Bo5")        return SetFormat::BO5;
+    if (desc == "Bo7")        return SetFormat::BO7;
+    if (desc == "FT5")        return SetFormat::FT5;
+    if (desc == "FT10")       return SetFormat::FT10;
+    return SetFormat::OTHER;
+}
+
 }

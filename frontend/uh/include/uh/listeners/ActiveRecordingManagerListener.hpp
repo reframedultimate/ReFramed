@@ -13,6 +13,7 @@ class ActiveRecordingManagerListener
 public:
     virtual void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) = 0;
     virtual void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) = 0;
+    virtual void onActiveRecordingManagerRecordingSaved(const QString& fileName) = 0;
 
     virtual void onActiveRecordingManagerP1NameChanged(const QString& name) = 0;
     virtual void onActiveRecordingManagerP2NameChanged(const QString& name) = 0;

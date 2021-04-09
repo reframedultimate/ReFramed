@@ -146,7 +146,7 @@ void Protocol::run()
             }
 
             emit _receiveMatchStarted(new ActiveRecording(
-                mappingInfo,
+                MappingInfo(mappingInfo),
                 std::move(fighterIDs),
                 std::move(tags),
                 stageID

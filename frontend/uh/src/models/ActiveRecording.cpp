@@ -12,12 +12,12 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-ActiveRecording::ActiveRecording(const MappingInfo& mapping,
+ActiveRecording::ActiveRecording(MappingInfo&& mapping,
                                  QVector<uint8_t>&& playerFighterIDs,
                                  QVector<QString>&& playerTags,
                                  uint16_t stageID)
     : Recording(
-          mapping,
+          std::move(mapping),
           std::move(playerFighterIDs),
           std::move(playerTags),
           stageID
