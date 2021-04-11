@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QExplicitlySharedDataPointer>
 
+class QTreeWidgetItem;
+
 namespace Ui {
     class RecordingView;
 }
@@ -28,6 +30,7 @@ private slots:
     // This is still broken, see
     // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
     void addDamagePlotToUI();
+    void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
     void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
@@ -39,6 +42,12 @@ private:
 private:
     Ui::RecordingView* ui_;
     DamagePlot* plot_;
+    QTreeWidgetItem* gameInfo_;
+    QTreeWidgetItem* stageIDMappings_;
+    QTreeWidgetItem* fighterIDMappings_;
+    QTreeWidgetItem* baseStatusIDMappings_;
+    QTreeWidgetItem* specificStatusIDMappings_;
+    QVector<QTreeWidgetItem*> playerData_;
     QExplicitlySharedDataPointer<Recording> recording_;
 };
 

@@ -16,6 +16,9 @@ RecordingGroupView::RecordingGroupView(QWidget* parent)
     , ui_(new Ui::RecordingGroupView)
 {
     ui_->setupUi(this);
+    ui_->splitter->setStretchFactor(0, 0);
+    ui_->splitter->setStretchFactor(1, 1);
+    ui_->splitter->setSizes({600});
     ui_->layout_data->addWidget(recordingView_);
 
     connect(ui_->listWidget_recordings, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onCurrentItemChanged(QListWidgetItem*,QListWidgetItem*)));
@@ -38,7 +41,7 @@ void RecordingGroupView::setRecordingGroup(RecordingGroup* group)
 
     for (const auto& fileName : group->absFilePathList())
         ui_->listWidget_recordings->addItem(fileName.completeBaseName());
-    ui_->listWidget_recordings->sortItems(Qt::AscendingOrder);
+    ui_->listWidget_recordings->sortItems(Qt::DescendingOrder);
 }
 
 // ----------------------------------------------------------------------------
@@ -75,7 +78,7 @@ void RecordingGroupView::onRecordingGroupNameChanged(const QString& name)
 void RecordingGroupView::onRecordingGroupFileAdded(const QFileInfo& absPathToFile)
 {
     ui_->listWidget_recordings->addItem(absPathToFile.completeBaseName());
-    ui_->listWidget_recordings->sortItems(Qt::AscendingOrder);
+    ui_->listWidget_recordings->sortItems(Qt::DescendingOrder);
 }
 
 // ----------------------------------------------------------------------------

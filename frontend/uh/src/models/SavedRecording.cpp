@@ -197,10 +197,20 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
         uint16_t status = it.key().toUInt(&ok);
         if (!ok)
             return nullptr;
-        if (it.value().isString() == false)
+        if (it.value().isArray() == false)
             return nullptr;
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, it.value().toString());
+        QJsonArray arr = it.value().toArray();
+        if (arr.size() != 3)
+            return nullptr;
+        if (arr[0].isString() == false || arr[1].isString() == false || arr[2].isString() == false)
+            return nullptr;
+
+        QString enumName   = arr[0].toString();
+        /*QString shortName  = arr[1].toString();
+        QString customName = arr[2].toString();*/
+
+        mappingInfo.fighterStatus.addBaseEnumName(status, enumName);
     }
     for (auto fighterit = jsonFighterSpecificStatusMapping.begin(); fighterit != jsonFighterSpecificStatusMapping.end(); ++fighterit)
     {
@@ -217,10 +227,20 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
             uint16_t status = it.key().toUInt(&ok);
             if (!ok)
                 return nullptr;
-            if (it.value().isString() == false)
+            if (it.value().isArray() == false)
                 return nullptr;
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, it.value().toString());
+            QJsonArray arr = it.value().toArray();
+            if (arr.size() != 3)
+                return nullptr;
+            if (arr[0].isString() == false || arr[1].isString() == false || arr[2].isString() == false)
+                return nullptr;
+
+            QString enumName   = arr[0].toString();
+            /*QString shortName  = arr[1].toString();
+            QString customName = arr[2].toString();*/
+
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, enumName);
         }
     }
 

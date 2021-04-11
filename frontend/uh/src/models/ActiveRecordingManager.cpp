@@ -180,9 +180,9 @@ void ActiveRecordingManager::onProtocolRecordingEnded(ActiveRecording* recording
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingEnded, recording);
 
     // Save recording
-    QString fileName = savePath_.absoluteFilePath(composeFileName(recording));
-    recording->saveAs(fileName);
-    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingSaved, fileName);
+    QFileInfo fileInfo(savePath_, composeFileName(recording));
+    recording->saveAs(fileInfo.absoluteFilePath());
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingSaved, fileInfo);
 
     // In between recordings (when players are in the menu) there is no active
     // recording, but it's still possible to edit the names/format/game number/etc

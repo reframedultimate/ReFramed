@@ -158,9 +158,9 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingSaved(const QString& fileName)
+void ActiveRecordingView::onActiveRecordingManagerRecordingSaved(const QFileInfo& absPathToFile)
 {
-    (void)fileName;
+    (void)absPathToFile;
 }
 
 // ----------------------------------------------------------------------------

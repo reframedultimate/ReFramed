@@ -48,7 +48,7 @@ private slots:
     void onDisconnectActionTriggered();
 
 private:
-    void onActiveRecordingManagerRecordingSaved(const QString& fileName) override;
+    void onActiveRecordingManagerRecordingSaved(const QFileInfo& fileName) override;
 
     void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override { (void)recording; }
     void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override { (void)recording; }

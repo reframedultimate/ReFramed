@@ -138,8 +138,9 @@ void MainWindow::onDisconnectActionTriggered()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveRecordingManagerRecordingSaved(const QString& fileName)
+void MainWindow::onActiveRecordingManagerRecordingSaved(const QFileInfo& absPathToFile)
 {
+    recordingManager_->allRecordingGroup()->addFile(absPathToFile);
 }
 
 // ----------------------------------------------------------------------------

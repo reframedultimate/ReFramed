@@ -44,45 +44,15 @@
             <string/>
            </property>
           </column>
-          <item>
-           <property name="text">
-            <string>Header</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Value Mappings</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>Stage IDs</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Fighter IDs</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Status IDs</string>
-            </property>
-           </item>
-          </item>
-          <item>
-           <property name="text">
-            <string>Player Data</string>
-           </property>
-          </item>
          </widget>
          <widget class="QStackedWidget" name="stackedWidget">
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
-          <widget class="QWidget" name="page_header">
+          <widget class="QWidget" name="page_gameInfo">
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="QTableWidget" name="tableWidget_2">
+             <widget class="QTableWidget" name="tableWidget_gameInfo">
               <column>
                <property name="text">
                 <string>Key</string>
@@ -133,10 +103,10 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="page_statusIDs">
+          <widget class="QWidget" name="page_baseStatusIDs">
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="QTableWidget" name="tableWidget">
+             <widget class="QTableWidget" name="tableWidget_baseStatusIDs">
               <column>
                <property name="text">
                 <string>Status ID</string>
@@ -144,10 +114,60 @@
               </column>
               <column>
                <property name="text">
-                <string>Meaning</string>
+                <string>Enum Name</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Short Name</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Custom Name</string>
                </property>
               </column>
              </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_specificStatusIDs">
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <widget class="QTableWidget" name="tableWidget_specificStatusIDs">
+              <column>
+               <property name="text">
+                <string>Fighter ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Status ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Enum Name</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Short Name</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Custom Name</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_playerData">
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QStackedWidget" name="stackedWidget_playerData"/>
             </item>
            </layout>
           </widget>

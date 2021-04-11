@@ -1,19 +1,20 @@
 #pragma once
 
-#include "uh/models/SetFormat.hpp"
-#include <QString>
+class QString;
+class QFileInfo;
 
 namespace uh {
 
 class ActiveRecording;
 class PlayerState;
+class SetFormat;
 
 class ActiveRecordingManagerListener
 {
 public:
     virtual void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) = 0;
     virtual void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) = 0;
-    virtual void onActiveRecordingManagerRecordingSaved(const QString& fileName) = 0;
+    virtual void onActiveRecordingManagerRecordingSaved(const QFileInfo& fileName) = 0;
 
     // We re-propagate all RecordingListener events because ActiveRecordingManager
     // allows you to change these properties even when there is no active recording
