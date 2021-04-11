@@ -161,4 +161,10 @@ bool Recording::saveAs(const QString& fileName)
     return true;
 }
 
+// ----------------------------------------------------------------------------
+const QVector<PlayerState>& Recording::playerStates(int player) const
+{
+    return playerStates_[player];
+}
+
 }

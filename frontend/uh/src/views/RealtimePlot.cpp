@@ -235,12 +235,6 @@ bool RealtimePlot::event(QEvent* event)
 }
 
 // ----------------------------------------------------------------------------
-QSize RealtimePlot::sizeHint() const
-{
-    return QSize(1, 1);
-}
-
-// ----------------------------------------------------------------------------
 void RealtimePlot::onPickerActivated(bool activated, const QPointF& point)
 {
     if(activated)

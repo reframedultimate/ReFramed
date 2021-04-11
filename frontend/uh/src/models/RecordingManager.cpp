@@ -78,7 +78,7 @@ void RecordingManager::scanForRecordings()
     allGroup->removeAllFiles();
     for (const auto& recdir : recordingDirectories_)
         for (const auto& file : recdir.entryList({"*.uhr", "*.UHR"}, QDir::Files))
-            allGroup->addFile(recdir.absoluteFilePath(file));
+            allGroup->addFile(QFileInfo(recdir, file));
 }
 
 // ----------------------------------------------------------------------------
@@ -95,13 +95,13 @@ void RecordingManager::onRecordingGroupNameChanged(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileAdded(const QDir& name)
+void RecordingManager::onRecordingGroupFileAdded(const QFileInfo& name)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileRemoved(const QDir& name)
+void RecordingManager::onRecordingGroupFileRemoved(const QFileInfo& name)
 {
 
 }

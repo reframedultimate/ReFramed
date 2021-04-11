@@ -14,9 +14,9 @@ RecordingView::RecordingView(QWidget *parent)
 {
     ui_->setupUi(this);
 
-    QVBoxLayout* layout = new QVBoxLayout;
-    layout->addWidget(plot_);
-    ui_->tab_damage->setLayout(layout);
+    // This is still broken, see
+    // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
+    QMetaObject::invokeMethod(this, "addDamagePlotToUI", Qt::QueuedConnection);
 }
 
 // ----------------------------------------------------------------------------
@@ -37,9 +37,22 @@ void RecordingView::setRecording(Recording* recording)
     int count = recording_->playerCount();
     plot_->resetPlot(count);
     for (int i = 0; i != count; ++i)
+    {
         plot_->setPlayerName(i, recording_->playerName(i));
+        for (const auto& state : recording_->playerStates(i))
+            plot_->addPlayerDamageValue(i, state.frame(), state.damage());
+    }
+    plot_->autoScale();
 
     recording_->dispatcher.addListener(this);
+}
+
+// ----------------------------------------------------------------------------
+void RecordingView::addDamagePlotToUI()
+{
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(plot_);
+    ui_->tab_damage->setLayout(layout);
 }
 
 // ----------------------------------------------------------------------------

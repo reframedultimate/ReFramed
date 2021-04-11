@@ -24,6 +24,11 @@ public:
 public slots:
     void setRecording(Recording* recording);
 
+private slots:
+    // This is still broken, see
+    // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
+    void addDamagePlotToUI();
+
 private:
     void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
     void onActiveRecordingSetNumberChanged(int number) override;

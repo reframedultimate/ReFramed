@@ -2,7 +2,7 @@
 
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include <QString>
-#include <QDir>
+#include <QFileInfo>
 #include <QVector>
 
 namespace uh {
@@ -14,12 +14,16 @@ class RecordingGroup
 public:
     RecordingGroup(const QString& name);
 
-    const QVector<QDir>& fileList() const;
+    /*!
+     * \brief The name of this group. It is unique among all groups.
+     */
     const QString& name() const;
 
+    const QVector<QFileInfo>& absFilePathList() const;
+
     void setName(const QString& name);
-    void addFile(const QDir& pathToFile);
-    bool removeFile(const QDir& pathToFile);
+    void addFile(const QFileInfo& absPathToFile);
+    bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
 
     ListenerDispatcher<RecordingGroupListener> dispatcher;
@@ -30,7 +34,7 @@ private:
 
 private:
     QString name_;
-    QVector<QDir> fileList_;
+    QVector<QFileInfo> fileList_;
 };
 
 }

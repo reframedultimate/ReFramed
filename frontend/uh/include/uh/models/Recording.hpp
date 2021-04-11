@@ -89,6 +89,8 @@ public:
      */
     const QDateTime& timeStarted() const { return timeStarted_; }
 
+    const QVector<PlayerState>& playerStates(int player) const;
+
     ListenerDispatcher<RecordingListener> dispatcher;
 
 protected:

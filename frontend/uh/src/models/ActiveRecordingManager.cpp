@@ -179,10 +179,15 @@ void ActiveRecordingManager::onProtocolRecordingEnded(ActiveRecording* recording
 {
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingEnded, recording);
 
+    // Save recording
     QString fileName = savePath_.absoluteFilePath(composeFileName(recording));
     recording->saveAs(fileName);
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingSaved, fileName);
 
+    // In between recordings (when players are in the menu) there is no active
+    // recording, but it's still possible to edit the names/format/game number/etc
+    // so copy the data out of the recording here so it can be edited, and when
+    // a new recording starts again we copy the data into the recording.
     format_ = recording->format();
     gameNumber_ = recording->gameNumber();
     setNumber_ = recording->setNumber();

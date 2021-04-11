@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QJsonValue>
 #include <QDataStream>
 
@@ -56,21 +57,21 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
         return nullptr;
     if (json.contains("gameinfo") == false || json["gameinfo"].isObject() == false)
         return nullptr;
-    if (json.contains("playerinfo") == false || json["playerinfo"].isObject() == false)
+    if (json.contains("playerinfo") == false || json["playerinfo"].isArray() == false)
         return nullptr;
     if (json.contains("playerstates") == false || json["playerstates"].isString() == false)
         return nullptr;
 
     const QJsonObject jsonMappingInfo = json["mappinginfo"].toObject();
     const QJsonObject jsonGameInfo = json["gameinfo"].toObject();
-    const QJsonObject jsonPlayerInfo = json["playerinfo"].toObject();
+    const QJsonArray jsonPlayerInfo = json["playerinfo"].toArray();
     const QString jsonPlayerStates = json["playerstates"].toString();
 
-    if (jsonMappingInfo.contains("fighterstatus") == false || json["fighterstatus"].isObject() == false)
+    if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].isObject() == false)
         return nullptr;
-    if (jsonMappingInfo.contains("fighterid") == false || json["fighterid"].isObject() == false)
+    if (jsonMappingInfo.contains("fighterid") == false || jsonMappingInfo["fighterid"].isObject() == false)
         return nullptr;
-    if (jsonMappingInfo.contains("stageid") == false || json["stageid"].isObject() == false)
+    if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].isObject() == false)
         return nullptr;
 
     MappingInfo mappingInfo;
@@ -106,9 +107,9 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
 
     QVector<uint8_t> playerFighterIDs;
     QVector<QString> playerTags;
-    for (const auto& infoValue : jsonPlayerInfo)
+    for (const auto& infoItem : jsonPlayerInfo)
     {
-        const QJsonObject info = infoValue.toObject();
+        const QJsonObject info = infoItem.toObject();
         if (info.contains("fighterid") == false || info["fighterid"].isDouble() == false)
             return nullptr;
         if (info.contains("tag") == false || info["tag"].isString() == false)
@@ -142,8 +143,8 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
     QDataStream stream(&stream_data, QIODevice::ReadOnly);
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        quint32 count; stream >> count;
-        for (quint32 i = 0; i < count; ++i)
+        quint32 frameCount; stream >> frameCount;
+        for (quint32 f = 0; f < frameCount; ++f)
         {
             quint32 frame;  stream >> frame;
             quint16 status; stream >> status;
@@ -163,21 +164,21 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
         return nullptr;
     if (json.contains("gameinfo") == false || json["gameinfo"].isObject() == false)
         return nullptr;
-    if (json.contains("playerinfo") == false || json["playerinfo"].isObject() == false)
+    if (json.contains("playerinfo") == false || json["playerinfo"].isArray() == false)
         return nullptr;
     if (json.contains("playerstates") == false || json["playerstates"].isString() == false)
         return nullptr;
 
     const QJsonObject jsonMappingInfo = json["mappinginfo"].toObject();
     const QJsonObject jsonGameInfo = json["gameinfo"].toObject();
-    const QJsonObject jsonPlayerInfo = json["playerinfo"].toObject();
+    const QJsonArray jsonPlayerInfo = json["playerinfo"].toArray();
     const QString jsonPlayerStates = json["playerstates"].toString();
 
-    if (jsonMappingInfo.contains("fighterstatus") == false || json["fighterstatus"].isObject() == false)
+    if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].isObject() == false)
         return nullptr;
-    if (jsonMappingInfo.contains("fighterid") == false || json["fighterid"].isObject() == false)
+    if (jsonMappingInfo.contains("fighterid") == false || jsonMappingInfo["fighterid"].isObject() == false)
         return nullptr;
-    if (jsonMappingInfo.contains("stageid") == false || json["stageid"].isObject() == false)
+    if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].isObject() == false)
         return nullptr;
 
     MappingInfo mappingInfo;
@@ -287,8 +288,8 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
     QDataStream stream(&stream_data, QIODevice::ReadOnly);
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        quint32 count; stream >> count;
-        for (quint32 i = 0; i < count; ++i)
+        quint32 frameCount; stream >> frameCount;
+        for (quint32 f = 0; f < frameCount; ++f)
         {
             quint32 frame;  stream >> frame;
             quint16 status; stream >> status;

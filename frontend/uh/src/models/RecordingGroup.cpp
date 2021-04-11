@@ -10,7 +10,7 @@ RecordingGroup::RecordingGroup(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-const QVector<QDir>& RecordingGroup::fileList() const
+const QVector<QFileInfo>& RecordingGroup::absFilePathList() const
 {
     return fileList_;
 }
@@ -29,20 +29,20 @@ void RecordingGroup::setName(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroup::addFile(const QDir& pathToFile)
+void RecordingGroup::addFile(const QFileInfo& absPathToFile)
 {
-    fileList_.push_back(pathToFile);
-    dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, pathToFile);
+    fileList_.push_back(absPathToFile);
+    dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, absPathToFile);
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingGroup::removeFile(const QDir& pathToFile)
+bool RecordingGroup::removeFile(const QFileInfo& absPathToFile)
 {
     for (auto it = fileList_.begin(); it != fileList_.end(); ++it)
-        if (*it == pathToFile)
+        if (*it == absPathToFile)
         {
             fileList_.erase(it);
-            dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, pathToFile);
+            dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, absPathToFile);
             return true;
         }
     return false;

@@ -69,8 +69,8 @@ private:
     void scanForRecordings();
 
     void onRecordingGroupNameChanged(const QString& name) override;
-    void onRecordingGroupFileAdded(const QDir& name) override;
-    void onRecordingGroupFileRemoved(const QDir& name) override;
+    void onRecordingGroupFileAdded(const QFileInfo& name) override;
+    void onRecordingGroupFileRemoved(const QFileInfo& name) override;
 
 private:
     Settings* settings_;
