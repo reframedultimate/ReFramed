@@ -9,9 +9,9 @@ class RecordingGroup;
 class RecordingManagerListener
 {
 public:
-    virtual void onRecordingManagerDefaultRecordingLocationChanged(const QDir& name) = 0;
-    virtual void onRecordingManagerGroupAdded(const RecordingGroup& group) = 0;
-    virtual void onRecordingManagerGroupRemoved(const RecordingGroup& group) = 0;
+    virtual void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) = 0;
+    virtual void onRecordingManagerGroupAdded(RecordingGroup* group) = 0;
+    virtual void onRecordingManagerGroupRemoved(RecordingGroup* group) = 0;
 };
 
 }

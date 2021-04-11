@@ -20,6 +20,7 @@ public:
     void setName(const QString& name);
     void addFile(const QDir& pathToFile);
     bool removeFile(const QDir& pathToFile);
+    void removeAllFiles();
 
     ListenerDispatcher<RecordingGroupListener> dispatcher;
 

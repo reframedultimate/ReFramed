@@ -48,4 +48,10 @@ bool RecordingGroup::removeFile(const QDir& pathToFile)
     return false;
 }
 
+// ----------------------------------------------------------------------------
+void RecordingGroup::removeAllFiles()
+{
+    fileList_.clear();
+}
+
 }

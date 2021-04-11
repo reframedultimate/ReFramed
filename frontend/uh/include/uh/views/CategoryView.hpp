@@ -1,15 +1,21 @@
 #pragma once
 
+#include "uh/listeners/RecordingManagerListener.hpp"
 #include "uh/models/CategoryType.hpp"
 #include <QTreeWidget>
 
 namespace uh {
 
+class RecordingManager;
+
 class CategoryView : public QTreeWidget
+                   , public RecordingManagerListener
 {
     Q_OBJECT
 public:
-    explicit CategoryView(QWidget* parent=nullptr);
+    explicit CategoryView(RecordingManager* recordingManager, QWidget* parent=nullptr);
+
+    void setActiveRecordingViewDisabled(bool enable);
 
 signals:
     /*!
@@ -22,6 +28,12 @@ private slots:
     void onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
+    void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
+    void onRecordingManagerGroupAdded(RecordingGroup* group) override;
+    void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
+
+private:
+    RecordingManager* recordingManager_;
     QTreeWidgetItem* analysisCategoryItem_;
     QTreeWidgetItem* recordingGroupsCategoryItem_;
     QTreeWidgetItem* recordingSourcesCategoryItem_;

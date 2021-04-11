@@ -1,7 +1,9 @@
 #pragma once
 
 #include "uh/models/CategoryType.hpp"
+#include "uh/listeners/ActiveRecordingManagerListener.hpp"
 #include <QMainWindow>
+#include <QDir>
 
 class QStackedWidget;
 class QTreeWidgetItem;
@@ -16,10 +18,11 @@ class ActiveRecordingManager;
 class CategoryView;
 class ConnectView;
 class Protocol;
-class Recording;
+class RecordingManager;
 class Settings;
 
 class MainWindow : public QMainWindow
+                 , public ActiveRecordingManagerListener
 {
     Q_OBJECT
 
@@ -29,6 +32,8 @@ public:
 
 private slots:
     void onCategoryChanged(CategoryType category);
+    void negotiateDefaultRecordingLocation();
+    void populateCategories();
 
 private:
     // Changes the UI to reflect connected/disconnected state
@@ -42,12 +47,15 @@ private slots:
     void onDisconnectActionTriggered();
 
 private:
-    Ui::MainWindow* ui_;
+    void onActiveRecordingManagerRecordingSaved(const QString& fileName) override;
+
+private:
+    QScopedPointer<Settings> settings_;
+    QScopedPointer<ActiveRecordingManager> activeRecordingManager_;
+    QScopedPointer<RecordingManager> recordingManager_;
     CategoryView* categoryView_;
     QStackedWidget* mainView_;
-    ActiveRecordingManager* activeRecordingManager_;
-    QScopedPointer<Settings> settings_;
-    QScopedPointer<Recording> previousRecording_;
+    Ui::MainWindow* ui_;
 };
 
 }

@@ -8,7 +8,7 @@ namespace uh {
 // ----------------------------------------------------------------------------
 Settings::Settings()
 {
-    QString pathStr = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString pathStr = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
     QDir path(pathStr);
     if(path.exists() == false)
         return;
@@ -18,10 +18,6 @@ Settings::Settings()
 // ----------------------------------------------------------------------------
 Settings::~Settings()
 {
-    QString pathStr = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir path(pathStr);
-    if(path.exists() == false)
-        QDir().mkdir(pathStr);
 }
 
 }
