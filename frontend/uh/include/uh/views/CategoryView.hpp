@@ -24,6 +24,11 @@ signals:
      */
     void categoryChanged(CategoryType category);
 
+    /*!
+     * \brief When the user clicks on a recording group entry
+     */
+    void recordingGroupSelected(RecordingGroup* group);
+
 private slots:
     void onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 

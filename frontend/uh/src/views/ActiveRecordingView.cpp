@@ -1,7 +1,7 @@
 #include "uh/Util.hpp"
 #include "uh/ui_ActiveRecordingView.h"
 #include "uh/views/ActiveRecordingView.hpp"
-#include "uh/views/DamagePlot.hpp"
+#include "uh/views/RecordingView.hpp"
 #include "uh/models/ActiveRecordingManager.hpp"
 #include "uh/models/ActiveRecording.hpp"
 
@@ -10,18 +10,14 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* model, QWidget* parent)
+ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* manager, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::ActiveRecordingView)
-    , model_(model)
+    , activeRecordingManager_(manager)
+    , recordingView_(new RecordingView)
 {
     ui_->setupUi(this);
-
-    plot_ = new DamagePlot;
-    QVBoxLayout* layout = new QVBoxLayout;
-    layout->addWidget(plot_);
-    ui_->tab_damagePlot->setLayout(layout);
-
+    ui_->layout_recordingView->addWidget(recordingView_);
     ui_->lineEdit_formatOther->setVisible(false);
 
     // Initial page should show "disconnected"
@@ -33,51 +29,52 @@ ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* model, QWidget*
     connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
     connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
 
-    connect(model_, SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
-    connect(model_, SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
+    connect(activeRecordingManager_, SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
+    connect(activeRecordingManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
 
-    model_->dispatcher.addListener(this);
+    activeRecordingManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 ActiveRecordingView::~ActiveRecordingView()
 {
-    model_->dispatcher.removeListener(this);
+    activeRecordingManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
 {
-    if (static_cast<SetFormat>(index) == SetFormat::OTHER)
+    if (static_cast<SetFormat::Type>(index) == SetFormat::OTHER)
         ui_->lineEdit_formatOther->setVisible(true);
     else
         ui_->lineEdit_formatOther->setVisible(false);
-    model_->setFormat(static_cast<SetFormat>(index), ui_->lineEdit_formatOther->text());
+    activeRecordingManager_->setFormat(SetFormat(static_cast<SetFormat::Type>(index), ui_->lineEdit_formatOther->text()));
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    model_->setFormat(SetFormat::OTHER, formatDesc);
+    activeRecordingManager_->setFormat(SetFormat(SetFormat::OTHER, formatDesc));
+    ui_->comboBox_format->setCurrentIndex(static_cast<int>(SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onSpinBoxGameNumberChanged(int value)
 {
-    model_->setGameNumber(value);
+    activeRecordingManager_->setGameNumber(value);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditP1TextChanged(const QString& name)
 {
-    model_->setP1Name(name);
+    activeRecordingManager_->setP1Name(name);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditP2TextChanged(const QString& name)
 {
-    model_->setP2Name(name);
+    activeRecordingManager_->setP2Name(name);
 }
 
 // ----------------------------------------------------------------------------
@@ -140,10 +137,8 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecordi
     ui_->label_date->setText(recording->timeStarted().toString());
     ui_->label_timeRemaining->setText("");
 
-    // Prepare plot for new game
-    plot_->resetPlot(count);
-    for (int i = 0; i != count; ++i)
-        plot_->setPlayerName(i, recording->playerName(i));
+    // Prepare recording view for new game
+    recordingView_->setRecording(recording);
 
     // Show active page, if not already
     ui_->stackedWidget->setCurrentWidget(ui_->page_active);
@@ -177,7 +172,6 @@ void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& n
     const QSignalBlocker blocker(ui_->lineEdit_player1);
 
     names_[0]->setTitle(name);
-    plot_->setPlayerName(0, name);
     ui_->lineEdit_player1->setText(name);
 }
 
@@ -190,20 +184,19 @@ void ActiveRecordingView::onActiveRecordingManagerP2NameChanged(const QString& n
     const QSignalBlocker blocker(ui_->lineEdit_player2);
 
     names_[1]->setTitle(name);
-    plot_->setPlayerName(1, name);
     ui_->lineEdit_player2->setText(name);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerFormatChanged(SetFormat format, const QString& otherFormatDesc)
+void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const SetFormat& format)
 {
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
 
-    ui_->comboBox_format->setCurrentIndex(static_cast<int>(format));
+    ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
 
-    if (format == SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(otherFormatDesc);
+    if (format.type() == SetFormat::OTHER)
+        ui_->lineEdit_formatOther->setText(format.description());
 }
 
 // ----------------------------------------------------------------------------
@@ -220,19 +213,16 @@ void ActiveRecordingView::onActiveRecordingManagerGameNumberChanged(int number)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int playerID, const PlayerState& state)
+void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state)
 {
-    if (playerID >= fighterStatus_.size())
+    if (player >= fighterStatus_.size())
         return;
 
-    fighterStatus_[playerID]->setText(QString::number(state.status()));
-    fighterDamage_[playerID]->setText(QString::number(state.damage()));
-    fighterStocks_[playerID]->setText(QString::number(state.stocks()));
+    fighterStatus_[player]->setText(QString::number(state.status()));
+    fighterDamage_[player]->setText(QString::number(state.damage()));
+    fighterStocks_[player]->setText(QString::number(state.stocks()));
 
     ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(state.frame() / 60.0).toString());
-
-    plot_->addPlayerDamageValue(playerID, state.frame(), state.damage());
-    plot_->replotAndAutoScale();
 }
 
 }

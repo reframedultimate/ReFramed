@@ -61,13 +61,13 @@ public:
 
     RecordingGroup* getOrCreateRecordingGroup(const QString& name);
 
-    void rescanForRecordings();
-
     void setDefaultRecordingSourceDirectory(const QDir& path);
 
     ListenerDispatcher<RecordingManagerListener> dispatcher;
 
 private:
+    void scanForRecordings();
+
     void onRecordingGroupNameChanged(const QString& name) override;
     void onRecordingGroupFileAdded(const QDir& name) override;
     void onRecordingGroupFileRemoved(const QDir& name) override;

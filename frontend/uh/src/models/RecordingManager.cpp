@@ -16,6 +16,8 @@ RecordingManager::RecordingManager(Settings* settings)
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
     recordingGroups_.insert({"All", std::make_unique<RecordingGroup>("All")});
+
+    scanForRecordings();
 }
 
 // ----------------------------------------------------------------------------
@@ -70,7 +72,7 @@ RecordingGroup* RecordingManager::getOrCreateRecordingGroup(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::rescanForRecordings()
+void RecordingManager::scanForRecordings()
 {
     RecordingGroup* allGroup = allRecordingGroup();
     allGroup->removeAllFiles();

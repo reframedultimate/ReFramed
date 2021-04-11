@@ -18,6 +18,7 @@ class ActiveRecordingManager;
 class CategoryView;
 class ConnectView;
 class Protocol;
+class RecordingGroupView;
 class RecordingManager;
 class Settings;
 
@@ -49,11 +50,21 @@ private slots:
 private:
     void onActiveRecordingManagerRecordingSaved(const QString& fileName) override;
 
+    void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override { (void)recording; }
+    void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override { (void)recording; }
+    void onActiveRecordingManagerP1NameChanged(const QString& name) override { (void)name; }
+    void onActiveRecordingManagerP2NameChanged(const QString& name) override { (void)name; }
+    void onActiveRecordingManagerSetNumberChanged(int number) override { (void)number; }
+    void onActiveRecordingManagerGameNumberChanged(int number) override { (void)number; }
+    void onActiveRecordingManagerFormatChanged(const SetFormat& format) override { (void)format; }
+    void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override { (void)player; (void)state; }
+
 private:
     QScopedPointer<Settings> settings_;
     QScopedPointer<ActiveRecordingManager> activeRecordingManager_;
     QScopedPointer<RecordingManager> recordingManager_;
     CategoryView* categoryView_;
+    RecordingGroupView* recordingGroupView_;
     QStackedWidget* mainView_;
     Ui::MainWindow* ui_;
 };

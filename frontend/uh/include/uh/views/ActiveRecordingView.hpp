@@ -13,7 +13,7 @@ namespace Ui {
 namespace uh {
 
 class ActiveRecordingManager;
-class DamagePlot;
+class RecordingView;
 class PlayerState;
 
 class ActiveRecordingView : public QWidget
@@ -21,7 +21,7 @@ class ActiveRecordingView : public QWidget
 {
     Q_OBJECT
 public:
-    ActiveRecordingView(ActiveRecordingManager* model, QWidget* parent=nullptr);
+    ActiveRecordingView(ActiveRecordingManager* manager, QWidget* parent=nullptr);
     ~ActiveRecordingView();
 
 private slots:
@@ -39,17 +39,18 @@ private:
     void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override;
     void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override;
     void onActiveRecordingManagerRecordingSaved(const QString& fileName) override;
+
     void onActiveRecordingManagerP1NameChanged(const QString& name) override;
     void onActiveRecordingManagerP2NameChanged(const QString& name) override;
-    void onActiveRecordingManagerFormatChanged(SetFormat format, const QString& otherFormatDesc) override;
     void onActiveRecordingManagerSetNumberChanged(int number) override;
     void onActiveRecordingManagerGameNumberChanged(int number) override;
-    void onActiveRecordingManagerPlayerStateAdded(int playerID, const PlayerState& state) override;
+    void onActiveRecordingManagerFormatChanged(const SetFormat& format) override;
+    void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override;
 
 private:
     Ui::ActiveRecordingView* ui_;
-    DamagePlot* plot_;
-    ActiveRecordingManager* model_;
+    ActiveRecordingManager* activeRecordingManager_;
+    RecordingView* recordingView_;
     QVector<QGroupBox*> names_;
     QVector<QLabel*> fighterName_;
     QVector<QLabel*> fighterStatus_;

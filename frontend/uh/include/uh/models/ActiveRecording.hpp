@@ -1,11 +1,10 @@
 #pragma once
 
-#include "uh/listeners/ListenerDispatcher.hpp"
 #include "uh/models/Recording.hpp"
 
 namespace uh {
 
-class ActiveRecordingListener;
+class RecordingListener;
 class PlayerState;
 
 class ActiveRecording : public Recording
@@ -19,10 +18,8 @@ public:
     void setPlayerName(int index, const QString& name);
     void setGameNumber(int number);
     void setSetNumber(int number);
-    void setFormat(SetFormat format, const QString& otherFormatDesc="");
+    void setFormat(const SetFormat& format);
     void addPlayerState(int index, PlayerState&& state);
-
-    ListenerDispatcher<ActiveRecordingListener> dispatcher;
 };
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uh/listeners/ListenerDispatcher.hpp"
-#include "uh/listeners/ActiveRecordingListener.hpp"
+#include "uh/listeners/RecordingListener.hpp"
 #include "uh/models/SetFormat.hpp"
 #include "uh/models/ActiveRecording.hpp"  // MOC requires this because of smart pointers
 #include "uh/models/Protocol.hpp"  // MOC requires this because of smart pointers
@@ -21,14 +21,14 @@ class ActiveRecordingManagerListener;
  * and manages set information and saving recordings to files as they come in.
  */
 class ActiveRecordingManager : public QObject
-                             , public ActiveRecordingListener
+                             , public RecordingListener
 {
     Q_OBJECT
 
 public:
     ActiveRecordingManager(Settings* settings, QObject* parent=nullptr);
 
-    void setFormat(SetFormat format, const QString& otherFormatDesc);
+    void setFormat(const SetFormat& format);
     void setP1Name(const QString& name);
     void setP2Name(const QString& name);
     void setGameNumber(int number);
@@ -56,6 +56,10 @@ private:
     QString composeFileName(const ActiveRecording* recording) const;
 
 private:
+    void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
+    void onActiveRecordingSetNumberChanged(int number) override;
+    void onActiveRecordingGameNumberChanged(int number) override;
+    void onActiveRecordingFormatChanged(const SetFormat& format) override;
     void onActiveRecordingPlayerStateAdded(int player, const PlayerState& state) override;
 
 private:
@@ -65,8 +69,7 @@ private:
     QDir savePath_;
     QString p1Name_;
     QString p2Name_;
-    QString otherFormatDesc_;
-    SetFormat format_ = SetFormat::FRIENDLIES;
+    SetFormat format_;
     int gameNumber_ = 1;
     int setNumber_ = 1;
 };

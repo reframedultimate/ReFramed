@@ -10,6 +10,7 @@
 namespace uh {
 
 class PlayerState;
+class RecordingListener;
 
 class Recording : public QSharedData
 {
@@ -82,16 +83,13 @@ public:
     SetFormat format() const { return format_; }
 
     /*!
-     * \brief Returns a string representation of the format.
-     */
-    QString formatDesc() const;
-
-    /*!
      * \brief Gets the datetime of when the match started. This marks the first
      * frame of gameplay, immediately after the 3-2-1-Go countdown completes.
      * May be slightly off by a few frames depending on latency.
      */
     const QDateTime& timeStarted() const { return timeStarted_; }
+
+    ListenerDispatcher<RecordingListener> dispatcher;
 
 protected:
     MappingInfo mappingInfo_;
@@ -100,8 +98,7 @@ protected:
     QVector<QString> playerNames_;
     QVector<uint8_t> playerFighterIDs_;
     QVector<QVector<PlayerState>> playerStates_;
-    SetFormat format_ = SetFormat::FRIENDLIES;
-    QString otherFormatDesc_;
+    SetFormat format_;
     int gameNumber_ = 1;
     int setNumber_ = 1;
     int winner_ = 0;

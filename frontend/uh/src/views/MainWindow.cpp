@@ -6,6 +6,7 @@
 #include "uh/views/CategoryView.hpp"
 #include "uh/views/ConnectView.hpp"
 #include "uh/views/MainWindow.hpp"
+#include "uh/views/RecordingGroupView.hpp"
 #include "uh/views/RecordingView.hpp"
 
 #include <QStackedWidget>
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget* parent)
     , activeRecordingManager_(new ActiveRecordingManager(settings_.get()))
     , recordingManager_(new RecordingManager(settings_.get()))
     , categoryView_(new CategoryView(recordingManager_.get()))
+    , recordingGroupView_(new RecordingGroupView)
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -33,6 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
     RecordingView* recordingView = new RecordingView;
 
     mainView_->addWidget(recordingView);
+    mainView_->addWidget(recordingGroupView_);
     mainView_->addWidget(activeRecordingView);
     setCentralWidget(mainView_);
 
@@ -46,6 +49,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(activeRecordingManager_.get(), SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
 
     connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
+    connect(categoryView_, SIGNAL(recordingGroupSelected(RecordingGroup*)), recordingGroupView_, SLOT(setRecordingGroup(RecordingGroup*)));
 
     connect(ui_->action_connect, SIGNAL(triggered(bool)), this, SLOT(onConnectActionTriggered()));
     connect(ui_->action_disconnect, SIGNAL(triggered(bool)), this, SLOT(onDisconnectActionTriggered()));
@@ -65,7 +69,7 @@ MainWindow::~MainWindow()
 void MainWindow::setStateConnected()
 {
     // Be (hopefully) helpful and switch to the active recording view
-    mainView_->setCurrentIndex(1);
+    mainView_->setCurrentIndex(2);
 
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
@@ -136,8 +140,6 @@ void MainWindow::onDisconnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onActiveRecordingManagerRecordingSaved(const QString& fileName)
 {
-    (void)fileName;
-    recordingManager_->rescanForRecordings();
 }
 
 // ----------------------------------------------------------------------------
@@ -146,10 +148,10 @@ void MainWindow::onCategoryChanged(CategoryType category)
     switch (category)
     {
         case CategoryType::ANALYSIS          : mainView_->setCurrentIndex(0); break;
-        case CategoryType::RECORDING_GROUPS  : break;
+        case CategoryType::RECORDING_GROUPS  : mainView_->setCurrentIndex(1); break;
         case CategoryType::RECORDING_SOURCES : break;
         case CategoryType::VIDEO_SOURCES     : break;
-        case CategoryType::ACTIVE_RECORDING  : mainView_->setCurrentIndex(1); break;
+        case CategoryType::ACTIVE_RECORDING  : mainView_->setCurrentIndex(2); break;
         case CategoryType::TOP_LEVEL : /* should never happen */ break;
     }
 }

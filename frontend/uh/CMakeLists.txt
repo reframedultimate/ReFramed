@@ -4,10 +4,6 @@ project ("uh-application"
 
 include (GNUInstallDirs)
 
-#find_package (Qt5Widgets REQUIRED)
-#find_package (Qt5Gui REQUIRED)
-#find_package (Qt5Network REQUIRED)
-#find_package (Qt5LinguistTools REQUIRED)
 find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
@@ -23,10 +19,12 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/views/DamagePlot.hpp"
     "include/uh/views/MainWindow.hpp"
     "include/uh/views/RealtimePlot.hpp"
+    "include/uh/views/RecordingGroupView.hpp"
     "include/uh/views/RecordingView.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
     "forms/ConnectView.ui"
+    "forms/RecordingGroupView.ui"
     "forms/RecordingView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (UH_RESOURCES_GEN
@@ -69,6 +67,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/ConnectView.cpp"
     "src/views/DamagePlot.cpp"
     "src/views/RealtimePlot.cpp"
+    "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight

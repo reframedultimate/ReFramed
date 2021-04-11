@@ -9,24 +9,23 @@ namespace uh {
 ActiveRecordingManager::ActiveRecordingManager(Settings* settings, QObject *parent)
     : QObject(parent)
     , savePath_(settings->activeRecordingSavePath)
+    , format_(SetFormat::FRIENDLIES)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingManager::setFormat(SetFormat format, const QString& otherFormatDesc)
+void ActiveRecordingManager::setFormat(const SetFormat& format)
 {
     if (activeRecording_)
     {
-        activeRecording_->setFormat(format, otherFormatDesc);
+        activeRecording_->setFormat(format);
     }
     else
     {
         format_ = format;
-        if (static_cast<SetFormat>(format) == SetFormat::OTHER)
-            otherFormatDesc_ = otherFormatDesc;
     }
 
-    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, format, otherFormatDesc);
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
@@ -136,7 +135,7 @@ void ActiveRecordingManager::onProtocolRecordingStarted(ActiveRecording* recordi
 {
     // first off, copy the data we've stored from the UI into the new recording
     // so comparing previous recordings is consistent
-    recording->setFormat(format_, otherFormatDesc_);
+    recording->setFormat(format_);
     recording->setGameNumber(gameNumber_);
     recording->setSetNumber(setNumber_);
     if (recording->playerCount() == 2)
@@ -165,9 +164,9 @@ void ActiveRecordingManager::onProtocolRecordingStarted(ActiveRecording* recordi
     recording->dispatcher.addListener(this);
     activeRecording_ = recording;
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingStarted, recording);
-    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, recording->format(), recording->formatDesc());
-    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, recording->gameNumber());
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerSetNumberChanged, recording->setNumber());
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, recording->gameNumber());
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, recording->format());
     if (recording->playerCount() == 2)
     {
         dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, recording->playerName(0));
@@ -192,8 +191,6 @@ void ActiveRecordingManager::onProtocolRecordingEnded(ActiveRecording* recording
         p1Name_ = recording->playerName(0);
         p2Name_ = recording->playerName(1);
     }
-    if (format_ == SetFormat::OTHER)
-        otherFormatDesc_ = recording->formatDesc();
 
     recording->dispatcher.removeListener(this);
     pastRecordings_.push_back(QExplicitlySharedDataPointer<ActiveRecording>(recording));
@@ -217,9 +214,9 @@ QString ActiveRecordingManager::composeFileName(const ActiveRecording* recording
     QString players = playerList.join(" vs ");
 
     if (recording->setNumber() == 1)
-        return date + " - " + recording->formatDesc() + " - " + players + " Game " + QString::number(recording->gameNumber()) + ".uhr";
+        return date + " - " + recording->format().description() + " - " + players + " Game " + QString::number(recording->gameNumber()) + ".uhr";
 
-    return date + " - " + recording->formatDesc() + " (" + QString::number(recording->setNumber()) + ") - " + players + " Game " + QString::number(recording->gameNumber()) + ".uhr";
+    return date + " - " + recording->format().description() + " (" + QString::number(recording->setNumber()) + ") - " + players + " Game " + QString::number(recording->gameNumber()) + ".uhr";
 }
 
 // ----------------------------------------------------------------------------
@@ -249,7 +246,7 @@ bool ActiveRecordingManager::shouldStartNewSet(const ActiveRecording* recording)
     }
 
     // Format might have changed
-    if (prev->format() != recording->format())
+    if (prev->format().type() != recording->format().type())
         return true;
 
     // tally up wins for each player
@@ -257,7 +254,7 @@ bool ActiveRecordingManager::shouldStartNewSet(const ActiveRecording* recording)
     for (const auto& rec : pastRecordings_)
         win[rec->winner()]++;
 
-    switch (recording->format())
+    switch (recording->format().type())
     {
         case SetFormat::BO3: {
             if (win[0] >= 2 || win[1] >= 2)
@@ -298,7 +295,7 @@ void ActiveRecordingManager::findUniqueGameAndSetNumbers(ActiveRecording* record
 {
     while (QFileInfo::exists(savePath_.absoluteFilePath(composeFileName(recording))))
     {
-        switch (format_)
+        switch (format_.type())
         {
             case SetFormat::FRIENDLIES:
             case SetFormat::PRACTICE:
@@ -311,6 +308,36 @@ void ActiveRecordingManager::findUniqueGameAndSetNumbers(ActiveRecording* record
                 break;
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onActiveRecordingPlayerNameChanged(int player, const QString& name)
+{
+    if (activeRecording_->playerCount() == 2)
+    {
+        if (player == 0)
+            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, name);
+        else
+            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, name);
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onActiveRecordingSetNumberChanged(int number)
+{
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerSetNumberChanged, number);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onActiveRecordingGameNumberChanged(int number)
+{
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, number);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onActiveRecordingFormatChanged(const SetFormat& format)
+{
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-#include "uh/listeners/ActiveRecordingListener.hpp"
+#include "uh/listeners/RecordingListener.hpp"
 #include "uh/models/ActiveRecording.hpp"
 #include "uh/models/PlayerState.hpp"
 #include <QFile>
@@ -29,26 +29,28 @@ ActiveRecording::ActiveRecording(MappingInfo&& mapping,
 void ActiveRecording::setPlayerName(int index, const QString& name)
 {
     playerNames_[index] = name;
+    dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerNameChanged, index, name);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecording::setGameNumber(int number)
 {
     gameNumber_ = number;
+    dispatcher.dispatch(&RecordingListener::onActiveRecordingGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecording::setSetNumber(int number)
 {
     setNumber_ = number;
+    dispatcher.dispatch(&RecordingListener::onActiveRecordingSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecording::setFormat(SetFormat format, const QString& otherFormatDesc)
+void ActiveRecording::setFormat(const SetFormat& format)
 {
     format_ = format;
-    if (format == SetFormat::OTHER)
-        otherFormatDesc_ = otherFormatDesc;
+    dispatcher.dispatch(&RecordingListener::onActiveRecordingFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
@@ -89,7 +91,7 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
         // of gameplay
         timeStarted_ = QDateTime::currentDateTime();
         playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&ActiveRecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
         return;
     }
 
@@ -97,12 +99,12 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     if (playerStates_[index].back().status() != state.status())
     {
         playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&ActiveRecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
     }
     else
     {
         // The UI still cares about every frame so dispatch event even if it wasn't added
-        dispatcher.dispatch(&ActiveRecordingListener::onActiveRecordingPlayerStateAdded, index, state);
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, state);
     }
 }
 

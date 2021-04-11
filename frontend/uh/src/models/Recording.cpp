@@ -21,6 +21,7 @@ Recording::Recording(MappingInfo&& mapping,
     , playerNames_(playerTags)
     , playerFighterIDs_(std::move(playerFighterIDs))
     , playerStates_(playerTags.size())
+    , format_(SetFormat::FRIENDLIES)
     , stageID_(stageID)
 {
     assert(playerTags_.size() == playerNames_.size());
@@ -43,7 +44,7 @@ bool Recording::saveAs(const QString& fileName)
     QJsonObject gameInfo;
     gameInfo["stageid"] = stageID_;
     gameInfo["date"] = timeStarted_.toUTC().toString();
-    gameInfo["format"] = setFormatDesc(format_, otherFormatDesc_);
+    gameInfo["format"] = format_.description();
     gameInfo["number"] = gameNumber_;
     gameInfo["set"] = setNumber_;
 
@@ -158,12 +159,6 @@ bool Recording::saveAs(const QString& fileName)
     f.write(QJsonDocument(json).toJson());
 
     return true;
-}
-
-// ----------------------------------------------------------------------------
-QString Recording::formatDesc() const
-{
-    return setFormatDesc(format_, otherFormatDesc_);
 }
 
 }

@@ -135,8 +135,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
     ));
 
     recording->timeStarted_ = QDateTime::fromString(jsonGameInfo["date"].toString()).toLocalTime();
-    recording->otherFormatDesc_ = jsonGameInfo["format"].toString();
-    recording->format_ = descToSetFormat(recording->otherFormatDesc_);
+    recording->format_ = SetFormat(jsonGameInfo["format"].toString());
     recording->gameNumber_ = jsonGameInfo["number"].toInt();
 
     QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
@@ -281,8 +280,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
     ));
 
     recording->timeStarted_ = QDateTime::fromString(jsonGameInfo["date"].toString()).toLocalTime();
-    recording->otherFormatDesc_ = jsonGameInfo["format"].toString();
-    recording->format_ = descToSetFormat(recording->otherFormatDesc_);
+    recording->format_ = SetFormat(jsonGameInfo["format"].toString());
     recording->gameNumber_ = jsonGameInfo["number"].toInt();
 
     QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);

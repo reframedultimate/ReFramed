@@ -1,6 +1,6 @@
 #include "uh/views/CategoryView.hpp"
 #include "uh/models/RecordingManager.hpp"
-#include "uh/models/RecordingGroup.hpp".hpp"
+#include "uh/models/RecordingGroup.hpp"
 
 namespace uh {
 
@@ -42,16 +42,36 @@ void CategoryView::setActiveRecordingViewDisabled(bool disable)
 // ----------------------------------------------------------------------------
 void CategoryView::onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-    if (current == analysisCategoryItem_)
-        emit categoryChanged(CategoryType::ANALYSIS);
-    else if (current == recordingGroupsCategoryItem_)
-        emit categoryChanged(CategoryType::RECORDING_GROUPS);
-    else if (current == recordingSourcesCategoryItem_)
-        emit categoryChanged(CategoryType::RECORDING_SOURCES);
-    else if (current == videoSourcesCategoryItem_)
-        emit categoryChanged(CategoryType::VIDEO_SOURCES);
-    else if (current == activeRecordingCategoryItem_)
-        emit categoryChanged(CategoryType::ACTIVE_RECORDING);
+    auto categoryOf = [this](const QTreeWidgetItem* item) -> CategoryType {
+        if (item == analysisCategoryItem_)
+            return CategoryType::ANALYSIS;
+        if (item == recordingGroupsCategoryItem_ || item->parent() == recordingGroupsCategoryItem_)
+            return CategoryType::RECORDING_GROUPS;
+        if (item == recordingSourcesCategoryItem_)
+            return CategoryType::RECORDING_SOURCES;
+        if (item == videoSourcesCategoryItem_)
+            return CategoryType::VIDEO_SOURCES;
+        if (item == activeRecordingCategoryItem_)
+            return CategoryType::ACTIVE_RECORDING;
+        assert(false);
+    };
+
+#define EMIT_IF_CHANGED(category) \
+    if (categoryOf(current) == category && (previous == nullptr || categoryOf(previous) != category)) \
+        emit categoryChanged(category);
+    EMIT_IF_CHANGED(CategoryType::ANALYSIS)
+    EMIT_IF_CHANGED(CategoryType::RECORDING_GROUPS)
+    EMIT_IF_CHANGED(CategoryType::RECORDING_SOURCES)
+    EMIT_IF_CHANGED(CategoryType::VIDEO_SOURCES)
+    EMIT_IF_CHANGED(CategoryType::ACTIVE_RECORDING)
+#undef EMIT_IF_CHANGED
+
+    if (current->parent() == recordingGroupsCategoryItem_)
+    {
+        RecordingGroup* group = recordingManager_->recordingGroup(current->text(0));
+        if (group)
+            emit recordingGroupSelected(group);
+    }
 }
 
 // ----------------------------------------------------------------------------

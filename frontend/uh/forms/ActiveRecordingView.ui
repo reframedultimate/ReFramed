@@ -225,21 +225,7 @@
         <layout class="QVBoxLayout" name="layout_playerInfo"/>
        </item>
        <item row="0" column="1" rowspan="2">
-        <widget class="QTabWidget" name="tabWidget">
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <widget class="QWidget" name="tab_damagePlot">
-          <attribute name="title">
-           <string>Damage</string>
-          </attribute>
-         </widget>
-         <widget class="QWidget" name="tab_decisionGraph">
-          <attribute name="title">
-           <string>Recording</string>
-          </attribute>
-         </widget>
-        </widget>
+        <layout class="QHBoxLayout" name="layout_recordingView"/>
        </item>
       </layout>
      </widget>
