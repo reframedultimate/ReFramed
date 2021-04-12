@@ -91,7 +91,8 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
         // of gameplay
         timeStarted_ = QDateTime::currentDateTime();
         playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index].back());
         return;
     }
 
@@ -99,13 +100,11 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     if (playerStates_[index].back().status() != state.status())
     {
         playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
     }
-    else
-    {
-        // The UI still cares about every frame so dispatch event even if it wasn't added
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerStateAdded, index, state);
-    }
+
+    // The UI still cares about every frame
+    dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, state);
 }
 
 }

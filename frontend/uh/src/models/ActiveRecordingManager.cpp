@@ -346,7 +346,14 @@ void ActiveRecordingManager::onActiveRecordingFormatChanged(const SetFormat& for
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingManager::onActiveRecordingPlayerStateAdded(int player, const PlayerState& state)
+void ActiveRecordingManager::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
+{
+    (void)player;
+    (void)state;
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onActiveRecordingNewPlayerState(int player, const PlayerState& state)
 {
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerPlayerStateAdded, player, state);
 }

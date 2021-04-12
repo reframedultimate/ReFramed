@@ -5,6 +5,7 @@
 #include <QExplicitlySharedDataPointer>
 
 class QTreeWidgetItem;
+class QTableWidget;
 
 namespace Ui {
     class RecordingView;
@@ -37,7 +38,8 @@ private:
     void onActiveRecordingSetNumberChanged(int number) override;
     void onActiveRecordingGameNumberChanged(int number) override;
     void onActiveRecordingFormatChanged(const SetFormat& format) override;
-    void onActiveRecordingPlayerStateAdded(int player, const PlayerState& state) override;
+    void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) override;
+    void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override;
 
 private:
     Ui::RecordingView* ui_;
@@ -48,6 +50,7 @@ private:
     QTreeWidgetItem* baseStatusIDMappings_;
     QTreeWidgetItem* specificStatusIDMappings_;
     QVector<QTreeWidgetItem*> playerData_;
+    QVector<QTableWidget*> playerDataTable_;
     QExplicitlySharedDataPointer<Recording> recording_;
 };
 

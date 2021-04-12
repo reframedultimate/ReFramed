@@ -209,6 +209,7 @@ void RecordingView::setRecording(Recording* recording)
     while (ui_->stackedWidget_playerData->count())
         delete ui_->stackedWidget_playerData->widget(0);
     playerData_.clear();
+    playerDataTable_.clear();
     for (i = 0; i != recording_->playerCount(); ++i)
     {
         const auto& statusMapping = recording_->mappingInfo().fighterStatus;
@@ -233,6 +234,7 @@ void RecordingView::setRecording(Recording* recording)
         playerData_.push_back(new QTreeWidgetItem({recording_->playerName(i)}));
         playerData->addChild(playerData_.back());
         ui_->stackedWidget_playerData->addWidget(table);
+        playerDataTable_.push_back(table);
     }
 
     ui_->stackedWidget->setCurrentIndex(storeCurrentPageIndex);
@@ -296,8 +298,27 @@ void RecordingView::onActiveRecordingFormatChanged(const SetFormat& format)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingPlayerStateAdded(int player, const PlayerState& state)
+void RecordingView::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
 {
+    // Append to player data table
+    QTableWidget* table = playerDataTable_[player];
+    int row = table->rowCount();
+    const auto& statusMapping = recording_->mappingInfo().fighterStatus;
+    const QString* baseEnum = statusMapping.statusToBaseEnumName(state.status());
+    const QString* specificEnum = statusMapping.statusToFighterSpecificEnumName(state.status(), recording_->playerFighterID(player));
+    table->setRowCount(row + 1);
+    table->setItem(row, 0, new QTableWidgetItem(QString::number(state.frame())));
+    table->setItem(row, 1, new QTableWidgetItem(QString::number(state.damage())));
+    table->setItem(row, 2, new QTableWidgetItem(QString::number(state.stocks())));
+    table->setItem(row, 3, new QTableWidgetItem(QString::number(state.status())));
+    table->setItem(row, 4, new QTableWidgetItem(baseEnum ? *baseEnum : (specificEnum ? *specificEnum : "")));
+    table->scrollToBottom();
+}
+
+// ----------------------------------------------------------------------------
+void RecordingView::onActiveRecordingNewPlayerState(int player, const PlayerState& state)
+{
+    // Update plot
     plot_->addPlayerDamageValue(player, state.frame(), state.damage());
     plot_->replotAndAutoScale();
 }

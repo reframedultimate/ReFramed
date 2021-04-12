@@ -86,7 +86,8 @@ void MainWindow::setStateDisconnected()
     ui_->action_connect->setVisible(true);
     ui_->action_disconnect->setVisible(false);
 
-    // Disable active recording view in the category view
+    // Disable active recording entry in the category view so it can't be
+    // selected anymore
     categoryView_->setActiveRecordingViewDisabled(true);
 }
 
