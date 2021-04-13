@@ -31,6 +31,8 @@ public:
     float hitstun() const { return hitstun_; }
     bool attack_connected() const { return attack_connected_; }
 
+
+
 private:
     PlayerState() {}
     friend class QVector<PlayerState>;
