@@ -25,8 +25,8 @@ Protocol::Protocol(tcp_socket socket, QObject* parent)
     // main thread
     connect(this, SIGNAL(_receiveMatchStarted(ActiveRecording*)),
             this, SLOT(onReceiveMatchStarted(ActiveRecording*)));
-    connect(this, SIGNAL(_receivePlayerState(unsigned int, int, unsigned int, float, unsigned int)),
-            this, SLOT(onReceivePlayerState(unsigned int, int, unsigned int, float, unsigned int)));
+    connect(this, SIGNAL(_receivePlayerState(quint32,quint8,quint8,float,float,quint16,quint64,float,bool)),
+            this, SLOT(onReceivePlayerState(quint32,quint8,quint8,float,float,quint16,quint64,float,bool)));
     connect(this, SIGNAL(_receiveMatchEnded()),
             this, SLOT(onReceiveMatchEnded()));
 }
@@ -161,31 +161,60 @@ void Protocol::run()
         }
         else if (msg == FighterState)
         {
-            uint8_t f0, f1, f2, f3, entryID, stocks, status_l, status_h, damage_l, damage_h;
-            if (tcp_socket_read(&socket_, &f0, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &f1, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &f2, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &f3, 1) != 1) break;
+            /*
+             * server.broadcast(&[
+             *     MessageType::FighterState.into(),
+             *     f0, f1, f2, f3,
+             *     entry_id as u8,
+             *     stock_count,
+             *     damage0, damage1,
+             *     shield0, shield1,
+             *     status0, status1,
+             *     m0, m1, m2, m3, m4, m5, m6, m7,
+             *     hitstun0, hitstun1,
+             *     flags
+             * ]);
+             */
+
+            uint8_t frame_[4], entryID, stocks, damage_[2], shield_[2];
+            uint8_t status_[2], motion_[8], hitstun_[2], flags;
+            if (tcp_socket_read(&socket_, &frame_[0], 4) != 4) break;
             if (tcp_socket_read(&socket_, &entryID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &stocks, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &status_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &status_l, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &damage_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &damage_l, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &damage_[0], 2) != 2) break;
+            if (tcp_socket_read(&socket_, &shield_[0], 2) != 2) break;
+            if (tcp_socket_read(&socket_, &status_[0], 2) != 2) break;
+            if (tcp_socket_read(&socket_, &motion_[0], 8) != 8) break;
+            if (tcp_socket_read(&socket_, &hitstun_[0], 2) != 2) break;
+            if (tcp_socket_read(&socket_, &flags, 1) != 1) break;
 
-            uint32_t frame = (f0 << 24)
-                           | (f1 << 16)
-                           | (f2 << 8)
-                           | (f3 << 0);
-            uint16_t status = (status_h << 8)
-                            | (status_l << 0);
-            float damage = (((uint16_t)damage_h << 8) | ((uint16_t)damage_l << 0)) * 0.01;
+            quint32 frame = (frame_[0] << 24)
+                          | (frame_[1] << 16)
+                          | (frame_[2] << 8)
+                          | (frame_[3] << 0);
+            float damage = (((uint16_t)damage_[0] << 8)
+                          | ((uint16_t)damage_[1] << 0)) * 0.01;
+            float shield = (((uint16_t)shield_[0] << 8)
+                          | ((uint16_t)shield_[1] << 0)) * 0.01;
+            quint16 status = (status_[0] << 8)
+                           | (status_[1] << 0);
+            quint64 motion = ((quint64)motion_[0] << 56)
+                           | ((quint64)motion_[1] << 48)
+                           | ((quint64)motion_[2] << 40)
+                           | ((quint64)motion_[3] << 32)
+                           | ((quint64)motion_[4] << 24)
+                           | ((quint64)motion_[5] << 16)
+                           | ((quint64)motion_[6] << 8)
+                           | ((quint64)motion_[7] << 0);
+            float hitstun = (((uint16_t)hitstun_[0] << 8)
+                           | ((uint16_t)hitstun_[1] << 0)) * 0.01;
+            bool attack_connected = !!(flags & 0x01);
 
             // Map the entry ID to an index
             for (int i = 0; i != entryIDs.size(); ++i)
                 if (entryIDs[i] == entryID)
                 {
-                    emit _receivePlayerState(frame, i, status, damage, stocks);
+                    emit _receivePlayerState(frame, i, stocks, damage, shield, status, motion, hitstun, attack_connected);
                     break;
                 }
         }
@@ -207,12 +236,21 @@ void Protocol::onReceiveMatchStarted(ActiveRecording* recording)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks)
+void Protocol::onReceivePlayerState(
+        quint32 frame,
+        quint8 playerID,
+        quint8 stocks,
+        float damage,
+        float shield,
+        quint16 status,
+        quint64 motion,
+        float hitstun,
+        bool attack_connected)
 {
     if (recording_ == nullptr)
         return;
 
-    recording_->addPlayerState(playerID, PlayerState(frame, status, damage, stocks));
+    recording_->addPlayerState(playerID, PlayerState(frame, stocks, damage, shield, status, motion, hitstun, attack_connected));
 }
 
 // ----------------------------------------------------------------------------

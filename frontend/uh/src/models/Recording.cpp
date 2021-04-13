@@ -133,15 +133,21 @@ bool Recording::saveAs(const QString& fileName)
         stream << static_cast<quint32>(states.size());
         for (const auto& state : states)
         {
+            quint8 flags = (state.attack_connected() & 0x01);
+
             stream << static_cast<quint32>(state.frame());
-            stream << static_cast<quint16>(state.status());
-            stream << static_cast<qreal>(state.damage());
             stream << static_cast<quint8>(state.stocks());
+            stream << static_cast<float>(state.damage());
+            stream << static_cast<float>(state.shield());
+            stream << static_cast<quint16>(state.status());
+            stream << static_cast<quint64>(state.motion());
+            stream << static_cast<float>(state.hitstun());
+            stream << flags;
         }
     }
 
     QJsonObject json;
-    json["version"] = "1.1";
+    json["version"] = "1.2";
     json["mappinginfo"] = mappingInfo;
     json["gameinfo"] = gameInfo;
     json["playerinfo"] = playerInfo;
@@ -156,7 +162,7 @@ bool Recording::saveAs(const QString& fileName)
         }*/
         return false;
     }
-    f.write(QJsonDocument(json).toJson());
+    f.write(qCompress(QJsonDocument(json).toJson(QJsonDocument::Compact), 9));
 
     return true;
 }

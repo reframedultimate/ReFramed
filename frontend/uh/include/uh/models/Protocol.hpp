@@ -40,14 +40,32 @@ public:
 signals:
     // emitted from the listener thread
     void _receiveMatchStarted(ActiveRecording* newRecording);
-    void _receivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
     void _receiveMatchEnded();
+    void _receivePlayerState(
+            quint32 frame,
+            quint8 playerID,
+            quint8 stocks,
+            float damage,
+            float shield,
+            quint16 status,
+            quint64 motion,
+            float hitstun,
+            bool attack_connected);
 
 private slots:
     // catch signals from listener thread so we have them in the main thread
     void onReceiveMatchStarted(ActiveRecording* newRecording);
-    void onReceivePlayerState(unsigned int frame, int playerID, unsigned int status, float damage, unsigned int stocks);
     void onReceiveMatchEnded();
+    void onReceivePlayerState(
+            quint32 frame,
+            quint8 playerID,
+            quint8 stocks,
+            float damage,
+            float shield,
+            quint16 status,
+            quint64 motion,
+            float hitstun,
+            bool attack_connected);
 
 signals:
     void recordingStarted(ActiveRecording* recording);
