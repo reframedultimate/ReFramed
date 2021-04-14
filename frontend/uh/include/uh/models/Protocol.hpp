@@ -44,13 +44,17 @@ signals:
     void _receivePlayerState(
             quint32 frame,
             quint8 playerID,
-            quint8 stocks,
+            float posx,
+            float posy,
             float damage,
+            float hitstun,
             float shield,
             quint16 status,
             quint64 motion,
-            float hitstun,
-            bool attack_connected);
+            quint8 hit_status,
+            quint8 stocks,
+            bool attack_connected,
+            bool facing_direction);
 
 private slots:
     // catch signals from listener thread so we have them in the main thread
@@ -59,13 +63,17 @@ private slots:
     void onReceivePlayerState(
             quint32 frame,
             quint8 playerID,
-            quint8 stocks,
+            float posx,
+            float posy,
             float damage,
+            float hitstun,
             float shield,
             quint16 status,
             quint64 motion,
-            float hitstun,
-            bool attack_connected);
+            quint8 hit_status,
+            quint8 stocks,
+            bool attack_connected,
+            bool facing_direction);
 
 signals:
     void recordingStarted(ActiveRecording* recording);

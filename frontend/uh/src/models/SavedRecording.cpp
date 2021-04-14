@@ -167,7 +167,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
             quint16 status; stream >> status;
             qreal damage;   stream >> damage;
             quint8 stocks;  stream >> stocks;
-            recording->playerStates_[i].push_back(PlayerState(frame, stocks, damage, 50.0, status, 0, 0.0, false));
+            recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
 
@@ -332,7 +332,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
             quint16 status; stream >> status;
             qreal damage;   stream >> damage;
             quint8 stocks;  stream >> stocks;
-            recording->playerStates_[i].push_back(PlayerState(frame, stocks, damage, 50.0, status, 0, 0.0, false));
+            recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
 
@@ -493,18 +493,22 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
         quint32 frameCount; stream >> frameCount;
         for (quint32 f = 0; f < frameCount; ++f)
         {
-            quint32 frame;  stream >> frame;
-            quint8 stocks;  stream >> stocks;
-            float  damage;  stream >> damage;
-            float shield;   stream >> shield;
-            quint16 status; stream >> status;
-            quint64 motion; stream >> motion;
-            float hitstun;  stream >> hitstun;
-            quint8 flags;   stream >> flags;
+            quint32 frame;     stream >> frame;
+            float posx;        stream >> posx;
+            float posy;        stream >> posy;
+            float damage;      stream >> damage;
+            float hitstun;     stream >> hitstun;
+            float shield;      stream >> shield;
+            quint16 status;    stream >> status;
+            quint64 motion;    stream >> motion;
+            quint8 hit_status; stream >> hit_status;
+            quint8 stocks;     stream >> stocks;
+            quint8 flags;      stream >> flags;
 
             bool attack_connected = !!(flags & 0x01);
+            bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frame, stocks, damage, shield, status, motion, hitstun, attack_connected));
+            recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
 

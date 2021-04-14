@@ -133,15 +133,19 @@ bool Recording::saveAs(const QString& fileName)
         stream << static_cast<quint32>(states.size());
         for (const auto& state : states)
         {
-            quint8 flags = (state.attack_connected() & 0x01);
+            quint8 flags = (state.attack_connected() << 0)
+                         | (state.facing_direction() << 1);
 
             stream << static_cast<quint32>(state.frame());
-            stream << static_cast<quint8>(state.stocks());
+            stream << static_cast<float>(state.posx());
+            stream << static_cast<float>(state.posy());
             stream << static_cast<float>(state.damage());
+            stream << static_cast<float>(state.hitstun());
             stream << static_cast<float>(state.shield());
             stream << static_cast<quint16>(state.status());
             stream << static_cast<quint64>(state.motion());
-            stream << static_cast<float>(state.hitstun());
+            stream << static_cast<quint8>(state.hit_status());
+            stream << static_cast<quint8>(state.stocks());
             stream << flags;
         }
     }

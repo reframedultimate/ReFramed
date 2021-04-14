@@ -44,6 +44,7 @@ add_executable (ultimate-hindsight WIN32
     "src/models/DecisionGraph.cpp"
     "src/models/FighterStatusMapping.cpp"
     "src/models/FighterIDMapping.cpp"
+    "src/models/HitStatusMapping.cpp"
     "src/models/MappingInfo.cpp"
     "src/models/PlayerState.cpp"
     "src/models/Protocol.cpp"

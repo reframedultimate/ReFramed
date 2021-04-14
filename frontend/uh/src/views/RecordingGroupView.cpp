@@ -21,7 +21,8 @@ RecordingGroupView::RecordingGroupView(QWidget* parent)
     ui_->splitter->setSizes({600});
     ui_->layout_data->addWidget(recordingView_);
 
-    connect(ui_->listWidget_recordings, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(onCurrentItemChanged(QListWidgetItem*,QListWidgetItem*)));
+    connect(ui_->listWidget_recordings, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
+            this, SLOT(onCurrentItemChanged(QListWidgetItem*,QListWidgetItem*)));
 }
 
 // ----------------------------------------------------------------------------

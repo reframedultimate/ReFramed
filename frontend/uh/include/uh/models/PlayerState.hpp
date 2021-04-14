@@ -14,24 +14,29 @@ class PlayerState
 public:
     PlayerState(
             uint32_t frame,
-            uint8_t stocks,
+            float posx, float posy,
             float damage,
+            float hitstun,
             float shield,
             uint16_t status,
             uint64_t motion,
-            float hitstun,
-            bool attack_connected);
+            uint8_t hit_status,
+            uint8_t stocks,
+            bool attack_connected,
+            bool facing_direction);
 
     uint32_t frame() const { return frame_; }
-    uint8_t stocks() const { return stocks_; }
+    float posx() const { return posx_; }
+    float posy() const { return posy_; }
     float damage() const { return damage_; }
+    float hitstun() const { return hitstun_; }
     float shield() const { return shield_; }
     uint16_t status() const { return status_; }
     uint64_t motion() const { return motion_; }
-    float hitstun() const { return hitstun_; }
+    uint8_t hit_status() const { return hit_status_; }
+    uint8_t stocks() const { return stocks_; }
     bool attack_connected() const { return attack_connected_; }
-
-
+    bool facing_direction() const { return facing_direction_; }
 
 private:
     PlayerState() {}
@@ -40,12 +45,16 @@ private:
 private:
     uint64_t motion_;
     uint32_t frame_;
+    float posx_;
+    float posy_;
     float damage_;
-    float shield_;
     float hitstun_;
+    float shield_;
     uint16_t status_;
+    uint8_t hit_status_;
     uint8_t stocks_;
     bool attack_connected_;
+    bool facing_direction_;
 };
 
 }
