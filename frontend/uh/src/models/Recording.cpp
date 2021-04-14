@@ -1,12 +1,15 @@
 #include "uh/models/Recording.hpp"
 #include "uh/models/PlayerState.hpp"
 #include <QFile>
+#include <QSet>
 #include <QDataStream>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QFileDialog>
+
+#include <QDebug>
 
 namespace uh {
 
@@ -32,6 +35,7 @@ Recording::Recording(MappingInfo&& mapping,
 // ----------------------------------------------------------------------------
 bool Recording::saveAs(const QString& fileName)
 {
+    qDebug() << "Saving recording to " << fileName;
     QSet<uint16_t> usedStatuses;
     for (const auto& player : playerStates_)
         for (const auto& state : player)

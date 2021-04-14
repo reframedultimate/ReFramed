@@ -62,6 +62,12 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
+    // will try to unregister as a listener of ActiveRecordingManager. The central widget
+    // would ordinarily be deleted in the base class of this class, after we've deleted the
+    // ActiveRecordingManager which gets deleted in this destructor.
+    delete takeCentralWidget();
+
     delete ui_;
 }
 

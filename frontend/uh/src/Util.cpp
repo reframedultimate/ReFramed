@@ -2,6 +2,7 @@
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
+#include <QStackedWidget>
 #include <cstring>
 
 namespace uh {
@@ -16,6 +17,17 @@ void clearLayout(QLayout* layout)
             item->layout()->deleteLater();
         if (item->widget() != nullptr)
             item->widget()->deleteLater();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void clearStackedWidget(QStackedWidget* sw)
+{
+    for (int i = 0; i < sw->count(); ++i)
+    {
+        QWidget* widget = sw->widget(i);
+        sw->removeWidget(widget);
+        widget->deleteLater();
     }
 }
 

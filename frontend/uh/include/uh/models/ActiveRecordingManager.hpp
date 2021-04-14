@@ -27,6 +27,7 @@ class ActiveRecordingManager : public QObject
 
 public:
     ActiveRecordingManager(Settings* settings, QObject* parent=nullptr);
+    ~ActiveRecordingManager();
 
     void setFormat(const SetFormat& format);
     void setP1Name(const QString& name);

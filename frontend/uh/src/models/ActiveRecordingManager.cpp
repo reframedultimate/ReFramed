@@ -14,6 +14,13 @@ ActiveRecordingManager::ActiveRecordingManager(Settings* settings, QObject *pare
 }
 
 // ----------------------------------------------------------------------------
+ActiveRecordingManager::~ActiveRecordingManager()
+{
+    if (activeRecording_)
+        activeRecording_->dispatcher.removeListener(this);
+}
+
+// ----------------------------------------------------------------------------
 void ActiveRecordingManager::setFormat(const SetFormat& format)
 {
     if (activeRecording_)

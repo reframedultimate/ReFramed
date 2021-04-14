@@ -1,4 +1,5 @@
 #include "uh/ui_RecordingView.h"
+#include "uh/Util.hpp"
 #include "uh/views/RecordingView.hpp"
 #include "uh/views/DamagePlot.hpp"
 #include "uh/models/Recording.hpp"
@@ -24,9 +25,9 @@ public:
 class DoubleIntegerTableWidgetItem : public QTableWidgetItem
 {
 public:
-    DoubleIntegerTableWidgetItem(int value, int otherValue)
-        : QTableWidgetItem(QString::number(value))
-        , otherValue_(otherValue)
+    DoubleIntegerTableWidgetItem(int value1, int value2)
+        : QTableWidgetItem(QString::number(value1))
+        , value2(value2)
     {}
 
     bool operator<(const QTableWidgetItem& other) const
@@ -34,17 +35,20 @@ public:
         const DoubleIntegerTableWidgetItem* otherDouble = dynamic_cast<const DoubleIntegerTableWidgetItem*>(&other);
         if (otherDouble)
         {
-            int value = text().toInt();
-            if (value < other.text().toInt())
-                return true;
-            return otherValue_ < otherDouble->otherValue_;
+            int value1 = text().toInt();
+            int otherValue1 = other.text().toInt();
+            int otherValue2 = otherDouble->value2;
+
+            if (value1 != otherValue1) return value1 < otherValue1;
+            if (value2 != otherValue2) return value2 < otherValue2;
+            return false;  // they are equal
         }
 
         return text().toInt() < other.text().toInt();
     }
 
 private:
-    int otherValue_;
+    int value2;
 };
 
 // ----------------------------------------------------------------------------
@@ -206,8 +210,7 @@ void RecordingView::setRecording(Recording* recording)
     ui_->tableWidget_specificStatusIDs->setColumnWidth(2, 600);
     ui_->tableWidget_specificStatusIDs->sortByColumn(0, Qt::AscendingOrder);
 
-    while (ui_->stackedWidget_playerData->count())
-        delete ui_->stackedWidget_playerData->widget(0);
+    clearStackedWidget(ui_->stackedWidget_playerData);
     playerData_.clear();
     playerDataTable_.clear();
     for (i = 0; i != recording_->playerCount(); ++i)
