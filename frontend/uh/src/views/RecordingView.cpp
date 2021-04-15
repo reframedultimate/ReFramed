@@ -105,4 +105,10 @@ void RecordingView::onActiveRecordingNewPlayerState(int player, const PlayerStat
     plot_->replotAndAutoScale();
 }
 
+// ----------------------------------------------------------------------------
+void RecordingView::onRecordingWinnerChanged(int winner)
+{
+    (void)winner;
+}
+
 }

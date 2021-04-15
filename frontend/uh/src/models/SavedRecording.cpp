@@ -175,6 +175,8 @@ SavedRecording* SavedRecording::loadVersion_1_0(const QJsonObject& json)
         }
     }
 
+    recording->winner_ = recording->findWinner();
+
     return recording.take();
 }
 
@@ -340,6 +342,8 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
         }
     }
 
+    recording->winner_ = recording->findWinner();
+
     return recording.take();
 }
 
@@ -484,8 +488,6 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
         return nullptr;
     if (jsonGameInfo.contains("set") == false || jsonGameInfo["set"].isDouble() == false)
         return nullptr;
-    if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].isDouble() == false)
-        return nullptr;
 
     QScopedPointer<SavedRecording> recording(new SavedRecording(
         std::move(mappingInfo),
@@ -498,7 +500,6 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
     recording->format_ = SetFormat(jsonGameInfo["format"].toString());
     recording->gameNumber_ = jsonGameInfo["number"].toInt();
     recording->setNumber_ = jsonGameInfo["set"].toInt();
-    recording->winner_ = jsonGameInfo["winner"].toInt();
     recording->playerNames_ = std::move(playerNames);
 
     QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
@@ -526,6 +527,8 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
             recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
+
+    recording->winner_ = recording->findWinner();
 
     return recording.take();
 }
@@ -700,7 +703,6 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
     recording->format_ = SetFormat(jsonGameInfo["format"].toString());
     recording->gameNumber_ = jsonGameInfo["number"].toInt();
     recording->setNumber_ = jsonGameInfo["set"].toInt();
-    recording->winner_ = jsonGameInfo["winner"].toInt();
     recording->playerNames_ = std::move(playerNames);
 
     QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
@@ -735,6 +737,8 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
             recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
+
+    recording->winner_ = recording->findWinner();
 
     return recording.take();
 }

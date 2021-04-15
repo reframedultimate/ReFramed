@@ -147,14 +147,7 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecordi
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording* recording)
 {
-    int winner = recording->winner();
-    for (int i = 0; i != names_.size(); ++i)
-    {
-        if (i == winner)
-            names_[i]->setStyleSheet("background-color: rgb(211, 249, 216)");
-        else
-            names_[i]->setStyleSheet("background-color: rgb(249, 214, 211)");
-    }
+    (void)recording;
 }
 
 // ----------------------------------------------------------------------------
@@ -223,6 +216,18 @@ void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, c
     fighterStocks_[player]->setText(QString::number(state.stocks()));
 
     ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(state.frame() / 60.0).toString());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingView::onActiveRecordingManagerWinnerChanged(int winner)
+{
+    for (int i = 0; i != names_.size(); ++i)
+    {
+        if (i == winner)
+            names_[i]->setStyleSheet("background-color: rgb(211, 249, 216)");
+        else
+            names_[i]->setStyleSheet("background-color: rgb(249, 214, 211)");
+    }
 }
 
 }

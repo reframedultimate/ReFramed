@@ -24,6 +24,7 @@ public:
     virtual void onActiveRecordingManagerGameNumberChanged(int number) = 0;
     virtual void onActiveRecordingManagerFormatChanged(const SetFormat& format) = 0;
     virtual void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) = 0;
+    virtual void onActiveRecordingManagerWinnerChanged(int winner) = 0;
 };
 
 }

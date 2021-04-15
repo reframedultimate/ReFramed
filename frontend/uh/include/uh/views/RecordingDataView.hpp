@@ -48,6 +48,7 @@ private:
     void onActiveRecordingFormatChanged(const SetFormat& format) override;
     void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) override;
     void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override;
+    void onRecordingWinnerChanged(int winner) override;
 
 private:
     Ui::RecordingDataView* ui_;

@@ -94,6 +94,9 @@ public:
     ListenerDispatcher<RecordingListener> dispatcher;
 
 protected:
+    int findWinner() const;
+
+protected:
     MappingInfo mappingInfo_;
     QDateTime timeStarted_;
     QVector<QString> playerTags_;

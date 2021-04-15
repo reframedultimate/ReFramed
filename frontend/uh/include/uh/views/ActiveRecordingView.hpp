@@ -46,6 +46,7 @@ private:
     void onActiveRecordingManagerGameNumberChanged(int number) override;
     void onActiveRecordingManagerFormatChanged(const SetFormat& format) override;
     void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override;
+    void onActiveRecordingManagerWinnerChanged(int winner) override;
 
 private:
     Ui::ActiveRecordingView* ui_;

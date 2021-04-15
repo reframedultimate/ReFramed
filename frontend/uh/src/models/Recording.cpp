@@ -1,5 +1,6 @@
 #include "uh/models/Recording.hpp"
 #include "uh/models/PlayerState.hpp"
+#include "uh/listeners/RecordingListener.hpp"
 #include <QFile>
 #include <QSet>
 #include <QDataStream>
@@ -195,6 +196,29 @@ bool Recording::saveAs(const QString& fileName)
 const QVector<PlayerState>& Recording::playerStates(int player) const
 {
     return playerStates_[player];
+}
+
+// ----------------------------------------------------------------------------
+int Recording::findWinner() const
+{
+    // The winner is the player with most stocks and least damage
+    int winneridx = 0;
+    for (int i = 0; i != playerCount(); ++i)
+    {
+        if (playerStates(i).count() == 0 || playerStates(winneridx).count() == 0)
+            continue;
+
+        const auto& current = playerStates(i).back();
+        const auto& winner = playerStates(winneridx).back();
+
+        if (current.stocks() > winner.stocks())
+            winneridx = i;
+        else if (current.stocks() == winner.stocks())
+            if (current.damage() < winner.damage())
+                winneridx = i;
+    }
+
+    return winneridx;
 }
 
 }
