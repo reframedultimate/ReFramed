@@ -365,4 +365,10 @@ void ActiveRecordingManager::onActiveRecordingNewPlayerState(int player, const P
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerPlayerStateAdded, player, state);
 }
 
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onRecordingWinnerChanged(int winner)
+{
+    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerWinnerChanged, winner);
+}
+
 }

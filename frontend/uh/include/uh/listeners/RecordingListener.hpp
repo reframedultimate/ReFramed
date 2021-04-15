@@ -16,6 +16,8 @@ public:
     virtual void onActiveRecordingFormatChanged(const SetFormat& format) = 0;
     virtual void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) = 0;
     virtual void onActiveRecordingNewPlayerState(int player, const PlayerState& state) = 0;
+
+    virtual void onRecordingWinnerChanged(int winner) = 0;
 };
 
 }

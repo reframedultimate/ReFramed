@@ -58,6 +58,7 @@ private:
     void onActiveRecordingManagerGameNumberChanged(int number) override { (void)number; }
     void onActiveRecordingManagerFormatChanged(const SetFormat& format) override { (void)format; }
     void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override { (void)player; (void)state; }
+    void onActiveRecordingManagerWinnerChanged(int winner) { (void)winner; }
 
 private:
     QScopedPointer<Settings> settings_;

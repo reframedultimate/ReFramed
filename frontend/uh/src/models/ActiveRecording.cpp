@@ -56,23 +56,6 @@ void ActiveRecording::setFormat(const SetFormat& format)
 // ----------------------------------------------------------------------------
 void ActiveRecording::addPlayerState(int index, PlayerState&& state)
 {
-    // The winner is the player with most stocks and least damage
-    winner_ = 0;
-    for (int i = 0; i != playerStates_.count(); ++i)
-    {
-        if (playerStates_[i].count() == 0 || playerStates_[winner_].count() == 0)
-            continue;
-
-        const auto& current = playerStates_[i].back();
-        const auto& winner = playerStates_[winner_].back();
-
-        if (current.stocks() > winner.stocks())
-            winner_ = i;
-        else if (current.stocks() == winner.stocks())
-            if (current.damage() < winner.damage())
-                winner_ = i;
-    }
-
     // If this is the first state we receive just store it. Need at least 1
     // past state to determine if the game started yet
     if (playerStates_[index].count() == 0)
@@ -101,6 +84,14 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     {
         playerStates_[index].push_back(std::move(state));
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
+
+        // Winner might have changed
+        int winner = Recording::findWinner();
+        if (winner_ != winner)
+        {
+            winner_ = winner;
+            dispatcher.dispatch(&RecordingListener::onRecordingWinnerChanged, winner_);
+        }
     }
 
     // The UI still cares about every frame

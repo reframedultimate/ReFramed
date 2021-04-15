@@ -149,20 +149,20 @@ void RecordingDataView::repopulateTree()
     mappings->addChildren({stageIDMappingsItem_, fighterIDMappingsItem_, statusMappings});
     ui_->treeWidget->addTopLevelItem(mappings);
 
-    // Player data
-    QTreeWidgetItem* playerData = new QTreeWidgetItem({"Player Data"});
-    ui_->treeWidget->addTopLevelItem(playerData);
+    // Player states
+    QTreeWidgetItem* playerStates = new QTreeWidgetItem({"Player States"});
+    ui_->treeWidget->addTopLevelItem(playerStates);
     for (int i = 0; i != recording_->playerCount(); ++i)
     {
         QTreeWidgetItem* player = new QTreeWidgetItem({recording_->playerName(i)});
         playerDataItems_.push_back(player);
-        playerData->addChild(player);
+        playerStates->addChild(player);
         player->setExpanded(true);
     }
 
     mappings->setExpanded(true);
     statusMappings->setExpanded(true);
-    playerData->setExpanded(true);
+    playerStates->setExpanded(true);
 }
 
 // ----------------------------------------------------------------------------
@@ -172,7 +172,7 @@ void RecordingDataView::repopulateGameInfoTable()
     ui_->tableWidget_gameInfo->clearContents();
 
     // Fill in data
-    ui_->tableWidget_gameInfo->setRowCount(6);
+    ui_->tableWidget_gameInfo->setRowCount(6 + recording_->playerCount());
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
     ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(recording_->timeStarted().toString()));
     ui_->tableWidget_gameInfo->setItem(1, 0, new QTableWidgetItem("Format"));
@@ -181,11 +181,18 @@ void RecordingDataView::repopulateGameInfoTable()
     ui_->tableWidget_gameInfo->setItem(2, 1, new QTableWidgetItem(QString::number(recording_->setNumber())));
     ui_->tableWidget_gameInfo->setItem(3, 0, new QTableWidgetItem("Game Number"));
     ui_->tableWidget_gameInfo->setItem(3, 1, new QTableWidgetItem(QString::number(recording_->gameNumber())));
-    ui_->tableWidget_gameInfo->setItem(4, 0, new QTableWidgetItem("Winner"));
-    ui_->tableWidget_gameInfo->setItem(4, 1, new QTableWidgetItem(recording_->playerName(recording_->winner())));
     const QString* stageName = recording_->mappingInfo().stageID.map(recording_->stageID());
-    ui_->tableWidget_gameInfo->setItem(5, 0, new QTableWidgetItem("Stage ID"));
-    ui_->tableWidget_gameInfo->setItem(5, 1, new QTableWidgetItem(QString::number(recording_->stageID()) + " (" + (stageName ? *stageName : "unknown stage") + ")"));
+    ui_->tableWidget_gameInfo->setItem(4, 0, new QTableWidgetItem("Stage ID"));
+    ui_->tableWidget_gameInfo->setItem(4, 1, new QTableWidgetItem(QString::number(recording_->stageID()) + " (" + (stageName ? *stageName : "unknown stage") + ")"));
+    ui_->tableWidget_gameInfo->setItem(5, 0, new QTableWidgetItem("Winner"));
+    ui_->tableWidget_gameInfo->setItem(5, 1, new QTableWidgetItem(recording_->playerName(recording_->winner())));
+
+    for (int i = 0; i != recording_->playerCount(); ++i)
+    {
+        const QString* fighterName = recording_->mappingInfo().fighterID.map(recording_->playerFighterID(i));
+        ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(recording_->playerName(i)));
+        ui_->tableWidget_gameInfo->setItem(6+i, 1, new QTableWidgetItem(fighterName ? *fighterName : "(Unknown fighter)"));
+    }
 
     ui_->tableWidget_gameInfo->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 }
@@ -348,6 +355,9 @@ void RecordingDataView::onActiveRecordingPlayerNameChanged(int player, const QSt
     if (player >= playerDataItems_.size())
         return;
     playerDataItems_[player]->setText(0, name);
+
+    for (int i = 0; i != recording_->playerCount(); ++i)
+        ui_->tableWidget_gameInfo->item(6+i, 0)->setText(recording_->playerName(i));
 }
 
 // ----------------------------------------------------------------------------
@@ -388,6 +398,12 @@ void RecordingDataView::onActiveRecordingNewPlayerState(int player, const Player
 {
     (void)player;
     (void)state;
+}
+
+// ----------------------------------------------------------------------------
+void RecordingDataView::onRecordingWinnerChanged(int winner)
+{
+    ui_->tableWidget_gameInfo->item(5, 1)->setText(recording_->playerName(winner));
 }
 
 }
