@@ -18,12 +18,14 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/views/ConnectView.hpp"
     "include/uh/views/DamagePlot.hpp"
     "include/uh/views/MainWindow.hpp"
+    "include/uh/views/RecordingDataView.hpp"
     "include/uh/views/RealtimePlot.hpp"
     "include/uh/views/RecordingGroupView.hpp"
     "include/uh/views/RecordingView.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
     "forms/ConnectView.ui"
+    "forms/RecordingDataView.ui"
     "forms/RecordingGroupView.ui"
     "forms/RecordingView.ui"
     "forms/MainWindow.ui")
@@ -67,6 +69,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"
     "src/views/DamagePlot.cpp"
+    "src/views/RecordingDataView.cpp"
     "src/views/RealtimePlot.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"

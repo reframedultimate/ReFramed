@@ -251,7 +251,7 @@ void Protocol::run()
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            qDebug() << "Fighter state: posx: " << posx << ", posy: " << posy << ", facing: " << facing_direction;
+            qDebug() << "motion: " << motion;
 
             // Map the entry ID to an index
             for (int i = 0; i != entryIDs.size(); ++i)

@@ -37,9 +37,13 @@ bool Recording::saveAs(const QString& fileName)
 {
     qDebug() << "Saving recording to " << fileName;
     QSet<uint16_t> usedStatuses;
+    QSet<uint8_t> usedHitStatuses;
     for (const auto& player : playerStates_)
         for (const auto& state : player)
+        {
             usedStatuses.insert(state.status());
+            usedHitStatuses.insert(state.hitStatus());
+        }
 
     QSet<uint8_t> usedFighterIDs;
     for (const auto& fighterID : playerFighterIDs_)
@@ -51,6 +55,7 @@ bool Recording::saveAs(const QString& fileName)
     gameInfo["format"] = format_.description();
     gameInfo["number"] = gameNumber_;
     gameInfo["set"] = setNumber_;
+    gameInfo["winner"] = winner_;
 
     QJsonObject fighterBaseStatusMapping;
     const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
@@ -115,10 +120,17 @@ bool Recording::saveAs(const QString& fileName)
         if (it.key() == stageID_)
             stageIDMapping[QString::number(it.key())] = it.value();
 
+    QJsonObject hitStatusMapping;
+    const auto& hitStatusMap = mappingInfo_.hitStatus.get();
+    for (auto it = hitStatusMap.begin(); it != hitStatusMap.end(); ++it)
+        if (usedHitStatuses.contains(it.key()))
+            hitStatusMapping[QString::number(it.key())] = it.value();
+
     QJsonObject mappingInfo;
     mappingInfo["fighterstatus"] = fighterStatusMapping;
     mappingInfo["fighterid"] = fighterIDMapping;
     mappingInfo["stageid"] = stageIDMapping;
+    mappingInfo["hitstatus"] = hitStatusMapping;
 
     QJsonArray playerInfo;
     for (int i = 0; i < playerCount(); ++i)
@@ -132,13 +144,16 @@ bool Recording::saveAs(const QString& fileName)
 
     QByteArray stream_data;
     QDataStream stream(&stream_data, QIODevice::WriteOnly);
+    stream.setByteOrder(QDataStream::LittleEndian);
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    stream.setVersion(QDataStream::Qt_5_12);
     for (const auto& states : playerStates_)
     {
         stream << static_cast<quint32>(states.size());
         for (const auto& state : states)
         {
-            quint8 flags = (state.attack_connected() << 0)
-                         | (state.facing_direction() << 1);
+            quint8 flags = (state.attackConnected() << 0)
+                         | (state.facingDirection() << 1);
 
             stream << static_cast<quint32>(state.frame());
             stream << static_cast<float>(state.posx());
@@ -147,15 +162,16 @@ bool Recording::saveAs(const QString& fileName)
             stream << static_cast<float>(state.hitstun());
             stream << static_cast<float>(state.shield());
             stream << static_cast<quint16>(state.status());
-            stream << static_cast<quint64>(state.motion());
-            stream << static_cast<quint8>(state.hit_status());
+            stream << static_cast<quint32>(state.motion() & 0xFFFFFFFF);
+            stream << static_cast<quint8>((state.motion() >> 32) & 0xFF);
+            stream << static_cast<quint8>(state.hitStatus());
             stream << static_cast<quint8>(state.stocks());
             stream << flags;
         }
     }
 
     QJsonObject json;
-    json["version"] = "1.2";
+    json["version"] = "1.3";
     json["mappinginfo"] = mappingInfo;
     json["gameinfo"] = gameInfo;
     json["playerinfo"] = playerInfo;

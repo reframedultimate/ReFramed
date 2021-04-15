@@ -23,9 +23,9 @@ void clearLayout(QLayout* layout)
 // ----------------------------------------------------------------------------
 void clearStackedWidget(QStackedWidget* sw)
 {
-    for (int i = 0; i < sw->count(); ++i)
+    while (sw->count())
     {
-        QWidget* widget = sw->widget(i);
+        QWidget* widget = sw->widget(0);
         sw->removeWidget(widget);
         widget->deleteLater();
     }

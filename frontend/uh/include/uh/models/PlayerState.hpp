@@ -33,10 +33,12 @@ public:
     float shield() const { return shield_; }
     uint16_t status() const { return status_; }
     uint64_t motion() const { return motion_; }
-    uint8_t hit_status() const { return hit_status_; }
+    uint8_t hitStatus() const { return hitStatus_; }
     uint8_t stocks() const { return stocks_; }
-    bool attack_connected() const { return attack_connected_; }
-    bool facing_direction() const { return facing_direction_; }
+    bool attackConnected() const { return attackConnected_; }
+    bool facingDirection() const { return facingDirection_; }
+
+    uint32_t combinedState() const;
 
 private:
     PlayerState() {}
@@ -51,10 +53,27 @@ private:
     float hitstun_;
     float shield_;
     uint16_t status_;
-    uint8_t hit_status_;
+    uint8_t hitStatus_;
     uint8_t stocks_;
-    bool attack_connected_;
-    bool facing_direction_;
+    bool attackConnected_;
+    bool facingDirection_;
 };
+
+inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)
+{
+    if (lhs.motion() != rhs.motion()) return false;
+    if (lhs.posx() != rhs.posx()) return false;
+    if (lhs.posy() != rhs.posy()) return false;
+    if (lhs.damage() != rhs.damage()) return false;
+    if (lhs.hitstun() != rhs.hitstun()) return false;
+    if (lhs.shield() != rhs.shield()) return false;
+    if (lhs.status() != rhs.status()) return false;
+    if (lhs.hitStatus() != rhs.hitStatus()) return false;
+    if (lhs.stocks() != rhs.stocks()) return false;
+    if (lhs.attackConnected() != rhs.attackConnected()) return false;
+    if (lhs.facingDirection() != rhs.facingDirection()) return false;
+    return true;
+}
+inline bool operator!=(const PlayerState& lhs, const PlayerState& rhs) { return !operator==(lhs, rhs); }
 
 }

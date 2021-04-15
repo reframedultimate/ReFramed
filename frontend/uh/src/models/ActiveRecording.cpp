@@ -97,7 +97,7 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     }
 
     // Only add a new state if the previous one was different
-    if (playerStates_[index].back().status() != state.status())
+    if (playerStates_[index].back() != state)
     {
         playerStates_[index].push_back(std::move(state));
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());

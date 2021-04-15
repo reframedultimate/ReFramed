@@ -26,6 +26,7 @@ private:
     static SavedRecording* loadVersion_1_0(const QJsonObject& json);
     static SavedRecording* loadVersion_1_1(const QJsonObject& json);
     static SavedRecording* loadVersion_1_2(const QJsonObject& json);
+    static SavedRecording* loadVersion_1_3(const QJsonObject& json);
 };
 
 }
