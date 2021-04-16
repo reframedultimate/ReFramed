@@ -10,9 +10,10 @@ namespace Ui {
 
 namespace uh {
 
-class DamagePlot;
+class DamageTimePlot;
 class Recording;
 class RecordingDataView;
+class XYPositionPlot;
 
 class RecordingView : public QWidget
                     , public RecordingListener
@@ -28,7 +29,7 @@ public slots:
 private slots:
     // This is still broken, see
     // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
-    void addDamagePlotToUI();
+    void addPlotsToUI();
 
 private:
     void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
@@ -41,7 +42,8 @@ private:
 
 private:
     Ui::RecordingView* ui_;
-    DamagePlot* plot_;
+    DamageTimePlot* damageTimePlot_;
+    XYPositionPlot* xyPositionPlot_;
     RecordingDataView* recordingDataView_;
     QExplicitlySharedDataPointer<Recording> recording_;
 };

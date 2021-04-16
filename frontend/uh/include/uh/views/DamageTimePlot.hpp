@@ -7,12 +7,12 @@ class QwtPlotCurve;
 
 namespace uh {
 
-class DamagePlot : public RealtimePlot
+class DamageTimePlot : public RealtimePlot
 {
     Q_OBJECT
 public:
-    explicit DamagePlot(QWidget* parent=nullptr);
-    ~DamagePlot();
+    explicit DamageTimePlot(QWidget* parent=nullptr);
+    ~DamageTimePlot();
 
 public slots:
     void resetPlot(int numPlayers);
