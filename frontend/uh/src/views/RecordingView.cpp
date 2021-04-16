@@ -44,79 +44,15 @@ void RecordingView::addPlotsToUI()
 // ----------------------------------------------------------------------------
 RecordingView::~RecordingView()
 {
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
 void RecordingView::setRecording(Recording* recording)
 {
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
-    recording_ = recording;
-
     recordingDataView_->setRecording(recording);
-
-    // Plot existing data
-    int playerCount = recording_->playerCount();
-    damageTimePlot_->resetPlot(playerCount);
-    for (int i = 0; i != playerCount; ++i)
-    {
-        damageTimePlot_->setPlayerName(i, recording_->playerName(i));
-        for (const auto& state : recording_->playerStates(i))
-            damageTimePlot_->addPlayerDamageValue(i, state.frame(), state.damage());
-    }
-    damageTimePlot_->forceAutoScale();
-
+    damageTimePlot_->setRecording(recording);
     xyPositionPlot_->setRecording(recording);
-
-    recording_->dispatcher.addListener(this);
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingPlayerNameChanged(int player, const QString& name)
-{
-    damageTimePlot_->setPlayerName(player, name);
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingSetNumberChanged(int number)
-{
-    (void)number;
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingGameNumberChanged(int number)
-{
-    (void)number;
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingFormatChanged(const SetFormat& format)
-{
-    (void)format;
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
-{
-    (void)player;
-    (void)state;
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onActiveRecordingNewPlayerState(int player, const PlayerState& state)
-{
-    // Update plot
-    damageTimePlot_->addPlayerDamageValue(player, state.frame(), state.damage());
-    damageTimePlot_->conditionalAutoScale();
-}
-
-// ----------------------------------------------------------------------------
-void RecordingView::onRecordingWinnerChanged(int winner)
-{
-    (void)winner;
 }
 
 }
