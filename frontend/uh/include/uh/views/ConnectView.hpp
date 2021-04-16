@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uh/models/ConfigAccessor.hpp"
 #include <QDialog>
 
 class QTcpSocket;
@@ -10,13 +11,12 @@ namespace Ui {
 
 namespace uh {
 
-class Settings;
-
 class ConnectView : public QDialog
+                  , public ConfigAccessor
 {
     Q_OBJECT
 public:
-    explicit ConnectView(Settings* settings, Qt::WindowFlags flags=Qt::Popup | Qt::Dialog);
+    explicit ConnectView(Config* config, Qt::WindowFlags flags=Qt::Popup | Qt::Dialog);
     ~ConnectView();
 
     void setConnecting();
@@ -32,7 +32,6 @@ private slots:
 
 private:
     Ui::ConnectView* ui_;
-    Settings* settings_;
 };
 
 }

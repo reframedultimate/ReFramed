@@ -20,7 +20,7 @@ class ConnectView;
 class Protocol;
 class RecordingGroupView;
 class RecordingManager;
-class Settings;
+class Config;
 
 class MainWindow : public QMainWindow
                  , public ActiveRecordingManagerListener
@@ -48,8 +48,7 @@ private slots:
     void onDisconnectActionTriggered();
 
 private:
-    void onActiveRecordingManagerRecordingSaved(const QFileInfo& fileName) override;
-
+    // All unused
     void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override { (void)recording; }
     void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override { (void)recording; }
     void onActiveRecordingManagerP1NameChanged(const QString& name) override { (void)name; }
@@ -61,9 +60,9 @@ private:
     void onActiveRecordingManagerWinnerChanged(int winner) { (void)winner; }
 
 private:
-    QScopedPointer<Settings> settings_;
-    QScopedPointer<ActiveRecordingManager> activeRecordingManager_;
+    QScopedPointer<Config> config_;
     QScopedPointer<RecordingManager> recordingManager_;
+    QScopedPointer<ActiveRecordingManager> activeRecordingManager_;
     CategoryView* categoryView_;
     RecordingGroupView* recordingGroupView_;
     QStackedWidget* mainView_;
