@@ -1,5 +1,7 @@
 #include "uh/plot/ColorPalette.hpp"
 #include "uh/views/DamageTimePlot.hpp"
+#include "uh/models/Recording.hpp"
+#include "uh/models/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 
@@ -63,40 +65,29 @@ DamageTimePlot::DamageTimePlot(QWidget* parent)
 // ----------------------------------------------------------------------------
 DamageTimePlot::~DamageTimePlot()
 {
-    for (auto& curve : curves_)
-        delete curve;
+    clear();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::resetPlot(int playerCount)
+void DamageTimePlot::clear()
 {
+    if (recording_)
+        recording_->dispatcher.removeListener(this);
+    recording_ = nullptr;
+
     for (auto& curve : curves_)
         delete curve;
     curves_.clear();
-
-    for (int i = 0; i != playerCount; ++i)
-    {
-        QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(ColorPalette::getColor(i), 2.0));
-        curve->setData(new CurveData);
-        curve->attach(this);
-        curves_.push_back(curve);
-    }
-
     largestTimeSeen_ = 0.0;
-    replot();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::addPlayerDamageValue(int idx, uint32_t frame, float damage)
+static void appendDataPoint(CurveData* data, float frame, float damage, float* largestTimeSeen)
 {
-    QwtPlotCurve* curve = curves_[idx];
-    CurveData* data = static_cast<CurveData*>(curve->data());
-
     float time = static_cast<float>(frame) / 60.0;
-    if (time > largestTimeSeen_)
+    if (time > *largestTimeSeen)
     {
-        largestTimeSeen_ = time;
+        *largestTimeSeen = time;
         float lastLargestSeen = 0.0;
         for (int i = 0; i < (int)data->size(); ++i)
         {
@@ -107,17 +98,52 @@ void DamageTimePlot::addPlayerDamageValue(int idx, uint32_t frame, float damage)
         for (int i = 0; i < (int)data->size(); ++i)
         {
             QPointF current = data->sample(i);
-            data->setSample(i, QPointF(current.x() - lastLargestSeen + largestTimeSeen_, current.y()));
+            data->setSample(i, QPointF(current.x() - lastLargestSeen + *largestTimeSeen, current.y()));
         }
     }
 
-    data->append(QPointF(largestTimeSeen_ - time, damage));
+    data->append(QPointF(*largestTimeSeen - time, damage));
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setPlayerName(int idx, const QString& tag)
+void DamageTimePlot::setRecording(Recording* recording)
 {
-    curves_[idx]->setTitle(tag);
+    clear();
+    recording_ = recording;
+    recording_->dispatcher.addListener(this);
+
+    for (int player = 0; player != recording_->playerCount(); ++player)
+    {
+        CurveData* data = new CurveData;
+        QwtPlotCurve* curve = new QwtPlotCurve;
+        curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
+        curve->setData(data);
+        curve->setTitle(recording_->playerName(player));
+        curve->attach(this);
+        curves_.push_back(curve);
+
+        for (const auto& state : recording_->playerStates(player))
+        {
+            appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+        }
+    }
+
+    forceAutoScale();
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const QString& name)
+{
+    curves_[player]->setTitle(name);
+    conditionalAutoScale();
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
+{
+    CurveData* data = static_cast<CurveData*>(curves_[player]->data());
+    data->append(QPointF(state.posx(), state.posy()));
+    conditionalAutoScale();
 }
 
 }
