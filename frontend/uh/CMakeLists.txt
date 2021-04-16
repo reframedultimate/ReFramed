@@ -16,12 +16,13 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/views/ActiveRecordingView.hpp"
     "include/uh/views/CategoryView.hpp"
     "include/uh/views/ConnectView.hpp"
-    "include/uh/views/DamagePlot.hpp"
+    "include/uh/views/DamageTimePlot.hpp"
     "include/uh/views/MainWindow.hpp"
     "include/uh/views/RecordingDataView.hpp"
     "include/uh/views/RealtimePlot.hpp"
     "include/uh/views/RecordingGroupView.hpp"
-    "include/uh/views/RecordingView.hpp")
+    "include/uh/views/RecordingView.hpp"
+    "include/uh/views/XYPositionPlot.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
     "forms/ConnectView.ui"
@@ -69,11 +70,12 @@ add_executable (ultimate-hindsight WIN32
     "src/views/ActiveRecordingView.cpp"
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"
-    "src/views/DamagePlot.cpp"
+    "src/views/DamageTimePlot.cpp"
     "src/views/RecordingDataView.cpp"
     "src/views/RealtimePlot.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
+    "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

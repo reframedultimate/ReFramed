@@ -1,5 +1,7 @@
 #include "uh/plot/ColorPalette.hpp"
-#include "uh/views/DamagePlot.hpp"
+#include "uh/views/XYPositionPlot.hpp"
+#include "uh/models/Recording.hpp"
+#include "uh/models/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 
@@ -53,80 +55,78 @@ private:
 }
 
 // ----------------------------------------------------------------------------
-DamagePlot::DamagePlot(QWidget* parent)
+XYPositionPlot::XYPositionPlot(QWidget* parent)
     : RealtimePlot(parent)
 {
-    setTitle("Damage over Time");
-    setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
+    setTitle("XY Positions");
 }
 
 // ----------------------------------------------------------------------------
-DamagePlot::~DamagePlot()
+XYPositionPlot::~XYPositionPlot()
 {
-    for (auto& curve : curves_)
-        delete curve;
+    clear();
 }
 
 // ----------------------------------------------------------------------------
-void DamagePlot::resetPlot(int playerCount)
+void XYPositionPlot::clear()
 {
+    if (recording_)
+        recording_->dispatcher.removeListener(this);
+    recording_ = nullptr;
+
     for (auto& curve : curves_)
         delete curve;
     curves_.clear();
+}
 
-    for (int i = 0; i != playerCount; ++i)
+// ----------------------------------------------------------------------------
+void XYPositionPlot::setRecording(Recording* recording)
+{
+    clear();
+    recording_ = recording;
+    recording_->dispatcher.addListener(this);
+
+    for (int player = 0; player != recording_->playerCount(); ++player)
     {
+        CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(ColorPalette::getColor(i), 2.0));
-        curve->setData(new CurveData);
+        curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
+        curve->setData(data);
+        curve->setTitle(recording_->playerName(player));
+        curve->setStyle(QwtPlotCurve::Dots);
         curve->attach(this);
         curves_.push_back(curve);
-    }
 
-    largestTimeSeen_ = 0.0;
-    replot();
-}
-
-// ----------------------------------------------------------------------------
-void DamagePlot::addPlayerDamageValue(int idx, uint32_t frame, float damage)
-{
-    QwtPlotCurve* curve = curves_[idx];
-    CurveData* data = static_cast<CurveData*>(curve->data());
-
-    float time = static_cast<float>(frame) / 60.0;
-    if (time > largestTimeSeen_)
-    {
-        largestTimeSeen_ = time;
-        float lastLargestSeen = 0.0;
-        for (int i = 0; i < (int)data->size(); ++i)
+        for (const auto& state : recording_->playerStates(player))
         {
-            float contender = data->sample(i).x();
-            if (lastLargestSeen < contender)
-                lastLargestSeen = contender;
-        }
-        for (int i = 0; i < (int)data->size(); ++i)
-        {
-            QPointF current = data->sample(i);
-            data->setSample(i, QPointF(current.x() - lastLargestSeen + largestTimeSeen_, current.y()));
+            data->append(QPointF(state.posx(), state.posy()));
         }
     }
 
-    data->append(QPointF(largestTimeSeen_ - time, damage));
+    autoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamagePlot::setPlayerName(int idx, const QString& tag)
-{
-    curves_[idx]->setTitle(tag);
-}
-
-// ----------------------------------------------------------------------------
-void DamagePlot::replotAndAutoScale()
+void XYPositionPlot::replotAndAutoScale()
 {
     if (lastScaleWasAutomatic())
         autoScale();
     else
         replot();
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const QString& name)
+{
+    curves_[player]->setTitle(name);
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionPlot::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
+{
+    CurveData* data = static_cast<CurveData*>(curves_[player]->data());
+    data->append(QPointF(state.posx(), state.posy()));
+    replotAndAutoScale();
 }
 
 }

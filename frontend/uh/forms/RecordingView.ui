@@ -24,9 +24,14 @@
        <string>Data</string>
       </attribute>
      </widget>
-     <widget class="QWidget" name="tab_damage">
+     <widget class="QWidget" name="tab_damage_vs_time">
       <attribute name="title">
        <string>Damage</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_xy_positions">
+      <attribute name="title">
+       <string>Positions</string>
       </attribute>
      </widget>
     </widget>

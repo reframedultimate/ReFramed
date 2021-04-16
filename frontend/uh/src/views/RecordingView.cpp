@@ -1,7 +1,8 @@
 #include "uh/ui_RecordingView.h"
 #include "uh/views/RecordingView.hpp"
 #include "uh/views/RecordingDataView.hpp"
-#include "uh/views/DamagePlot.hpp"
+#include "uh/views/DamageTimePlot.hpp"
+#include "uh/views/XYPositionPlot.hpp"
 #include "uh/models/Recording.hpp"
 #include "uh/models/PlayerState.hpp"
 
@@ -13,7 +14,8 @@ namespace uh {
 RecordingView::RecordingView(QWidget *parent)
     : QWidget(parent)
     , ui_(new Ui::RecordingView)
-    , plot_(new DamagePlot)
+    , damageTimePlot_(new DamageTimePlot)
+    , xyPositionPlot_(new XYPositionPlot)
     , recordingDataView_(new RecordingDataView)
 {
     ui_->setupUi(this);
@@ -24,15 +26,19 @@ RecordingView::RecordingView(QWidget *parent)
 
     // This is still broken, see
     // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
-    QMetaObject::invokeMethod(this, "addDamagePlotToUI", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "addPlotsToUI", Qt::QueuedConnection);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::addDamagePlotToUI()
+void RecordingView::addPlotsToUI()
 {
     QVBoxLayout* layout = new QVBoxLayout;
-    layout->addWidget(plot_);
-    ui_->tab_damage->setLayout(layout);
+    layout->addWidget(damageTimePlot_);
+    ui_->tab_damage_vs_time->setLayout(layout);
+
+    layout = new QVBoxLayout;
+    layout->addWidget(xyPositionPlot_);
+    ui_->tab_xy_positions->setLayout(layout);
 }
 
 // ----------------------------------------------------------------------------
@@ -54,14 +60,16 @@ void RecordingView::setRecording(Recording* recording)
 
     // Plot existing data
     int playerCount = recording_->playerCount();
-    plot_->resetPlot(playerCount);
+    damageTimePlot_->resetPlot(playerCount);
     for (int i = 0; i != playerCount; ++i)
     {
-        plot_->setPlayerName(i, recording_->playerName(i));
+        damageTimePlot_->setPlayerName(i, recording_->playerName(i));
         for (const auto& state : recording_->playerStates(i))
-            plot_->addPlayerDamageValue(i, state.frame(), state.damage());
+            damageTimePlot_->addPlayerDamageValue(i, state.frame(), state.damage());
     }
-    plot_->autoScale();
+    damageTimePlot_->autoScale();
+
+    xyPositionPlot_->setRecording(recording);
 
     recording_->dispatcher.addListener(this);
 }
@@ -69,7 +77,7 @@ void RecordingView::setRecording(Recording* recording)
 // ----------------------------------------------------------------------------
 void RecordingView::onActiveRecordingPlayerNameChanged(int player, const QString& name)
 {
-    plot_->setPlayerName(player, name);
+    damageTimePlot_->setPlayerName(player, name);
 }
 
 // ----------------------------------------------------------------------------
@@ -101,8 +109,8 @@ void RecordingView::onActiveRecordingNewUniquePlayerState(int player, const Play
 void RecordingView::onActiveRecordingNewPlayerState(int player, const PlayerState& state)
 {
     // Update plot
-    plot_->addPlayerDamageValue(player, state.frame(), state.damage());
-    plot_->replotAndAutoScale();
+    damageTimePlot_->addPlayerDamageValue(player, state.frame(), state.damage());
+    damageTimePlot_->replotAndAutoScale();
 }
 
 // ----------------------------------------------------------------------------
