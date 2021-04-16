@@ -4,6 +4,9 @@
 #include "uh/models/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
+#include <QMenu>
+#include <QAction>
+#include <QSignalMapper>
 
 namespace uh {
 
@@ -40,25 +43,23 @@ public:
     }
 };
 
-class TimeScaleDraw : public QwtScaleDraw
-{
-public:
-    QwtText label(double v) const override
-    {
-        return QTime(0, 0).addSecs(static_cast<int>(v)).toString();
-    }
-
-private:
-    QTime baseTime_;
-};
-
 }
 
 // ----------------------------------------------------------------------------
 XYPositionPlot::XYPositionPlot(QWidget* parent)
     : RealtimePlot(parent)
+    , curveTypeActionGroup_(new QActionGroup(this))
 {
     setTitle("XY Positions");
+
+    QAction* dotted = curveTypeActionGroup_->addAction("Dotted");
+    dotted->setCheckable(true);
+    dotted->setChecked(true);
+    QAction* lines = curveTypeActionGroup_->addAction("Lines");
+    lines->setCheckable(true);
+
+    connect(dotted, &QAction::triggered, this, &XYPositionPlot::onDottedAction);
+    connect(lines, &QAction::triggered, this, &XYPositionPlot::onLinesAction);
 }
 
 // ----------------------------------------------------------------------------
@@ -93,7 +94,7 @@ void XYPositionPlot::setRecording(Recording* recording)
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
         curve->setTitle(recording_->playerName(player));
-        curve->setStyle(QwtPlotCurve::Dots);
+        curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
 
@@ -103,16 +104,28 @@ void XYPositionPlot::setRecording(Recording* recording)
         }
     }
 
-    autoScale();
+    forceAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::replotAndAutoScale()
+void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 {
-    if (lastScaleWasAutomatic())
-        autoScale();
-    else
-        replot();
+    for (const auto& action : curveTypeActionGroup_->actions())
+        menu->addAction(action);
+    menu->addSeparator();
+
+    if (recording_ == nullptr)
+        return;
+    for (int i = 0; i != recording_->playerCount(); ++i)
+    {
+        QAction* a = menu->addAction(recording_->playerName(i));
+        a->setCheckable(true);
+        a->setChecked(curves_[i]->isVisible());
+        connect(a, &QAction::triggered, [=](bool checked) {
+            setCurveVisible(i, checked);
+        });
+    }
+    menu->addSeparator();
 }
 
 // ----------------------------------------------------------------------------
@@ -126,7 +139,38 @@ void XYPositionPlot::onActiveRecordingNewUniquePlayerState(int player, const Pla
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     data->append(QPointF(state.posx(), state.posy()));
-    replotAndAutoScale();
+    conditionalAutoScale();
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionPlot::onDottedAction(bool enable)
+{
+    if (!enable)
+        return;
+
+    for (auto& curve : curves_)
+        curve->setStyle(QwtPlotCurve::Dots);
+
+    replot();
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionPlot::onLinesAction(bool enable)
+{
+    if (!enable)
+        return;
+
+    for (auto& curve : curves_)
+        curve->setStyle(QwtPlotCurve::Lines);
+
+    replot();
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionPlot::setCurveVisible(int player, bool visible)
+{
+    curves_[player]->setVisible(visible);
+    replot();
 }
 
 }

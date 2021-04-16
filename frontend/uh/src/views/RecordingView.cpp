@@ -67,7 +67,7 @@ void RecordingView::setRecording(Recording* recording)
         for (const auto& state : recording_->playerStates(i))
             damageTimePlot_->addPlayerDamageValue(i, state.frame(), state.damage());
     }
-    damageTimePlot_->autoScale();
+    damageTimePlot_->forceAutoScale();
 
     xyPositionPlot_->setRecording(recording);
 
@@ -110,7 +110,7 @@ void RecordingView::onActiveRecordingNewPlayerState(int player, const PlayerStat
 {
     // Update plot
     damageTimePlot_->addPlayerDamageValue(player, state.frame(), state.damage());
-    damageTimePlot_->replotAndAutoScale();
+    damageTimePlot_->conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------

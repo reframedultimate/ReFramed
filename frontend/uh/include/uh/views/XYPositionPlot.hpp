@@ -4,12 +4,14 @@
 #include "uh/views/RealtimePlot.hpp"
 #include <QExplicitlySharedDataPointer>
 
+class QActionGroup;
 class QwtPlotDirectPainter;
 class QwtPlotCurve;
 
 namespace uh {
 
 class Recording;
+class XYPositionPlotContextMenuActions;
 
 class XYPositionPlot : public RealtimePlot
                      , public RecordingListener
@@ -22,7 +24,9 @@ public:
 public slots:
     void clear();
     void setRecording(Recording* recording);
-    void replotAndAutoScale();
+
+protected:
+    void prependContextMenuActions(QMenu* menu) override;
 
 private:
     void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
@@ -34,9 +38,15 @@ private:
     void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override { (void)player; (void)state; }
     void onRecordingWinnerChanged(int winner) override { (void)winner; }
 
+private slots:
+    void onDottedAction(bool enable);
+    void onLinesAction(bool enable);
+    void setCurveVisible(int player, bool visible);
+
 private:
     QVector<QwtPlotCurve*> curves_;
     QExplicitlySharedDataPointer<Recording> recording_;
+    QActionGroup* curveTypeActionGroup_;
 };
 
 }

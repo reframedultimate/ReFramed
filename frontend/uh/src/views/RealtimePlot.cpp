@@ -56,7 +56,6 @@ RealtimePlot::RealtimePlot(QWidget* parent) :
     QwtPlot(parent),
     contextMenuStore_(new RealtimePlotContextMenuStore),
     autoScaler_(NULL),
-    contextMenuWasRequested_(false),
     lastScaleWasAutomatic_(true)
 {
     // set up background colours
@@ -132,10 +131,19 @@ RealtimePlot::~RealtimePlot()
 }
 
 // ----------------------------------------------------------------------------
-void RealtimePlot::autoScale()
+void RealtimePlot::forceAutoScale()
 {
     autoScaler_->autoScale();
     lastScaleWasAutomatic_ = true;
+}
+
+// ----------------------------------------------------------------------------
+void RealtimePlot::conditionalAutoScale()
+{
+    if (lastScaleWasAutomatic_)
+        autoScaler_->autoScale();
+    else
+        replot();
 }
 
 // ----------------------------------------------------------------------------
@@ -157,12 +165,6 @@ void RealtimePlot::setYAxisUnit(QString unitY)
 {
     unitTracker_->setYUnit(unitY);
 }*/
-
-// ----------------------------------------------------------------------------
-bool RealtimePlot::lastScaleWasAutomatic() const
-{
-    return lastScaleWasAutomatic_;
-}
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::changeEvent(QEvent* e)
@@ -187,8 +189,7 @@ bool RealtimePlot::event(QEvent* event)
         QKeyEvent* ke = static_cast<QKeyEvent*>(event);
         if(ke->key() == Qt::Key_Space)
         {
-            autoScale();
-            lastScaleWasAutomatic_ = true;
+            forceAutoScale();
             return true;
         }
     }
@@ -205,17 +206,19 @@ bool RealtimePlot::event(QEvent* event)
      */
     if(event->type() == QEvent::ContextMenu)
     {
-        contextMenuWasRequested_ = true;
+        QContextMenuEvent* e = static_cast<QContextMenuEvent*>(event);
+        contextMenuRequestedAt_ = e->pos();
         return true;
     }
-    if(event->type() == QEvent::MouseButtonRelease && contextMenuWasRequested_)
+    if(event->type() == QEvent::MouseButtonRelease && !contextMenuRequestedAt_.isNull())
     {
         QMouseEvent* me = static_cast<QMouseEvent*>(event);
         if(me->button() == Qt::RightButton)
         {
-            contextMenuWasRequested_ = false;
+            QPoint pos = contextMenuRequestedAt_;
+            contextMenuRequestedAt_ = QPoint();
             if(contextMenuPolicy() == Qt::CustomContextMenu)
-                emit customContextMenuRequested(pos());
+                emit customContextMenuRequested(pos);
             return true;
         }
     }
@@ -257,25 +260,27 @@ void RealtimePlot::showContextMenu(const QPoint& pos)
     (void)pos;
     QMenu contextMenu(tr("Context Menu"));
 
+    prependContextMenuActions(&contextMenu);
+
     contextMenu.addAction(&contextMenuStore_->resetZoom);
     contextMenu.addAction(&contextMenuStore_->copyImage);
     contextMenu.addAction(&contextMenuStore_->copyCSV);
     contextMenu.addAction(&contextMenuStore_->copyMatlabArray);
     // TODO contextMenu.addAction(&contextMenuStore_->saveAs);
 
-    contextMenu.exec(QCursor::pos());
+    contextMenu.exec(mapToGlobal(pos));
 }
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::cancelContextMenu()
 {
-    contextMenuWasRequested_ = false;
+    contextMenuRequestedAt_ = QPoint();
 }
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::resetZoom()
 {
-    autoScale();
+    forceAutoScale();
 }
 
 // ----------------------------------------------------------------------------
