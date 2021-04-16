@@ -120,13 +120,4 @@ void DamageTimePlot::setPlayerName(int idx, const QString& tag)
     curves_[idx]->setTitle(tag);
 }
 
-// ----------------------------------------------------------------------------
-void DamageTimePlot::replotAndAutoScale()
-{
-    if (lastScaleWasAutomatic())
-        autoScale();
-    else
-        replot();
-}
-
 }

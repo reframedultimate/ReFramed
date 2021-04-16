@@ -2,6 +2,8 @@
 
 #include <qwt_plot.h>
 
+class QMenu;
+
 namespace uh {
 
 class AutoScaler;
@@ -20,13 +22,12 @@ public:
     explicit RealtimePlot(QWidget* parent = 0);
     virtual ~RealtimePlot();
 
-    void autoScale();
+    void forceAutoScale();
+    void conditionalAutoScale();
 
     /*void setAxisUnits(QString unitX, QString unitY);
     void setXAxisUnit(QString unitX);
     void setYAxisUnit(QString unitY);*/
-
-    bool lastScaleWasAutomatic() const;
 
 signals:
     /*!
@@ -38,6 +39,7 @@ signals:
 protected:
     virtual void changeEvent(QEvent* e) override;
     virtual bool event(QEvent* event) override;
+    virtual void prependContextMenuActions(QMenu* menu) { (void)menu; }
 
 private slots:
     void onPickerActivated(bool activated, const QPointF& point);
@@ -58,7 +60,7 @@ private:
     AutoScaler* autoScaler_;
     //UnitTracker* unitTracker_;
     QPointF activatedPoint_;
-    bool contextMenuWasRequested_;
+    QPoint contextMenuRequestedAt_;
     bool lastScaleWasAutomatic_;
 };
 
