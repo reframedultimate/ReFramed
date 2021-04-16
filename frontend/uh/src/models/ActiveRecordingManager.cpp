@@ -1,21 +1,24 @@
 #include "uh/listeners/ActiveRecordingManagerListener.hpp"
 #include "uh/models/ActiveRecordingManager.hpp"
-#include "uh/models/Settings.hpp"
+#include "uh/models/RecordingManager.hpp"
 #include "uh/platform/tcp_socket.h"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-ActiveRecordingManager::ActiveRecordingManager(Settings* settings, QObject *parent)
+ActiveRecordingManager::ActiveRecordingManager(RecordingManager* recordingManager, QObject *parent)
     : QObject(parent)
-    , savePath_(settings->activeRecordingSavePath)
+    , recordingManager_(recordingManager)
     , format_(SetFormat::FRIENDLIES)
 {
+    recordingManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 ActiveRecordingManager::~ActiveRecordingManager()
 {
+    recordingManager_->dispatcher.removeListener(this);
+
     if (activeRecording_)
         activeRecording_->dispatcher.removeListener(this);
 }
@@ -88,20 +91,6 @@ void ActiveRecordingManager::setGameNumber(int number)
     {
         gameNumber_ = number;
         dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, number);
-    }
-}
-
-// ----------------------------------------------------------------------------
-void ActiveRecordingManager::setSavePath(const QDir& savePath)
-{
-    savePath_ = savePath;
-
-    if (activeRecording_)
-    {
-        findUniqueGameAndSetNumbers(activeRecording_.data());
-
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerSetNumberChanged, activeRecording_->setNumber());
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, activeRecording_->gameNumber());
     }
 }
 
@@ -187,9 +176,19 @@ void ActiveRecordingManager::onProtocolRecordingEnded(ActiveRecording* recording
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingEnded, recording);
 
     // Save recording
-    QFileInfo fileInfo(savePath_, composeFileName(recording));
-    recording->saveAs(fileInfo.absoluteFilePath());
-    dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerRecordingSaved, fileInfo);
+    QFileInfo fileInfo(
+        recordingManager_->defaultRecordingSourceDirectory(),
+        composeFileName(recording)
+    );
+    if (recording->saveAs(fileInfo.absoluteFilePath()))
+    {
+        // Add the new recording to the "All" recording group
+        recordingManager_->allRecordingGroup()->addFile(fileInfo.absoluteFilePath());
+    }
+    else
+    {
+        // TODO: Need to handle this somehow
+    }
 
     // In between recordings (when players are in the menu) there is no active
     // recording, but it's still possible to edit the names/format/game number/etc
@@ -305,7 +304,8 @@ bool ActiveRecordingManager::shouldStartNewSet(const ActiveRecording* recording)
 // ----------------------------------------------------------------------------
 void ActiveRecordingManager::findUniqueGameAndSetNumbers(ActiveRecording* recording)
 {
-    while (QFileInfo::exists(savePath_.absoluteFilePath(composeFileName(recording))))
+    const QDir& dir = recordingManager_->defaultRecordingSourceDirectory();
+    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
     {
         switch (format_.type())
         {
@@ -319,6 +319,18 @@ void ActiveRecordingManager::findUniqueGameAndSetNumbers(ActiveRecording* record
                 recording->setSetNumber(recording->setNumber() + 1);
                 break;
         }
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ActiveRecordingManager::onRecordingManagerDefaultRecordingLocationChanged(const QDir& path)
+{
+    if (activeRecording_)
+    {
+        findUniqueGameAndSetNumbers(activeRecording_.data());
+
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerSetNumberChanged, activeRecording_->setNumber());
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerGameNumberChanged, activeRecording_->gameNumber());
     }
 }
 

@@ -2,6 +2,7 @@
 
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include "uh/listeners/RecordingListener.hpp"
+#include "uh/listeners/RecordingManagerListener.hpp"
 #include "uh/models/SetFormat.hpp"
 #include "uh/models/ActiveRecording.hpp"  // MOC requires this because of smart pointers
 #include "uh/models/Protocol.hpp"  // MOC requires this because of smart pointers
@@ -15,18 +16,20 @@ class Protocol;
 class Settings;
 class ActiveRecording;
 class ActiveRecordingManagerListener;
+class RecordingManager;
 
 /*!
  * \brief Central class that controls the connection + protocol with the Switch
  * and manages set information and saving recordings to files as they come in.
  */
 class ActiveRecordingManager : public QObject
+                             , public RecordingManagerListener
                              , public RecordingListener
 {
     Q_OBJECT
 
 public:
-    ActiveRecordingManager(Settings* settings, QObject* parent=nullptr);
+    ActiveRecordingManager(RecordingManager* recordingManager, QObject* parent=nullptr);
     ~ActiveRecordingManager();
 
     void setFormat(const SetFormat& format);
@@ -42,7 +45,6 @@ signals:
     void disconnectedFromServer();
 
 public slots:
-    void setSavePath(const QDir& savePath);
     void tryConnectToServer(const QString& ipAddress, uint16_t port);
     void disconnectFromServer();
 
@@ -57,6 +59,20 @@ private:
     QString composeFileName(const ActiveRecording* recording) const;
 
 private:
+    void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
+
+    void onRecordingManagerGroupAdded(RecordingGroup* group) override { (void)group; }
+    void onRecordingManagerGroupRemoved(RecordingGroup* group) override { (void)group; }
+
+    void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onRecordingManagerRecordingSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onRecordingManagerRecordingSourceRemoved(const QString& name) override { (void)name; }
+
+    void onRecordingManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onRecordingManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onRecordingManagerVideoSourceRemoved(const QString& name) override { (void)name; }
+
+private:
     void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
     void onActiveRecordingSetNumberChanged(int number) override;
     void onActiveRecordingGameNumberChanged(int number) override;
@@ -69,7 +85,7 @@ private:
     QScopedPointer<Protocol> protocol_;
     QVector<QExplicitlySharedDataPointer<ActiveRecording>> pastRecordings_;
     QExplicitlySharedDataPointer<ActiveRecording> activeRecording_;
-    QDir savePath_;
+    RecordingManager* recordingManager_;
     QString p1Name_;
     QString p2Name_;
     SetFormat format_;

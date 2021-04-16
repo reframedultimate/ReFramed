@@ -3,7 +3,19 @@
 #include <QLayoutItem>
 #include <QWidget>
 #include <QStackedWidget>
+#include <QDir>
+#include <QFileInfo>
 #include <cstring>
+
+// ----------------------------------------------------------------------------
+qhash_result_t qHash(const QDir& c, qhash_result_t seed) noexcept
+{
+    return qHash(c.canonicalPath().constData(), seed);
+}
+qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed) noexcept
+{
+    return qHash(c.absoluteFilePath().constData(), seed);
+}
 
 namespace uh {
 

@@ -1,17 +1,26 @@
+#include "uh/Util.hpp"
 #include "uh/models/RecordingManager.hpp"
-#include "uh/models/Settings.hpp"
 #include "uh/listeners/RecordingManagerListener.hpp"
 
 #include <QStandardPaths>
+#include <QJsonObject>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-RecordingManager::RecordingManager(Settings* settings)
-    : settings_(settings)
+RecordingManager::RecordingManager(Config* config)
+    : ConfigAccessor(config)
 {
+    QJsonObject& cfg = getConfig();
+    if (cfg["recordingmanager"].isNull())
+        cfg["recordingmanager"] = QJsonObject();
+    auto cfgRecMgr = cfg["recordingmanager"].toObject();
+    if (cfgRecMgr["defaultrecordingdir"].isNull())
+        cfgRecMgr["defaultrecordingdir"] = QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation)).canonicalPath();
+    cfg["recordingmanager"] = cfgRecMgr;
+
     // Default location is always at index 0
-    recordingDirectories_.push_back(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    recordingSources_.insert("Default", defaultRecordingSourceDirectory());
 
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
@@ -21,21 +30,97 @@ RecordingManager::RecordingManager(Settings* settings)
 }
 
 // ----------------------------------------------------------------------------
-const QDir& RecordingManager::defaultRecordingSourceDirectory() const
+QDir RecordingManager::defaultRecordingSourceDirectory() const
 {
-    return recordingDirectories_[0];
+    return getConfig()["recordingmanager"].toObject()["defaultrecordingdir"].toString();
 }
 
 // ----------------------------------------------------------------------------
-const QVector<QDir>& RecordingManager::recordingSourceDirectories() const
+const QHash<QString, QDir>& RecordingManager::recordingSources() const
 {
-    return recordingDirectories_;
+    return recordingSources_;
 }
 
 // ----------------------------------------------------------------------------
-const QVector<QDir>& RecordingManager::videoSourceDirectories()
+bool RecordingManager::addRecordingSource(const QString& name, const QDir& path)
+{
+    if (recordingSources_.contains(name))
+        return false;
+
+    recordingSources_.insert(name, path);
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceAdded, name, path);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::changeRecordingSourceName(const QString& oldName, const QString& newName)
+{
+    auto it = recordingSources_.find(oldName);
+    if (it == recordingSources_.end())
+        return false;
+    if (recordingSources_.contains(newName))
+        return false;
+
+    QDir dir = it.value();
+    recordingSources_.insert(newName, dir);
+    recordingSources_.erase(it);
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceNameChanged, oldName, newName);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::removeRecordingSource(const QString& name)
+{
+    if (recordingSources_.remove(name) == 0)
+        return false;
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceRemoved, name);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+const QHash<QString, QDir>& RecordingManager::videoSources()
 {
     return videoDirectories_;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::addVideoSource(const QString& name, const QDir& path)
+{
+    if (videoDirectories_.contains(name))
+        return false;
+
+    videoDirectories_.insert(name, path);
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceAdded, name, path);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::changeVideoSourceName(const QString& oldName, const QString& newName)
+{
+    auto it = videoDirectories_.find(oldName);
+    if (it == videoDirectories_.end())
+        return false;
+    if (videoDirectories_.contains(newName))
+        return false;
+
+    QDir dir = it.value();
+    videoDirectories_.insert(newName, dir);
+    videoDirectories_.erase(it);
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceNameChanged, oldName, newName);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::removeVideoSource(const QString& name)
+{
+    if (videoDirectories_.remove(name) == 0)
+        return false;
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceRemoved, name);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -76,7 +161,7 @@ void RecordingManager::scanForRecordings()
 {
     RecordingGroup* allGroup = allRecordingGroup();
     allGroup->removeAllFiles();
-    for (const auto& recdir : recordingDirectories_)
+    for (const auto& recdir : recordingSources_)
         for (const auto& file : recdir.entryList({"*.uhr", "*.UHR"}, QDir::Files))
             allGroup->addFile(QFileInfo(recdir, file));
 }
@@ -84,8 +169,15 @@ void RecordingManager::scanForRecordings()
 // ----------------------------------------------------------------------------
 void RecordingManager::setDefaultRecordingSourceDirectory(const QDir& path)
 {
-    recordingDirectories_[0] = path;
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerDefaultRecordingLocationChanged, path);
+    QString canonicalPath = path.canonicalPath();
+
+    QJsonObject& cfg = getConfig();
+    QJsonObject cfgRecMgr = cfg["recordingmanager"].toObject();
+    cfgRecMgr["defaultrecordingdir"] = canonicalPath;
+    cfg = cfgRecMgr;
+    saveConfig();
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerDefaultRecordingLocationChanged, QDir(canonicalPath));
 }
 
 // ----------------------------------------------------------------------------

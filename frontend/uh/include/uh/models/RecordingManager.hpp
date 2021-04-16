@@ -3,6 +3,7 @@
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include "uh/listeners/RecordingGroupListener.hpp"
 #include "uh/models/RecordingGroup.hpp"
+#include "uh/models/ConfigAccessor.hpp"
 #include <QString>
 #include <QDir>
 #include <unordered_map>
@@ -23,10 +24,11 @@ namespace uh {
 class RecordingManagerListener;
 class Settings;
 
-class RecordingManager : public RecordingGroupListener
+class RecordingManager : public ConfigAccessor
+                       , public RecordingGroupListener
 {
 public:
-    RecordingManager(Settings* settings);
+    RecordingManager(Config* config);
 
     /*!
      * \brief This is the location where recordings are saved automatically.
@@ -35,21 +37,31 @@ public:
      * The main window has some logic that forces the user to set a default
      * location before anything else can happen.
      */
-    const QDir& defaultRecordingSourceDirectory() const;
+    QDir defaultRecordingSourceDirectory() const;
+
+    void setDefaultRecordingSourceDirectory(const QDir& path);
 
     /*!
      * \brief Returns a list of paths to directories in which the recording
      * manager can find and load recordings.
      * \note The default recording location is also part of this list.
      */
-    const QVector<QDir>& recordingSourceDirectories() const;
+    const QHash<QString, QDir>& recordingSources() const;
+
+    bool addRecordingSource(const QString& name, const QDir& path);
+    bool changeRecordingSourceName(const QString& oldName, const QString& newName);
+    bool removeRecordingSource(const QString& name);
 
     /*!
      * \brief Returns a list of paths to directories in which the recording
      * manager can find and load videos that are associated with a recording.
      * \return
      */
-    const QVector<QDir>& videoSourceDirectories();
+    const QHash<QString, QDir>& videoSources();
+
+    bool addVideoSource(const QString& name, const QDir& path);
+    bool changeVideoSourceName(const QString& oldName, const QString& newName);
+    bool removeVideoSource(const QString& name);
 
     RecordingGroup* allRecordingGroup();
 
@@ -71,8 +83,6 @@ public:
 
     RecordingGroup* getOrCreateRecordingGroup(const QString& name);
 
-    void setDefaultRecordingSourceDirectory(const QDir& path);
-
     ListenerDispatcher<RecordingManagerListener> dispatcher;
 
 private:
@@ -84,8 +94,8 @@ private:
 
 private:
     Settings* settings_;
-    QVector<QDir> recordingDirectories_;
-    QVector<QDir> videoDirectories_;
+    QHash<QString, QDir> recordingSources_;
+    QHash<QString, QDir> videoDirectories_;
     std::unordered_map<QString, std::unique_ptr<RecordingGroup>> recordingGroups_;
 };
 

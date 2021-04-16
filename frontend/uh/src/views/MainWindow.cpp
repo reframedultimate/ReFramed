@@ -1,4 +1,4 @@
-#include "uh/models/Settings.hpp"
+#include "uh/models/Config.hpp"
 #include "uh/models/ActiveRecordingManager.hpp"
 #include "uh/models/RecordingManager.hpp"
 #include "uh/ui_MainWindow.h"
@@ -21,9 +21,9 @@ namespace uh {
 // ----------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , settings_(new Settings)
-    , activeRecordingManager_(new ActiveRecordingManager(settings_.get()))
-    , recordingManager_(new RecordingManager(settings_.get()))
+    , config_(new Config)
+    , recordingManager_(new RecordingManager(config_.get()))
+    , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
     , categoryView_(new CategoryView(recordingManager_.get()))
     , recordingGroupView_(new RecordingGroupView)
     , mainView_(new QStackedWidget)
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(activeRecordingManager_.get(), SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
 
     connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
-    connect(categoryView_, SIGNAL(recordingGroupSelected(RecordingGroup*)), recordingGroupView_, SLOT(setRecordingGroup(RecordingGroup*)));
+    connect(categoryView_, SIGNAL(recordingGroupSelected(RecordingGroup*)), recordingGroupView_, SLOT(setRecordingGroupWeakRef(RecordingGroup*)));
 
     connect(ui_->action_connect, SIGNAL(triggered(bool)), this, SLOT(onConnectActionTriggered()));
     connect(ui_->action_disconnect, SIGNAL(triggered(bool)), this, SLOT(onDisconnectActionTriggered()));
@@ -126,7 +126,7 @@ static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup)
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
-    ConnectView* c = new ConnectView(settings_.get(), Qt::Popup | Qt::Dialog);
+    ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
     connect(c, SIGNAL(connectRequest(const QString&,uint16_t)), activeRecordingManager_.get(), SLOT(tryConnectToServer(const QString&, uint16_t)));
     connect(activeRecordingManager_.get(), SIGNAL(connectedToServer()), c, SLOT(close()));
@@ -145,30 +145,36 @@ void MainWindow::onDisconnectActionTriggered()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveRecordingManagerRecordingSaved(const QFileInfo& absPathToFile)
-{
-    recordingManager_->allRecordingGroup()->addFile(absPathToFile);
-}
-
-// ----------------------------------------------------------------------------
 void MainWindow::onCategoryChanged(CategoryType category)
 {
     switch (category)
     {
-        case CategoryType::ANALYSIS          : mainView_->setCurrentIndex(0); break;
-        case CategoryType::RECORDING_GROUPS  : mainView_->setCurrentIndex(1); break;
-        case CategoryType::RECORDING_SOURCES : break;
-        case CategoryType::VIDEO_SOURCES     : break;
-        case CategoryType::ACTIVE_RECORDING  : mainView_->setCurrentIndex(2); break;
-        case CategoryType::TOP_LEVEL : /* should never happen */ break;
+        case CategoryType::TOP_LEVEL_ANALYSIS:
+            mainView_->setCurrentIndex(0);
+            break;
+
+        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+        case CategoryType::RECORDING_GROUP_ITEM:
+            mainView_->setCurrentIndex(1);
+            break;
+
+        case CategoryType::TOP_LEVEL_RECORDING_SOURCES:
+        case CategoryType::RECORDING_SOURCE_ITEM:
+            break;
+
+        case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
+        case CategoryType::VIDEO_SOURCE_ITEM:
+            break;
+
+        case CategoryType::TOP_LEVEL_ACTIVE_RECORDING:
+            mainView_->setCurrentIndex(2);
+            break;
     }
 }
 
 // ----------------------------------------------------------------------------
 void MainWindow::negotiateDefaultRecordingLocation()
 {
-    QDir path = recordingManager_->defaultRecordingSourceDirectory();
-
     auto askForDir = [this](const QString& path) -> QString {
         return QFileDialog::getExistingDirectory(
             this,
@@ -178,7 +184,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         );
     };
 
-    QFileInfo pathInfo(path.absolutePath());
+    QFileInfo pathInfo(recordingManager_->defaultRecordingSourceDirectory().path());
     if (!pathInfo.exists())
     {
         int option = QMessageBox::warning(
@@ -200,7 +206,6 @@ void MainWindow::negotiateDefaultRecordingLocation()
         }
         else
         {
-            pathInfo = path.absolutePath();
             if (QDir().mkdir(pathInfo.filePath()))
             {
                 recordingManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());

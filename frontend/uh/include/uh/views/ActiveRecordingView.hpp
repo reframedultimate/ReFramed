@@ -38,7 +38,6 @@ private slots:
 private:
     void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override;
     void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override;
-    void onActiveRecordingManagerRecordingSaved(const QFileInfo& absPathToFile) override;
 
     void onActiveRecordingManagerP1NameChanged(const QString& name) override;
     void onActiveRecordingManagerP2NameChanged(const QString& name) override;

@@ -1,3 +1,4 @@
+#include "uh/Util.hpp"
 #include "uh/listeners/RecordingGroupListener.hpp"
 #include "uh/models/RecordingGroup.hpp"
 
@@ -10,7 +11,7 @@ RecordingGroup::RecordingGroup(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-const QVector<QFileInfo>& RecordingGroup::absFilePathList() const
+const QSet<QFileInfo>& RecordingGroup::absFilePathList() const
 {
     return fileList_;
 }
@@ -31,7 +32,7 @@ void RecordingGroup::setName(const QString& name)
 // ----------------------------------------------------------------------------
 void RecordingGroup::addFile(const QFileInfo& absPathToFile)
 {
-    fileList_.push_back(absPathToFile);
+    fileList_.insert(absPathToFile);
     dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, absPathToFile);
 }
 

@@ -3,7 +3,7 @@
 #include "uh/listeners/ListenerDispatcher.hpp"
 #include <QString>
 #include <QFileInfo>
-#include <QVector>
+#include <QSet>
 
 namespace uh {
 
@@ -19,7 +19,7 @@ public:
      */
     const QString& name() const;
 
-    const QVector<QFileInfo>& absFilePathList() const;
+    const QSet<QFileInfo>& absFilePathList() const;
 
     void setName(const QString& name);
     void addFile(const QFileInfo& absPathToFile);
@@ -34,7 +34,8 @@ private:
 
 private:
     QString name_;
-    QVector<QFileInfo> fileList_;
+    QSet<QFileInfo> fileList_;
 };
 
 }
+

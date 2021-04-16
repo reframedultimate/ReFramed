@@ -1,18 +1,29 @@
-#include "uh/models/Settings.hpp"
 #include "uh/views/ConnectView.hpp"
 #include "uh/ui_ConnectView.h"
+#include <QJsonObject>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-ConnectView::ConnectView(Settings* settings, Qt::WindowFlags flags)
+ConnectView::ConnectView(Config* config, Qt::WindowFlags flags)
     : QDialog(nullptr, flags)
+    , ConfigAccessor(config)
     , ui_(new Ui::ConnectView)
-    , settings_(settings)
 {
     ui_->setupUi(this);
-    ui_->lineEdit_address->setText(settings_->connectIPAddress);
-    ui_->lineEdit_port->setText(QString::number(settings_->connectPort));
+
+    QJsonObject& cfg = getConfig();
+    if (cfg["connectview"].isObject() == false)
+        cfg["connectview"] = QJsonObject();
+    auto cfgConnect = cfg["connectview"].toObject();
+    if (cfgConnect["lastip"].isString() == false)
+        cfgConnect["lastip"] = QString();
+    if (cfgConnect["lastport"].isString() == false)
+        cfgConnect["lastport"] = "42069";
+    cfg["connectview"] = cfgConnect;
+
+    ui_->lineEdit_address->setText(cfgConnect["lastip"].toString());
+    ui_->lineEdit_port->setText(cfgConnect["lastport"].toString());
     ui_->label_info->setText("<font color=\"#000000\">Not connected.</font>");
 
     connect(ui_->pushButton_connect, SIGNAL(released()), this, SLOT(onConnectButtonReleased()));
@@ -42,12 +53,20 @@ void ConnectView::onConnectButtonReleased()
 {
     bool ok = false;
     uint16_t port = ui_->lineEdit_port->text().toUInt(&ok);
-    if (ok)
-        settings_->connectPort = port;
-    settings_->connectIPAddress = ui_->lineEdit_address->text();
+    if (!ok)
+    {
+        ui_->label_info->setText("<font color=\"#ff0000\">Invalid port number</font>");
+        return;
+    }
+
+    QJsonObject& cfg = getConfig();
+    auto cfgConnect = cfg["connectview"].toObject();
+    cfgConnect["lastip"] = ui_->lineEdit_address->text();
+    cfgConnect["lastport"] = QString::number(port);
+    cfg["connectview"] = cfgConnect;
 
     setConnecting();
-    emit connectRequest(settings_->connectIPAddress, settings_->connectPort);
+    emit connectRequest(ui_->lineEdit_address->text(), port);
 }
 
 }

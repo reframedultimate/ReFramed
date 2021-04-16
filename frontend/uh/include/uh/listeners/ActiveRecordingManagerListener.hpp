@@ -14,7 +14,6 @@ class ActiveRecordingManagerListener
 public:
     virtual void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) = 0;
     virtual void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) = 0;
-    virtual void onActiveRecordingManagerRecordingSaved(const QFileInfo& fileName) = 0;
 
     // We re-propagate all RecordingListener events because ActiveRecordingManager
     // allows you to change these properties even when there is no active recording

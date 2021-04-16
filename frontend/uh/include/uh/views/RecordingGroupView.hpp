@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QListWidgetItem;
+class QStringListModel;
 
 namespace Ui {
     class RecordingGroupView;
@@ -13,6 +14,7 @@ namespace uh {
 
 class RecordingGroup;
 class RecordingView;
+class RecordingNameCompleter;
 
 class RecordingGroupView : public QWidget
                          , public RecordingGroupListener
@@ -24,11 +26,12 @@ public:
     ~RecordingGroupView();
 
 public slots:
-    void setRecordingGroup(RecordingGroup* group);
-    void clear();
+    void setRecordingGroupWeakRef(RecordingGroup* group);
+    void recordingGroupExpired();
 
 private slots:
     void onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
+    void onFiltersTextChanged(const QString& text);
 
 private:
     void onRecordingGroupNameChanged(const QString& name) override;
@@ -36,9 +39,10 @@ private:
     void onRecordingGroupFileRemoved(const QFileInfo& absPathToFile) override;
 
 private:
+    Ui::RecordingGroupView* ui_;
     RecordingGroup* currentGroup_ = nullptr;
     RecordingView* recordingView_;
-    Ui::RecordingGroupView* ui_;
+    RecordingNameCompleter* filterCompleter_;
 };
 
 }

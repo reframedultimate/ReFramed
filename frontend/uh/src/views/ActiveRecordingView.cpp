@@ -151,12 +151,6 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingSaved(const QFileInfo& absPathToFile)
-{
-    (void)absPathToFile;
-}
-
-// ----------------------------------------------------------------------------
 void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& name)
 {
     if (0 >= names_.size())
