@@ -4,7 +4,7 @@ project ("uh-application"
 
 include (GNUInstallDirs)
 
-find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
+find_package (Qt5 COMPONENTS Widgets Gui Multimedia MultimediaWidgets LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/models/ActiveRecordingManager.hpp"
@@ -22,6 +22,7 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/uh/views/RealtimePlot.hpp"
     "include/uh/views/RecordingGroupView.hpp"
     "include/uh/views/RecordingView.hpp"
+    "include/uh/views/VideoPlayer.hpp"
     "include/uh/views/XYPositionPlot.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
@@ -75,6 +76,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/RealtimePlot.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
+    "src/views/VideoPlayer.cpp"
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight

@@ -9,6 +9,8 @@
 #include "uh/views/RecordingGroupView.hpp"
 #include "uh/views/RecordingView.hpp"
 
+#include "uh/views/VideoPlayer.hpp"
+
 #include <QStackedWidget>
 #include <QDockWidget>
 #include <QStackedWidget>
@@ -32,9 +34,9 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->setupUi(this);
 
     ActiveRecordingView* activeRecordingView = new ActiveRecordingView(activeRecordingManager_.get());
-    RecordingView* recordingView = new RecordingView;
+    VideoPlayer* analysis = new VideoPlayer;
 
-    mainView_->addWidget(recordingView);
+    mainView_->addWidget(analysis);
     mainView_->addWidget(recordingGroupView_);
     mainView_->addWidget(activeRecordingView);
     setCentralWidget(mainView_);
