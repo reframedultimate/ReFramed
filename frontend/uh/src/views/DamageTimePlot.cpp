@@ -142,7 +142,7 @@ void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const QStrin
 void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
-    data->append(QPointF(state.posx(), state.posy()));
+    appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
     conditionalAutoScale();
 }
 
