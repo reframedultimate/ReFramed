@@ -1,0 +1,156 @@
+#include "gmock/gmock.h"
+#include "uh/Reference.hpp"
+#include "uh/RefCounted.hpp"
+
+#define NAME reference
+
+using namespace testing;
+
+class Obj : public uh::RefCounted
+{
+public:
+};
+
+class NAME : public Test
+{
+public:
+	void SetUp() override {}
+	void TearDown() override {}
+};
+
+TEST_F(NAME, default_refcounted_constructor_has_refcount_0)
+{
+	Obj* o = new Obj;
+	EXPECT_THAT(o->refs(), Eq(0));
+	delete o;
+}
+
+TEST_F(NAME, default_reference_constructor_has_refcount_0)
+{
+	uh::Reference<Obj> ref;
+	ASSERT_THAT(ref.refs(), Eq(0));
+}
+
+TEST_F(NAME, construct_from_raw_pointer)
+{
+	uh::Reference<Obj> ref(new Obj);
+	ASSERT_THAT(ref.refs(), Eq(1));
+
+	Obj* o = ref.get();
+	o->incRef();
+	ASSERT_THAT(o->refs(), Eq(2));
+	ref.reset();
+	ASSERT_THAT(o->refs(), Eq(1));
+	o->decRef();
+}
+
+TEST_F(NAME, copy_construct)
+{
+	Obj* o = new Obj;
+	o->incRef();
+
+	uh::Reference<Obj> ref1(o);
+	uh::Reference<Obj> ref2(ref1);
+
+	ASSERT_THAT(ref1.refs(), Eq(3));
+	ASSERT_THAT(ref2.refs(), Eq(3));
+	ASSERT_THAT(o->refs(), Eq(3));
+
+	ref1.reset();
+	ref2.reset();
+	ASSERT_THAT(o->refs(), Eq(1));
+	o->decRef();
+}
+
+TEST_F(NAME, assign_raw_pointer)
+{
+	Obj* o1 = new Obj;
+	Obj* o2 = new Obj;
+	o1->incRef();
+	o2->incRef();
+
+	uh::Reference<Obj> ref = o1;
+	ASSERT_THAT(o1->refs(), Eq(2));
+	ASSERT_THAT(o2->refs(), Eq(1));
+	ref = o2;
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	ref.reset();
+	ASSERT_THAT(o1->refs(), Eq(1));
+
+	o1->decRef();
+	o2->decRef();
+}
+
+TEST_F(NAME, assign_operator)
+{
+	Obj* o1 = new Obj;
+	Obj* o2 = new Obj;
+	o1->incRef();
+	o2->incRef();
+
+	uh::Reference<Obj> ref1 = o1;
+	uh::Reference<Obj> ref2 = o2;
+	ASSERT_THAT(o1->refs(), Eq(2));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	ref1 = ref2;
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(3));
+
+	ref1.reset();
+	ref2.reset();
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(1));
+
+	o1->decRef();
+	o2->decRef();
+}
+
+TEST_F(NAME, move_construct)
+{
+	Obj* o1 = new Obj;
+	Obj* o2 = new Obj;
+	o1->incRef();
+	o2->incRef();
+
+	uh::Reference<Obj> ref2 = o2;
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	uh::Reference<Obj> ref1(std::move(ref2));
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	ref1.reset();
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(1));
+
+	o1->decRef();
+	o2->decRef();
+}
+
+TEST_F(NAME, move_assign)
+{
+	Obj* o1 = new Obj;
+	Obj* o2 = new Obj;
+	o1->incRef();
+	o2->incRef();
+
+	uh::Reference<Obj> ref1 = o1;
+	uh::Reference<Obj> ref2 = o2;
+	ASSERT_THAT(o1->refs(), Eq(2));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	ref1 = std::move(ref2);
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(2));
+
+	ref1.reset();
+	ASSERT_THAT(o1->refs(), Eq(1));
+	ASSERT_THAT(o2->refs(), Eq(1));
+
+	o1->decRef();
+	o2->decRef();
+}

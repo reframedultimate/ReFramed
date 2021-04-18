@@ -17,10 +17,22 @@ project ("ultimate-hindsight"
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-set (UH_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+set (UH_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+set (UH_BUILD_LIBDIR "${UH_BUILD_BINDIR}/lib")
+set (UH_BUILD_PLUGINDIR "${UH_BUILD_BINDIR}/plugins")
+
+set (UH_INSTALL_BINDIR "")
+set (UH_INSTALL_LIBDIR "lib")
+set (UH_INSTALL_PLUGINDIR "plugins")
+set (UH_INSTALL_INCLUDEDIR "include")
+set (UH_INSTALL_DATADIR "share/uh")
+set (UH_INSTALL_CMAKEDIR "share/uh/cmake")
 
 add_subdirectory ("thirdparty/qwt-6.1.6")
+add_subdirectory ("thirdparty/googletest")
 add_subdirectory ("uh")
+add_subdirectory ("application")
+add_subdirectory ("tests")
 
 # Workaround because uic generates headers into CMAKE_CURRENT_BINARY_DIR and
 # we want to include them from <uh/ui_*.h>
