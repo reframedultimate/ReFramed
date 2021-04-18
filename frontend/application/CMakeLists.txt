@@ -76,7 +76,8 @@ target_link_libraries (ultimate-hindsight
     PRIVATE Qt5::Core
     PRIVATE Qt5::Gui
     PRIVATE Qt5::Widgets
-    PRIVATE qwtinternal)
+    PRIVATE qwtinternal
+	PRIVATE uh)
 set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})

@@ -11,11 +11,11 @@ class ActiveRecording : public Recording
 {
 public:
     ActiveRecording(MappingInfo&& mapping,
-                    QVector<uint8_t>&& playerFighterIDs,
-                    QVector<QString>&& playerTags,
+                    std::initializer_list<uint8_t> playerFighterIDs,
+                    std::initializer_list<std::string> playerTags,
                     uint16_t stageID);
 
-    void setPlayerName(int index, const QString& name);
+    void setPlayerName(int index, const std::string& name);
     void setGameNumber(int number);
     void setSetNumber(int number);
     void setFormat(const SetFormat& format);

@@ -1,13 +1,14 @@
 #include "uh/RecordingListener.hpp"
 #include "uh/ActiveRecording.hpp"
 #include "uh/PlayerState.hpp"
+#include "uh/time.h"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
 ActiveRecording::ActiveRecording(MappingInfo&& mapping,
-                                 QVector<uint8_t>&& playerFighterIDs,
-                                 QVector<QString>&& playerTags,
+                                 std::initializer_list<uint8_t> playerFighterIDs,
+                                 std::initializer_list<std::string> playerTags,
                                  uint16_t stageID)
     : Recording(
           std::move(mapping),
@@ -19,7 +20,7 @@ ActiveRecording::ActiveRecording(MappingInfo&& mapping,
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecording::setPlayerName(int index, const QString& name)
+void ActiveRecording::setPlayerName(int index, const std::string& name)
 {
     playerNames_[index] = name;
     dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerNameChanged, index, name);
@@ -51,21 +52,21 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
 {
     // If this is the first state we receive just store it. Need at least 1
     // past state to determine if the game started yet
-    if (playerStates_[index].count() == 0)
+    if (playerStates_[index].size() == 0)
     {
         playerStates_[index].push_back(std::move(state));
         return;
     }
 
     // Check to see if the game has started yet
-    if (playerStates_[index].count() == 1)
+    if (playerStates_[index].size() == 1)
     {
         if (playerStates_[index].back().frame() == state.frame())
             return;  // has not started yet
 
         // The game has started. Adjust time started to be on the first frame
         // of gameplay
-        timeStarted_ = QDateTime::currentDateTime();
+        timeStarted_ = time_milli_seconds_since_epoch();
         playerStates_[index].push_back(std::move(state));
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index].back());

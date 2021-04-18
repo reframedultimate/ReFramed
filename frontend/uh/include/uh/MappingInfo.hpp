@@ -1,9 +1,9 @@
 #pragma once
 
-#include "application/models/FighterStatusMapping.hpp"
-#include "application/models/HitStatusMapping.hpp"
-#include "application/models/FighterIDMapping.hpp"
-#include "application/models/StageIDMapping.hpp"
+#include "uh/FighterStatusMapping.hpp"
+#include "uh/HitStatusMapping.hpp"
+#include "uh/FighterIDMapping.hpp"
+#include "uh/StageIDMapping.hpp"
 
 namespace uh {
 

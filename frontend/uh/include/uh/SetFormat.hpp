@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QString>
+#include <string>
 
 namespace uh {
 
@@ -18,19 +18,19 @@ public:
         OTHER
     };
 
-    SetFormat(Type type, const QString& otherDesc="");
-    SetFormat(const QString& description);
+    SetFormat(Type type, const std::string& otherDesc="");
+    SetFormat(const std::string& description);
 
     Type type() const { return type_; }
 
     /*!
      * \brief Gets a string representation of the set's format.
      */
-    QString description() const;
+    std::string description() const;
 
 private:
     Type type_;
-    QString otherDesc_;
+    std::string otherDesc_;
 };
 
 }

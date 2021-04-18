@@ -1,12 +1,12 @@
 #pragma once
 
-#include "application/listeners/ListenerDispatcher.hpp"
-#include "application/listeners/RecordingListener.hpp"
 #include "application/listeners/RecordingManagerListener.hpp"
-#include "application/models/SetFormat.hpp"
-#include "application/models/ActiveRecording.hpp"  // MOC requires this because of smart pointers
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
-#include "application/models/PlayerState.hpp"  // MOC requires this because of smart pointers
+#include "uh/SetFormat.hpp"
+#include "uh/ListenerDispatcher.hpp"
+#include "uh/RecordingListener.hpp"
+#include "uh/ActiveRecording.hpp"  // MOC requires this because of smart pointers
+#include "uh/PlayerState.hpp"  // MOC requires this because of smart pointers
 #include <QObject>
 #include <QDir>
 
@@ -24,7 +24,7 @@ class RecordingManager;
  */
 class ActiveRecordingManager : public QObject
                              , public RecordingManagerListener
-                             , public RecordingListener
+                             , public uh::RecordingListener
 {
     Q_OBJECT
 
@@ -37,7 +37,7 @@ public:
     void setP2Name(const QString& name);
     void setGameNumber(int number);
 
-    ListenerDispatcher<ActiveRecordingManagerListener> dispatcher;
+    uh::ListenerDispatcher<ActiveRecordingManagerListener> dispatcher;
 
 signals:
     void failedToConnectToServer();
@@ -88,7 +88,7 @@ private:
     RecordingManager* recordingManager_;
     QString p1Name_;
     QString p2Name_;
-    SetFormat format_;
+    uh::SetFormat format_;
     int gameNumber_ = 1;
     int setNumber_ = 1;
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QVector>
-#include <QSet>
+#include <vector>
+#include <unordered_set>
 
 namespace uh {
 
@@ -20,8 +20,8 @@ public:
     void addEdge(uint16_t from, uint16_t to, uint32_t frame, float damage);
 
 private:
-    QSet<uint16_t> states_;
-    QVector<Edge> edges_;
+    std::unordered_set<uint16_t> states_;
+    std::vector<Edge> edges_;
 };
 
 }

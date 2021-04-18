@@ -4,6 +4,7 @@
 #include "uh/MappingInfo.hpp"
 #include "uh/SetFormat.hpp"
 #include "uh/RefCounted.hpp"
+#include <string>
 
 namespace uh {
 
@@ -14,11 +15,11 @@ class Recording : public RefCounted
 {
 public:
     Recording(MappingInfo&& mapping,
-              QVector<uint8_t>&& playerFighterIDs,
-              QVector<QString>&& playerTags,
+              std::initializer_list<uint8_t> playerFighterIDs,
+              std::initializer_list<std::string> playerTags,
               uint16_t stageID);
 
-    bool saveAs(const QString& fileName);
+    bool saveAs(const std::string& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
@@ -36,7 +37,7 @@ public:
      * above the player in-game and is created when the player sets their controls.
      * \param index Which player to get
      */
-    const QString& playerTag(int index) const { return playerTags_[index]; }
+    const std::string& playerTag(int index) const { return playerTags_[index]; }
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
@@ -45,7 +46,7 @@ public:
      * Unlike tags, there is also no character limit to a player's name.
      * \param index Which player to get
      */
-    const QString& playerName(int index) const { return playerNames_[index]; }
+    const std::string& playerName(int index) const { return playerNames_[index]; }
 
     /*!
      * \brief Gets the fighter ID being used by the specified player.
@@ -81,13 +82,16 @@ public:
     SetFormat format() const { return format_; }
 
     /*!
-     * \brief Gets the datetime of when the match started. This marks the first
+     * \brief Gets the absolute time of when the match started in
+     * unix time (milli-seconds since Jan 1 1970). This marks the first
      * frame of gameplay, immediately after the 3-2-1-Go countdown completes.
      * May be slightly off by a few frames depending on latency.
      */
-    const QDateTime& timeStarted() const { return timeStarted_; }
+    uint64_t timeStarted() const { return timeStarted_; }
 
-    const QVector<PlayerState>& playerStates(int player) const;
+    int playerStateCount() const;
+
+    const PlayerState& playerState(int idx) const;
 
     ListenerDispatcher<RecordingListener> dispatcher;
 
@@ -96,11 +100,11 @@ protected:
 
 protected:
     MappingInfo mappingInfo_;
-    QDateTime timeStarted_;
-    QVector<QString> playerTags_;
-    QVector<QString> playerNames_;
-    QVector<uint8_t> playerFighterIDs_;
-    QVector<QVector<PlayerState>> playerStates_;
+    uint64_t timeStarted_;
+    std::vector<std::string> playerTags_;
+    std::vector<std::string> playerNames_;
+    std::vector<uint8_t> playerFighterIDs_;
+    std::vector<std::vector<PlayerState>> playerStates_;
     SetFormat format_;
     int gameNumber_ = 1;
     int setNumber_ = 1;

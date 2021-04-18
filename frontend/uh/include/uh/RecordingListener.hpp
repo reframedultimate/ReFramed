@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QString>
-#include "application/models/SetFormat.hpp"
+#include "uh/SetFormat.hpp"
+#include <string>
 
 namespace uh {
 
@@ -10,7 +10,7 @@ class PlayerState;
 class RecordingListener
 {
 public:
-    virtual void onActiveRecordingPlayerNameChanged(int player, const QString& name) = 0;
+    virtual void onActiveRecordingPlayerNameChanged(int player, const std::wstring& name) = 0;
     virtual void onActiveRecordingSetNumberChanged(int number) = 0;
     virtual void onActiveRecordingGameNumberChanged(int number) = 0;
     virtual void onActiveRecordingFormatChanged(const SetFormat& format) = 0;
