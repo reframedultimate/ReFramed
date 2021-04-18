@@ -1,7 +1,7 @@
 #pragma once
 
-#include "application/platform/tcp_socket.h"
-#include "application/models/ActiveRecording.hpp"
+#include "uh/tcp_socket.h"
+#include "uh/ActiveRecording.hpp"
 
 #include <QVector>
 #include <QThread>

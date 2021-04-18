@@ -30,6 +30,8 @@ set (UH_INSTALL_CMAKEDIR "share/uh/cmake")
 
 add_subdirectory ("thirdparty/qwt-6.1.6")
 add_subdirectory ("thirdparty/googletest")
+add_subdirectory ("thirdparty/json")
+add_subdirectory ("thirdparty/zlib-1.2.11")
 add_subdirectory ("uh")
 add_subdirectory ("application")
 add_subdirectory ("tests")

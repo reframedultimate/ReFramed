@@ -1,17 +1,21 @@
 #include "uh/Recording.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/RecordingListener.hpp"
+#include "uh/time.h"
+#include "nlohmann/json.hpp"
+#include "zlib.h"
 #include <cassert>
+#include <unordered_set>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
 Recording::Recording(MappingInfo&& mapping,
-                     QVector<uint8_t>&& playerFighterIDs,
-                     QVector<QString>&& playerTags,
+                     std::initializer_list<uint8_t> playerFighterIDs,
+                     std::initializer_list<std::string> playerTags,
                      uint16_t stageID)
     : mappingInfo_(std::move(mapping))
-    , timeStarted_(QDateTime::currentDateTime())
+    , timeStarted_(time_milli_seconds_since_epoch())
     , playerTags_(playerTags)
     , playerNames_(playerTags)
     , playerFighterIDs_(std::move(playerFighterIDs))
@@ -25,11 +29,10 @@ Recording::Recording(MappingInfo&& mapping,
 }
 
 // ----------------------------------------------------------------------------
-bool Recording::saveAs(const QString& fileName)
+bool Recording::saveAs(const std::string& fileName)
 {
-    qDebug() << "Saving recording to " << fileName;
-    QSet<uint16_t> usedStatuses;
-    QSet<uint8_t> usedHitStatuses;
+    std::unordered_set<uint16_t> usedStatuses;
+    std::unordered_set<uint8_t> usedHitStatuses;
     for (const auto& player : playerStates_)
         for (const auto& state : player)
         {
@@ -37,7 +40,7 @@ bool Recording::saveAs(const QString& fileName)
             usedHitStatuses.insert(state.hitStatus());
         }
 
-    QSet<uint8_t> usedFighterIDs;
+    std::unordered_set<uint8_t> usedFighterIDs;
     for (const auto& fighterID : playerFighterIDs_)
         usedFighterIDs.insert(fighterID);
 

@@ -1,20 +1,20 @@
-#include "application/models/HitStatusMapping.hpp"
+#include "uh/HitStatusMapping.hpp"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const QString* HitStatusMapping::map(uint8_t status) const
+const std::string* HitStatusMapping::map(uint8_t status) const
 {
     auto it = map_.find(status);
     if (it == map_.end())
         return nullptr;
-    return &(*it);
+    return &it->second;
 }
 
 // ----------------------------------------------------------------------------
-void HitStatusMapping::add(uint8_t status, const QString& name)
+void HitStatusMapping::add(uint8_t status, const std::string& name)
 {
-    map_.insert(status, name);
+    map_.emplace(status, name);
 }
 
 }

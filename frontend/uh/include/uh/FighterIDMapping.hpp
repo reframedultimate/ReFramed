@@ -1,19 +1,20 @@
 #pragma once
 
-#include <QHash>
+#include <string>
+#include <unordered_map>
 
 namespace uh {
 
 class FighterIDMapping
 {
 public:
-    const QString* map(uint8_t fighterID) const;
-    void add(uint8_t fighterId, const QString& name);
+    const std::string* map(uint8_t fighterID) const;
+    void add(uint8_t fighterId, const std::string& name);
 
-    const QHash<uint8_t, QString>& get() const { return map_; }
+    const std::unordered_map<uint8_t, std::string>& get() const { return map_; }
 
 private:
-    QHash<uint8_t, QString> map_;
+    std::unordered_map<uint8_t, std::string> map_;
 };
 
 }

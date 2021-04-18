@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QHash>
+#include <unordered_map>
 
 namespace uh {
 
@@ -29,18 +29,18 @@ namespace uh {
 class FighterStatusMapping
 {
 public:
-    const QString* statusToBaseEnumName(uint16_t status) const;
-    const QString* statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const;
+    const std::string* statusToBaseEnumName(uint16_t status) const;
+    const std::string* statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const;
 
-    void addBaseEnumName(uint16_t status, const QString& name);
-    void addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const QString& name);
+    void addBaseEnumName(uint16_t status, const std::string& name);
+    void addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const std::string& name);
 
-    const QHash<uint16_t, QString>& baseEnumNames() const { return baseEnumNames_; }
-    const QHash<uint8_t, QHash<uint16_t, QString>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
+    const std::unordered_map<uint16_t, std::string>& baseEnumNames() const { return baseEnumNames_; }
+    const std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
 
 private:
-    QHash<uint16_t, QString> baseEnumNames_;
-    QHash<uint8_t, QHash<uint16_t, QString>> fighterSpecificEnumNames_;
+    std::unordered_map<uint16_t, std::string> baseEnumNames_;
+    std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>> fighterSpecificEnumNames_;
 };
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <QVector>
+#include <vector>
 
 namespace uh {
 
@@ -39,10 +39,6 @@ public:
     bool facingDirection() const { return facingDirection_; }
 
     uint32_t combinedState() const;
-
-private:
-    PlayerState() {}
-    friend class QVector<PlayerState>;
 
 private:
     uint64_t motion_;

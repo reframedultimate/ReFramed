@@ -27,7 +27,8 @@ add_library (uh SHARED
 	"src/SavedRecording.cpp"
 	"src/SetFormat.cpp"
 	"src/StageIDMapping.cpp"
-    "src/platform/tcp_socket.c")
+    "src/platform/tcp_socket.c"
+	"src/platform/time.c")
 target_include_directories (uh
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
@@ -39,6 +40,9 @@ target_compile_options (uh
 	PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>)
 target_compile_features (uh
 	PUBLIC cxx_std_17)
+target_link_libraries (uh 
+	PRIVATE nlohmann_json::nlohmann_json
+	PRIVATE zlibstatic)
 set_target_properties (uh
 	PROPERTIES
 		LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}

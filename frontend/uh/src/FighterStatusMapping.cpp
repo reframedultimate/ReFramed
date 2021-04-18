@@ -1,43 +1,41 @@
-#include "application/models/FighterStatusMapping.hpp"
+#include "uh/FighterStatusMapping.hpp"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const QString* FighterStatusMapping::statusToBaseEnumName(uint16_t status) const
+const std::string* FighterStatusMapping::statusToBaseEnumName(uint16_t status) const
 {
     auto it = baseEnumNames_.find(status);
     if (it == baseEnumNames_.end())
         return nullptr;
-    return &(*it);
+    return &it->second;
 }
 
 // ----------------------------------------------------------------------------
-const QString* FighterStatusMapping::statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const
+const std::string* FighterStatusMapping::statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const
 {
     auto fighter = fighterSpecificEnumNames_.find(fighterID);
     if (fighter == fighterSpecificEnumNames_.end())
         return nullptr;
 
-    auto it = fighter.value().find(status);
-    if (it == fighter.value().end())
+    auto it = fighter->second.find(status);
+    if (it == fighter->second.end())
         return nullptr;
 
-    return &(*it);
+    return &it->second;
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatusMapping::addBaseEnumName(uint16_t status, const QString& name)
+void FighterStatusMapping::addBaseEnumName(uint16_t status, const std::string& name)
 {
-    baseEnumNames_.insert(status, name);
+    baseEnumNames_.emplace(status, name);
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatusMapping::addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const QString& name)
+void FighterStatusMapping::addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const std::string& name)
 {
-    auto fighter = fighterSpecificEnumNames_.find(fighterID);
-    if (fighter == fighterSpecificEnumNames_.end())
-        fighter = fighterSpecificEnumNames_.insert(fighterID, QHash<uint16_t, QString>());
-    fighter.value().insert(status, name);
+    auto result = fighterSpecificEnumNames_.emplace(fighterID, std::unordered_map<uint16_t, std::string>());
+    result.first->second.emplace(status, name);
 }
 
 }

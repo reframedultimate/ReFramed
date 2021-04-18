@@ -1,19 +1,20 @@
 #pragma once
 
-#include <QHash>
+#include <unordered_map>
+#include <string>
 
 namespace uh {
 
 class StageIDMapping
 {
 public:
-    const QString* map(uint16_t stageID) const;
-    void add(uint16_t stageID, const QString& name);
+    const std::string* map(uint16_t stageID) const;
+    void add(uint16_t stageID, const std::string& name);
 
-    const QHash<uint16_t, QString>& get() const { return map_; }
+    const std::unordered_map<uint16_t, std::string>& get() const { return map_; }
 
 private:
-    QHash<uint16_t, QString> map_;
+    std::unordered_map<uint16_t, std::string> map_;
 };
 
 }
