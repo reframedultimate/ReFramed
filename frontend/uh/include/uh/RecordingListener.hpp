@@ -10,7 +10,7 @@ class PlayerState;
 class RecordingListener
 {
 public:
-    virtual void onActiveRecordingPlayerNameChanged(int player, const std::wstring& name) = 0;
+    virtual void onActiveRecordingPlayerNameChanged(int player, const std::string& name) = 0;
     virtual void onActiveRecordingSetNumberChanged(int number) = 0;
     virtual void onActiveRecordingGameNumberChanged(int number) = 0;
     virtual void onActiveRecordingFormatChanged(const SetFormat& format) = 0;

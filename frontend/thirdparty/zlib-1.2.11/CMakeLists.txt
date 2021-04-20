@@ -3,7 +3,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
 project(zlib
 	VERSION 1.2.11
-	LANGUAGES C)
+    LANGUAGES C)
 
 set(VERSION "1.2.11")
 
@@ -105,7 +105,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 	if(ZLIB_ASMS)
 		target_sources(zlibstatic PRIVATE ${ZLIB_ASMS})
 		target_compile_definitions(zlibstatic PRIVATE DASMV)
-		set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C COMPILE_FLAGS -DNO_UNDERLINE)
+        set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C COMPILE_FLAGS -DNO_UNDERLINE)
 	endif()
 endif()
 
@@ -135,9 +135,9 @@ string(REGEX REPLACE ".*#define[ \t]+ZLIB_VERSION[ \t]+\"([-0-9A-Za-z.]+)\".*"
 
 if(UNIX)
     # On unix-like platforms the library is almost always called libz
-   set_target_properties(zlib zlibstatic PROPERTIES OUTPUT_NAME z)
+   set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME z)
    if(NOT APPLE)
-     set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${PROJECT_SOURCE_DIR}/zlib.map\"")
+     set_target_properties(zlibstatic PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${PROJECT_SOURCE_DIR}/zlib.map\"")
    endif()
 endif ()
 
