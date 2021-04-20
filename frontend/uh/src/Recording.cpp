@@ -2,17 +2,21 @@
 #include "uh/PlayerState.hpp"
 #include "uh/RecordingListener.hpp"
 #include "uh/time.h"
+#include "uh/StreamBuffer.hpp"
 #include "nlohmann/json.hpp"
+#include "cpp-base64/base64.h"
 #include "zlib.h"
 #include <cassert>
 #include <unordered_set>
 
 namespace uh {
 
+using nlohmann::json;
+
 // ----------------------------------------------------------------------------
 Recording::Recording(MappingInfo&& mapping,
-                     std::initializer_list<uint8_t> playerFighterIDs,
-                     std::initializer_list<std::string> playerTags,
+                     std::vector<uint8_t>&& playerFighterIDs,
+                     std::vector<std::string>&& playerTags,
                      uint16_t stageID)
     : mappingInfo_(std::move(mapping))
     , timeStarted_(time_milli_seconds_since_epoch())
@@ -31,6 +35,8 @@ Recording::Recording(MappingInfo&& mapping,
 // ----------------------------------------------------------------------------
 bool Recording::saveAs(const std::string& fileName)
 {
+    // Create sets of the IDs that were used in game so we don't end up saving
+    // every ID
     std::unordered_set<uint16_t> usedStatuses;
     std::unordered_set<uint8_t> usedHitStatuses;
     for (const auto& player : playerStates_)
@@ -39,157 +45,175 @@ bool Recording::saveAs(const std::string& fileName)
             usedStatuses.insert(state.status());
             usedHitStatuses.insert(state.hitStatus());
         }
-
     std::unordered_set<uint8_t> usedFighterIDs;
     for (const auto& fighterID : playerFighterIDs_)
         usedFighterIDs.insert(fighterID);
 
-    QJsonObject gameInfo;
-    gameInfo["stageid"] = stageID_;
-    gameInfo["date"] = timeStarted_.toUTC().toString();
-    gameInfo["format"] = format_.description();
-    gameInfo["number"] = gameNumber_;
-    gameInfo["set"] = setNumber_;
-    gameInfo["winner"] = winner_;
+    json gameInfo = {
+        {"stageid", stageID_},
+        {"date", timeStarted_},
+        {"format", format_.description()},
+        {"number", gameNumber_},
+        {"set", setNumber_},
+        {"winner", winner_}
+    };
 
-    QJsonObject fighterBaseStatusMapping;
+    json fighterBaseStatusMapping;
     const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
     for (auto it = baseEnumNames.begin(); it != baseEnumNames.end(); ++it)
     {
         // Skip saving enums that aren't actually used in the set of player states
-        if (usedStatuses.contains(it.key()) == false)
+        if (usedStatuses.find(it->first) == usedStatuses.end())
             continue;
 
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-        QJsonArray mappings;
-        mappings.append(it.value());
-        mappings.append(/*shortName ? *shortName :*/ QString());
-        mappings.append(/*customName ? *customName :*/ QString());
-        fighterBaseStatusMapping[QString::number(it.key())] = mappings;
+        fighterBaseStatusMapping[std::to_string(it->first)] = {
+            {it->second, "", ""}
+        };
     }
 
-    QJsonObject fighterSpecificStatusMapping;
+    json fighterSpecificStatusMapping;
     const auto& specificEnumNames = mappingInfo_.fighterStatus.fighterSpecificEnumNames();
     for (auto fighter = specificEnumNames.begin(); fighter != specificEnumNames.end(); ++fighter)
     {
         // Skip saving enums for fighters that aren't being used
-        if (usedFighterIDs.contains(fighter.key()) == false)
+        if (usedFighterIDs.find(fighter->first) == usedFighterIDs.end())
             continue;
 
-        QJsonObject specificMapping;
-        for (auto it = fighter.value().begin(); it != fighter.value().end(); ++it)
+        json specificMapping;
+        for (auto it = fighter->second.begin(); it != fighter->second.end(); ++it)
         {
             // Skip saving enums that aren't actually used in the set of player states
-            if (usedStatuses.contains(it.key()) == false)
+            if (usedStatuses.find(it->first) == usedStatuses.end())
                 continue;
 
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-            QJsonArray mappings;
-            mappings.append(it.value());
-            mappings.append(/*shortName ? *shortName :*/ QString());
-            mappings.append(/*customName ? *customName :*/ QString());
-            specificMapping[QString::number(it.key())] = mappings;
+            specificMapping[std::to_string(it->first)] = {
+                {it->second, "", ""}
+            };
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[QString::number(fighter.key())] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(fighter->first)] = specificMapping;
     }
 
-    QJsonObject fighterStatusMapping;
-    fighterStatusMapping["base"] = fighterBaseStatusMapping;
-    fighterStatusMapping["specific"] = fighterSpecificStatusMapping;
+    json fighterStatusMapping = {
+        {"base", fighterBaseStatusMapping},
+        {"specific", fighterSpecificStatusMapping}
+    };
 
-    QJsonObject fighterIDMapping;
+    json fighterIDMapping;
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
     for (auto it = fighterIDMap.begin(); it != fighterIDMap.end(); ++it)
-        if (usedFighterIDs.contains(it.key()))
-            fighterIDMapping[QString::number(it.key())] = it.value();
+        if (usedFighterIDs.find(it->first) != usedFighterIDs.end())
+            fighterIDMapping[std::to_string(it->first)] = it->second;
 
-    QJsonObject stageIDMapping;
+    json stageIDMapping;
     const auto& stageIDMap = mappingInfo_.stageID.get();
     for (auto it = stageIDMap.begin(); it != stageIDMap.end(); ++it)
-        if (it.key() == stageID_)
-            stageIDMapping[QString::number(it.key())] = it.value();
+        if (it->first == stageID_)  // Only care about saving the stage that was played on
+            stageIDMapping[std::to_string(it->first)] = it->second;
 
-    QJsonObject hitStatusMapping;
+    json hitStatusMapping;
     const auto& hitStatusMap = mappingInfo_.hitStatus.get();
     for (auto it = hitStatusMap.begin(); it != hitStatusMap.end(); ++it)
-        if (usedHitStatuses.contains(it.key()))
-            hitStatusMapping[QString::number(it.key())] = it.value();
+        if (usedHitStatuses.find(it->first) != usedHitStatuses.end())
+            hitStatusMapping[std::to_string(it->first)] = it->second;
 
-    QJsonObject mappingInfo;
-    mappingInfo["fighterstatus"] = fighterStatusMapping;
-    mappingInfo["fighterid"] = fighterIDMapping;
-    mappingInfo["stageid"] = stageIDMapping;
-    mappingInfo["hitstatus"] = hitStatusMapping;
+    json mappingInfo = {
+        {"fighterstatus", fighterStatusMapping},
+        {"fighterid", fighterIDMapping},
+        {"stageid", stageIDMapping},
+        {"hitstatus", hitStatusMapping}
+    };
 
-    QJsonArray playerInfo;
+    json playerInfo = json::array();
     for (int i = 0; i < playerCount(); ++i)
     {
-        QJsonObject player;
-        player["tag"] = playerTags_[i];
-        player["name"] = playerNames_[i];
-        player["fighterid"] = playerFighterIDs_[i];
-        playerInfo.append(player);
+        playerInfo += {
+            {"tag", playerTags_[i]},
+            {"name", playerNames_[i]},
+            {"fighterid", playerFighterIDs_[i]}
+        };
     }
 
-    QByteArray stream_data;
-    QDataStream stream(&stream_data, QIODevice::WriteOnly);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    stream.setVersion(QDataStream::Qt_5_12);
+    int stateBufferSize = 0;
     for (const auto& states : playerStates_)
     {
-        stream << static_cast<quint32>(states.size());
+        stateBufferSize += 4; // state count
+        for (const auto& state : states)
+            stateBufferSize +=
+                    sizeof(state.frame()) +
+                    sizeof(state.posx()) +
+                    sizeof(state.posy()) +
+                    sizeof(state.damage()) +
+                    sizeof(state.hitstun()) +
+                    sizeof(state.shield()) +
+                    sizeof(state.status()) +
+                    5 + // motion is a hash40 (40 bits)
+                    sizeof(state.hitStatus()) +
+                    sizeof(state.stocks()) +
+                    1;  // flags
+    }
+
+
+    StreamBuffer stream(stateBufferSize);
+    for (const auto& states : playerStates_)
+    {
+        stream.writeU32(states.size());
         for (const auto& state : states)
         {
-            quint8 flags = (state.attackConnected() << 0)
-                         | (state.facingDirection() << 1);
+            uint8_t flags = (state.attackConnected() << 0)
+                          | (state.facingDirection() << 1);
 
-            stream << static_cast<quint32>(state.frame());
-            stream << static_cast<float>(state.posx());
-            stream << static_cast<float>(state.posy());
-            stream << static_cast<float>(state.damage());
-            stream << static_cast<float>(state.hitstun());
-            stream << static_cast<float>(state.shield());
-            stream << static_cast<quint16>(state.status());
-            stream << static_cast<quint32>(state.motion() & 0xFFFFFFFF);
-            stream << static_cast<quint8>((state.motion() >> 32) & 0xFF);
-            stream << static_cast<quint8>(state.hitStatus());
-            stream << static_cast<quint8>(state.stocks());
-            stream << flags;
+            stream
+                .writeU32(state.frame())
+                .writeF32(state.posx())
+                .writeF32(state.posy())
+                .writeF32(state.damage())
+                .writeF32(state.hitstun())
+                .writeF32(state.shield())
+                .writeU16(state.status())
+                .writeU32(static_cast<uint32_t>(state.motion() & 0xFFFFFFFF))
+                .writeU8(static_cast<uint8_t>((state.motion() >> 32) & 0xFF))
+                .writeU8(state.hitStatus())
+                .writeU8(state.stocks())
+                .writeU8(flags);
         }
     }
 
-    QJsonObject json;
-    json["version"] = "1.3";
-    json["mappinginfo"] = mappingInfo;
-    json["gameinfo"] = gameInfo;
-    json["playerinfo"] = playerInfo;
-    json["playerstates"] = QString::fromUtf8(stream_data.toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals));
+    json j = {
+        {"version", "1.4"},
+        {"mappinginfo", mappingInfo},
+        {"gameinfo", gameInfo},
+        {"playerinfo", playerInfo},
+        {"playerstates", base64_encode(static_cast<unsigned char*>(stream.get()), stream.size(), false)}
+    };
 
-    QFile f(fileName);
-    if (!f.open(QIODevice::WriteOnly))
-    {/*
+    std::string s = j.dump();
+    gzFile f = gzopen(fileName.c_str(), "wb");
+    if (f == nullptr)
+        goto gz_open_fail;
+    if (gzsetparams(f, 9, Z_DEFAULT_STRATEGY) != Z_OK)
+        goto gz_fail;
+    if (gzwrite(f, s.data(), s.length()) == 0)
+        goto gz_fail;
+    gzclose(f);
+
+    return true;
+
+    gz_fail      : gzclose(f);
+    gz_open_fail :;
+        /*
         if (QMessageBox::warning(nullptr, "Failed to save recording", QString("Failed to open file for writing: ") + f.fileName() + "\n\nWould you like to save the file manually?", QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
         {
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
-        return false;
-    }
-    f.write(qCompress(QJsonDocument(json).toJson(QJsonDocument::Compact), 9));
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-const QVector<PlayerState>& Recording::playerStates(int player) const
-{
-    return playerStates_[player];
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -199,11 +223,11 @@ int Recording::findWinner() const
     int winneridx = 0;
     for (int i = 0; i != playerCount(); ++i)
     {
-        if (playerStates(i).count() == 0 || playerStates(winneridx).count() == 0)
+        if (playerStateCount(i) == 0 || playerStateCount(winneridx) == 0)
             continue;
 
-        const auto& current = playerStates(i).back();
-        const auto& winner = playerStates(winneridx).back();
+        const auto& current = playerState(i, playerStateCount(i) - 1);
+        const auto& winner = playerState(winneridx, playerStateCount(winneridx) - 1);
 
         if (current.stocks() > winner.stocks())
             winneridx = i;

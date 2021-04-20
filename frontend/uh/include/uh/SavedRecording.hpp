@@ -1,15 +1,13 @@
 #pragma once
 
-#include "application/models/Recording.hpp"
-
-class QJsonObject;
+#include "uh/Recording.hpp"
 
 namespace uh {
 
 class SavedRecording : public Recording
 {
 public:
-    static SavedRecording* load(const QString& fileName);
+    static SavedRecording* load(const std::string& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
@@ -19,14 +17,17 @@ public:
 
 private:
     SavedRecording(MappingInfo&& mapping,
-                   QVector<uint8_t>&& playerFighterIDs,
-                   QVector<QString>&& playerTags,
+                   std::vector<uint8_t>&& playerFighterIDs,
+                   std::vector<std::string>&& playerTags,
                    uint16_t stageID);
 
-    static SavedRecording* loadVersion_1_0(const QJsonObject& json);
-    static SavedRecording* loadVersion_1_1(const QJsonObject& json);
-    static SavedRecording* loadVersion_1_2(const QJsonObject& json);
-    static SavedRecording* loadVersion_1_3(const QJsonObject& json);
+    // Using void* here to avoid json objects leaking into the rest of the
+    // program
+    static SavedRecording* loadVersion_1_0(const void* jptr);
+    static SavedRecording* loadVersion_1_1(const void* jptr);
+    static SavedRecording* loadVersion_1_2(const void* jptr);
+    static SavedRecording* loadVersion_1_3(const void* jptr);
+    static SavedRecording* loadVersion_1_4(const void* jptr);
 };
 
 }

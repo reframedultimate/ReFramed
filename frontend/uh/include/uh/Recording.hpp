@@ -15,8 +15,8 @@ class Recording : public RefCounted
 {
 public:
     Recording(MappingInfo&& mapping,
-              std::initializer_list<uint8_t> playerFighterIDs,
-              std::initializer_list<std::string> playerTags,
+              std::vector<uint8_t>&& playerFighterIDs,
+              std::vector<std::string>&& playerTags,
               uint16_t stageID);
 
     bool saveAs(const std::string& fileName);
@@ -89,9 +89,9 @@ public:
      */
     uint64_t timeStarted() const { return timeStarted_; }
 
-    int playerStateCount() const;
+    int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].size()); }
 
-    const PlayerState& playerState(int idx) const;
+    const PlayerState& playerState(int player, int idx) const { return playerStates_[player][idx]; }
 
     ListenerDispatcher<RecordingListener> dispatcher;
 
