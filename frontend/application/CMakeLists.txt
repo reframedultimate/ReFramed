@@ -4,7 +4,7 @@ project ("application"
 
 include (GNUInstallDirs)
 
-find_package (Qt5 COMPONENTS Widgets Gui Multimedia MultimediaWidgets LinguistTools REQUIRED)
+find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/models/ActiveRecordingManager.hpp"

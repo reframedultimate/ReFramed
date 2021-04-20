@@ -189,7 +189,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         if (stream.readBytesLeft() < 4)
             return nullptr;
         uint32_t frameCount = stream.readU32();
-        if (stream.readBytesLeft() < (4+2+8+1) * frameCount)
+        if (stream.readBytesLeft() < static_cast<int>((4+2+8+1) * frameCount))
             return nullptr;
 
         for (uint32_t f = 0; f < frameCount; ++f)
@@ -208,21 +208,21 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
+SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
 {
-    if (json.contains("mappinginfo") == false || json["mappinginfo"].is_object() == false)
+    const json& j = *static_cast<const json*>(jptr);
+    if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
-    if (json.contains("gameinfo") == false || json["gameinfo"].is_object() == false)
+    if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
         return nullptr;
-    if (json.contains("playerinfo") == false || json["playerinfo"].is_array() == false)
+    if (j.contains("playerinfo") == false || j["playerinfo"].is_array() == false)
         return nullptr;
-    if (json.contains("playerstates") == false || json["playerstates"].is_string() == false)
+    if (j.contains("playerstates") == false || j["playerstates"].is_string() == false)
         return nullptr;
 
-    const QJsonObject jsonMappingInfo = json["mappinginfo"];
-    const QJsonObject jsonGameInfo = json["gameinfo"];
-    const QJsonArray jsonPlayerInfo = json["playerinfo"].toArray();
-    const QString jsonPlayerStates = json["playerstates"].get<std::string>();
+    const json jsonMappingInfo = j["mappinginfo"];
+    const json jsonGameInfo = j["gameinfo"];
+    const json jsonPlayerInfo = j["playerinfo"];
 
     if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
         return nullptr;
@@ -233,68 +233,57 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
 
     MappingInfo mappingInfo;
 
-    const QJsonObject jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
+    const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
         return nullptr;
     if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
         return nullptr;
 
-    const QJsonObject jsonFighterBaseStatusMapping = jsonFighterStatusMapping["base"];
-    const QJsonObject jsonFighterSpecificStatusMapping = jsonFighterStatusMapping["specific"];
-    for (auto it = jsonFighterBaseStatusMapping.begin(); it != jsonFighterBaseStatusMapping.end(); ++it)
+    const json jsonFighterBaseStatusMapping = jsonFighterStatusMapping["base"];
+    const json jsonFighterSpecificStatusMapping = jsonFighterStatusMapping["specific"];
+    for (const auto& [key, value] : jsonFighterBaseStatusMapping.items())
     {
-        bool ok;
-        uint16_t status = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        uint8_t id = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_array() == false)
-            return nullptr;
-
-        QJsonArray arr = it.value().toArray();
-        if (arr.size() != 3)
-            return nullptr;
-        if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+        if (value.is_array() == false)
             return nullptr;
 
-        QString enumName   = arr[0].get<std::string>();
-        /*QString shortName  = arr[1].get<std::string>();
-        QString customName = arr[2].get<std::string>();*/
+        if (value.size() != 3)
+            return nullptr;
+        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+            return nullptr;
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, enumName);
+        mappingInfo.fighterStatus.addBaseEnumName(id, value[0].get<std::string>());
     }
-    for (auto fighterit = jsonFighterSpecificStatusMapping.begin(); fighterit != jsonFighterSpecificStatusMapping.end(); ++fighterit)
+    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterSpecificStatusMapping.items())
     {
-        bool ok;
-        uint8_t fighterID = fighterit.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        uint8_t fighterID = std::stoul(fighter, &pos);
+        if (pos != fighter.length())
             return nullptr;
-        if (fighterit.value().is_object() == false)
+        if (jsonSpecificMapping.is_object() == false)
             return nullptr;
 
-        const QJsonObject jsonSpecificMapping = fighterit.value();
-        for (auto it = jsonSpecificMapping.begin(); it != jsonSpecificMapping.end(); ++it)
+        for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            uint16_t status = it.key().toUInt(&ok);
-            if (!ok)
+            uint16_t status = std::stoul(key, &pos);
+            if (pos != key.length())
                 return nullptr;
-            if (it.value().is_array() == false)
-                return nullptr;
-
-            QJsonArray arr = it.value().toArray();
-            if (arr.size() != 3)
-                return nullptr;
-            if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+            if (value.is_array() == false)
                 return nullptr;
 
-            QString enumName   = arr[0].get<std::string>();
-            /*QString shortName  = arr[1].get<std::string>();
-            QString customName = arr[2].get<std::string>();*/
+            if (value.size() != 3)
+                return nullptr;
+            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+                return nullptr;
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, enumName);
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
         }
     }
 
-    const QJsonObject jsonFighterIDMapping = jsonMappingInfo["fighterid"];
+    const json jsonFighterIDMapping = jsonMappingInfo["fighterid"];
     for (auto it = jsonFighterIDMapping.begin(); it != jsonFighterIDMapping.end(); ++it)
     {
         bool ok;
@@ -375,8 +364,9 @@ SavedRecording* SavedRecording::loadVersion_1_1(const QJsonObject& json)
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
+SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
 {
+    const json& j = *static_cast<const json*>(jptr);
     if (json.contains("mappinginfo") == false || json["mappinginfo"].is_object() == false)
         return nullptr;
     if (json.contains("gameinfo") == false || json["gameinfo"].is_object() == false)
@@ -388,7 +378,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
 
     const QJsonObject jsonMappingInfo = json["mappinginfo"];
     const QJsonObject jsonGameInfo = json["gameinfo"];
-    const QJsonArray jsonPlayerInfo = json["playerinfo"].toArray();
+    const QJsonArray jsonPlayerInfo = json["playerinfo"].to_array();
     const QString jsonPlayerStates = json["playerstates"].get<std::string>();
 
     if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
@@ -417,7 +407,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
         if (it.value().is_array() == false)
             return nullptr;
 
-        QJsonArray arr = it.value().toArray();
+        QJsonArray arr = it.value().to_array();
         if (arr.size() != 3)
             return nullptr;
         if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
@@ -447,7 +437,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
             if (it.value().is_array() == false)
                 return nullptr;
 
-            QJsonArray arr = it.value().toArray();
+            QJsonArray arr = it.value().to_array();
             if (arr.size() != 3)
                 return nullptr;
             if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
@@ -561,8 +551,9 @@ SavedRecording* SavedRecording::loadVersion_1_2(const QJsonObject& json)
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
+SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
 {
+    const json& j = *static_cast<const json*>(jptr);
     if (json.contains("mappinginfo") == false || json["mappinginfo"].is_object() == false)
         return nullptr;
     if (json.contains("gameinfo") == false || json["gameinfo"].is_object() == false)
@@ -574,7 +565,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
 
     const QJsonObject jsonMappingInfo = json["mappinginfo"];
     const QJsonObject jsonGameInfo = json["gameinfo"];
-    const QJsonArray jsonPlayerInfo = json["playerinfo"].toArray();
+    const QJsonArray jsonPlayerInfo = json["playerinfo"].to_array();
     const QString jsonPlayerStates = json["playerstates"].get<std::string>();
 
     if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
@@ -605,7 +596,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
         if (it.value().is_array() == false)
             return nullptr;
 
-        QJsonArray arr = it.value().toArray();
+        QJsonArray arr = it.value().to_array();
         if (arr.size() != 3)
             return nullptr;
         if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
@@ -635,7 +626,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
             if (it.value().is_array() == false)
                 return nullptr;
 
-            QJsonArray arr = it.value().toArray();
+            QJsonArray arr = it.value().to_array();
             if (arr.size() != 3)
                 return nullptr;
             if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
@@ -770,4 +761,8 @@ SavedRecording* SavedRecording::loadVersion_1_3(const QJsonObject& json)
     return recording.take();
 }
 
+SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
+{
+    const json& j = *static_cast<const json*>(jptr);
+    return nullptr;
 }
