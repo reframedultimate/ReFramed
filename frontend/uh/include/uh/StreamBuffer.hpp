@@ -17,6 +17,7 @@ public:
     StreamBuffer& writeU32(uint32_t value);
     StreamBuffer& writeU64(uint64_t value);
     StreamBuffer& writeF32(float value);
+    StreamBuffer& writeF64(double value);
 
     uint8_t readU8();
     uint16_t readU16();
@@ -25,13 +26,16 @@ public:
     float readF32();
     double readF64();
 
+    int readBytesLeft() const;
+    int writeBytesLeft() const;
     void* get() { return static_cast<void*>(buffer_.data()); }
-    int size() { return buffer_.length(); }
+    const void* get() const { return static_cast<const void*>(buffer_.data()); }
+    int size() const { return buffer_.size(); }
 
 private:
     std::string buffer_;
-    unsigned char* writePtr_;
-    unsigned char* readPtr_;
+    void* writePtr_;
+    void* readPtr_;
 };
 
 }
