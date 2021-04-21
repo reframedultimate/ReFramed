@@ -70,6 +70,7 @@ add_library (uh SHARED
 	"src/SetFormat.cpp"
 	"src/StageIDMapping.cpp"
     "src/StreamBuffer.cpp"
+    "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
 	"src/platform/time.c")
 target_include_directories (uh
@@ -91,6 +92,11 @@ set_target_properties (uh
 	PROPERTIES
 		LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}
 		RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
+
+if (UNIX)
+    find_package (DL REQUIRED)
+    target_link_libraries (uh PRIVATE DL::DL)
+endif ()
 
 install (
 	TARGETS uh
