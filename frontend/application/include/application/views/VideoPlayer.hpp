@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-namespace uhapp {
+struct VideoPlayerData;
 
 class VideoPlayer : public QWidget
 {
@@ -13,6 +13,5 @@ public:
     ~VideoPlayer();
 
 private:
+    VideoPlayerData* d;
 };
-
-}
