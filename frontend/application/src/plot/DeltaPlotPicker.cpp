@@ -3,8 +3,7 @@
 
 #include "qwt_plot.h"
 
-namespace uh {
-
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 DeltaPlotPicker::DeltaPlotPicker(QWidget* canvas) :

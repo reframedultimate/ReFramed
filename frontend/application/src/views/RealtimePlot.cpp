@@ -20,7 +20,7 @@
 #include <QApplication>
 
 
-namespace uh {
+namespace uhapp {
 
 class RealtimePlotContextMenuStore
 {

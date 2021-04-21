@@ -11,9 +11,9 @@ class ActiveRecording : public Recording
 {
 public:
     ActiveRecording(MappingInfo&& mapping,
-                    std::initializer_list<uint8_t> playerFighterIDs,
-                    std::initializer_list<std::string> playerTags,
-                    uint16_t stageID);
+                    std::vector<FighterID>&& playerFighterIDs,
+                    std::vector<std::string>&& playerTags,
+                    StageID stageID);
 
     void setPlayerName(int index, const std::string& name);
     void setGameNumber(int number);

@@ -12,23 +12,17 @@ namespace detail {
 /// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
 static inline uint16_t generic_bswap16(uint16_t a)
 {
-    PROFILE(EndianGlobal, generic_bswap16);
-
     return (a<<8) | (a>>8);
 }
 /// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
 static inline uint32_t generic_bswap32(uint32_t a)
 {
-    PROFILE(EndianGlobal, generic_bswap32);
-
     return (a<<24) | (a>>24) |
            ((a&0xFF00)<<8) | ((a&0xFF0000)>>8);
 }
 /// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
 static inline uint64_t generic_bswap64(uint64_t a)
 {
-    PROFILE(EndianGlobal, generic_bswap64);
-
     /*
      * 56 48 40 32 24 16  8  0
      * AA BB CC DD EE FF GG HH

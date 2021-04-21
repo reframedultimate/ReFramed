@@ -4,7 +4,7 @@
 
 class QMenu;
 
-namespace uh {
+namespace uhapp {
 
 class AutoScaler;
 //class UnitTracker;

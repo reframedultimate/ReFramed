@@ -2,7 +2,7 @@
 #include "application/ui_ConnectView.h"
 #include <QJsonObject>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 ConnectView::ConnectView(Config* config, Qt::WindowFlags flags)

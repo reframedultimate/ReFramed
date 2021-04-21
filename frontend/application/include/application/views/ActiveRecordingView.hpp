@@ -6,15 +6,18 @@
 class QGroupBox;
 class QLabel;
 
+namespace uh {
+    class ActiveRecording;
+}
+
 namespace Ui {
     class ActiveRecordingView;
 }
 
-namespace uh {
+namespace uhapp {
 
 class ActiveRecordingManager;
 class RecordingView;
-class PlayerState;
 
 class ActiveRecordingView : public QWidget
                           , public ActiveRecordingManagerListener
@@ -36,26 +39,26 @@ private slots:
     void onActiveRecordingManagerDisconnectedFromServer();
 
 private:
-    void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override;
-    void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override;
+    void onActiveRecordingManagerRecordingStarted(uh::ActiveRecording* recording) override;
+    void onActiveRecordingManagerRecordingEnded(uh::ActiveRecording* recording) override;
 
     void onActiveRecordingManagerP1NameChanged(const QString& name) override;
     void onActiveRecordingManagerP2NameChanged(const QString& name) override;
-    void onActiveRecordingManagerSetNumberChanged(int number) override;
-    void onActiveRecordingManagerGameNumberChanged(int number) override;
-    void onActiveRecordingManagerFormatChanged(const SetFormat& format) override;
-    void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override;
+    void onActiveRecordingManagerSetNumberChanged(uh::SetNumber number) override;
+    void onActiveRecordingManagerGameNumberChanged(uh::GameNumber number) override;
+    void onActiveRecordingManagerFormatChanged(const uh::SetFormat& format) override;
+    void onActiveRecordingManagerPlayerStateAdded(int player, const uh::PlayerState& state) override;
     void onActiveRecordingManagerWinnerChanged(int winner) override;
 
 private:
     Ui::ActiveRecordingView* ui_;
     ActiveRecordingManager* activeRecordingManager_;
     RecordingView* recordingView_;
-    QVector<QGroupBox*> names_;
-    QVector<QLabel*> fighterName_;
-    QVector<QLabel*> fighterStatus_;
-    QVector<QLabel*> fighterDamage_;
-    QVector<QLabel*> fighterStocks_;
+    std::vector<QGroupBox*> names_;
+    std::vector<QLabel*> fighterName_;
+    std::vector<QLabel*> fighterStatus_;
+    std::vector<QLabel*> fighterDamage_;
+    std::vector<QLabel*> fighterStocks_;
 };
 
 }

@@ -3,7 +3,7 @@
 #include <QString>
 #include <QFileInfo>
 
-namespace uh {
+namespace uhapp {
 
 class RecordingGroup;
 

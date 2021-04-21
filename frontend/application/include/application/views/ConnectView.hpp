@@ -9,7 +9,7 @@ namespace Ui {
     class ConnectView;
 }
 
-namespace uh {
+namespace uhapp {
 
 class ConnectView : public QDialog
                   , public ConfigAccessor

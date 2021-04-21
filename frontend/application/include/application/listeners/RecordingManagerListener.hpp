@@ -3,7 +3,7 @@
 #include <QString>
 #include <QDir>
 
-namespace uh {
+namespace uhapp {
 
 class RecordingGroup;
 class RecordingManagerListener

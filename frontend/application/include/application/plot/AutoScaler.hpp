@@ -4,7 +4,7 @@
 
 class QWidget;
 
-namespace uh {
+namespace uhapp {
 
 /*!
  * Provides a method for auto-scaling the data in a plot when double-clicking.

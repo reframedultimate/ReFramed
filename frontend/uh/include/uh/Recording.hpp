@@ -15,9 +15,9 @@ class Recording : public RefCounted
 {
 public:
     Recording(MappingInfo&& mapping,
-              std::vector<uint8_t>&& playerFighterIDs,
+              std::vector<FighterID>&& playerFighterIDs,
               std::vector<std::string>&& playerTags,
-              uint16_t stageID);
+              StageID stageID);
 
     bool saveAs(const std::string& fileName);
 

@@ -2,7 +2,7 @@
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/models/RecordingGroup.hpp"
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 RecordingGroup::RecordingGroup(const QString& name)

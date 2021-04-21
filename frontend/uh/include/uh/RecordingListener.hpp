@@ -1,6 +1,7 @@
 #pragma once
 
 #include "uh/SetFormat.hpp"
+#include "uh/Types.hpp"
 #include <string>
 
 namespace uh {
@@ -11,8 +12,8 @@ class RecordingListener
 {
 public:
     virtual void onActiveRecordingPlayerNameChanged(int player, const std::string& name) = 0;
-    virtual void onActiveRecordingSetNumberChanged(int number) = 0;
-    virtual void onActiveRecordingGameNumberChanged(int number) = 0;
+    virtual void onActiveRecordingSetNumberChanged(SetNumber number) = 0;
+    virtual void onActiveRecordingGameNumberChanged(GameNumber number) = 0;
     virtual void onActiveRecordingFormatChanged(const SetFormat& format) = 0;
     virtual void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) = 0;
     virtual void onActiveRecordingNewPlayerState(int player, const PlayerState& state) = 0;

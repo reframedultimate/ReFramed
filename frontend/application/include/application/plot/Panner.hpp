@@ -2,10 +2,9 @@
 
 #include "application/plot/DeltaPlotPicker.hpp"
 
-
 class QWidget;
 
-namespace uh {
+namespace uhapp {
 
 /*!
  * Provides a method for panning in real-time in both X/Y directions using the
@@ -23,4 +22,4 @@ protected slots:
     void doPan(const QPointF& delta);
 };
 
-} // namespace uh
+}

@@ -7,9 +7,9 @@ namespace uh {
 
 // ----------------------------------------------------------------------------
 ActiveRecording::ActiveRecording(MappingInfo&& mapping,
-                                 std::initializer_list<uint8_t> playerFighterIDs,
-                                 std::initializer_list<std::string> playerTags,
-                                 uint16_t stageID)
+                                 std::vector<FighterID>&& playerFighterIDs,
+                                 std::vector<std::string>&& playerTags,
+                                 StageID stageID)
     : Recording(
           std::move(mapping),
           std::move(playerFighterIDs),

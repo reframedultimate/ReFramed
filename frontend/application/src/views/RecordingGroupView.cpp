@@ -1,15 +1,16 @@
 #include "application/ui_RecordingGroupView.h"
 #include "application/views/RecordingGroupView.hpp"
 #include "application/models/RecordingGroup.hpp"
-#include "application/models/SavedRecording.hpp"
 #include "application/views/RecordingView.hpp"
+#include "uh/SavedRecording.hpp"
+#include "uh/PlayerState.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QCompleter>
 #include <QStringListModel>
 
-namespace uh {
+namespace uhapp {
 
 class RecordingNameCompleter : public QCompleter
 {
@@ -140,7 +141,7 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (fileName.completeBaseName() == current->text())
         {
-            SavedRecording* recording = SavedRecording::load(fileName.absoluteFilePath());
+            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString());
             if (recording)
                 recordingView_->setRecording(recording);
             break;

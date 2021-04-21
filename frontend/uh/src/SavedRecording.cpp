@@ -2,10 +2,12 @@
 #include "uh/MappingInfo.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/StreamBuffer.hpp"
+#include "uh/Types.hpp"
 #include "uh/time.h"
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
 #include "zlib.h"
+#include <iostream>
 
 namespace uh {
 
@@ -26,7 +28,6 @@ SavedRecording::SavedRecording(MappingInfo&& mapping,
 // ----------------------------------------------------------------------------
 SavedRecording* SavedRecording::load(const std::string& fileName)
 {
-
     auto decompressFile = [](const std::string& fileName) -> std::string {
         gzFile f = gzopen(fileName.c_str(), "rb");
         if (f == nullptr)
@@ -43,13 +44,16 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
             size_t prevSize = buf.size();
             buf.resize(buf.size() + 0x1000, '\0');
             void* dst = static_cast<void*>(buf.data() + prevSize);
-            int len = gzread(f, dst, 0x1000 - 1);
+            int len = gzread(f, dst, 0x1000);
             if (len < 0)
                 return "";
-            if (len < 0x1000 - 1)
+            if (len < 0x1000)
             {
                 if (gzeof(f))
+                {
+                    buf.resize(prevSize + len);
                     return buf;
+                }
                 return "";
             }
         }
@@ -58,7 +62,13 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
     std::string s = decompressFile(fileName);
     if (s.length() == 0)
         return nullptr;
-    json j = json::parse(std::move(s));
+
+    json j;
+    try {
+        j = json::parse(std::move(s));
+    } catch (const json::parse_error& e) {
+        return nullptr;
+    }
 
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
@@ -120,36 +130,34 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
 
     MappingInfo mappingInfo;
 
-    const json jsonFighterIDMapping = jsonMappingInfo["fighterid"];
-    for (const auto& [key, value] : jsonFighterIDMapping.items())
+    for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        uint8_t id = std::stoul(key, &pos);
+        FighterID fighterID = std::stoul(key, &pos);
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(id, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
     }
 
-    const json jsonStageIDMapping = jsonMappingInfo["stageid"];
-    for (const auto& [key, value] : jsonStageIDMapping.items())
+    for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        uint8_t id = std::stoul(key, &pos);
+        StageID stageID = std::stoul(key, &pos);
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(id, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>());
     }
 
     // skip loading status mappings, it was broken in 1.0
-    /*const QJsonObject jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];*/
+    /*const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];*/
 
-    std::vector<uint8_t> playerFighterIDs;
+    std::vector<FighterID> playerFighterIDs;
     std::vector<std::string> playerTags;
     for (const auto& info : jsonPlayerInfo)
     {
@@ -158,7 +166,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<uint8_t>());
+        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
         playerTags.push_back(info["tag"].get<std::string>());
     }
 
@@ -175,29 +183,28 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        jsonGameInfo["stageid"].get<uint16_t>()
+        jsonGameInfo["stageid"].get<StageID>()
     ));
-
 
     recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
-    recording->gameNumber_ = jsonGameInfo["number"].get<uint8_t>();
+    recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
 
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         if (stream.readBytesLeft() < 4)
             return nullptr;
-        uint32_t frameCount = stream.readU32();
+        Frame frameCount = stream.readU32();
         if (stream.readBytesLeft() < static_cast<int>((4+2+8+1) * frameCount))
             return nullptr;
 
-        for (uint32_t f = 0; f < frameCount; ++f)
+        for (Frame f = 0; f < frameCount; ++f)
         {
-            uint32_t frame = stream.readU32();
-            uint16_t status = stream.readU16();
+            Frame frame = stream.readU32();
+            FighterStatus status = stream.readU16();
             float damage = stream.readF64();
-            uint8_t stocks = stream.readU8();
+            FighterStocks stocks = stream.readU8();
             recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
@@ -239,12 +246,10 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
         return nullptr;
 
-    const json jsonFighterBaseStatusMapping = jsonFighterStatusMapping["base"];
-    const json jsonFighterSpecificStatusMapping = jsonFighterStatusMapping["specific"];
-    for (const auto& [key, value] : jsonFighterBaseStatusMapping.items())
+    for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        uint8_t id = std::stoul(key, &pos);
+        FighterStatus status = std::stoul(key, &pos);
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -255,12 +260,12 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterStatus.addBaseEnumName(id, value[0].get<std::string>());
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
     }
-    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterSpecificStatusMapping.items())
+    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        uint8_t fighterID = std::stoul(fighter, &pos);
+        FighterID fighterID = std::stoul(fighter, &pos);
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -268,7 +273,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            uint16_t status = std::stoul(key, &pos);
+            FighterStatus status = std::stoul(key, &pos);
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -283,43 +288,40 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         }
     }
 
-    const json jsonFighterIDMapping = jsonMappingInfo["fighterid"];
-    for (auto it = jsonFighterIDMapping.begin(); it != jsonFighterIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
-        bool ok;
-        uint8_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterID fighterID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(id, it.value().get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
     }
 
-    const QJsonObject jsonStageIDMapping = jsonMappingInfo["stageid"];
-    for (auto it = jsonStageIDMapping.begin(); it != jsonStageIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
-        bool ok;
-        uint16_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        StageID stageID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(id, it.value().get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>());
     }
 
-    QVector<uint8_t> playerFighterIDs;
-    QVector<QString> playerTags;
-    for (const auto& infoValue : jsonPlayerInfo)
+    std::vector<FighterID> playerFighterIDs;
+    std::vector<std::string> playerTags;
+    for (const auto& info : jsonPlayerInfo)
     {
-        const QJsonObject info = infoValue;
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
             return nullptr;
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(static_cast<uint8_t>(info["fighterid"].toInt()));
+        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
         playerTags.push_back(info["tag"].get<std::string>());
     }
 
@@ -332,54 +334,57 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
         return nullptr;
 
-    QScopedPointer<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedRecording> recording(new SavedRecording(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        jsonGameInfo["stageid"].toInt()
+        jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = QDateTime::fromString(jsonGameInfo["date"].get<std::string>()).toLocalTime();
+    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
-    recording->gameNumber_ = jsonGameInfo["number"].toInt();
+    recording->gameNumber_ = jsonGameInfo["number"].get<int>();
 
-    QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-    QDataStream stream(&stream_data, QIODevice::ReadOnly);
+    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        quint32 frameCount; stream >> frameCount;
-        for (quint32 f = 0; f < frameCount; ++f)
+        if (stream.readBytesLeft() < 4)
+            return nullptr;
+        Frame frameCount = stream.readU32();
+        if (stream.readBytesLeft() < static_cast<int>((4+2+8+1) * frameCount))
+            return nullptr;
+
+        for (Frame f = 0; f < frameCount; ++f)
         {
-            quint32 frame;  stream >> frame;
-            quint16 status; stream >> status;
-            qreal damage;   stream >> damage;
-            quint8 stocks;  stream >> stocks;
+            Frame frame = stream.readU32();
+            FighterStatus status = stream.readU16();
+            float damage = stream.readF64();
+            FighterStocks stocks = stream.readU8();
             recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
 
     recording->winner_ = recording->findWinner();
 
-    return recording.take();
+    return recording.release();
 }
 
 // ----------------------------------------------------------------------------
 SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
-    if (json.contains("mappinginfo") == false || json["mappinginfo"].is_object() == false)
+    if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
-    if (json.contains("gameinfo") == false || json["gameinfo"].is_object() == false)
+    if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
         return nullptr;
-    if (json.contains("playerinfo") == false || json["playerinfo"].is_array() == false)
+    if (j.contains("playerinfo") == false || j["playerinfo"].is_array() == false)
         return nullptr;
-    if (json.contains("playerstates") == false || json["playerstates"].is_string() == false)
+    if (j.contains("playerstates") == false || j["playerstates"].is_string() == false)
         return nullptr;
 
-    const QJsonObject jsonMappingInfo = json["mappinginfo"];
-    const QJsonObject jsonGameInfo = json["gameinfo"];
-    const QJsonArray jsonPlayerInfo = json["playerinfo"].to_array();
-    const QString jsonPlayerStates = json["playerstates"].get<std::string>();
+    const json jsonMappingInfo = j["mappinginfo"];
+    const json jsonGameInfo = j["gameinfo"];
+    const json jsonPlayerInfo = j["playerinfo"];
 
     if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
         return nullptr;
@@ -390,99 +395,89 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
 
     MappingInfo mappingInfo;
 
-    const QJsonObject jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
+    const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
         return nullptr;
     if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
         return nullptr;
 
-    const QJsonObject jsonFighterBaseStatusMapping = jsonFighterStatusMapping["base"];
-    const QJsonObject jsonFighterSpecificStatusMapping = jsonFighterStatusMapping["specific"];
-    for (auto it = jsonFighterBaseStatusMapping.begin(); it != jsonFighterBaseStatusMapping.end(); ++it)
+    for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
-        bool ok;
-        uint16_t status = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterStatus status = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_array() == false)
-            return nullptr;
-
-        QJsonArray arr = it.value().to_array();
-        if (arr.size() != 3)
-            return nullptr;
-        if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+        if (value.is_array() == false)
             return nullptr;
 
-        QString enumName   = arr[0].get<std::string>();
+        if (value.size() != 3)
+            return nullptr;
+        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+            return nullptr;
+
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, enumName);
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
     }
-    for (auto fighterit = jsonFighterSpecificStatusMapping.begin(); fighterit != jsonFighterSpecificStatusMapping.end(); ++fighterit)
+    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
-        bool ok;
-        uint8_t fighterID = fighterit.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterID fighterID = std::stoul(fighter, &pos);
+        if (pos != fighter.length())
             return nullptr;
-        if (fighterit.value().is_object() == false)
+        if (jsonSpecificMapping.is_object() == false)
             return nullptr;
 
-        const QJsonObject jsonSpecificMapping = fighterit.value();
-        for (auto it = jsonSpecificMapping.begin(); it != jsonSpecificMapping.end(); ++it)
+        for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            uint16_t status = it.key().toUInt(&ok);
-            if (!ok)
+            FighterStatus status = std::stoul(key, &pos);
+            if (pos != key.length())
                 return nullptr;
-            if (it.value().is_array() == false)
-                return nullptr;
-
-            QJsonArray arr = it.value().to_array();
-            if (arr.size() != 3)
-                return nullptr;
-            if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+            if (value.is_array() == false)
                 return nullptr;
 
-            QString enumName   = arr[0].get<std::string>();
+            if (value.size() != 3)
+                return nullptr;
+            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+                return nullptr;
+
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, enumName);
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
         }
     }
 
-    const QJsonObject jsonFighterIDMapping = jsonMappingInfo["fighterid"];
-    for (auto it = jsonFighterIDMapping.begin(); it != jsonFighterIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
-        bool ok;
-        uint8_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterID fighterID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(id, it.value().get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
     }
 
-    const QJsonObject jsonStageIDMapping = jsonMappingInfo["stageid"];
-    for (auto it = jsonStageIDMapping.begin(); it != jsonStageIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
-        bool ok;
-        uint16_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        StageID stageID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(id, it.value().get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>());
     }
 
-    QVector<uint8_t> playerFighterIDs;
-    QVector<QString> playerTags;
-    QVector<QString> playerNames;
-    for (const auto& infoValue : jsonPlayerInfo)
+    std::vector<FighterID> playerFighterIDs;
+    std::vector<std::string> playerTags;
+    std::vector<std::string> playerNames;
+    for (const auto& info : jsonPlayerInfo)
     {
-        const QJsonObject info = infoValue;
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
             return nullptr;
         if (info.contains("tag") == false || info["tag"].is_string() == false)
@@ -490,7 +485,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(static_cast<uint8_t>(info["fighterid"].toInt()));
+        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
         playerTags.push_back(info["tag"].get<std::string>());
         playerNames.push_back(info["name"].get<std::string>());
     }
@@ -506,37 +501,41 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     if (jsonGameInfo.contains("set") == false || jsonGameInfo["set"].is_number() == false)
         return nullptr;
 
-    QScopedPointer<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedRecording> recording(new SavedRecording(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        jsonGameInfo["stageid"].toInt()
+        jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = QDateTime::fromString(jsonGameInfo["date"].get<std::string>()).toLocalTime();
+    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
-    recording->gameNumber_ = jsonGameInfo["number"].toInt();
-    recording->setNumber_ = jsonGameInfo["set"].toInt();
+    recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
+    recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
     recording->playerNames_ = std::move(playerNames);
 
-    QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-    QDataStream stream(&stream_data, QIODevice::ReadOnly);
+    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        quint32 frameCount; stream >> frameCount;
-        for (quint32 f = 0; f < frameCount; ++f)
+        if (stream.readBytesLeft() < 4)
+            return nullptr;
+        Frame frameCount = stream.readU32();
+        if (stream.readBytesLeft() < static_cast<int>((4+8+8+8+8+8+2+8+1+1+1) * frameCount))
+            return nullptr;
+
+        for (Frame f = 0; f < frameCount; ++f)
         {
-            quint32 frame;     stream >> frame;
-            float posx;        stream >> posx;
-            float posy;        stream >> posy;
-            float damage;      stream >> damage;
-            float hitstun;     stream >> hitstun;
-            float shield;      stream >> shield;
-            quint16 status;    stream >> status;
-            quint64 motion;    stream >> motion;
-            quint8 hit_status; stream >> hit_status;
-            quint8 stocks;     stream >> stocks;
-            quint8 flags;      stream >> flags;
+            Frame frame = stream.readU32();
+            float posx = stream.readF64();
+            float posy = stream.readF64();
+            float damage = stream.readF64();
+            float hitstun = stream.readF64();
+            float shield = stream.readF64();
+            FighterStatus status = stream.readU16();
+            FighterMotion motion = stream.readU64();
+            FighterHitStatus hit_status = stream.readU8();
+            FighterStocks stocks = stream.readU8();
+            uint8_t flags = stream.readU8();
 
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
@@ -547,26 +546,25 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
 
     recording->winner_ = recording->findWinner();
 
-    return recording.take();
+    return recording.release();
 }
 
 // ----------------------------------------------------------------------------
 SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
-    if (json.contains("mappinginfo") == false || json["mappinginfo"].is_object() == false)
+    if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
-    if (json.contains("gameinfo") == false || json["gameinfo"].is_object() == false)
+    if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
         return nullptr;
-    if (json.contains("playerinfo") == false || json["playerinfo"].is_array() == false)
+    if (j.contains("playerinfo") == false || j["playerinfo"].is_array() == false)
         return nullptr;
-    if (json.contains("playerstates") == false || json["playerstates"].is_string() == false)
+    if (j.contains("playerstates") == false || j["playerstates"].is_string() == false)
         return nullptr;
 
-    const QJsonObject jsonMappingInfo = json["mappinginfo"];
-    const QJsonObject jsonGameInfo = json["gameinfo"];
-    const QJsonArray jsonPlayerInfo = json["playerinfo"].to_array();
-    const QString jsonPlayerStates = json["playerstates"].get<std::string>();
+    const json jsonMappingInfo = j["mappinginfo"];
+    const json jsonGameInfo = j["gameinfo"];
+    const json jsonPlayerInfo = j["playerinfo"];
 
     if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
         return nullptr;
@@ -579,112 +577,101 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
 
     MappingInfo mappingInfo;
 
-    const QJsonObject jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
+    const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
         return nullptr;
     if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
         return nullptr;
 
-    const QJsonObject jsonFighterBaseStatusMapping = jsonFighterStatusMapping["base"];
-    const QJsonObject jsonFighterSpecificStatusMapping = jsonFighterStatusMapping["specific"];
-    for (auto it = jsonFighterBaseStatusMapping.begin(); it != jsonFighterBaseStatusMapping.end(); ++it)
+    for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
-        bool ok;
-        uint16_t status = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterStatus status = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_array() == false)
-            return nullptr;
-
-        QJsonArray arr = it.value().to_array();
-        if (arr.size() != 3)
-            return nullptr;
-        if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+        if (value.is_array() == false)
             return nullptr;
 
-        QString enumName   = arr[0].get<std::string>();
+        if (value.size() != 3)
+            return nullptr;
+        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+            return nullptr;
+
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, enumName);
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
     }
-    for (auto fighterit = jsonFighterSpecificStatusMapping.begin(); fighterit != jsonFighterSpecificStatusMapping.end(); ++fighterit)
+    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
-        bool ok;
-        uint8_t fighterID = fighterit.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterID fighterID = std::stoul(fighter, &pos);
+        if (pos != fighter.length())
             return nullptr;
-        if (fighterit.value().is_object() == false)
+        if (jsonSpecificMapping.is_object() == false)
             return nullptr;
 
-        const QJsonObject jsonSpecificMapping = fighterit.value();
-        for (auto it = jsonSpecificMapping.begin(); it != jsonSpecificMapping.end(); ++it)
+        for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            uint16_t status = it.key().toUInt(&ok);
-            if (!ok)
+            FighterStatus status = std::stoul(key, &pos);
+            if (pos != key.length())
                 return nullptr;
-            if (it.value().is_array() == false)
-                return nullptr;
-
-            QJsonArray arr = it.value().to_array();
-            if (arr.size() != 3)
-                return nullptr;
-            if (arr[0].is_string() == false || arr[1].is_string() == false || arr[2].is_string() == false)
+            if (value.is_array() == false)
                 return nullptr;
 
-            QString enumName   = arr[0].get<std::string>();
+            if (value.size() != 3)
+                return nullptr;
+            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+                return nullptr;
+
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, enumName);
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
         }
     }
 
-    const QJsonObject jsonFighterIDMapping = jsonMappingInfo["fighterid"];
-    for (auto it = jsonFighterIDMapping.begin(); it != jsonFighterIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
-        bool ok;
-        uint8_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterID fighterID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(id, it.value().get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
     }
 
-    const QJsonObject jsonStageIDMapping = jsonMappingInfo["stageid"];
-    for (auto it = jsonStageIDMapping.begin(); it != jsonStageIDMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
-        bool ok;
-        uint16_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        StageID stageID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(id, it.value().get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>());
     }
 
-    const QJsonObject jsonHitStatusMapping = jsonMappingInfo["hitstatus"];
-    for (auto it = jsonHitStatusMapping.begin(); it != jsonHitStatusMapping.end(); ++it)
+    for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
     {
-        bool ok;
-        uint8_t id = it.key().toUInt(&ok);
-        if (!ok)
+        std::size_t pos;
+        FighterHitStatus hitStatusID = std::stoul(key, &pos);
+        if (pos != key.length())
             return nullptr;
-        if (it.value().is_string() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.hitStatus.add(id, it.value().get<std::string>());
+        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>());
     }
 
-    QVector<uint8_t> playerFighterIDs;
-    QVector<QString> playerTags;
-    QVector<QString> playerNames;
-    for (const auto& infoValue : jsonPlayerInfo)
+    std::vector<FighterID> playerFighterIDs;
+    std::vector<std::string> playerTags;
+    std::vector<std::string> playerNames;
+    for (const auto& info : jsonPlayerInfo)
     {
-        const QJsonObject info = infoValue;
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
             return nullptr;
         if (info.contains("tag") == false || info["tag"].is_string() == false)
@@ -692,7 +679,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(static_cast<uint8_t>(info["fighterid"].toInt()));
+        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
         playerTags.push_back(info["tag"].get<std::string>());
         playerNames.push_back(info["name"].get<std::string>());
     }
@@ -710,44 +697,45 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
         return nullptr;
 
-    QScopedPointer<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedRecording> recording(new SavedRecording(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        jsonGameInfo["stageid"].toInt()
+        jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = QDateTime::fromString(jsonGameInfo["date"].get<std::string>()).toLocalTime();
+    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
-    recording->gameNumber_ = jsonGameInfo["number"].toInt();
-    recording->setNumber_ = jsonGameInfo["set"].toInt();
+    recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
+    recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
     recording->playerNames_ = std::move(playerNames);
 
-    QByteArray stream_data = QByteArray::fromBase64(jsonPlayerStates.toUtf8(), QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-    QDataStream stream(&stream_data, QIODevice::ReadOnly);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    stream.setVersion(QDataStream::Qt_5_12);
+    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        quint32 frameCount; stream >> frameCount;
-        for (quint32 f = 0; f < frameCount; ++f)
-        {
-            quint32 frame;     stream >> frame;
-            float posx;        stream >> posx;
-            float posy;        stream >> posy;
-            float damage;      stream >> damage;
-            float hitstun;     stream >> hitstun;
-            float shield;      stream >> shield;
-            quint16 status;    stream >> status;
-            quint32 motion_l;  stream >> motion_l;
-            quint8 motion_h;   stream >> motion_h;
-            quint8 hit_status; stream >> hit_status;
-            quint8 stocks;     stream >> stocks;
-            quint8 flags;      stream >> flags;
+        if (stream.readBytesLeft() < 4)
+            return nullptr;
+        Frame frameCount = stream.readU32();
+        if (stream.readBytesLeft() < static_cast<int>((4+4+4+4+4+4+2+5+1+1+1) * frameCount))
+            return nullptr;
 
-            quint64 motion = static_cast<quint64>(motion_l)
-                          | (static_cast<quint64>(motion_h) << 32);
+        for (Frame f = 0; f < frameCount; ++f)
+        {
+            Frame frame = stream.readU32();
+            float posx = stream.readF64();
+            float posy = stream.readF64();
+            float damage = stream.readF64();
+            float hitstun = stream.readF64();
+            float shield = stream.readF64();
+            FighterStatus status = stream.readU16();
+            uint32_t motion_l = stream.readU32();
+            uint8_t motion_h = stream.readU8();
+            FighterHitStatus hit_status = stream.readU8();
+            FighterStocks stocks = stream.readU8();
+            uint8_t flags = stream.readU8();
+
+            FighterMotion motion = static_cast<uint64_t>(motion_l)
+                                 | (static_cast<uint64_t>(motion_h) << 32);
 
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
@@ -758,11 +746,207 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
 
     recording->winner_ = recording->findWinner();
 
-    return recording.take();
+    return recording.release();
 }
 
+// ----------------------------------------------------------------------------
 SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
-    return nullptr;
+    if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
+        return nullptr;
+    if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
+        return nullptr;
+    if (j.contains("playerinfo") == false || j["playerinfo"].is_array() == false)
+        return nullptr;
+    if (j.contains("playerstates") == false || j["playerstates"].is_string() == false)
+        return nullptr;
+
+    const json jsonMappingInfo = j["mappinginfo"];
+    const json jsonGameInfo = j["gameinfo"];
+    const json jsonPlayerInfo = j["playerinfo"];
+
+    if (jsonMappingInfo.contains("fighterstatus") == false || jsonMappingInfo["fighterstatus"].is_object() == false)
+        return nullptr;
+    if (jsonMappingInfo.contains("fighterid") == false || jsonMappingInfo["fighterid"].is_object() == false)
+        return nullptr;
+    if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
+        return nullptr;
+    if (jsonMappingInfo.contains("hitstatus") == false || jsonMappingInfo["hitstatus"].is_object() == false)
+        return nullptr;
+
+    MappingInfo mappingInfo;
+
+    const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
+    if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
+        return nullptr;
+    if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
+        return nullptr;
+
+    for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
+    {
+        std::size_t pos;
+        FighterStatus status = std::stoul(key, &pos);
+        if (pos != key.length())
+            return nullptr;
+        if (value.is_array() == false)
+            return nullptr;
+
+        if (value.size() != 3)
+            return nullptr;
+        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+            return nullptr;
+
+        /*QString shortName  = arr[1].get<std::string>();
+        QString customName = arr[2].get<std::string>();*/
+
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
+    }
+    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
+    {
+        std::size_t pos;
+        FighterID fighterID = std::stoul(fighter, &pos);
+        if (pos != fighter.length())
+            return nullptr;
+        if (jsonSpecificMapping.is_object() == false)
+            return nullptr;
+
+        for (const auto& [key, value] : jsonSpecificMapping.items())
+        {
+            FighterStatus status = std::stoul(key, &pos);
+            if (pos != key.length())
+                return nullptr;
+            if (value.is_array() == false)
+                return nullptr;
+
+            if (value.size() != 3)
+                return nullptr;
+            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+                return nullptr;
+
+            /*QString shortName  = arr[1].get<std::string>();
+            QString customName = arr[2].get<std::string>();*/
+
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
+        }
+    }
+
+    for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
+    {
+        std::size_t pos;
+        FighterID fighterID = std::stoul(key, &pos);
+        if (pos != key.length())
+            return nullptr;
+        if (value.is_string() == false)
+            return nullptr;
+
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+    }
+
+    for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
+    {
+        std::size_t pos;
+        StageID stageID = std::stoul(key, &pos);
+        if (pos != key.length())
+            return nullptr;
+        if (value.is_string() == false)
+            return nullptr;
+
+        mappingInfo.stageID.add(stageID, value.get<std::string>());
+    }
+
+    for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
+    {
+        std::size_t pos;
+        FighterHitStatus hitStatusID = std::stoul(key, &pos);
+        if (pos != key.length())
+            return nullptr;
+        if (value.is_string() == false)
+            return nullptr;
+
+        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>());
+    }
+
+    std::vector<FighterID> playerFighterIDs;
+    std::vector<std::string> playerTags;
+    std::vector<std::string> playerNames;
+    for (const auto& info : jsonPlayerInfo)
+    {
+        if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
+            return nullptr;
+        if (info.contains("tag") == false || info["tag"].is_string() == false)
+            return nullptr;
+        if (info.contains("name") == false || info["name"].is_string() == false)
+            return nullptr;
+
+        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
+        playerTags.push_back(info["tag"].get<std::string>());
+        playerNames.push_back(info["name"].get<std::string>());
+    }
+
+    if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_number() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("format") == false || jsonGameInfo["format"].is_string() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("number") == false || jsonGameInfo["number"].is_number() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("set") == false || jsonGameInfo["set"].is_number() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
+        return nullptr;
+
+    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+        std::move(mappingInfo),
+        std::move(playerFighterIDs),
+        std::move(playerTags),
+        jsonGameInfo["stageid"].get<StageID>()
+    ));
+
+    recording->timeStarted_ = jsonGameInfo["date"].get<uint64_t>();
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
+    recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
+    recording->playerNames_ = std::move(playerNames);
+
+    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    for (int i = 0; i < recording->playerCount(); ++i)
+    {
+        if (stream.readBytesLeft() < 4)
+            return nullptr;
+        Frame frameCount = stream.readU32();
+        if (stream.readBytesLeft() < static_cast<int>((4+4+4+4+4+4+2+5+1+1+1) * frameCount))
+            return nullptr;
+
+        for (Frame f = 0; f < frameCount; ++f)
+        {
+            Frame frame = stream.readU32();
+            float posx = stream.readF32();
+            float posy = stream.readF32();
+            float damage = stream.readF32();
+            float hitstun = stream.readF32();
+            float shield = stream.readF32();
+            FighterStatus status = stream.readU16();
+            uint32_t motion_l = stream.readU32();
+            uint8_t motion_h = stream.readU8();
+            FighterHitStatus hit_status = stream.readU8();
+            FighterStocks stocks = stream.readU8();
+            uint8_t flags = stream.readU8();
+
+            FighterMotion motion = static_cast<uint64_t>(motion_l)
+                                 | (static_cast<uint64_t>(motion_h) << 32);
+
+            bool attack_connected = !!(flags & 0x01);
+            bool facing_direction = !!(flags & 0x02);
+
+            recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+        }
+    }
+
+    recording->winner_ = recording->findWinner();
+
+    return recording.release();
+}
+
 }

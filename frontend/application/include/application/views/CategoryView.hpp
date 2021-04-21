@@ -4,7 +4,7 @@
 #include "application/models/CategoryType.hpp"
 #include <QTreeWidget>
 
-namespace uh {
+namespace uhapp {
 
 class RecordingManager;
 

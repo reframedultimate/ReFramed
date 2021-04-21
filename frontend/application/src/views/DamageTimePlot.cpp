@@ -1,11 +1,11 @@
 #include "application/plot/ColorPalette.hpp"
 #include "application/views/DamageTimePlot.hpp"
-#include "application/models/Recording.hpp"
-#include "application/models/PlayerState.hpp"
+#include "uh/Recording.hpp"
+#include "uh/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 
-namespace uh {
+namespace uhapp {
 
 namespace {
 
@@ -106,7 +106,7 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setRecording(Recording* recording)
+void DamageTimePlot::setRecording(uh::Recording* recording)
 {
     clear();
     recording_ = recording;
@@ -118,12 +118,13 @@ void DamageTimePlot::setRecording(Recording* recording)
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(recording_->playerName(player));
+        curve->setTitle(QString::fromStdString(recording_->playerName(player)));
         curve->attach(this);
         curves_.push_back(curve);
 
-        for (const auto& state : recording_->playerStates(player))
+        for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
+            const auto& state = recording_->playerState(player, i);
             appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
         }
     }
@@ -132,14 +133,14 @@ void DamageTimePlot::setRecording(Recording* recording)
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const QString& name)
+void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
 {
-    curves_[player]->setTitle(name);
+    curves_[player]->setTitle(QString::fromStdString(name));
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
+void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);

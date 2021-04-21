@@ -2,7 +2,7 @@
 
 #include <QJsonObject>
 
-namespace uh {
+namespace uhapp {
 
 class Config
 {

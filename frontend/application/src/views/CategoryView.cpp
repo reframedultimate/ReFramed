@@ -2,7 +2,7 @@
 #include "application/models/RecordingManager.hpp"
 #include "application/models/RecordingGroup.hpp"
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)

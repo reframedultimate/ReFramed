@@ -10,7 +10,7 @@ namespace Ui {
     class RecordingGroupView;
 }
 
-namespace uh {
+namespace uhapp {
 
 class RecordingGroup;
 class RecordingView;

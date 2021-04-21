@@ -6,7 +6,6 @@
 
 #include <QtCore/qmath.h>
 
-
 static QPointF qPow(qreal base, const QPointF& exponent)
 {
     return QPointF(
@@ -15,7 +14,7 @@ static QPointF qPow(qreal base, const QPointF& exponent)
     );
 }
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 Zoomer::Zoomer(QWidget* canvas) :

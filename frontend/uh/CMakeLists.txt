@@ -53,12 +53,15 @@ configure_file ("templates/Endian.hpp.in" "include/uh/Endian.hpp")
 
 add_library (uh SHARED
 	"src/ActiveRecording.cpp"
+    "src/crc32.c"
 	"src/DataPoint.cpp"
 	"src/DataSet.cpp"
 	"src/DecisionGraph.cpp"
 	"src/FighterIDMapping.cpp"
 	"src/FighterStatusMapping.cpp"
+    "src/hash40.c"
 	"src/HitStatusMapping.cpp"
+    "src/init.c"
 	"src/MappingInfo.cpp"
 	"src/PlayerState.cpp"
 	"src/Recording.cpp"

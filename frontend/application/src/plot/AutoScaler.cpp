@@ -3,8 +3,7 @@
 #include "qwt_plot_canvas.h"
 #include <QMouseEvent>
 
-
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 AutoScaler::AutoScaler(QWidget* canvas) :

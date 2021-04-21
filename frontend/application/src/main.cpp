@@ -1,21 +1,21 @@
 #include "application/views/MainWindow.hpp"
-#include "application/platform/tcp_socket.h"
+#include "uh/init.h"
 #include <QApplication>
 
 int main(int argc, char** argv)
 {
     int result;
     QApplication app(argc, argv);
-    uh::MainWindow mainWindow;
+    uhapp::MainWindow mainWindow;
 
-    if (tcp_socket_global_init() != 0)
-        goto init_sockets_failed;
+    if (uh_init() != 0)
+        goto init_uh_library_failed;
 
     mainWindow.show();
     result = app.exec();
 
-    tcp_socket_global_deinit();
+    uh_deinit();
     return result;
 
-    init_sockets_failed: return -1;
+    init_uh_library_failed: return -1;
 }

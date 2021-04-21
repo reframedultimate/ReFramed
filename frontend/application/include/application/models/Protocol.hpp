@@ -2,6 +2,8 @@
 
 #include "uh/tcp_socket.h"
 #include "uh/ActiveRecording.hpp"
+#include "uh/Reference.hpp"
+#include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
 
 #include <QVector>
 #include <QThread>
@@ -9,9 +11,11 @@
 #include <QExplicitlySharedDataPointer>
 
 namespace uh {
+    class MappingInfo;
+    class Recording;
+}
 
-class MappingInfo;
-class Recording;
+namespace uhapp {
 
 /*!
  * \brief Decodes the incoming stream from the nintendo switch into structures.
@@ -39,7 +43,7 @@ public:
 
 signals:
     // emitted from the listener thread
-    void _receiveMatchStarted(ActiveRecording* newRecording);
+    void _receiveMatchStarted(uh::ActiveRecording* newRecording);
     void _receiveMatchEnded();
     void _receivePlayerState(
             quint32 frame,
@@ -58,7 +62,7 @@ signals:
 
 private slots:
     // catch signals from listener thread so we have them in the main thread
-    void onReceiveMatchStarted(ActiveRecording* newRecording);
+    void onReceiveMatchStarted(uh::ActiveRecording* newRecording);
     void onReceiveMatchEnded();
     void onReceivePlayerState(
             quint32 frame,
@@ -76,8 +80,8 @@ private slots:
             bool facing_direction);
 
 signals:
-    void recordingStarted(ActiveRecording* recording);
-    void recordingEnded(ActiveRecording* recording);
+    void recordingStarted(uh::ActiveRecording* recording);
+    void recordingEnded(uh::ActiveRecording* recording);
     void serverClosedConnection();
 
 private:
@@ -86,7 +90,7 @@ private:
 private:
     tcp_socket socket_;
     QMutex mutex_;
-    QExplicitlySharedDataPointer<ActiveRecording> recording_;
+    uh::Reference<uh::ActiveRecording> recording_;
     bool requestShutdown_ = false;
 };
 

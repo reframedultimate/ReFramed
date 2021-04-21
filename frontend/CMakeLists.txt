@@ -28,6 +28,11 @@ set (UH_INSTALL_INCLUDEDIR "include")
 set (UH_INSTALL_DATADIR "share/uh")
 set (UH_INSTALL_CMAKEDIR "share/uh/cmake")
 
+# Need to compile static libraries with position independent code on because
+# libuh is a shared library
+set (CPP_BASE64_PIC ON CACHE INTERNAL "")
+set (ZLIB_PIC ON CACHE INTERNAL "")
+
 add_subdirectory ("thirdparty/qwt-6.1.6")
 add_subdirectory ("thirdparty/googletest")
 add_subdirectory ("thirdparty/json")

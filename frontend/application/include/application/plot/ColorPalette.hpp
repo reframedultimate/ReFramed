@@ -2,7 +2,7 @@
 
 #include <QColor>
 
-namespace uh {
+namespace uhapp {
 
 struct ColorPalette
 {
