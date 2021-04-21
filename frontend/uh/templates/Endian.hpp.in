@@ -89,5 +89,59 @@ static inline uint64_t toLittleEndian64(uint64_t x)
 #endif
 }
 
+static inline uint16_t fromBigEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_16(x);
+#endif
+}
+
+static inline uint16_t toBigEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_16(x);
+#endif
+}
+
+static inline uint32_t fromBigEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_32(x);
+#endif
+}
+
+static inline uint32_t toBigEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_32(x);
+#endif
+}
+
+static inline uint64_t fromBigEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_64(x);
+#endif
+}
+
+static inline uint64_t toBigEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return UH_SWAP_ENDIAN_64(x);
+#endif
+}
+
 }
 

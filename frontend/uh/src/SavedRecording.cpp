@@ -14,6 +14,141 @@ namespace uh {
 using nlohmann::json;
 
 // ----------------------------------------------------------------------------
+static std::string decompressGZFile(const std::string& fileName)
+{
+    std::string out;
+    gzFile f = gzopen(fileName.c_str(), "rb");
+    if (f == nullptr)
+        goto open_failed;
+    if (gzbuffer(f, 128 * 1024) != 0)
+        goto read_error;
+
+    while (true)
+    {
+        size_t prevSize = out.size();
+        out.resize(out.size() + 0x1000, '\0');
+        void* dst = static_cast<void*>(out.data() + prevSize);
+        int len = gzread(f, dst, 0x1000);
+        if (len < 0)
+            goto read_error;
+        if (len < 0x1000)
+        {
+            if (gzeof(f))
+            {
+                out.resize(prevSize + len);
+                break;
+            }
+            else
+            {
+                goto read_error;
+            }
+        }
+    }
+
+    if (gzclose(f) != Z_OK)
+        return "";
+    return out;
+
+    read_error      : gzclose(f);
+    open_failed     : return "";
+}
+
+// ----------------------------------------------------------------------------
+static std::string decompressQtZFile(const std::string& fileName)
+{
+#define CHUNK (256*1024)
+    std::string out;
+    FILE* fp = fopen(fileName.c_str(), "rb");
+    if (fp == nullptr)
+        return "";
+
+    unsigned char* buf = new unsigned char[CHUNK];
+
+    // Qt prepends 4 bytes describing the uncompressed length. This is not
+    // normally part of a Z compressed file so remove it
+    uint32_t qtLengthHeader;
+    fread(&qtLengthHeader, 4, 1, fp);
+
+    z_stream s;
+    s.zalloc = Z_NULL;
+    s.zfree = Z_NULL;
+    s.opaque = Z_NULL;
+    s.avail_in = 0;
+    s.next_in = Z_NULL;
+    if (inflateInit(&s) != Z_OK)
+        goto init_stream_failed;
+
+    int ret;
+    do {
+        s.avail_in = fread(buf, 1, CHUNK, fp);
+        if (ferror(fp))
+            goto read_error;
+        if (s.avail_in == 0)
+            break;
+        s.next_in = buf;
+
+        do {
+            size_t prevSize = out.size();
+            out.resize(prevSize + CHUNK);
+            s.avail_out = CHUNK;
+            s.next_out = reinterpret_cast<unsigned char*>(out.data() + prevSize);
+
+            ret = inflate(&s, Z_NO_FLUSH);
+            if (ret == Z_STREAM_END)
+                break;
+            if (ret != Z_OK)
+                goto read_error;
+
+            int have = CHUNK - s.avail_out;
+            if (have < CHUNK)
+                out.resize(prevSize + have);
+        } while (s.avail_out == 0);
+    } while (ret != Z_STREAM_END);
+    assert(ret == Z_STREAM_END);
+
+    deflateEnd(&s);
+    delete[] buf;
+    fclose(fp);
+
+    return out;
+
+read_error :
+    deflateEnd(&s);
+init_stream_failed :
+    delete[] buf;
+    fclose(fp);
+    return "";
+#undef CHUNK
+}
+
+// ----------------------------------------------------------------------------
+static std::string readUncompressedFile(const std::string& fileName)
+{
+#define CHUNK (256*1024)
+    std::string out;
+    FILE* fp = fopen(fileName.c_str(), "rb");
+    if (fp == nullptr)
+        goto open_failed;
+
+    do {
+        size_t prevSize = out.size();
+        out.resize(prevSize + CHUNK);
+        size_t bytes = fread(out.data() + prevSize, 1, CHUNK, fp);
+        if (ferror(fp))
+            goto read_error;
+        if (bytes < CHUNK)
+            out.resize(prevSize + bytes);
+    } while (!feof(fp));
+
+    fclose(fp);
+    return out;
+
+    read_error  : fclose(fp);
+    open_failed : return "";
+#undef CHUNK
+}
+
+// ----------------------------------------------------------------------------
 SavedRecording::SavedRecording(MappingInfo&& mapping,
                                std::vector<uint8_t>&& playerFighterIDs,
                                std::vector<std::string>&& playerTags,
@@ -28,46 +163,17 @@ SavedRecording::SavedRecording(MappingInfo&& mapping,
 // ----------------------------------------------------------------------------
 SavedRecording* SavedRecording::load(const std::string& fileName)
 {
-    auto decompressFile = [](const std::string& fileName) -> std::string {
-        gzFile f = gzopen(fileName.c_str(), "rb");
-        if (f == nullptr)
-            return "";
-        if (gzbuffer(f, 128 * 1024) != 0)
-        {
-            gzclose(f);
-            return "";
-        }
-
-        std::string buf;
-        while (true)
-        {
-            size_t prevSize = buf.size();
-            buf.resize(buf.size() + 0x1000, '\0');
-            void* dst = static_cast<void*>(buf.data() + prevSize);
-            int len = gzread(f, dst, 0x1000);
-            if (len < 0)
-                return "";
-            if (len < 0x1000)
-            {
-                if (gzeof(f))
-                {
-                    buf.resize(prevSize + len);
-                    return buf;
-                }
-                return "";
-            }
-        }
-    };
-
-    std::string s = decompressFile(fileName);
-    if (s.length() == 0)
-        return nullptr;
-
     json j;
-    try {
-        j = json::parse(std::move(s));
-    } catch (const json::parse_error& e) {
-        return nullptr;
+    for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
+    {
+        std::string s = readFile(fileName);
+        if (s.length() == 0)
+            continue;
+
+        try {
+            j = json::parse(std::move(s));
+            break;
+        } catch (const json::parse_error& e) {}
     }
 
     if (j.contains("version") == false || j["version"].is_string() == false)
@@ -193,18 +299,21 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        if (stream.readBytesLeft() < 4)
-            return nullptr;
-        Frame frameCount = stream.readU32();
-        if (stream.readBytesLeft() < static_cast<int>((4+2+8+1) * frameCount))
+        int error = 0;
+        Frame frameCount = stream.readBU32(&error);
+        if (error)
             return nullptr;
 
         for (Frame f = 0; f < frameCount; ++f)
         {
-            Frame frame = stream.readU32();
-            FighterStatus status = stream.readU16();
-            float damage = stream.readF64();
-            FighterStocks stocks = stream.readU8();
+            Frame frame = stream.readBU32(&error);
+            FighterStatus status = stream.readBU16(&error);
+            float damage = stream.readBF64(&error);
+            FighterStocks stocks = stream.readU8(&error);
+
+            if (error)
+                return nullptr;
+
             recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
@@ -348,18 +457,21 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        if (stream.readBytesLeft() < 4)
-            return nullptr;
-        Frame frameCount = stream.readU32();
-        if (stream.readBytesLeft() < static_cast<int>((4+2+8+1) * frameCount))
+        int error = 0;
+        Frame frameCount = stream.readBU32(&error);
+        if (error)
             return nullptr;
 
         for (Frame f = 0; f < frameCount; ++f)
         {
-            Frame frame = stream.readU32();
-            FighterStatus status = stream.readU16();
-            float damage = stream.readF64();
-            FighterStocks stocks = stream.readU8();
+            Frame frame = stream.readBU32(&error);
+            FighterStatus status = stream.readBU16(&error);
+            float damage = stream.readBF64(&error);
+            FighterStocks stocks = stream.readU8(&error);
+
+            if (error)
+                return nullptr;
+
             recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
@@ -517,25 +629,27 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        if (stream.readBytesLeft() < 4)
-            return nullptr;
-        Frame frameCount = stream.readU32();
-        if (stream.readBytesLeft() < static_cast<int>((4+8+8+8+8+8+2+8+1+1+1) * frameCount))
+        int error = 0;
+        Frame frameCount = stream.readBU32(&error);
+        if (error)
             return nullptr;
 
         for (Frame f = 0; f < frameCount; ++f)
         {
-            Frame frame = stream.readU32();
-            float posx = stream.readF64();
-            float posy = stream.readF64();
-            float damage = stream.readF64();
-            float hitstun = stream.readF64();
-            float shield = stream.readF64();
-            FighterStatus status = stream.readU16();
-            FighterMotion motion = stream.readU64();
-            FighterHitStatus hit_status = stream.readU8();
-            FighterStocks stocks = stream.readU8();
-            uint8_t flags = stream.readU8();
+            Frame frame = stream.readBU32(&error);
+            float posx = stream.readBF64(&error);
+            float posy = stream.readBF64(&error);
+            float damage = stream.readBF64(&error);
+            float hitstun = stream.readBF64(&error);
+            float shield = stream.readBF64(&error);
+            FighterStatus status = stream.readBU16(&error);
+            FighterMotion motion = stream.readBU64(&error);
+            FighterHitStatus hit_status = stream.readU8(&error);
+            FighterStocks stocks = stream.readU8(&error);
+            uint8_t flags = stream.readU8(&error);
+
+            if (error)
+                return nullptr;
 
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
@@ -713,26 +827,28 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        if (stream.readBytesLeft() < 4)
-            return nullptr;
-        Frame frameCount = stream.readU32();
-        if (stream.readBytesLeft() < static_cast<int>((4+4+4+4+4+4+2+5+1+1+1) * frameCount))
+        int error = 0;
+        Frame frameCount = stream.readLU32(&error);
+        if (error)
             return nullptr;
 
         for (Frame f = 0; f < frameCount; ++f)
         {
-            Frame frame = stream.readU32();
-            float posx = stream.readF64();
-            float posy = stream.readF64();
-            float damage = stream.readF64();
-            float hitstun = stream.readF64();
-            float shield = stream.readF64();
-            FighterStatus status = stream.readU16();
-            uint32_t motion_l = stream.readU32();
-            uint8_t motion_h = stream.readU8();
-            FighterHitStatus hit_status = stream.readU8();
-            FighterStocks stocks = stream.readU8();
-            uint8_t flags = stream.readU8();
+            Frame frame = stream.readLU32(&error);
+            float posx = stream.readLF32(&error);
+            float posy = stream.readLF32(&error);
+            float damage = stream.readLF32(&error);
+            float hitstun = stream.readLF32(&error);
+            float shield = stream.readLF32(&error);
+            FighterStatus status = stream.readLU16(&error);
+            uint32_t motion_l = stream.readLU32(&error);
+            uint8_t motion_h = stream.readU8(&error);
+            FighterHitStatus hit_status = stream.readU8(&error);
+            FighterStocks stocks = stream.readU8(&error);
+            uint8_t flags = stream.readU8(&error);
+
+            if (error)
+                return nullptr;
 
             FighterMotion motion = static_cast<uint64_t>(motion_l)
                                  | (static_cast<uint64_t>(motion_h) << 32);
@@ -913,26 +1029,28 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        if (stream.readBytesLeft() < 4)
-            return nullptr;
-        Frame frameCount = stream.readU32();
-        if (stream.readBytesLeft() < static_cast<int>((4+4+4+4+4+4+2+5+1+1+1) * frameCount))
+        int error = 0;
+        Frame frameCount = stream.readLU32(&error);
+        if (error)
             return nullptr;
 
         for (Frame f = 0; f < frameCount; ++f)
         {
-            Frame frame = stream.readU32();
-            float posx = stream.readF32();
-            float posy = stream.readF32();
-            float damage = stream.readF32();
-            float hitstun = stream.readF32();
-            float shield = stream.readF32();
-            FighterStatus status = stream.readU16();
-            uint32_t motion_l = stream.readU32();
-            uint8_t motion_h = stream.readU8();
-            FighterHitStatus hit_status = stream.readU8();
-            FighterStocks stocks = stream.readU8();
-            uint8_t flags = stream.readU8();
+            Frame frame = stream.readLU32(&error);
+            float posx = stream.readLF32(&error);
+            float posy = stream.readLF32(&error);
+            float damage = stream.readLF32(&error);
+            float hitstun = stream.readLF32(&error);
+            float shield = stream.readLF32(&error);
+            FighterStatus status = stream.readLU16(&error);
+            uint32_t motion_l = stream.readLU32(&error);
+            uint8_t motion_h = stream.readU8(&error);
+            FighterHitStatus hit_status = stream.readU8(&error);
+            FighterStocks stocks = stream.readU8(&error);
+            uint8_t flags = stream.readU8(&error);
+
+            if (error)
+                return nullptr;
 
             FighterMotion motion = static_cast<uint64_t>(motion_l)
                                  | (static_cast<uint64_t>(motion_h) << 32);

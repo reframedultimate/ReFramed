@@ -31,7 +31,7 @@ StreamBuffer& StreamBuffer::writeU8(uint8_t value)
 }
 
 // ----------------------------------------------------------------------------
-StreamBuffer& StreamBuffer::writeU16(uint16_t value)
+StreamBuffer& StreamBuffer::writeLU16(uint16_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + size();
     unsigned char* current = static_cast<unsigned char*>(writePtr_);
@@ -43,7 +43,7 @@ StreamBuffer& StreamBuffer::writeU16(uint16_t value)
 }
 
 // ----------------------------------------------------------------------------
-StreamBuffer& StreamBuffer::writeU32(uint32_t value)
+StreamBuffer& StreamBuffer::writeLU32(uint32_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + size();
     unsigned char* current = static_cast<unsigned char*>(writePtr_);
@@ -55,7 +55,7 @@ StreamBuffer& StreamBuffer::writeU32(uint32_t value)
 }
 
 // ----------------------------------------------------------------------------
-StreamBuffer& StreamBuffer::writeU64(uint64_t value)
+StreamBuffer& StreamBuffer::writeLU64(uint64_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + size();
     unsigned char* current = static_cast<unsigned char*>(writePtr_);
@@ -67,7 +67,7 @@ StreamBuffer& StreamBuffer::writeU64(uint64_t value)
 }
 
 // ----------------------------------------------------------------------------
-StreamBuffer& StreamBuffer::writeF32(float value)
+StreamBuffer& StreamBuffer::writeLF32(float value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + size();
     unsigned char* current = static_cast<unsigned char*>(writePtr_);
@@ -79,7 +79,7 @@ StreamBuffer& StreamBuffer::writeF32(float value)
 }
 
 // ----------------------------------------------------------------------------
-StreamBuffer& StreamBuffer::writeF64(double value)
+StreamBuffer& StreamBuffer::writeLF64(double value)
 {
 
     unsigned char* end = static_cast<unsigned char*>(get()) + size();
@@ -92,10 +92,75 @@ StreamBuffer& StreamBuffer::writeF64(double value)
 }
 
 // ----------------------------------------------------------------------------
-uint8_t StreamBuffer::readU8()
+StreamBuffer& StreamBuffer::writeBU16(uint16_t value)
+{
+    unsigned char* end = static_cast<unsigned char*>(get()) + size();
+    unsigned char* current = static_cast<unsigned char*>(writePtr_);
+    assert(current + 2 <= end);
+    uint16_t le = toBigEndian16(value);
+    std::memcpy(writePtr_, &le, 2);
+    writePtr_ = current + 2;
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+StreamBuffer& StreamBuffer::writeBU32(uint32_t value)
+{
+    unsigned char* end = static_cast<unsigned char*>(get()) + size();
+    unsigned char* current = static_cast<unsigned char*>(writePtr_);
+    assert(current + 4 <= end);
+    uint32_t le = toBigEndian32(value);
+    std::memcpy(writePtr_, &le, 4);
+    writePtr_ = current + 4;
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+StreamBuffer& StreamBuffer::writeBU64(uint64_t value)
+{
+    unsigned char* end = static_cast<unsigned char*>(get()) + size();
+    unsigned char* current = static_cast<unsigned char*>(writePtr_);
+    assert(current + 8 <= end);
+    uint64_t le = toBigEndian64(value);
+    std::memcpy(writePtr_, &le, 8);
+    writePtr_ = current + 8;
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+StreamBuffer& StreamBuffer::writeBF32(float value)
+{
+    unsigned char* end = static_cast<unsigned char*>(get()) + size();
+    unsigned char* current = static_cast<unsigned char*>(writePtr_);
+    assert(current + 4 <= end);
+    uint32_t le = toBigEndian32(*reinterpret_cast<uint32_t*>(&value));
+    std::memcpy(writePtr_, &le, 4);
+    writePtr_ = current + 4;
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+StreamBuffer& StreamBuffer::writeBF64(double value)
+{
+
+    unsigned char* end = static_cast<unsigned char*>(get()) + size();
+    unsigned char* current = static_cast<unsigned char*>(writePtr_);
+    assert(current + 8 <= end);
+    uint64_t le = toBigEndian64(*reinterpret_cast<uint64_t*>(&value));
+    std::memcpy(writePtr_, &le, 8);
+    writePtr_ = current + 8;
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+uint8_t StreamBuffer::readU8(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 1 <= writePtr_);
+    if (current + 1 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint8_t le;
     std::memcpy(&le, readPtr_, 1);
     readPtr_ = current + 1;
@@ -103,10 +168,14 @@ uint8_t StreamBuffer::readU8()
 }
 
 // ----------------------------------------------------------------------------
-uint16_t StreamBuffer::readU16()
+uint16_t StreamBuffer::readLU16(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 2 <= writePtr_);
+    if (current + 2 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint16_t le;
     std::memcpy(&le, readPtr_, 2);
     readPtr_ = current + 2;
@@ -114,10 +183,14 @@ uint16_t StreamBuffer::readU16()
 }
 
 // ----------------------------------------------------------------------------
-uint32_t StreamBuffer::readU32()
+uint32_t StreamBuffer::readLU32(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 4 <= writePtr_);
+    if (current + 4 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
     readPtr_ = current + 4;
@@ -125,10 +198,14 @@ uint32_t StreamBuffer::readU32()
 }
 
 // ----------------------------------------------------------------------------
-uint64_t StreamBuffer::readU64()
+uint64_t StreamBuffer::readLU64(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 8 <= writePtr_);
+    if (current + 8 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
     readPtr_ = current + 8;
@@ -136,10 +213,14 @@ uint64_t StreamBuffer::readU64()
 }
 
 // ----------------------------------------------------------------------------
-float StreamBuffer::readF32()
+float StreamBuffer::readLF32(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 4 <= writePtr_);
+    if (current + 4 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
     readPtr_ = current + 4;
@@ -148,10 +229,14 @@ float StreamBuffer::readF32()
 }
 
 // ----------------------------------------------------------------------------
-double StreamBuffer::readF64()
+double StreamBuffer::readLF64(int* error)
 {
     unsigned char* current = static_cast<unsigned char*>(readPtr_);
-    assert(current + 8 <= writePtr_);
+    if (current + 8 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
     readPtr_ = current + 8;
@@ -160,19 +245,80 @@ double StreamBuffer::readF64()
 }
 
 // ----------------------------------------------------------------------------
-int StreamBuffer::readBytesLeft() const
+uint16_t StreamBuffer::readBU16(int* error)
 {
-    const unsigned char* end = static_cast<const unsigned char*>(get()) + size();
-    const unsigned char* current = static_cast<const unsigned char*>(readPtr_);
-    return end - current;
+    unsigned char* current = static_cast<unsigned char*>(readPtr_);
+    if (current + 2 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
+    uint16_t le;
+    std::memcpy(&le, readPtr_, 2);
+    readPtr_ = current + 2;
+    return fromBigEndian16(le);
 }
 
 // ----------------------------------------------------------------------------
-int StreamBuffer::writeBytesLeft() const
+uint32_t StreamBuffer::readBU32(int* error)
 {
-    const unsigned char* end = static_cast<const unsigned char*>(get()) + size();
-    const unsigned char* current = static_cast<const unsigned char*>(writePtr_);
-    return end - current;
+    unsigned char* current = static_cast<unsigned char*>(readPtr_);
+    if (current + 4 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
+    uint32_t le;
+    std::memcpy(&le, readPtr_, 4);
+    readPtr_ = current + 4;
+    return fromBigEndian32(le);
+}
+
+// ----------------------------------------------------------------------------
+uint64_t StreamBuffer::readBU64(int* error)
+{
+    unsigned char* current = static_cast<unsigned char*>(readPtr_);
+    if (current + 8 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
+    uint64_t le;
+    std::memcpy(&le, readPtr_, 8);
+    readPtr_ = current + 8;
+    return fromBigEndian64(le);
+}
+
+// ----------------------------------------------------------------------------
+float StreamBuffer::readBF32(int* error)
+{
+    unsigned char* current = static_cast<unsigned char*>(readPtr_);
+    if (current + 4 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
+    uint32_t le;
+    std::memcpy(&le, readPtr_, 4);
+    readPtr_ = current + 4;
+    le = fromBigEndian32(le);
+    return *reinterpret_cast<float*>(&le);
+}
+
+// ----------------------------------------------------------------------------
+double StreamBuffer::readBF64(int* error)
+{
+    unsigned char* current = static_cast<unsigned char*>(readPtr_);
+    if (current + 8 > writePtr_)
+    {
+        *error = 1;
+        return 0;
+    }
+    uint64_t le;
+    std::memcpy(&le, readPtr_, 8);
+    readPtr_ = current + 8;
+    le = fromBigEndian64(le);
+    return *reinterpret_cast<double*>(&le);
 }
 
 }

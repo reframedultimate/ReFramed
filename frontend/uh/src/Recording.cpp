@@ -160,21 +160,21 @@ bool Recording::saveAs(const std::string& fileName)
     StreamBuffer stream(stateBufferSize);
     for (const auto& states : playerStates_)
     {
-        stream.writeU32(states.size());
+        stream.writeLU32(states.size());
         for (const auto& state : states)
         {
             uint8_t flags = (state.attackConnected() << 0)
                           | (state.facingDirection() << 1);
 
             stream
-                .writeU32(state.frame())
-                .writeF32(state.posx())
-                .writeF32(state.posy())
-                .writeF32(state.damage())
-                .writeF32(state.hitstun())
-                .writeF32(state.shield())
-                .writeU16(state.status())
-                .writeU32(static_cast<uint32_t>(state.motion() & 0xFFFFFFFF))
+                .writeLU32(state.frame())
+                .writeLF32(state.posx())
+                .writeLF32(state.posy())
+                .writeLF32(state.damage())
+                .writeLF32(state.hitstun())
+                .writeLF32(state.shield())
+                .writeLU16(state.status())
+                .writeLU32(static_cast<uint32_t>(state.motion() & 0xFFFFFFFF))
                 .writeU8(static_cast<uint8_t>((state.motion() >> 32) & 0xFF))
                 .writeU8(state.hitStatus())
                 .writeU8(state.stocks())
