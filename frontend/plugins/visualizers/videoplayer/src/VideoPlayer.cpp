@@ -1,4 +1,4 @@
-#include "application/views/VideoPlayer.hpp"
+#include "videoplayer/VideoPlayer.hpp"
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -22,6 +22,7 @@ VideoPlayer::~VideoPlayer()
     delete d;
 }
 
+/*
 // ----------------------------------------------------------------------------
 bool VideoPlayer::openFile(const QString& fileName)
 {
@@ -64,3 +65,4 @@ bool VideoPlayer::openFile(const QString& fileName)
     open_input_failed       : avformat_free_context(d->formatContext);
     alloc_context_failed    : return false;
 }
+*/

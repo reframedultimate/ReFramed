@@ -1,33 +1,37 @@
 #include "videoplayer/PluginConfig.hpp"
+#include "videoplayer/VideoPlayer.hpp"
 #include "uh/PluginInterface.hpp"
-#include "uh/PluginFactory.hpp"
-#include "uh/VisualizerPlugin.hpp"
+#include "uh/PluginType.hpp"
 
 #include <QWidget>
 
-class VideoPlayer : public uh::VisualizerPlugin
-                  , public QWidget
+static uh::Plugin* createVideoPlayer()
 {
-public:
-    QWidget* getWidget() override { return this; }
-};
-
-class VideoPlayerFactory : public uh::PluginFactory
-{
-    uh::Plugin* create() override { return new VideoPlayer; }
-    void destroy(uh::Plugin* plugin) override { delete plugin; }
-    Type type() const override { return uh::PluginFactory::VISUALIZER; }
-    const char* author() const override { return "TheComet"; }
-    const char* contact() const override { return "alex.murray@gmx.ch"; }
-    const char* description() const override { return ""; }
-};
-
-PLUGIN_API bool startPlugin(uh::PluginInterface* pi)
-{
-    return pi->registerFactory<VideoPlayerFactory>();
+    return new VideoPlayer;
 }
 
-PLUGIN_API void stopPlugin(uh::PluginInterface* pi)
+static void destroy(uh::Plugin* plugin)
 {
-    pi->unregisterFactory<VideoPlayerFactory>();
+    delete plugin;
 }
+
+static PluginFactory factories[] = {
+    {createVideoPlayer, destroy, uh::PluginType::VISUALIZER,
+     "Video Player", "TheComet", "alex.murray@gmx.ch", "A video player"},
+    {NULL}
+};
+
+static int start(uint32_t version)
+{
+    return 0;
+}
+
+static void stop()
+{
+}
+
+PLUGIN_API PluginInterface plugin_interface = {
+    start,
+    stop,
+    factories
+};

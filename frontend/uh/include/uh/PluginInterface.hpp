@@ -1,19 +1,26 @@
 #pragma once
 
+#include "uh/PluginType.hpp"
 #include <cstdint>
 
 namespace uh {
+    class Plugin;
+}
 
-class PluginInterface
+struct PluginFactory
 {
-public:
-    uint32_t version() const { return 0; }
-
-    template <typename T>
-    bool registerFactory() { return false; }
-
-    template <typename T>
-    void unregisterFactory() {}
+    uh::Plugin* (*create)(void);
+    void (*destroy)(uh::Plugin* plugin);
+    uh::PluginType type;
+    const char* name;
+    const char* author;
+    const char* contact;
+    const char* description;
 };
 
-}
+struct PluginInterface
+{
+    int (*start)(uint32_t version);
+    void (*stop)(void);
+    PluginFactory* factories;
+};

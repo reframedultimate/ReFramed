@@ -1,6 +1,7 @@
 #include "application/models/Config.hpp"
 #include "application/models/ActiveRecordingManager.hpp"
 #include "application/models/RecordingManager.hpp"
+#include "application/models/PluginManager.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/ActiveRecordingView.hpp"
 #include "application/views/CategoryView.hpp"
@@ -9,7 +10,7 @@
 #include "application/views/RecordingGroupView.hpp"
 #include "application/views/RecordingView.hpp"
 
-#include "application/models/PluginManager.hpp"
+#include "uh/VisualizerPlugin.hpp"
 
 #include <QStackedWidget>
 #include <QDockWidget>
@@ -26,6 +27,7 @@ MainWindow::MainWindow(QWidget* parent)
     , config_(new Config)
     , recordingManager_(new RecordingManager(config_.get()))
     , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
+    , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
     , recordingGroupView_(new RecordingGroupView)
     , mainView_(new QStackedWidget)
@@ -34,6 +36,13 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->setupUi(this);
 
     ActiveRecordingView* activeRecordingView = new ActiveRecordingView(activeRecordingManager_.get());
+
+    if (pluginManager_->loadPlugin("share/uh/plugins/videoplayer.so"))
+    {
+        uh::VisualizerPlugin* video = pluginManager_->createVisualizer("Video Player");
+        if (video)
+            mainView_->addWidget(video->takeWidget());
+    }
     /*VideoPlayer* analysis = new VideoPlayer;
 
     mainView_->addWidget(analysis);*/
@@ -64,6 +73,8 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    pluginManager_->unloadAllPlugins();
+
     // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
     // will try to unregister as a listener of ActiveRecordingManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the

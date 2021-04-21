@@ -17,6 +17,7 @@ namespace uhapp {
 class ActiveRecordingManager;
 class CategoryView;
 class ConnectView;
+class PluginManager;
 class Protocol;
 class RecordingGroupView;
 class RecordingManager;
@@ -63,6 +64,7 @@ private:
     std::unique_ptr<Config> config_;
     std::unique_ptr<RecordingManager> recordingManager_;
     std::unique_ptr<ActiveRecordingManager> activeRecordingManager_;
+    std::unique_ptr<PluginManager> pluginManager_;
     CategoryView* categoryView_;
     RecordingGroupView* recordingGroupView_;
     QStackedWidget* mainView_;
