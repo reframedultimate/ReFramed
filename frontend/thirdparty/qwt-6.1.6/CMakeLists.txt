@@ -179,4 +179,12 @@ target_link_libraries (qwtinternal
 target_compile_definitions (qwtinternal
     PRIVATE QWT_BUILDING
     PRIVATE $<$<NOT:$<BOOL:${QWT_SVG}>>:QWT_NO_SVG>)
+set_target_properties (qwtinternal
+    PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${UH_BUILD_LIBDIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${UH_BUILD_BINDIR}")
+install (
+    TARGETS qwtinternal
+    LIBRARY DESTINATION "${UH_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${UH_INSTALL_BINDIR}")
 
