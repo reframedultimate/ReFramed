@@ -22,9 +22,8 @@ VideoPlayer::~VideoPlayer()
     delete d;
 }
 
-/*
 // ----------------------------------------------------------------------------
-bool VideoPlayer::openFile(const QString& fileName)
+bool VideoPlayer::openFile(const std::string& fileName)
 {
     // AVFormatContext holds the header information from the format (Container)
     // Allocating memory for this component
@@ -40,8 +39,8 @@ bool VideoPlayer::openFile(const QString& fileName)
     // AVInputFormat (if you pass NULL it'll do the auto detect)
     // and AVDictionary (which are options to the demuxer)
     // http://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga31d601155e9035d5b0e7efedc894ee49
-    if (avformat_open_input(&d->formatContext, fileName.toStdString().c_str(), NULL, NULL) != 0)
-          goto open_input_failed;
+    if (avformat_open_input(&d->formatContext, fileName.c_str(), NULL, NULL) != 0)
+        goto open_input_failed;
 
     // read Packets from the Format to get stream information
     // this function populates pFormatContext->streams
@@ -65,4 +64,3 @@ bool VideoPlayer::openFile(const QString& fileName)
     open_input_failed       : avformat_free_context(d->formatContext);
     alloc_context_failed    : return false;
 }
-*/

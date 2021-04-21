@@ -14,6 +14,8 @@ public:
     explicit VideoPlayer(QWidget* parent=nullptr);
     ~VideoPlayer();
 
+    bool openFile(const std::string& fileName);
+
     QWidget* takeWidget() override { return this; }
     void giveWidget() override { setParent(nullptr); }
 
