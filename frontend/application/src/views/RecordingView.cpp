@@ -3,12 +3,12 @@
 #include "application/views/RecordingDataView.hpp"
 #include "application/views/DamageTimePlot.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "application/models/Recording.hpp"
-#include "application/models/PlayerState.hpp"
+#include "uh/Recording.hpp"
+#include "uh/PlayerState.hpp"
 
 #include <QTreeWidgetItem>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 RecordingView::RecordingView(QWidget *parent)
@@ -48,7 +48,7 @@ RecordingView::~RecordingView()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::setRecording(Recording* recording)
+void RecordingView::setRecording(uh::Recording* recording)
 {
     recordingDataView_->setRecording(recording);
     damageTimePlot_->setRecording(recording);

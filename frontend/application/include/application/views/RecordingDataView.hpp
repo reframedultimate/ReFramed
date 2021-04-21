@@ -1,9 +1,9 @@
 #pragma once
 
-#include "application/listeners/RecordingListener.hpp"
+#include "uh/RecordingListener.hpp"
+#include "uh/Reference.hpp"
 #include <QWidget>
 #include <QVector>
-#include <QExplicitlySharedDataPointer>
 
 class QTreeWidgetItem;
 class QTableWidget;
@@ -13,11 +13,13 @@ namespace Ui {
 }
 
 namespace uh {
+    class Recording;
+}
 
-class Recording;
+namespace uhapp {
 
 class RecordingDataView : public QWidget
-                        , public RecordingListener
+                        , public uh::RecordingListener
 {
     Q_OBJECT
 
@@ -26,7 +28,7 @@ public:
     ~RecordingDataView();
 
 public slots:
-    void setRecording(Recording* recording);
+    void setRecording(uh::Recording* recording);
 
 private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
@@ -39,15 +41,15 @@ private:
     void repopulateStatusMappingTable();
     void repopulatePlayerDataTables();
     void ensurePlayerDataTablesPopulated();
-    void setPlayerDataTableRow(int player, int row, const PlayerState& state);
+    void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
-    void onActiveRecordingSetNumberChanged(int number) override;
-    void onActiveRecordingGameNumberChanged(int number) override;
-    void onActiveRecordingFormatChanged(const SetFormat& format) override;
-    void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) override;
-    void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override;
+    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingSetNumberChanged(uh::SetNumber number) override;
+    void onActiveRecordingGameNumberChanged(uh::GameNumber number) override;
+    void onActiveRecordingFormatChanged(const uh::SetFormat& format) override;
+    void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state) override;
     void onRecordingWinnerChanged(int winner) override;
 
 private:
@@ -58,9 +60,9 @@ private:
     QTreeWidgetItem* baseStatusIDMappingsItem_ = nullptr;
     QTreeWidgetItem* specificStatusIDMappingsItem_ = nullptr;
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
-    QVector<QTreeWidgetItem*> playerDataItems_;
-    QVector<QTableWidget*> playerDataTables_;
-    QExplicitlySharedDataPointer<Recording> recording_;
+    std::vector<QTreeWidgetItem*> playerDataItems_;
+    std::vector<QTableWidget*> playerDataTables_;
+    uh::Reference<uh::Recording> recording_;
     bool playerDataTableRowsLoaded_ = false;
 };
 

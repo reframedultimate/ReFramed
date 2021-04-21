@@ -1,20 +1,22 @@
 #pragma once
 
+#include "uh/config.hpp"
+#include "uh/Types.hpp"
 #include <unordered_map>
 #include <string>
 
 namespace uh {
 
-class StageIDMapping
+class UH_PUBLIC_API StageIDMapping
 {
 public:
-    const std::string* map(uint16_t stageID) const;
-    void add(uint16_t stageID, const std::string& name);
+    const std::string* map(StageID stageID) const;
+    void add(StageID stageID, const std::string& name);
 
-    const std::unordered_map<uint16_t, std::string>& get() const { return map_; }
+    const std::unordered_map<StageID, std::string>& get() const { return map_; }
 
 private:
-    std::unordered_map<uint16_t, std::string> map_;
+    std::unordered_map<StageID, std::string> map_;
 };
 
 }

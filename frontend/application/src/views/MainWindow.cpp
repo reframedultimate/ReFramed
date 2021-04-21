@@ -18,7 +18,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget* parent)

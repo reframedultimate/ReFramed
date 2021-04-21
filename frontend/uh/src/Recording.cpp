@@ -15,9 +15,9 @@ using nlohmann::json;
 
 // ----------------------------------------------------------------------------
 Recording::Recording(MappingInfo&& mapping,
-                     std::vector<uint8_t>&& playerFighterIDs,
+                     std::vector<FighterID>&& playerFighterIDs,
                      std::vector<std::string>&& playerTags,
-                     uint16_t stageID)
+                     StageID stageID)
     : mappingInfo_(std::move(mapping))
     , timeStarted_(time_milli_seconds_since_epoch())
     , playerTags_(playerTags)
@@ -69,9 +69,7 @@ bool Recording::saveAs(const std::string& fileName)
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-        fighterBaseStatusMapping[std::to_string(it->first)] = {
-            {it->second, "", ""}
-        };
+        fighterBaseStatusMapping[std::to_string(it->first)] = {it->second, "", ""};
     }
 
     json fighterSpecificStatusMapping;
@@ -82,7 +80,7 @@ bool Recording::saveAs(const std::string& fileName)
         if (usedFighterIDs.find(fighter->first) == usedFighterIDs.end())
             continue;
 
-        json specificMapping;
+        json specificMapping = json::object();
         for (auto it = fighter->second.begin(); it != fighter->second.end(); ++it)
         {
             // Skip saving enums that aren't actually used in the set of player states
@@ -92,9 +90,7 @@ bool Recording::saveAs(const std::string& fileName)
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-            specificMapping[std::to_string(it->first)] = {
-                {it->second, "", ""}
-            };
+            specificMapping[std::to_string(it->first)] = {it->second, "", ""};
         }
 
         if (specificMapping.size() > 0)

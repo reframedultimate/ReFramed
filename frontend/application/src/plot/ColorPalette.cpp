@@ -2,8 +2,7 @@
 
 #include <QVector>
 
-
-namespace uh {
+namespace uhapp {
 
 static QVector<QColor> generateColorPalette()
 {

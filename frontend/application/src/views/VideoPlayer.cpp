@@ -1,7 +1,7 @@
 #include "application/views/VideoPlayer.hpp"
 #include <QVBoxLayout>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 VideoPlayer::VideoPlayer(QWidget *parent)

@@ -1,10 +1,10 @@
 #include "application/models/Protocol.hpp"
-#include "application/models/PlayerState.hpp"
-#include "application/models/ActiveRecording.hpp"
+#include "uh/PlayerState.hpp"
+#include "uh/ActiveRecording.hpp"
 
 #include <QDebug>
 
-namespace uh {
+namespace uhapp {
 
 enum MessageType
 {
@@ -24,12 +24,12 @@ Protocol::Protocol(tcp_socket socket, QObject* parent)
 {
     // These signals are used to transfer data from the listener thread to the
     // main thread
-    connect(this, SIGNAL(_receiveMatchStarted(ActiveRecording*)),
-            this, SLOT(onReceiveMatchStarted(ActiveRecording*)));
-    connect(this, SIGNAL(_receivePlayerState(quint32,quint8,float,float,float,float,float,quint16,quint64,quint8,quint8,bool,bool)),
-            this, SLOT(onReceivePlayerState(quint32,quint8,float,float,float,float,float,quint16,quint64,quint8,quint8,bool,bool)));
-    connect(this, SIGNAL(_receiveMatchEnded()),
-            this, SLOT(onReceiveMatchEnded()));
+    connect(this, &Protocol::_receiveMatchStarted,
+            this, &Protocol::onReceiveMatchStarted);
+    connect(this, &Protocol::_receivePlayerState,
+            this, &Protocol::onReceivePlayerState);
+    connect(this, &Protocol::_receiveMatchEnded,
+            this, &Protocol::onReceiveMatchEnded);
 }
 
 // ----------------------------------------------------------------------------
@@ -43,15 +43,16 @@ Protocol::~Protocol()
     wait();
 
     tcp_socket_close(&socket_);
+
     if (recording_)
-        emit recordingEnded(recording_.data());
+        emit recordingEnded(recording_);
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::run()
 {
     QVector<uint8_t> entryIDs;
-    MappingInfo mappingInfo;
+    uh::MappingInfo mappingInfo;
 
     while (true)
     {
@@ -69,8 +70,10 @@ void Protocol::run()
 
         if (msg == FighterKinds)
         {
-            uint8_t fighterID, len;
+            uh::FighterID fighterID;
+            uint8_t len;
             char name[256];
+            static_assert(sizeof(uh::FighterID) == 1);
             if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
@@ -81,8 +84,10 @@ void Protocol::run()
         }
         else if (msg == FighterStatusKinds)
         {
-            uint8_t fighterID, statusID_l, statusID_h, len;
+            uh::FighterID fighterID;
+            uint8_t statusID_l, statusID_h, len;
             char name[256];
+            static_assert(sizeof(uh::FighterID) == 1);
             if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &statusID_h, 1) != 1) break;
             if (tcp_socket_read(&socket_, &statusID_l, 1) != 1) break;
@@ -90,8 +95,9 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, name, len) != len) break;
             name[(int)len] = '\0';
 
-            uint16_t statusID = (statusID_h << 8)
-                              | (statusID_l << 0);
+            static_assert(sizeof(uh::FighterStatus) == 2);
+            uh::FighterStatus statusID = (statusID_h << 8)
+                                       | (statusID_l << 0);
 
             if (fighterID == 255)
             {
@@ -114,16 +120,19 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, name, len) != len) break;
             name[(int)len] = '\0';
 
-            uint16_t stageID = (stageID_h << 8)
-                             | (stageID_l << 0);
+            static_assert(sizeof(uh::StageID) == 2);
+            uh::StageID stageID = (stageID_h << 8)
+                                | (stageID_l << 0);
 
             mappingInfo.stageID.add(stageID, name);
             qDebug() << "stage kind: " << stageID <<": " << name;
         }
         else if (msg == HitStatusKinds)
         {
-            uint8_t status, len;
+            uh::FighterHitStatus status;
+            uint8_t len;
             char name[256];
+            static_assert(sizeof(uh::FighterHitStatus) == 1);
             if (tcp_socket_read(&socket_, &status, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
@@ -140,38 +149,42 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
             if (tcp_socket_read(&socket_, &playerCount, 1) != 1) break;
 
-            uint16_t stageID = (stageID_h << 8)
-                             | (stageID_l << 0);
+            static_assert(sizeof(uh::StageID) == 2);
+            uh::StageID stageID = (stageID_h << 8)
+                                | (stageID_l << 0);
 
-            QVector<uint8_t> fighterIDs(playerCount);
-            QVector<QString> tags(playerCount);
+            std::vector<uh::FighterID> fighterIDs(playerCount);
+            std::vector<std::string> tags(playerCount);
             entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
-                uint8_t id;
-                if (tcp_socket_read(&socket_, &id, 1) != 1) goto fail;
-                entryIDs[i] = id;
+                uint8_t entryID;
+                if (tcp_socket_read(&socket_, &entryID, 1) != 1) goto fail;
+                entryIDs[i] = entryID;
             }
             for (int i = 0; i < playerCount; ++i)
             {
-                uint8_t id;
-                if (tcp_socket_read(&socket_, &id, 1) != 1) goto fail;
-                fighterIDs[i] = id;
+                uh::FighterID fighterID;
+                static_assert(sizeof(uh::FighterID) == 1);
+                if (tcp_socket_read(&socket_, &fighterID, 1) != 1) goto fail;
+                fighterIDs[i] = fighterID;
             }
             for (int i = 0; i < playerCount; ++i)
             {
+                // TODO Tags on switch are stored as UTF-16. Have to update
+                // protocol at some point
                 uint8_t len;
                 char tag[256];
                 if (tcp_socket_read(&socket_, &len, 1) != 1) goto fail;
                 if (tcp_socket_read(&socket_, tag, len) != len) goto fail;
-                tag[(int)len] = '\0';
+                tag[(int)len] = 0;
                 tags[i] = tag;
             }
 
             qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
 
-            emit _receiveMatchStarted(new ActiveRecording(
-                MappingInfo(mappingInfo),
+            emit _receiveMatchStarted(new uh::ActiveRecording(
+                uh::MappingInfo(mappingInfo),
                 std::move(fighterIDs),
                 std::move(tags),
                 stageID
@@ -268,14 +281,14 @@ void Protocol::run()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceiveMatchStarted(ActiveRecording* recording)
+void Protocol::onReceiveMatchStarted(uh::ActiveRecording* recording)
 {
     // Handle case where match end is not sent (should never happen but you never know)
-    if (recording_ != nullptr)
-        emit recordingEnded(recording_.data());
+    if (recording_.notNull())
+        emit recordingEnded(recording_);
 
     recording_ = recording;
-    emit recordingStarted(recording_.data());
+    emit recordingStarted(recording_);
 }
 
 // ----------------------------------------------------------------------------
@@ -294,19 +307,19 @@ void Protocol::onReceivePlayerState(
         bool attack_connected,
         bool facing_direction)
 {
-    if (recording_ == nullptr)
+    if (recording_.isNull())
         return;
 
-    recording_->addPlayerState(playerID, PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+    recording_->addPlayerState(playerID, uh::PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onReceiveMatchEnded()
 {
-    if (recording_ == nullptr)
+    if (recording_.isNull())
         return;
 
-    emit recordingEnded(recording_.data());
+    emit recordingEnded(recording_);
     recording_.reset();
 }
 

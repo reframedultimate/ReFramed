@@ -9,6 +9,7 @@ set(VERSION "1.2.11")
 
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
+option(ZLIB_PIC "Generate position independent code" OFF)
 
 set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Installation directory for executables")
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
@@ -94,6 +95,11 @@ target_include_directories(zlibstatic
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/public>
 	PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/private>
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
+
+if(ZLIB_PIC)
+    set_target_properties (zlibstatic
+        PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
     if(ASM686)

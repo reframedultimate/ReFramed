@@ -12,7 +12,7 @@ using qhash_result_t = size_t;
 qhash_result_t qHash(const QDir& c, qhash_result_t seed=0) noexcept;
 qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed=0) noexcept;
 
-namespace uh {
+namespace uhapp {
 
 /*!
  * \brief Deletes all widgets/layouts from a layout

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "application/listeners/ListenerDispatcher.hpp"
+#include "uh/ListenerDispatcher.hpp"
 #include <QString>
 #include <QFileInfo>
 #include <QSet>
 
-namespace uh {
+namespace uhapp {
 
 class RecordingGroupListener;
 
@@ -26,7 +26,7 @@ public:
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
 
-    ListenerDispatcher<RecordingGroupListener> dispatcher;
+    uh::ListenerDispatcher<RecordingGroupListener> dispatcher;
 
 private:
     RecordingGroup() {}

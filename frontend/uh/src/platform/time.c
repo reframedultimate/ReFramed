@@ -43,5 +43,5 @@ uint64_t time_qt_to_milli_seconds_since_epoch(const char* str)
 {
     struct tm t;
     strptime(str, "%a %b %d %H:%M:%S %Y %Z", &t);
-    return (uint64_t)mktime(&t);
+    return (uint64_t)mktime(&t) * 1000;
 }

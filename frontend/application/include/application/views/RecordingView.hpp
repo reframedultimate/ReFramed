@@ -2,14 +2,17 @@
 
 #include <QWidget>
 
+namespace uh {
+    class Recording;
+}
+
 namespace Ui {
     class RecordingView;
 }
 
-namespace uh {
+namespace uhapp {
 
 class DamageTimePlot;
-class Recording;
 class RecordingDataView;
 class XYPositionPlot;
 
@@ -21,7 +24,7 @@ public:
     ~RecordingView();
 
 public slots:
-    void setRecording(Recording* recording);
+    void setRecording(uh::Recording* recording);
 
 private slots:
     // This is still broken, see

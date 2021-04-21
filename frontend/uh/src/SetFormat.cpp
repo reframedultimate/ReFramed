@@ -1,16 +1,17 @@
-#include "application/models/SetFormat.hpp"
+#include "uh/SetFormat.hpp"
+#include <cassert>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(Type type, const QString& otherDesc)
+SetFormat::SetFormat(Type type, const std::string& otherDesc)
     : type_(type)
     , otherDesc_(otherDesc)
 {
 }
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(const QString& desc)
+SetFormat::SetFormat(const std::string& desc)
     : type_([&desc]() -> Type {
         if (desc == "Friendlies") return FRIENDLIES;
         if (desc == "Practice")   return PRACTICE;
@@ -27,7 +28,7 @@ SetFormat::SetFormat(const QString& desc)
 }
 
 // ----------------------------------------------------------------------------
-QString SetFormat::description() const
+std::string SetFormat::description() const
 {
     switch (type_)
     {

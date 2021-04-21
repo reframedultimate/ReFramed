@@ -3,11 +3,12 @@
 #include "application/views/ActiveRecordingView.hpp"
 #include "application/views/RecordingView.hpp"
 #include "application/models/ActiveRecordingManager.hpp"
-#include "application/models/ActiveRecording.hpp"
+#include "uh/ActiveRecording.hpp"
 
 #include <QVBoxLayout>
+#include <QDateTime>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* manager, QWidget* parent)
@@ -45,18 +46,21 @@ ActiveRecordingView::~ActiveRecordingView()
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
 {
-    if (static_cast<SetFormat::Type>(index) == SetFormat::OTHER)
+    if (static_cast<uh::SetFormat::Type>(index) == uh::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setVisible(true);
     else
         ui_->lineEdit_formatOther->setVisible(false);
-    activeRecordingManager_->setFormat(SetFormat(static_cast<SetFormat::Type>(index), ui_->lineEdit_formatOther->text()));
+    activeRecordingManager_->setFormat(uh::SetFormat(
+        static_cast<uh::SetFormat::Type>(index),
+        ui_->lineEdit_formatOther->text().toStdString()
+    ));
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    activeRecordingManager_->setFormat(SetFormat(SetFormat::OTHER, formatDesc));
-    ui_->comboBox_format->setCurrentIndex(static_cast<int>(SetFormat::OTHER));
+    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString()));
+    ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
@@ -90,7 +94,7 @@ void ActiveRecordingView::onActiveRecordingManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecording* recording)
+void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRecording* recording)
 {
     clearLayout(ui_->layout_playerInfo);
 
@@ -104,15 +108,15 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecordi
     for (int i = 0; i != count; ++i)
     {
         fighterName_[i] = new QLabel();
-        const QString* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
-        fighterName_[i]->setText(fighterNameStr ? *fighterNameStr : "(Unknown Fighter)");
+        const std::string* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
+        fighterName_[i]->setText(fighterNameStr ? QString::fromStdString(*fighterNameStr) : "(Unknown Fighter)");
 
         fighterStatus_[i] = new QLabel();
         fighterDamage_[i] = new QLabel();
         fighterStocks_[i] = new QLabel();
 
         names_[i] = new QGroupBox;
-        names_[i]->setTitle(recording->playerName(i));
+        names_[i]->setTitle(QString::fromStdString(recording->playerName(i)));
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
@@ -132,9 +136,9 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecordi
     }
 
     // Set game info
-    const QString* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
-    ui_->label_stage->setText(stageStr ? *stageStr : "(Unknown Stage)");
-    ui_->label_date->setText(recording->timeStarted().toString());
+    const std::string* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
+    ui_->label_stage->setText(stageStr ? QString::fromStdString(*stageStr) : "(Unknown Stage)");
+    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStarted()).toString());
     ui_->label_timeRemaining->setText("");
 
     // Prepare recording view for new game
@@ -145,7 +149,7 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(ActiveRecordi
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(ActiveRecording* recording)
+void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(uh::ActiveRecording* recording)
 {
     (void)recording;
 }
@@ -175,32 +179,32 @@ void ActiveRecordingView::onActiveRecordingManagerP2NameChanged(const QString& n
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const SetFormat& format)
+void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const uh::SetFormat& format)
 {
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
 
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
 
-    if (format.type() == SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(format.description());
+    if (format.type() == uh::SetFormat::OTHER)
+        ui_->lineEdit_formatOther->setText(QString::fromStdString(format.description()));
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerSetNumberChanged(int number)
+void ActiveRecordingView::onActiveRecordingManagerSetNumberChanged(uh::SetNumber number)
 {
     (void)number;
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerGameNumberChanged(int number)
+void ActiveRecordingView::onActiveRecordingManagerGameNumberChanged(uh::GameNumber number)
 {
-    const QSignalBlocker blocker2(ui_->spinBox_gameNumber);
+    const QSignalBlocker blocker(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state)
+void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, const uh::PlayerState& state)
 {
     if (player >= fighterStatus_.size())
         return;

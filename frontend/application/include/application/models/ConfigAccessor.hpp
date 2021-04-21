@@ -3,7 +3,7 @@
 class QJsonObject;
 class QStringList;
 
-namespace uh {
+namespace uhapp {
 
 class Config;
 

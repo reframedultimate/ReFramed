@@ -1,14 +1,14 @@
 #include "application/plot/ColorPalette.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "application/models/Recording.hpp"
-#include "application/models/PlayerState.hpp"
+#include "uh/Recording.hpp"
+#include "uh/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include <QMenu>
 #include <QAction>
 #include <QSignalMapper>
 
-namespace uh {
+namespace uhapp {
 
 namespace {
 
@@ -81,7 +81,7 @@ void XYPositionPlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::setRecording(Recording* recording)
+void XYPositionPlot::setRecording(uh::Recording* recording)
 {
     clear();
     recording_ = recording;
@@ -93,13 +93,14 @@ void XYPositionPlot::setRecording(Recording* recording)
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(recording_->playerName(player));
+        curve->setTitle(QString::fromStdString(recording_->playerName(player)));
         curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
 
-        for (const auto& state : recording_->playerStates(player))
+        for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
+            const auto& state = recording_->playerState(player, i);
             data->append(QPointF(state.posx(), state.posy()));
         }
     }
@@ -118,7 +119,7 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
         return;
     for (int i = 0; i != recording_->playerCount(); ++i)
     {
-        QAction* a = menu->addAction(recording_->playerName(i));
+        QAction* a = menu->addAction(QString::fromStdString(recording_->playerName(i)));
         a->setCheckable(true);
         a->setChecked(curves_[i]->isVisible());
         connect(a, &QAction::triggered, [=](bool checked) {
@@ -129,13 +130,13 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const QString& name)
+void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
 {
-    curves_[player]->setTitle(name);
+    curves_[player]->setTitle(QString::fromStdString(name));
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state)
+void XYPositionPlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     data->append(QPointF(state.posx(), state.posy()));

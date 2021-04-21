@@ -3,7 +3,7 @@
 #include "qwt_plot_picker.h"
 #include "qwt_scale_map.h"
 
-namespace uh {
+namespace uhapp {
 
 /*!
  * Qwt provides QwtPlotPicker, which gives us absolute positions in the plot

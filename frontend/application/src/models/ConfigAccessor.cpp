@@ -1,7 +1,7 @@
 #include "application/models/ConfigAccessor.hpp"
 #include "application/models/Config.hpp"
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 ConfigAccessor::ConfigAccessor(Config* config)

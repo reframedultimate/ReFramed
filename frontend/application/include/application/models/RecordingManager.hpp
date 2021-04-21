@@ -1,9 +1,9 @@
 #pragma once
 
-#include "application/listeners/ListenerDispatcher.hpp"
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/models/RecordingGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
+#include "uh/ListenerDispatcher.hpp"
 #include <QString>
 #include <QDir>
 #include <unordered_map>
@@ -19,7 +19,7 @@ namespace std {
 }
 #endif
 
-namespace uh {
+namespace uhapp {
 
 class RecordingManagerListener;
 class Settings;
@@ -83,7 +83,7 @@ public:
 
     RecordingGroup* getOrCreateRecordingGroup(const QString& name);
 
-    ListenerDispatcher<RecordingManagerListener> dispatcher;
+    uh::ListenerDispatcher<RecordingManagerListener> dispatcher;
 
 private:
     void scanForRecordings();

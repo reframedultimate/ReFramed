@@ -1,20 +1,20 @@
-#include "application/models/StageIDMapping.hpp"
+#include "uh/StageIDMapping.hpp"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const QString* StageIDMapping::map(uint16_t stageID) const
+const std::string* StageIDMapping::map(StageID stageID) const
 {
     auto it = map_.find(stageID);
     if (it == map_.end())
         return nullptr;
-    return &(*it);
+    return &it->second;
 }
 
 // ----------------------------------------------------------------------------
-void StageIDMapping::add(uint16_t stageID, const QString& name)
+void StageIDMapping::add(StageID stageID, const std::string& name)
 {
-    map_.insert(stageID, name);
+    map_.emplace(stageID, name);
 }
 
 }

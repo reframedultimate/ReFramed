@@ -5,7 +5,7 @@
 #include <QStandardPaths>
 #include <QJsonObject>
 
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 RecordingManager::RecordingManager(Config* config)
@@ -183,7 +183,6 @@ void RecordingManager::setDefaultRecordingSourceDirectory(const QDir& path)
 // ----------------------------------------------------------------------------
 void RecordingManager::onRecordingGroupNameChanged(const QString& name)
 {
-
 }
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace uh {
+namespace uhapp {
 
 enum class CategoryType : int
 {

@@ -4,8 +4,7 @@
 #include <QMouseEvent>
 #include "qwt_event_pattern.h"
 
-
-namespace uh {
+namespace uhapp {
 
 // ----------------------------------------------------------------------------
 MousePlotPickerMachine::MousePlotPickerMachine():

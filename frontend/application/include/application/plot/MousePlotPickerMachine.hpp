@@ -2,7 +2,7 @@
 
 #include "qwt_picker_machine.h"
 
-namespace uh {
+namespace uhapp {
 
 class MousePlotPickerMachine : public QwtPickerMachine
 {

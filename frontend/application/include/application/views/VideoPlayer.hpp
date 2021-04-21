@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-namespace uh {
+namespace uhapp {
 
 class VideoPlayer : public QWidget
 {

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "application/listeners/RecordingListener.hpp"
 #include "application/views/RealtimePlot.hpp"
+#include "uh/RecordingListener.hpp"
+#include "uh/Reference.hpp"
 #include <QExplicitlySharedDataPointer>
 
 class QActionGroup;
@@ -9,12 +10,15 @@ class QwtPlotDirectPainter;
 class QwtPlotCurve;
 
 namespace uh {
+    class Recording;
+}
 
-class Recording;
+namespace uhapp {
+
 class XYPositionPlotContextMenuActions;
 
 class XYPositionPlot : public RealtimePlot
-                     , public RecordingListener
+                     , public uh::RecordingListener
 {
     Q_OBJECT
 public:
@@ -23,19 +27,19 @@ public:
 
 public slots:
     void clear();
-    void setRecording(Recording* recording);
+    void setRecording(uh::Recording* recording);
 
 protected:
     void prependContextMenuActions(QMenu* menu) override;
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
-    void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) override;
+    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
 
-    void onActiveRecordingSetNumberChanged(int number) override { (void)number; }
-    void onActiveRecordingGameNumberChanged(int number) override { (void)number; }
-    void onActiveRecordingFormatChanged(const SetFormat& format) { (void)format; }
-    void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override { (void)player; (void)state; }
+    void onActiveRecordingSetNumberChanged(uh::SetNumber number) override { (void)number; }
+    void onActiveRecordingGameNumberChanged(uh::GameNumber number) override { (void)number; }
+    void onActiveRecordingFormatChanged(const uh::SetFormat& format) { (void)format; }
+    void onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
     void onRecordingWinnerChanged(int winner) override { (void)winner; }
 
 private slots:
@@ -45,7 +49,7 @@ private slots:
 
 private:
     QVector<QwtPlotCurve*> curves_;
-    QExplicitlySharedDataPointer<Recording> recording_;
+    uh::Reference<uh::Recording> recording_;
     QActionGroup* curveTypeActionGroup_;
 };
 

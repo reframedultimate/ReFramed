@@ -12,7 +12,7 @@ namespace Ui {
     class MainWindow;
 }
 
-namespace uh {
+namespace uhapp {
 
 class ActiveRecordingManager;
 class CategoryView;
@@ -49,20 +49,20 @@ private slots:
 
 private:
     // All unused
-    void onActiveRecordingManagerRecordingStarted(ActiveRecording* recording) override { (void)recording; }
-    void onActiveRecordingManagerRecordingEnded(ActiveRecording* recording) override { (void)recording; }
+    void onActiveRecordingManagerRecordingStarted(uh::ActiveRecording* recording) override { (void)recording; }
+    void onActiveRecordingManagerRecordingEnded(uh::ActiveRecording* recording) override { (void)recording; }
     void onActiveRecordingManagerP1NameChanged(const QString& name) override { (void)name; }
     void onActiveRecordingManagerP2NameChanged(const QString& name) override { (void)name; }
-    void onActiveRecordingManagerSetNumberChanged(int number) override { (void)number; }
-    void onActiveRecordingManagerGameNumberChanged(int number) override { (void)number; }
-    void onActiveRecordingManagerFormatChanged(const SetFormat& format) override { (void)format; }
-    void onActiveRecordingManagerPlayerStateAdded(int player, const PlayerState& state) override { (void)player; (void)state; }
+    void onActiveRecordingManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
+    void onActiveRecordingManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
+    void onActiveRecordingManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
+    void onActiveRecordingManagerPlayerStateAdded(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
     void onActiveRecordingManagerWinnerChanged(int winner) { (void)winner; }
 
 private:
-    QScopedPointer<Config> config_;
-    QScopedPointer<RecordingManager> recordingManager_;
-    QScopedPointer<ActiveRecordingManager> activeRecordingManager_;
+    std::unique_ptr<Config> config_;
+    std::unique_ptr<RecordingManager> recordingManager_;
+    std::unique_ptr<ActiveRecordingManager> activeRecordingManager_;
     CategoryView* categoryView_;
     RecordingGroupView* recordingGroupView_;
     QStackedWidget* mainView_;

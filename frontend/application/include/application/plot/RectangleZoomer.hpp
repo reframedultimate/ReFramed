@@ -2,10 +2,9 @@
 
 #include "application/plot/DeltaPlotPicker.hpp"
 
-
 class QWidget;
 
-namespace uh {
+namespace uhapp {
 
 /*!
  * Provides a method for zooming in and out in real-time on both X/Y axes by
@@ -27,4 +26,4 @@ private:
     QPointF initialClickPosition_;
 };
 
-} // namespace uh
+}

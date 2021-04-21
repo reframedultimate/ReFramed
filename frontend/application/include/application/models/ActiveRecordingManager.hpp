@@ -2,6 +2,7 @@
 
 #include "application/listeners/RecordingManagerListener.hpp"
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
+#include "uh/Reference.hpp"
 #include "uh/SetFormat.hpp"
 #include "uh/ListenerDispatcher.hpp"
 #include "uh/RecordingListener.hpp"
@@ -9,12 +10,12 @@
 #include "uh/PlayerState.hpp"  // MOC requires this because of smart pointers
 #include <QObject>
 #include <QDir>
+#include <vector>
 
-namespace uh {
+namespace uhapp {
 
 class Protocol;
 class Settings;
-class ActiveRecording;
 class ActiveRecordingManagerListener;
 class RecordingManager;
 
@@ -32,10 +33,10 @@ public:
     ActiveRecordingManager(RecordingManager* recordingManager, QObject* parent=nullptr);
     ~ActiveRecordingManager();
 
-    void setFormat(const SetFormat& format);
+    void setFormat(const uh::SetFormat& format);
     void setP1Name(const QString& name);
     void setP2Name(const QString& name);
-    void setGameNumber(int number);
+    void setGameNumber(uh::GameNumber number);
 
     uh::ListenerDispatcher<ActiveRecordingManagerListener> dispatcher;
 
@@ -50,13 +51,13 @@ public slots:
 
 private slots:
     void onProtocolConnectionLost();
-    void onProtocolRecordingStarted(ActiveRecording* recording);
-    void onProtocolRecordingEnded(ActiveRecording* recording);
+    void onProtocolRecordingStarted(uh::ActiveRecording* recording);
+    void onProtocolRecordingEnded(uh::ActiveRecording* recording);
 
 private:
-    void findUniqueGameAndSetNumbers(ActiveRecording* recording);
-    bool shouldStartNewSet(const ActiveRecording* recording);
-    QString composeFileName(const ActiveRecording* recording) const;
+    void findUniqueGameAndSetNumbers(uh::ActiveRecording* recording);
+    bool shouldStartNewSet(const uh::ActiveRecording* recording);
+    QString composeFileName(const uh::ActiveRecording* recording) const;
 
 private:
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
@@ -73,24 +74,24 @@ private:
     void onRecordingManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const QString& name) override;
-    void onActiveRecordingSetNumberChanged(int number) override;
-    void onActiveRecordingGameNumberChanged(int number) override;
-    void onActiveRecordingFormatChanged(const SetFormat& format) override;
-    void onActiveRecordingNewUniquePlayerState(int player, const PlayerState& state) override;
-    void onActiveRecordingNewPlayerState(int player, const PlayerState& state) override;
+    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingSetNumberChanged(uh::SetNumber number) override;
+    void onActiveRecordingGameNumberChanged(uh::GameNumber number) override;
+    void onActiveRecordingFormatChanged(const uh::SetFormat& format) override;
+    void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state) override;
     void onRecordingWinnerChanged(int winner) override;
 
 private:
-    QScopedPointer<Protocol> protocol_;
-    QVector<QExplicitlySharedDataPointer<ActiveRecording>> pastRecordings_;
-    QExplicitlySharedDataPointer<ActiveRecording> activeRecording_;
+    std::unique_ptr<Protocol> protocol_;
+    std::vector<uh::Reference<uh::ActiveRecording>> pastRecordings_;
+    uh::Reference<uh::ActiveRecording> activeRecording_;
     RecordingManager* recordingManager_;
-    QString p1Name_;
-    QString p2Name_;
+    std::string p1Name_;
+    std::string p2Name_;
     uh::SetFormat format_;
-    int gameNumber_ = 1;
-    int setNumber_ = 1;
+    uh::GameNumber gameNumber_ = 1;
+    uh::SetNumber setNumber_ = 1;
 };
 
 }
