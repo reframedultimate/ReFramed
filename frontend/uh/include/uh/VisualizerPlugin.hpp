@@ -7,7 +7,9 @@ namespace uh {
 class Plugin
 {
 public:
-    virtual QWidget* getWidget() = 0;
+    virtual ~Plugin() {}
+    virtual QWidget* takeWidget() = 0;
+    virtual void giveWidget() = 0;
 };
 
 class VisualizerPlugin : public Plugin
