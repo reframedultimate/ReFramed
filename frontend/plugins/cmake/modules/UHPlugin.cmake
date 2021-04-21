@@ -17,6 +17,8 @@ macro (uh_add_plugin PLUGIN)
 
     find_package (Qt5 COMPONENTS Widgets Gui Core REQUIRED)
 
+    string (REPLACE "plugin-" "" ${PLUGIN}_OUTPUT_NAME ${PLUGIN})
+
     qt5_wrap_cpp (${PLUGIN}_MOC_SOURCES ${${PLUGIN}_MOC_HEADERS})
     qt5_wrap_ui (${PLUGIN}_MOC_FORMS ${${PLUGIN}_FORMS})
 
@@ -43,6 +45,7 @@ macro (uh_add_plugin PLUGIN)
     set_target_properties (${PLUGIN}
         PROPERTIES
             PREFIX ""
+            OUTPUT_NAME ${${PLUGIN}_OUTPUT_NAME}
             LIBRARY_OUTPUT_DIRECTORY "${UH_BUILD_PLUGINDIR}"
             RUNTIME_OUTPUT_DIRECTORY "${UH_BUILD_PLUGINDIR}")
     install (
