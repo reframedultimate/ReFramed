@@ -19,13 +19,13 @@ list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 set (UH_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set (UH_BUILD_LIBDIR "${UH_BUILD_BINDIR}/lib")
-set (UH_BUILD_PLUGINDIR "${UH_BUILD_BINDIR}/plugins")
+set (UH_BUILD_PLUGINDIR "${UH_BUILD_BINDIR}/share/uh/plugins")
 
-set (UH_INSTALL_BINDIR "")
+set (UH_INSTALL_BINDIR ".")
 set (UH_INSTALL_LIBDIR "lib")
-set (UH_INSTALL_PLUGINDIR "plugins")
 set (UH_INSTALL_INCLUDEDIR "include")
 set (UH_INSTALL_DATADIR "share/uh")
+set (UH_INSTALL_PLUGINDIR "share/uh/plugins")
 set (UH_INSTALL_CMAKEDIR "share/uh/cmake")
 
 # Need to compile static libraries with position independent code on because
@@ -33,12 +33,16 @@ set (UH_INSTALL_CMAKEDIR "share/uh/cmake")
 set (CPP_BASE64_PIC ON CACHE INTERNAL "")
 set (ZLIB_PIC ON CACHE INTERNAL "")
 
+# Don't install thirdparty libs
+set (INSTALL_GTEST OFF CACHE INTERNAL "")
+
 add_subdirectory ("thirdparty/qwt-6.1.6")
-add_subdirectory ("thirdparty/googletest")
+add_subdirectory ("thirdparty/googletest-1.10.0")
 add_subdirectory ("thirdparty/json")
 add_subdirectory ("thirdparty/zlib-1.2.11")
 add_subdirectory ("thirdparty/cpp-base64")
 add_subdirectory ("uh")
+add_subdirectory ("plugins")
 add_subdirectory ("application")
 add_subdirectory ("tests")
 
