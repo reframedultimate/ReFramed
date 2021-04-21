@@ -4,7 +4,7 @@ project ("application"
 
 include (GNUInstallDirs)
 
-find_package (Qt5 COMPONENTS Widgets Gui LinguistTools REQUIRED)
+find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/models/ActiveRecordingManager.hpp"
@@ -46,6 +46,7 @@ add_executable (ultimate-hindsight WIN32
     "src/models/ActiveRecordingManager.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
+    "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
     "src/models/RecordingGroup.cpp"
     "src/models/RecordingManager.cpp"
@@ -91,7 +92,8 @@ endif()
 # output qwt dll to bin directory
 set_target_properties (qwtinternal
 	PROPERTIES
-		RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
+		RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
+        LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR})
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
@@ -109,3 +111,10 @@ if (WIN32 OR CYGWIN)
         COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${UH_BUILD_BINDIR}/$<CONFIG>'"
         VERBATIM)
 endif ()
+
+install (
+    TARGETS ultimate-hindsight
+    RUNTIME DESTINATION "${UH_INSTALL_BINDIR}")
+set_target_properties (ultimate-hindsight
+    PROPERTIES
+        INSTALL_RPATH ${UH_INSTALL_LIBDIR})
