@@ -85,9 +85,10 @@ public:
      * \brief Gets the absolute time of when the match started in
      * unix time (milli-seconds since Jan 1 1970). This marks the first
      * frame of gameplay, immediately after the 3-2-1-Go countdown completes.
-     * May be slightly off by a few frames depending on latency.
+     * May be slightly off by 1 second or so.
      */
-    uint64_t timeStarted() const { return timeStarted_; }
+    uint64_t timeStampStartedMs() const;
+    uint64_t timeStampEndedMs() const;
 
     int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].size()); }
 
@@ -100,7 +101,6 @@ protected:
 
 protected:
     MappingInfo mappingInfo_;
-    uint64_t timeStarted_;
     std::vector<std::string> playerTags_;
     std::vector<std::string> playerNames_;
     std::vector<uint8_t> playerFighterIDs_;

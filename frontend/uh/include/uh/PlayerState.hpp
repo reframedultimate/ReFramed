@@ -13,6 +13,7 @@ class PlayerState
 {
 public:
     PlayerState(
+            uint64_t timeStampMs,
             uint32_t frame,
             float posx, float posy,
             float damage,
@@ -25,6 +26,7 @@ public:
             bool attack_connected,
             bool facing_direction);
 
+    uint64_t timeStampMs() const { return timeStampMs_; }
     uint32_t frame() const { return frame_; }
     float posx() const { return posx_; }
     float posy() const { return posy_; }
@@ -38,9 +40,8 @@ public:
     bool attackConnected() const { return attackConnected_; }
     bool facingDirection() const { return facingDirection_; }
 
-    uint32_t combinedState() const;
-
 private:
+    uint64_t timeStampMs_;
     uint64_t motion_;
     uint32_t frame_;
     float posx_;

@@ -1,6 +1,7 @@
 #include "application/models/Protocol.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/ActiveRecording.hpp"
+#include "uh/time.h"
 
 #include <QDebug>
 
@@ -218,6 +219,10 @@ void Protocol::run()
              * ]);
              */
 
+            // Do this as early as possible to reduce latency as much as possible
+            // (reading data might skew the time)
+            uint64_t frameTimeStamp = time_milli_seconds_since_epoch();
+
             uint8_t frame_[4], entryID, posx_[4], posy_[4], hitstun_[2];
             uint8_t damage_[2], shield_[2], status_[2], motion_[5], hit_status;
             uint8_t stocks, flags;
@@ -270,7 +275,7 @@ void Protocol::run()
             for (int i = 0; i != entryIDs.size(); ++i)
                 if (entryIDs[i] == entryID)
                 {
-                    emit _receivePlayerState(frame, i, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+                    emit _receivePlayerState(frameTimeStamp, frame, i, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
                     break;
                 }
         }
@@ -293,6 +298,7 @@ void Protocol::onReceiveMatchStarted(uh::ActiveRecording* recording)
 
 // ----------------------------------------------------------------------------
 void Protocol::onReceivePlayerState(
+        uint64_t frameTimeStamp,
         quint32 frame,
         quint8 playerID,
         float posx,
@@ -310,7 +316,7 @@ void Protocol::onReceivePlayerState(
     if (recording_.isNull())
         return;
 
-    recording_->addPlayerState(playerID, uh::PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+    recording_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 }
 
 // ----------------------------------------------------------------------------

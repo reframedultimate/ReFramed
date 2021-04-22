@@ -215,7 +215,7 @@ void ActiveRecordingManager::onProtocolRecordingEnded(uh::ActiveRecording* recor
 // ----------------------------------------------------------------------------
 QString ActiveRecordingManager::composeFileName(const uh::ActiveRecording* recording) const
 {
-    QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStarted()).toString("yyyy-MM-dd");
+    QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString("yyyy-MM-dd");
     QStringList playerList;
     for (int i = 0; i < recording->playerCount(); ++i)
     {

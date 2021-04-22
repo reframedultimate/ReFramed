@@ -19,7 +19,6 @@ Recording::Recording(MappingInfo&& mapping,
                      std::vector<std::string>&& playerTags,
                      StageID stageID)
     : mappingInfo_(std::move(mapping))
-    , timeStarted_(time_milli_seconds_since_epoch())
     , playerTags_(playerTags)
     , playerNames_(playerTags)
     , playerFighterIDs_(std::move(playerFighterIDs))
@@ -51,11 +50,18 @@ bool Recording::saveAs(const std::string& fileName)
 
     json gameInfo = {
         {"stageid", stageID_},
-        {"date", timeStarted_},
+        {"timestampstart", timeStampStartedMs()},
+        {"timestampend", timeStampEndedMs()},
         {"format", format_.description()},
         {"number", gameNumber_},
         {"set", setNumber_},
         {"winner", winner_}
+    };
+
+    json videoInfo = {
+        {"filename", ""},
+        {"filepath", ""},
+        {"offsetms", ""}
     };
 
     json fighterBaseStatusMapping;
@@ -167,6 +173,7 @@ bool Recording::saveAs(const std::string& fileName)
                           | (state.facingDirection() << 1);
 
             stream
+                .writeLU64(state.timeStampMs())
                 .writeLU32(state.frame())
                 .writeLF32(state.posx())
                 .writeLF32(state.posy())
@@ -186,6 +193,7 @@ bool Recording::saveAs(const std::string& fileName)
         {"version", "1.4"},
         {"mappinginfo", mappingInfo},
         {"gameinfo", gameInfo},
+        {"videoinfo", videoInfo},
         {"playerinfo", playerInfo},
         {"playerstates", base64_encode(static_cast<unsigned char*>(stream.get()), stream.size(), false)}
     };
@@ -210,6 +218,18 @@ bool Recording::saveAs(const std::string& fileName)
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
     return false;
+}
+
+// ----------------------------------------------------------------------------
+uint64_t Recording::timeStampStartedMs() const
+{
+    return playerStates_[0][0].timeStampMs();
+}
+
+// ----------------------------------------------------------------------------
+uint64_t Recording::timeStampEndedMs() const
+{
+    return playerStates_.back().back().timeStampMs();
 }
 
 // ----------------------------------------------------------------------------
