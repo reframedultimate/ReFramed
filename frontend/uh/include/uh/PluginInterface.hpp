@@ -12,6 +12,7 @@ struct PluginFactory
     uh::Plugin* (*create)(void);
     void (*destroy)(uh::Plugin* plugin);
     uh::PluginType type;
+    uint32_t version;
     const char* name;
     const char* author;
     const char* contact;
