@@ -23,7 +23,7 @@ macro (uh_add_plugin PLUGIN)
     qt5_wrap_ui (${PLUGIN}_MOC_FORMS ${${PLUGIN}_FORMS})
 
     configure_file ("${PLUGIN_CONFIG_TEMPLATE_PATH}/PluginConfig.hpp.in"
-        "${PROJECT_BINARY_DIR}/include/${PLUGIN}/PluginConfig.hpp")
+        "${PROJECT_BINARY_DIR}/include/${${PLUGIN}_OUTPUT_NAME}/PluginConfig.hpp")
 
     add_library (${PLUGIN} SHARED
         ${${PLUGIN}_SOURCES}
