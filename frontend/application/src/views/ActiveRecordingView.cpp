@@ -138,7 +138,7 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRec
     // Set game info
     const std::string* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
     ui_->label_stage->setText(stageStr ? QString::fromStdString(*stageStr) : "(Unknown Stage)");
-    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStarted()).toString());
+    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString());
     ui_->label_timeRemaining->setText("");
 
     // Prepare recording view for new game

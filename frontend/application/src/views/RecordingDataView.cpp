@@ -175,7 +175,7 @@ void RecordingDataView::repopulateGameInfoTable()
     // Fill in data
     ui_->tableWidget_gameInfo->setRowCount(6 + recording_->playerCount());
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
-    ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(recording_->timeStarted()).toString()));
+    ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(recording_->timeStampStartedMs()).toString()));
     ui_->tableWidget_gameInfo->setItem(1, 0, new QTableWidgetItem("Format"));
     ui_->tableWidget_gameInfo->setItem(1, 1, new QTableWidgetItem(QString::fromStdString(recording_->format().description())));
     ui_->tableWidget_gameInfo->setItem(2, 0, new QTableWidgetItem("Set Number"));

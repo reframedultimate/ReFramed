@@ -292,7 +292,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
 
@@ -300,11 +300,13 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
-        Frame frameCount = stream.readBU32(&error);
+        Frame stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < frameCount; ++f)
+        Frame framesPassed = 0;
+        Frame prevFrame = std::numeric_limits<Frame>::max();
+        for (Frame f = 0; f < stateCount; ++f)
         {
             Frame frame = stream.readBU32(&error);
             FighterStatus status = stream.readBU16(&error);
@@ -314,7 +316,17 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
             if (error)
                 return nullptr;
 
-            recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
+            // Version 1.0 did not timestamp each frame so we have to make a guesstimate
+            // based on the timestamp of when the recording started and how many
+            // frames passed since. This will not account for game pauses or
+            // lag, but it should be good enough.
+            uint64_t frameTimeStamp = firstFrameTimeStampMs + static_cast<uint64_t>(framesPassed * 1000.0 / 60.0);
+            if (prevFrame != std::numeric_limits<Frame>::max())
+                framesPassed += prevFrame - frame;
+            prevFrame = frame;
+
+            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
+
         }
     }
 
@@ -450,7 +462,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
     recording->gameNumber_ = jsonGameInfo["number"].get<int>();
 
@@ -458,11 +470,13 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
-        Frame frameCount = stream.readBU32(&error);
+        Frame stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < frameCount; ++f)
+        Frame framesPassed = 0;
+        Frame prevFrame = std::numeric_limits<Frame>::max();
+        for (Frame f = 0; f < stateCount; ++f)
         {
             Frame frame = stream.readBU32(&error);
             FighterStatus status = stream.readBU16(&error);
@@ -472,7 +486,16 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
             if (error)
                 return nullptr;
 
-            recording->playerStates_[i].push_back(PlayerState(frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
+            // Version 1.1 did not timestamp each frame so we have to make a guesstimate
+            // based on the timestamp of when the recording started and how many
+            // frames passed since. This will not account for game pauses or
+            // lag, but it should be good enough.
+            uint64_t frameTimeStamp = firstFrameTimeStampMs + static_cast<uint64_t>(framesPassed * 1000.0 / 60.0);
+            if (prevFrame != std::numeric_limits<Frame>::max())
+                framesPassed += prevFrame - frame;
+            prevFrame = frame;
+
+            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
         }
     }
 
@@ -620,7 +643,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
@@ -630,11 +653,13 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
-        Frame frameCount = stream.readBU32(&error);
+        Frame stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < frameCount; ++f)
+        Frame framesPassed = 0;
+        Frame prevFrame = std::numeric_limits<Frame>::max();
+        for (Frame f = 0; f < stateCount; ++f)
         {
             Frame frame = stream.readBU32(&error);
             float posx = stream.readBF64(&error);
@@ -651,10 +676,19 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
             if (error)
                 return nullptr;
 
+            // Version 1.2 did not timestamp each frame so we have to make a guesstimate
+            // based on the timestamp of when the recording started and how many
+            // frames passed since. This will not account for game pauses or
+            // lag, but it should be good enough.
+            uint64_t frameTimeStamp = firstFrameTimeStampMs + static_cast<uint64_t>(framesPassed * 1000.0 / 60.0);
+            if (prevFrame != std::numeric_limits<Frame>::max())
+                framesPassed += prevFrame - frame;
+            prevFrame = frame;
+
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
 
@@ -818,7 +852,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
@@ -828,11 +862,13 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
-        Frame frameCount = stream.readLU32(&error);
+        Frame stateCount = stream.readLU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < frameCount; ++f)
+        Frame framesPassed = 0;
+        Frame prevFrame = std::numeric_limits<Frame>::max();
+        for (Frame f = 0; f < stateCount; ++f)
         {
             Frame frame = stream.readLU32(&error);
             float posx = stream.readLF32(&error);
@@ -856,7 +892,16 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            // Version 1.3 did not timestamp each frame so we have to make a guesstimate
+            // based on the timestamp of when the recording started and how many
+            // frames passed since. This will not account for game pauses or
+            // lag, but it should be good enough.
+            uint64_t frameTimeStamp = firstFrameTimeStampMs + static_cast<uint64_t>(framesPassed * 1000.0 / 60.0);
+            if (prevFrame != std::numeric_limits<Frame>::max())
+                framesPassed += prevFrame - frame;
+            prevFrame = frame;
+
+            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
 
@@ -1002,7 +1047,9 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
 
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
         return nullptr;
-    if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_number() == false)
+    if (jsonGameInfo.contains("timestampstart") == false || jsonGameInfo["timestampstart"].is_number() == false)
+        return nullptr;
+    if (jsonGameInfo.contains("timestampend") == false || jsonGameInfo["timestampend"].is_number() == false)
         return nullptr;
     if (jsonGameInfo.contains("format") == false || jsonGameInfo["format"].is_string() == false)
         return nullptr;
@@ -1020,7 +1067,6 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->timeStarted_ = jsonGameInfo["date"].get<uint64_t>();
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
@@ -1030,12 +1076,13 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
-        Frame frameCount = stream.readLU32(&error);
+        Frame stateCount = stream.readLU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < frameCount; ++f)
+        for (Frame f = 0; f < stateCount; ++f)
         {
+            uint64_t frameTimeStamp = stream.readLU64(&error);
             Frame frame = stream.readLU32(&error);
             float posx = stream.readLF32(&error);
             float posy = stream.readLF32(&error);
@@ -1058,7 +1105,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
         }
     }
 

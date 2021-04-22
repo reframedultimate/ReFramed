@@ -3,7 +3,8 @@ project ("uh-tests"
 	LANGUAGES CXX)
 	
 add_executable (uh-tests
-	"src/test_reference.cpp"
+    "src/test_Reference.cpp"
+    "src/test_DataSet.cpp"
 	"src/main.cpp")
 target_link_libraries (uh-tests
 	PRIVATE uh

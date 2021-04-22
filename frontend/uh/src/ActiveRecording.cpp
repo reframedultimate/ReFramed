@@ -61,15 +61,14 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     // Check to see if the game has started yet
     if (playerStates_[index].size() == 1)
     {
-        if (playerStates_[index].back().frame() == state.frame())
+        if (playerStates_[index][0].frame() == state.frame())
             return;  // has not started yet
 
-        // The game has started. Adjust time started to be on the first frame
-        // of gameplay
-        timeStarted_ = time_milli_seconds_since_epoch();
         playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index].back());
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index][1]);
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index][1]);
         return;
     }
 
