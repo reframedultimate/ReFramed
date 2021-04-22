@@ -53,8 +53,9 @@ private:
 
 private:
     RecordingManager* recordingManager_;
-    QTreeWidgetItem* analysisCategoryItem_;
     QTreeWidgetItem* recordingGroupsItem_;
+    QTreeWidgetItem* dataSetsItem_;
+    QTreeWidgetItem* analysisCategoryItem_;
     QTreeWidgetItem* recordingSourcesItem_;
     QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* activeRecordingItem_;
