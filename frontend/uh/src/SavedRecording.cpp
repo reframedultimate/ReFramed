@@ -16,11 +16,17 @@ using nlohmann::json;
 // ----------------------------------------------------------------------------
 static std::string decompressGZFile(const std::string& fileName)
 {
+    int header;
     std::string out;
     gzFile f = gzopen(fileName.c_str(), "rb");
     if (f == nullptr)
         goto open_failed;
-    if (gzbuffer(f, 128 * 1024) != 0)
+
+    header = gzgetc(f); if (header != 0x1f) goto read_error;
+    header = gzgetc(f); if (header != 0x8b) goto read_error;
+    gzrewind(f);
+
+    if (gzbuffer(f, 256 * 1024) != 0)
         goto read_error;
 
     while (true)
@@ -167,13 +173,15 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
     {
         std::string s = readFile(fileName);
-        if (s.length() == 0)
-            continue;
-
-        try {
-            j = json::parse(std::move(s));
-            break;
-        } catch (const json::parse_error& e) {}
+        if (s.length())
+        {
+            try {
+                j = json::parse(std::move(s));
+                break;
+            } catch (const json::parse_error& e) {
+                return nullptr;
+            }
+        }
     }
 
     if (j.contains("version") == false || j["version"].is_string() == false)
