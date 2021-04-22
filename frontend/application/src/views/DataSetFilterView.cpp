@@ -149,9 +149,9 @@ void DataSetFilterView::addGroupToInputDataSet(RecordingGroup* group)
 {
     for (const auto& fileInfo : group->absFilePathList())
     {
-        /*uh::Reference<uh::Recording> recording = uh::SavedRecording::load(fileInfo.absoluteFilePath().toStdString());
+        uh::Reference<uh::Recording> recording = uh::SavedRecording::load(fileInfo.absoluteFilePath().toStdString());
         if (recording.isNull())
-            continue;*/
+            continue;
     }
 }
 
