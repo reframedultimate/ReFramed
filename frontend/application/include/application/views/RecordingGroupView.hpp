@@ -34,9 +34,9 @@ private slots:
     void onFiltersTextChanged(const QString& text);
 
 private:
-    void onRecordingGroupNameChanged(const QString& name) override;
-    void onRecordingGroupFileAdded(const QFileInfo& absPathToFile) override;
-    void onRecordingGroupFileRemoved(const QFileInfo& absPathToFile) override;
+    void onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
+    void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile) override;
+    void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile) override;
 
 private:
     Ui::RecordingGroupView* ui_;

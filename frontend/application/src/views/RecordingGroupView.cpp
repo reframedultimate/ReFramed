@@ -159,20 +159,22 @@ void RecordingGroupView::onFiltersTextChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupNameChanged(const QString& name)
+void RecordingGroupView::onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupFileAdded(const QFileInfo& absPathToFile)
+void RecordingGroupView::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
+    (void)group;
     ui_->listWidget_recordings->addItem(absPathToFile.completeBaseName());
     ui_->listWidget_recordings->sortItems(Qt::DescendingOrder);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupFileRemoved(const QFileInfo& absPathToFile)
+void RecordingGroupView::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
+    (void)group;
     for (const auto& item : ui_->listWidget_recordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
     {
         ui_->listWidget_recordings->removeItemWidget(item);

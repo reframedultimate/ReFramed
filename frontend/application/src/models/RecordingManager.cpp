@@ -181,18 +181,18 @@ void RecordingManager::setDefaultRecordingSourceDirectory(const QDir& path)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupNameChanged(const QString& name)
+void RecordingManager::onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileAdded(const QFileInfo& name)
+void RecordingManager::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& name)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileRemoved(const QFileInfo& name)
+void RecordingManager::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& name)
 {
 
 }

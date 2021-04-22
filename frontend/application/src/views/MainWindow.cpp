@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget* parent)
     }*/
 
     mainView_->addWidget(recordingGroupView_);
-    mainView_->addWidget(new DataSetFilterView);
+    mainView_->addWidget(new DataSetFilterView(recordingManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
