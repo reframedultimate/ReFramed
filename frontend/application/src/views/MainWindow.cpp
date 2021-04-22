@@ -6,6 +6,7 @@
 #include "application/views/ActiveRecordingView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
+#include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/RecordingGroupView.hpp"
 #include "application/views/RecordingView.hpp"
@@ -37,16 +38,21 @@ MainWindow::MainWindow(QWidget* parent)
 
     ActiveRecordingView* activeRecordingView = new ActiveRecordingView(activeRecordingManager_.get());
 
+    /*
     if (pluginManager_->loadPlugin("share/uh/plugins/videoplayer.so"))
     {
         uh::VisualizerPlugin* video = pluginManager_->createVisualizer("Video Player");
         if (video)
             mainView_->addWidget(video->takeWidget());
-    }
-    /*VideoPlayer* analysis = new VideoPlayer;
+        else
+            mainView_->addWidget()
+    }*/
 
-    mainView_->addWidget(analysis);*/
     mainView_->addWidget(recordingGroupView_);
+    mainView_->addWidget(new DataSetFilterView);
+    mainView_->addWidget(new QWidget);
+    mainView_->addWidget(new QWidget);
+    mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeRecordingView);
     setCentralWidget(mainView_);
 
@@ -73,6 +79,7 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    // Removes all widgets created by plugins and unloads the shared libraries
     pluginManager_->unloadAllPlugins();
 
     // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
@@ -162,25 +169,32 @@ void MainWindow::onCategoryChanged(CategoryType category)
 {
     switch (category)
     {
-        case CategoryType::TOP_LEVEL_ANALYSIS:
+        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+        case CategoryType::RECORDING_GROUP_ITEM:
             mainView_->setCurrentIndex(0);
             break;
 
-        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
-        case CategoryType::RECORDING_GROUP_ITEM:
+        case CategoryType::TOP_LEVEL_DATA_SETS:
+        case CategoryType::DATA_SETS_ITEM:
             mainView_->setCurrentIndex(1);
+            break;
+
+        case CategoryType::TOP_LEVEL_ANALYSIS:
+            mainView_->setCurrentIndex(2);
             break;
 
         case CategoryType::TOP_LEVEL_RECORDING_SOURCES:
         case CategoryType::RECORDING_SOURCE_ITEM:
+            mainView_->setCurrentIndex(3);
             break;
 
         case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
         case CategoryType::VIDEO_SOURCE_ITEM:
+            mainView_->setCurrentIndex(4);
             break;
 
         case CategoryType::TOP_LEVEL_ACTIVE_RECORDING:
-            mainView_->setCurrentIndex(2);
+            mainView_->setCurrentIndex(5);
             break;
     }
 }

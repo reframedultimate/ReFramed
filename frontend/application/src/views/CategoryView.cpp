@@ -8,8 +8,9 @@ namespace uhapp {
 CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     : QTreeWidget(parent)
     , recordingManager_(recordingManager)
-    , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
     , recordingGroupsItem_(new QTreeWidgetItem({"Recording Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_GROUPS)))
+    , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
+    , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
     , recordingSourcesItem_(new QTreeWidgetItem({"Recording Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_SOURCES)))
     , videoSourcesItem_(new QTreeWidgetItem({"Video Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
     , activeRecordingItem_(new QTreeWidgetItem({"Active Recording"}, static_cast<int>(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)))
@@ -17,8 +18,9 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     setHeaderHidden(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
 
-    addTopLevelItem(analysisCategoryItem_);
     addTopLevelItem(recordingGroupsItem_);
+    addTopLevelItem(dataSetsItem_);
+    addTopLevelItem(analysisCategoryItem_);
     addTopLevelItem(recordingSourcesItem_);
     addTopLevelItem(videoSourcesItem_);
     addTopLevelItem(activeRecordingItem_);
@@ -70,12 +72,14 @@ void CategoryView::onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* cur
 #define EMIT_IF_CHANGED(category) \
     if (categoryOf(current) == category && (previous == nullptr || categoryOf(previous) != category)) \
         emit categoryChanged(category);
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ANALYSIS)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_RECORDING_GROUPS)
+    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_DATA_SETS)
+    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ANALYSIS)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_RECORDING_GROUPS)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_VIDEO_SOURCES)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)
     EMIT_IF_CHANGED(CategoryType::RECORDING_GROUP_ITEM)
+    EMIT_IF_CHANGED(CategoryType::DATA_SETS_ITEM)
     EMIT_IF_CHANGED(CategoryType::RECORDING_SOURCE_ITEM)
     EMIT_IF_CHANGED(CategoryType::VIDEO_SOURCE_ITEM)
 #undef EMIT_IF_CHANGED
@@ -91,12 +95,16 @@ void CategoryView::onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* cur
 // ----------------------------------------------------------------------------
 CategoryType CategoryView::categoryOf(const QTreeWidgetItem* item) const
 {
-    if (item == analysisCategoryItem_)
-        return CategoryType::TOP_LEVEL_ANALYSIS;
     if (item == recordingGroupsItem_)
         return CategoryType::TOP_LEVEL_RECORDING_GROUPS;
     if (item->parent() == recordingGroupsItem_)
         return CategoryType::RECORDING_GROUP_ITEM;
+    if (item == dataSetsItem_)
+        return CategoryType::TOP_LEVEL_DATA_SETS;
+    if (item->parent() == dataSetsItem_)
+        return CategoryType::DATA_SETS_ITEM;
+    if (item == analysisCategoryItem_)
+        return CategoryType::TOP_LEVEL_ANALYSIS;
     if (item == recordingSourcesItem_)
         return CategoryType::TOP_LEVEL_RECORDING_SOURCES;
     if (item->parent() == recordingSourcesItem_)
