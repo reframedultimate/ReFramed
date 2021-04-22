@@ -88,9 +88,9 @@ public:
 private:
     void scanForRecordings();
 
-    void onRecordingGroupNameChanged(const QString& name) override;
-    void onRecordingGroupFileAdded(const QFileInfo& name) override;
-    void onRecordingGroupFileRemoved(const QFileInfo& name) override;
+    void onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
+    void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& name) override;
+    void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& name) override;
 
 private:
     Settings* settings_;
