@@ -39,6 +39,7 @@ public:
 
 signals:
     void enableFilter(bool);
+    void invertFilter(bool);
     void moveFilterUp();
     void moveFilterDown();
     void removeFilterRequested();
@@ -55,6 +56,7 @@ private slots:
 private:
     QToolButton* toggleButton_;
     QCheckBox* enableCheckbox_;
+    QCheckBox* notCheckbox_;
     QParallelAnimationGroup* toggleAnimation_;
     QScrollArea* contentArea_;
     int animationDuration_;

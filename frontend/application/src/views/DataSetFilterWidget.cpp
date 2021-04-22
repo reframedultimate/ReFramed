@@ -13,30 +13,15 @@
 
 namespace uhapp {
 
-class IconWidget : public QWidget
-{
-public:
-    explicit IconWidget(QWidget* parent = 0) : QWidget(parent) {}
-
-protected:
-    virtual void paintEvent(QPaintEvent* e) override
-    {
-        QWidget::paintEvent(e);
-
-        QPainter painter(this);
-        QPixmap pixmap = QPixmap(":/icons/FFT.png").scaled(size(), Qt::KeepAspectRatio);
-        painter.drawPixmap((size().width() - pixmap.width()) / 2, 0, pixmap);
-    }
-};
-
 // ----------------------------------------------------------------------------
-DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent) :
-    QWidget(parent),
-    toggleButton_(new QToolButton),
-    enableCheckbox_(new QCheckBox),
-    toggleAnimation_(new QParallelAnimationGroup(this)),
-    contentArea_(new QScrollArea),
-    animationDuration_(100)
+DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
+    : QWidget(parent)
+    , toggleButton_(new QToolButton)
+    , enableCheckbox_(new QCheckBox)
+    , notCheckbox_(new QCheckBox("Not"))
+    , toggleAnimation_(new QParallelAnimationGroup(this))
+    , contentArea_(new QScrollArea)
+    , animationDuration_(100)
 {
     toggleButton_->setToolButtonStyle(Qt::ToolButtonIconOnly);
     toggleButton_->setArrowType(Qt::RightArrow);
@@ -49,6 +34,10 @@ DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
     enableCheckbox_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     enableCheckbox_->setContentsMargins(0, 0, 0, 0);
     enableCheckbox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+
+    notCheckbox_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    notCheckbox_->setContentsMargins(0, 0, 0, 0);
+    notCheckbox_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
 
     QToolButton* moveUpButton = new QToolButton;
     moveUpButton->setArrowType(Qt::UpArrow);
@@ -73,8 +62,6 @@ DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
     headerLine->setFrameShadow(QFrame::Sunken);
     headerLine->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    IconWidget* iconWidget = new IconWidget;
-
     contentArea_->setStyleSheet("QToolButton { border: none; }");
     contentArea_->setStyleSheet("QScrollArea { background-color: white; border: none; }");
     contentArea_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -94,8 +81,8 @@ DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
     mainLayout->setVerticalSpacing(0);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addWidget(toggleButton_,  0, column++, 1, 1, Qt::AlignLeft);
-    mainLayout->addWidget(iconWidget, 0, column++, 1, 1, Qt::AlignLeft);
-    mainLayout->addWidget(enableCheckbox_,    0, column, 1, 1, Qt::AlignLeft);
+    mainLayout->addWidget(enableCheckbox_,    0, column++, 1, 1, Qt::AlignLeft);
+    mainLayout->addWidget(notCheckbox_,    0, column, 1, 1, Qt::AlignLeft);
     mainLayout->setColumnStretch(column++, 1); // title should use as much space as possible
     mainLayout->addWidget(moveUpButton,   0, column++);
     mainLayout->addWidget(moveDownButton, 0, column++);
@@ -114,6 +101,7 @@ DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
 
     connect(toggleButton_, SIGNAL(clicked(bool)), this, SLOT(onToolButtonClicked(bool)));
     connect(enableCheckbox_, SIGNAL(toggled(bool)), SIGNAL(enableFilter(bool)));
+    connect(notCheckbox_, SIGNAL(toggled(bool)), SIGNAL(invertFilter(bool)));
     connect(moveUpButton, SIGNAL(released()), SIGNAL(moveFilterUp()));
     connect(moveDownButton, SIGNAL(released()), SIGNAL(moveFilterDown()));
     connect(closeButton, SIGNAL(released()), SIGNAL(removeFilterRequested()));

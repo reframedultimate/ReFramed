@@ -56,6 +56,8 @@ add_library (uh SHARED
     "src/crc32.c"
 	"src/DataPoint.cpp"
 	"src/DataSet.cpp"
+    "src/DataSetFilter.cpp"
+    "src/DataSetFilterChain.cpp"
 	"src/DecisionGraph.cpp"
 	"src/FighterIDMapping.cpp"
 	"src/FighterStatusMapping.cpp"
