@@ -9,6 +9,7 @@ DataSetFilterWidget_Stage::DataSetFilterWidget_Stage(QWidget* parent)
     , ui_(new Ui::DataSetFilterWidget_Stage)
 {
     ui_->setupUi(contentWidget());
+    setTitle("Stage");
     updateSize();
     setExpanded(true);
 }

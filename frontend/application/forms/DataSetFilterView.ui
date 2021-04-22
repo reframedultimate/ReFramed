@@ -165,6 +165,21 @@
     <string>Player</string>
    </property>
   </action>
+  <action name="actionDate">
+   <property name="text">
+    <string>Date</string>
+   </property>
+  </action>
+  <action name="actionGame">
+   <property name="text">
+    <string>Game</string>
+   </property>
+  </action>
+  <action name="actionPlayerCount">
+   <property name="text">
+    <string>PlayerCount</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

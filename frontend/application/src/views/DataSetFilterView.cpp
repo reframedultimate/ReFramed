@@ -1,14 +1,20 @@
 #include "application/ui_DataSetFilterView.h"
 #include "application/views/DataSetFilterView.hpp"
+#include "application/views/DataSetFilterWidget_Date.hpp"
+#include "application/views/DataSetFilterWidget_Game.hpp"
 #include "application/views/DataSetFilterWidget_Matchup.hpp"
 #include "application/views/DataSetFilterWidget_Player.hpp"
+#include "application/views/DataSetFilterWidget_PlayerCount.hpp"
 #include "application/views/DataSetFilterWidget_Stage.hpp"
 
 #include <QMenu>
 
 #define FILTER_LIST \
+    X(Date) \
+    X(Game) \
     X(Matchup) \
     X(Player) \
+    X(PlayerCount) \
     X(Stage)
 
 namespace uhapp {
