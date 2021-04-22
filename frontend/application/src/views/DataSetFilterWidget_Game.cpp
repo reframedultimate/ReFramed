@@ -1,21 +1,21 @@
-#include "application/ui_DataSetFilterWidget_Player.h"
-#include "application/views/DataSetFilterWidget_Player.hpp"
+#include "application/ui_DataSetFilterWidget_Game.h"
+#include "application/views/DataSetFilterWidget_Game.hpp"
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-DataSetFilterWidget_Player::DataSetFilterWidget_Player(QWidget* parent)
+DataSetFilterWidget_Game::DataSetFilterWidget_Game(QWidget* parent)
     : DataSetFilterWidget(nullptr, parent)
-    , ui_(new Ui::DataSetFilterWidget_Player)
+    , ui_(new Ui::DataSetFilterWidget_Game)
 {
     ui_->setupUi(contentWidget());
-    setTitle("Player");
+    setTitle("Game");
     updateSize();
     setExpanded(true);
 }
 
 // ----------------------------------------------------------------------------
-DataSetFilterWidget_Player::~DataSetFilterWidget_Player()
+DataSetFilterWidget_Game::~DataSetFilterWidget_Game()
 {
     delete ui_;
 }
