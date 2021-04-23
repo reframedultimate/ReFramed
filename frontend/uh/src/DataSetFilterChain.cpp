@@ -100,8 +100,7 @@ DataSet* DataSetFilterChain::apply(const DataSet* ds)
 
         if (out == nullptr)
         {
-            out = new DataSet;
-            out->mergeDataFrom((filter->*applyFunc)(ds));
+            out = (filter->*applyFunc)(ds);
         }
         else
         {
