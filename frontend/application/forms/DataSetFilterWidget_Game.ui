@@ -7,22 +7,32 @@
     <x>0</x>
     <y>0</y>
     <width>763</width>
-    <height>100</height>
+    <height>168</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
+   <item row="1" column="2">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Format:</string>
+      <string>Max Length:</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
-    <widget class="QComboBox" name="comboBox"/>
+   <item row="1" column="3">
+    <widget class="QTimeEdit" name="maxLength">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="displayFormat">
+      <string>mm:ss</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="2">
     <widget class="QLabel" name="label_3">
@@ -32,41 +42,54 @@
     </widget>
    </item>
    <item row="0" column="3">
-    <widget class="QTimeEdit" name="timeEdit">
+    <widget class="QTimeEdit" name="minLength">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="currentSection">
+      <enum>QDateTimeEdit::MinuteSection</enum>
+     </property>
+     <property name="displayFormat">
+      <string>mm:ss</string>
+     </property>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_formatName">
+     <property name="text">
+      <string>Format Name:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Winner of Set:</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="lineEdit"/>
-   </item>
-   <item row="1" column="2">
-    <widget class="QLabel" name="label_4">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Max Length:</string>
+      <string>Format:</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="3">
-    <widget class="QTimeEdit" name="timeEdit_2">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="winner">
+     <property name="placeholderText">
+      <string>Enter Name</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="comboBox_format"/>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="lineEdit_formatName"/>
    </item>
   </layout>
  </widget>

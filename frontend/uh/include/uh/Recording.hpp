@@ -90,6 +90,8 @@ public:
     uint64_t timeStampStartedMs() const;
     uint64_t timeStampEndedMs() const;
 
+    uint64_t gameLengthMs() const;
+
     int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].size()); }
 
     const PlayerState& playerState(int player, int idx) const { return playerStates_[player][idx]; }

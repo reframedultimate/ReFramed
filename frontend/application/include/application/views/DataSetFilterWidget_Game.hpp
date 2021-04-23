@@ -16,6 +16,13 @@ public:
     explicit DataSetFilterWidget_Game(QWidget* parent=nullptr);
     ~DataSetFilterWidget_Game();
 
+private slots:
+    void onFormatComboBoxChanged(int index);
+    void onFormatDescChanged(const QString& text);
+    void onWinnerTextChanged(const QString& text);
+    void onMinLengthChanged(const QTime& time);
+    void onMaxLengthChanged(const QTime& time);
+
 private:
     Ui::DataSetFilterWidget_Game* ui_;
 };

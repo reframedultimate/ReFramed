@@ -233,6 +233,12 @@ uint64_t Recording::timeStampEndedMs() const
 }
 
 // ----------------------------------------------------------------------------
+uint64_t Recording::gameLengthMs() const
+{
+    return timeStampEndedMs() - timeStampStartedMs();
+}
+
+// ----------------------------------------------------------------------------
 int Recording::findWinner() const
 {
     // The winner is the player with most stocks and least damage
