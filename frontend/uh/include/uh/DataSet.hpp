@@ -2,40 +2,30 @@
 
 #include "uh/config.hpp"
 #include "uh/RefCounted.hpp"
+#include "uh/DataSetPlayer.hpp"
+#include <string>
+#include <vector>
+#include <unordered_map>
 
 namespace uh {
 
 class Recording;
-class DataPoint;
-class PlayerState;
 
+/*!
+ * \brief This is the top-level structure used to hold the player state data
+ * for analyzers to work with.
+ */
 class UH_PUBLIC_API DataSet : public RefCounted
 {
 public:
-    DataSet();
-    ~DataSet();
-    DataSet(const DataSet& other);
-    DataSet(DataSet&& other);
-    DataSet& operator=(DataSet rhs);
-    DataSet& operator=(DataSet&& rhs);
-    friend void swap(DataSet& first, DataSet& second) noexcept;
+    void appendRecording(Recording* recording);
+    void removeRecording(Recording* recording);
 
-    void appendPlayerStatesFromRecording(int player, Recording* recording);
-    void appendPlayerState(Recording* recording, const PlayerState& state);
-    void erase(const DataPoint* dp);
-    void erase(int idx);
-    void clear();
-
-    int count() const;
-    const DataPoint* begin() const;
-    const DataPoint* end() const;
-    DataPoint* begin();
-    DataPoint* end();
+    const DataSetPlayer* playerDataSet(const std::string& name);
+    std::vector<std::string> playerNames() const;
 
 private:
-    char* mem_;
-    int count_;
-    int capacity_;
+    std::unordered_map<std::string, DataSetPlayer> players_;
 };
 
 }
