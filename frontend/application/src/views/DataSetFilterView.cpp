@@ -60,6 +60,10 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
     ui_->scrollAreaWidgetContents_filters->setLayout(filterWidgetsLayout_);
     filterWidgetsLayout_->setAlignment(Qt::AlignTop);
 
+    // Set up progress bar and info text
+    ui_->progressBar->setVisible(false);
+    ui_->label_outputInfo->setText("");
+
     // Fill in input groups list
     for (const auto& it : recordingManager_->recordingGroups())
         onRecordingManagerGroupAdded(it.second.get());
@@ -193,15 +197,21 @@ void DataSetFilterView::reprocessInputDataSet()
 
     outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
 
+    int numDataPoints = 0;
     std::unordered_set<uh::Recording*> uniqueRecordings;
     for (const auto& playerName : outputDataSet_->playerNames())
         for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
+        {
             uniqueRecordings.emplace(dataPoint.recording());
+            numDataPoints++;
+        }
 
     ui_->listWidget_outputGroup->clear();
     for (const auto& recording : uniqueRecordings)
         ui_->listWidget_outputGroup->addItem(composeFileName(recording));
     ui_->listWidget_outputGroup->sortItems(Qt::DescendingOrder);
+
+    ui_->label_outputInfo->setText(QString("Found %1 data points in %2 recordings").arg(numDataPoints).arg(uniqueRecordings.size()));
 
     dataSetFiltersDirty_ = false;
 }
@@ -217,7 +227,7 @@ void DataSetFilterView::dirtyDataSetFilters()
 void DataSetFilterView::addNewFilterWidget(DataSetFilterWidget* widget)
 {
     filterWidgetsLayout_->addWidget(widget);
-    recursivelyInstallEventFilter(widget);
+    //recursivelyInstallEventFilter(widget);
 
     dataSetFilterChain_->add(widget->filter());
     widget->filter()->dispatcher.addListener(this);  // Listen to dirtying events
