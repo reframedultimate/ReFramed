@@ -9,14 +9,27 @@ DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
     for (const auto& playerName : dataSet->playerNames())
-    {
         for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
         {
             const PlayerState& state = dp.state();
             if (state.timeStampMs() >= startTime_ && state.timeStampMs() <= endTime_)
                 out->appendDataPoint(playerName, dp);
         }
-    }
+
+    return out;
+}
+
+// ----------------------------------------------------------------------------
+DataSet* DataSetFilter_Date::applyInverse(const DataSet* dataSet)
+{
+    DataSet* out = new DataSet;
+    for (const auto& playerName : dataSet->playerNames())
+        for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
+        {
+            const PlayerState& state = dp.state();
+            if (state.timeStampMs() < startTime_ || state.timeStampMs() > endTime_)
+                out->appendDataPoint(playerName, dp);
+        }
 
     return out;
 }

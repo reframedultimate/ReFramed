@@ -13,12 +13,13 @@ class UH_PUBLIC_API DataSetFilter : public RefCounted
 {
 public:
     virtual DataSet* apply(const DataSet* dataSet) = 0;
+    virtual DataSet* applyInverse(const DataSet* dataSet) = 0;
 
     DataSetFilter& setEnabled(bool enable);
     DataSetFilter& setInverted(bool invert);
 
     bool enabled() const { return enabled_; }
-    bool isInverted() const { return inverted_; }
+    bool inverted() const { return inverted_; }
 
     ListenerDispatcher<DataSetFilterListener> dispatcher;
 
@@ -26,8 +27,8 @@ protected:
     void notifyDirty();
 
 private:
-    bool enabled_;
-    bool inverted_;
+    bool enabled_ = true;
+    bool inverted_ = false;
 };
 
 }

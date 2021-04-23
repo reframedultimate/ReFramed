@@ -89,11 +89,33 @@ DataSetFilter* DataSetFilterChain::filter(int idx) const
 // ----------------------------------------------------------------------------
 DataSet* DataSetFilterChain::apply(const DataSet* ds)
 {
-    DataSet* out = new DataSet;
+    DataSet* out = nullptr;
     for (const auto& filter : d->filters)
-        out->mergeDataFrom(filter->apply(ds));
-    if (d->filters.size() == 0)
+    {
+        if (filter->enabled() == false)
+            continue;
+
+        DataSet* (DataSetFilter::*applyFunc)(const DataSet*) = filter->inverted() ?
+                    &DataSetFilter::applyInverse : &DataSetFilter::apply;
+
+        if (out == nullptr)
+        {
+            out = new DataSet;
+            out->mergeDataFrom((filter->*applyFunc)(ds));
+        }
+        else
+        {
+            uh::Reference<uh::DataSet> ref(out);  // Make sure the previous instance gets deleted
+            out = (filter->*applyFunc)(out);
+        }
+    }
+
+    if (out == nullptr)
+    {
+        out = new DataSet;
         out->mergeDataFrom(ds);
+    }
+
     return out;
 }
 

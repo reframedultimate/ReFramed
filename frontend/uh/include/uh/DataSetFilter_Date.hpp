@@ -9,6 +9,7 @@ class UH_PUBLIC_API DataSetFilter_Date : public DataSetFilter
 {
 public:
     DataSet* apply(const DataSet* dataSet) override;
+    DataSet* applyInverse(const DataSet* dataSet) override;
 
     void setStartTimeMs(uint64_t startMs);
     void setEndTimeMs(uint64_t endMs);

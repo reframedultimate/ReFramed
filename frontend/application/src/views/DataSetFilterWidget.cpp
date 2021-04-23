@@ -83,7 +83,7 @@ DataSetFilterWidget::DataSetFilterWidget(uh::DataSetFilter* filter, QWidget* par
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addWidget(toggleButton_,  0, column++, 1, 1, Qt::AlignLeft);
     mainLayout->addWidget(enableCheckbox_,    0, column++, 1, 1, Qt::AlignLeft);
-    mainLayout->addWidget(notCheckbox_,    0, column, 1, 1, Qt::AlignLeft);
+    mainLayout->addWidget(notCheckbox_,    0, column, 1, 1, Qt::AlignRight);
     mainLayout->setColumnStretch(column++, 1); // title should use as much space as possible
     mainLayout->addWidget(moveUpButton,   0, column++);
     mainLayout->addWidget(moveDownButton, 0, column++);

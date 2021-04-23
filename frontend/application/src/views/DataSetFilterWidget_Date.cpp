@@ -14,12 +14,12 @@ DataSetFilterWidget_Date::DataSetFilterWidget_Date(QWidget* parent)
     updateSize();
     setExpanded(true);
 
-    uh::DataSetFilter_Date* f = static_cast<uh::DataSetFilter_Date*>(filter());
     QDateTime now = QDateTime::currentDateTime();
-    f->setStartTimeMs(now.toMSecsSinceEpoch());
-    f->setEndTimeMs(now.toMSecsSinceEpoch());
     ui_->from->setDateTime(now.addMonths(-1));
     ui_->to->setDateTime(now);
+
+    onFromChanged(ui_->from->dateTime());
+    onToChanged(ui_->to->dateTime());
 
     connect(ui_->from, &QDateTimeEdit::dateTimeChanged, this, &DataSetFilterWidget_Date::onFromChanged);
     connect(ui_->to, &QDateTimeEdit::dateTimeChanged, this, &DataSetFilterWidget_Date::onToChanged);
