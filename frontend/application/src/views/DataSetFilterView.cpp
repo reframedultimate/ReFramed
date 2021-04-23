@@ -12,6 +12,7 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "uh/DataSetFilterChain.hpp"
 #include "uh/DataSet.hpp"
+#include "uh/DataSetFilter.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/Reference.hpp"
 #include "uh/SavedRecording.hpp"
@@ -100,6 +101,8 @@ void DataSetFilterView::onToolButtonAddFilterTriggered(QAction* action)
         addNewFilterWidget(new DataSetFilterWidget_##filter);
     FILTER_LIST
 #undef X
+
+    dirtyDataSetFilters();
 }
 
 // ----------------------------------------------------------------------------
@@ -123,10 +126,107 @@ void DataSetFilterView::onInputGroupItemChanged(QListWidgetItem* item)
 }
 
 // ----------------------------------------------------------------------------
+void DataSetFilterView::onFilterEnabled(DataSetFilterWidget* widget, bool enable)
+{
+    widget->filter()->setEnabled(enable);
+    widget->contentWidget()->setEnabled(enable);
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onFilterInverted(DataSetFilterWidget* widget, bool inverted)
+{
+    widget->filter()->setInverted(inverted);
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onFilterMoveUp(DataSetFilterWidget* widget)
+{
+    int newIndex = dataSetFilterChain_->moveLater(widget->filter());
+    moveFilterWidgetInLayout(widget, newIndex);
+
+    dirtyDataSetFilters();
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onFilterMoveDown(DataSetFilterWidget* widget)
+{
+    int newIndex = dataSetFilterChain_->moveEarlier(widget->filter());
+    moveFilterWidgetInLayout(widget, newIndex);
+
+    dirtyDataSetFilters();
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onRemoveFilterRequested(DataSetFilterWidget* widget)
+{
+    widget->filter()->dispatcher.removeListener(this);
+    int wasIndex = dataSetFilterChain_->remove(widget->filter());
+    QWidget* at = filterWidgetsLayout_->itemAt(wasIndex)->widget();
+    assert(at == widget);
+    (void)at;
+    widget->deleteLater();
+
+    dirtyDataSetFilters();
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::moveFilterWidgetInLayout(DataSetFilterWidget* widget, int layoutIndex)
+{
+    for (int i = 0; i != filterWidgetsLayout_->count(); ++i)
+    {
+        if (filterWidgetsLayout_->itemAt(i)->widget() == widget)
+        {
+            filterWidgetsLayout_->takeAt(i);
+            filterWidgetsLayout_->insertWidget(layoutIndex, widget);
+            return;
+        }
+    }
+
+    assert(false);
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::reprocessInputDataSet()
+{
+    if (dataSetFiltersDirty_ == false)
+        return;
+
+    outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
+
+    std::unordered_set<uh::Recording*> uniqueRecordings;
+    for (const auto& playerName : outputDataSet_->playerNames())
+        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
+            uniqueRecordings.emplace(dataPoint.recording());
+
+    ui_->listWidget_outputGroup->clear();
+    for (const auto& recording : uniqueRecordings)
+        ui_->listWidget_outputGroup->addItem(composeFileName(recording));
+    ui_->listWidget_outputGroup->sortItems(Qt::DescendingOrder);
+
+    dataSetFiltersDirty_ = false;
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::dirtyDataSetFilters()
+{
+    dataSetFiltersDirty_ = true;
+    QMetaObject::invokeMethod(this, "reprocessInputDataSet", Qt::QueuedConnection);
+}
+
+// ----------------------------------------------------------------------------
 void DataSetFilterView::addNewFilterWidget(DataSetFilterWidget* widget)
 {
     filterWidgetsLayout_->addWidget(widget);
     recursivelyInstallEventFilter(widget);
+
+    dataSetFilterChain_->add(widget->filter());
+    widget->filter()->dispatcher.addListener(this);  // Listen to dirtying events
+
+    connect(widget, &DataSetFilterWidget::enableFilter, this, &DataSetFilterView::onFilterEnabled);
+    connect(widget, &DataSetFilterWidget::invertFilter, this, &DataSetFilterView::onFilterInverted);
+    connect(widget, &DataSetFilterWidget::moveFilterUp, this, &DataSetFilterView::onFilterMoveUp);
+    connect(widget, &DataSetFilterWidget::moveFilterDown, this, &DataSetFilterView::onFilterMoveDown);
+    connect(widget, &DataSetFilterWidget::removeFilterRequested, this, &DataSetFilterView::onRemoveFilterRequested);
 }
 
 // ----------------------------------------------------------------------------
@@ -163,17 +263,7 @@ void DataSetFilterView::removeGroupFromInputDataSet(RecordingGroup* group)
     for (const auto& [group, dataSet] : inputDataSets_)
         inputDataSetMerged_->mergeDataFrom(dataSet);
 
-    outputDataSet_->replaceDataWith(inputDataSetMerged_.get());
-    dataSetFilterChain_->apply(outputDataSet_);
-
-    std::unordered_set<uh::Recording*> uniqueRecordings;
-    for (const auto& playerName : outputDataSet_->playerNames())
-        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
-            uniqueRecordings.emplace(dataPoint.recording());
-
-    ui_->listWidget_outputGroup->clear();
-    for (const auto& recording : uniqueRecordings)
-        ui_->listWidget_outputGroup->addItem(composeFileName(recording));
+    dirtyDataSetFilters();
 }
 
 // ----------------------------------------------------------------------------
@@ -238,20 +328,16 @@ void DataSetFilterView::onRecordingManagerGroupRemoved(RecordingGroup* group)
 void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet)
 {
     inputDataSets_.emplace(group, dataSet);
-
     inputDataSetMerged_->mergeDataFrom(dataSet);
 
-    outputDataSet_->replaceDataWith(inputDataSetMerged_.get());
-    dataSetFilterChain_->apply(outputDataSet_);
+    dirtyDataSetFilters();
+}
 
-    std::unordered_set<uh::Recording*> uniqueRecordings;
-    for (const auto& playerName : outputDataSet_->playerNames())
-        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
-            uniqueRecordings.emplace(dataPoint.recording());
-
-    ui_->listWidget_outputGroup->clear();
-    for (const auto& recording : uniqueRecordings)
-        ui_->listWidget_outputGroup->addItem(composeFileName(recording));
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onDataSetFilterDirtied(uh::DataSetFilter* filter)
+{
+    (void)filter;
+    dirtyDataSetFilters();
 }
 
 }

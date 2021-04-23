@@ -11,6 +11,7 @@ class UH_PUBLIC_API DataSetPlayer
 public:
     DataSetPlayer(const std::string& playerName);
 
+    void appendDataPoint(const DataPoint& dataPoint);
     void appendPlayerStatesFromRecording(int player, Recording* recording);
     void removePlayerStatesForRecording(int player, Recording* recording);
     void clear();

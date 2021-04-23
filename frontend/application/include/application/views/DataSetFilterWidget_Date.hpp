@@ -16,6 +16,10 @@ public:
     explicit DataSetFilterWidget_Date(QWidget* parent=nullptr);
     ~DataSetFilterWidget_Date();
 
+private slots:
+    void onFromChanged(const QDateTime& dt);
+    void onToChanged(const QDateTime& dt);
+
 private:
     Ui::DataSetFilterWidget_Date* ui_;
 };

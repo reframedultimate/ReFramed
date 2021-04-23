@@ -1,5 +1,7 @@
 #include "uh/DataSetFilterChain.hpp"
 #include "uh/DataSetFilter.hpp"
+#include "uh/DataSet.hpp"
+#include "uh/Recording.hpp"
 #include "uh/Reference.hpp"
 #include <vector>
 #include <algorithm>
@@ -85,10 +87,14 @@ DataSetFilter* DataSetFilterChain::filter(int idx) const
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterChain::apply(DataSet* ds)
+DataSet* DataSetFilterChain::apply(const DataSet* ds)
 {
+    DataSet* out = new DataSet;
     for (const auto& filter : d->filters)
-        filter->apply(ds);
+        out->mergeDataFrom(filter->apply(ds));
+    if (d->filters.size() == 0)
+        out->mergeDataFrom(ds);
+    return out;
 }
 
 }

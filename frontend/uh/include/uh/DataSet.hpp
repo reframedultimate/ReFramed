@@ -18,6 +18,7 @@ class Recording;
 class UH_PUBLIC_API DataSet : public RefCounted
 {
 public:
+    void appendDataPoint(const std::string& playerName, const DataPoint& dataPoint);
     void appendRecording(Recording* recording);
     void removeRecording(Recording* recording);
     void mergeDataFrom(const DataSet* other);
