@@ -16,6 +16,12 @@ DataSetPlayer::DataSetPlayer(const std::string& playerName)
 }
 
 // ----------------------------------------------------------------------------
+void DataSetPlayer::appendDataPoint(const DataPoint& dataPoint)
+{
+    points_.push_back(dataPoint);
+}
+
+// ----------------------------------------------------------------------------
 void DataSetPlayer::appendPlayerStatesFromRecording(int player, Recording* recording)
 {
     if (recording->playerStateCount(player) == 0)

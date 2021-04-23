@@ -1,5 +1,7 @@
 #pragma once
 
+#include "uh/Reference.hpp"
+#include "uh/DataSetFilter.hpp"  // required by MOC
 #include <QWidget>
 
 class QToolButton;
@@ -8,8 +10,6 @@ class QParallelAnimationGroup;
 class QScrollArea;
 
 namespace uhapp {
-
-class DataSetFilter;
 
 /*!
  * @brief Collapsible widget. Code was copied from here and adapted:
@@ -30,19 +30,19 @@ class DataSetFilterWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit DataSetFilterWidget(DataSetFilter* filter, QWidget* parent=nullptr);
+    explicit DataSetFilterWidget(uh::DataSetFilter* filter, QWidget* parent=nullptr);
 
     void setTitle(const QString& title);
     QWidget* contentWidget();
 
-    DataSetFilter* filter() const;
+    uh::DataSetFilter* filter() const;
 
 signals:
-    void enableFilter(bool);
-    void invertFilter(bool);
-    void moveFilterUp();
-    void moveFilterDown();
-    void removeFilterRequested();
+    void enableFilter(DataSetFilterWidget*, bool);
+    void invertFilter(DataSetFilterWidget*, bool);
+    void moveFilterUp(DataSetFilterWidget*);
+    void moveFilterDown(DataSetFilterWidget*);
+    void removeFilterRequested(DataSetFilterWidget*);
 
 public slots:
     void setExpanded(bool expanded);
@@ -51,9 +51,10 @@ protected:
     void updateSize();
 
 private slots:
-    void onToolButtonClicked(bool checked);
+    void onToggleButtonClicked(bool checked);
 
 private:
+    uh::Reference<uh::DataSetFilter> filter_;
     QToolButton* toggleButton_;
     QCheckBox* enableCheckbox_;
     QCheckBox* notCheckbox_;

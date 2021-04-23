@@ -5,6 +5,14 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
+void DataSet::appendDataPoint(const std::string& playerName, const DataPoint& dataPoint)
+{
+    auto result = players_.emplace(playerName, DataSetPlayer(playerName));
+    DataSetPlayer& ds = result.first->second;
+    ds.appendDataPoint(dataPoint);
+}
+
+// ----------------------------------------------------------------------------
 void DataSet::appendRecording(Recording* recording)
 {
     for (int i = 0; i != recording->playerCount(); ++i)

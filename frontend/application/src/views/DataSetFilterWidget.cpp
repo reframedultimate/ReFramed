@@ -14,8 +14,9 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
+DataSetFilterWidget::DataSetFilterWidget(uh::DataSetFilter* filter, QWidget* parent)
     : QWidget(parent)
+    , filter_(filter)
     , toggleButton_(new QToolButton)
     , enableCheckbox_(new QCheckBox)
     , notCheckbox_(new QCheckBox("Not"))
@@ -99,12 +100,12 @@ DataSetFilterWidget::DataSetFilterWidget(DataSetFilter* filter, QWidget* parent)
      */
     collapsedHeight_ = sizeHint().height();
 
-    connect(toggleButton_, SIGNAL(clicked(bool)), this, SLOT(onToolButtonClicked(bool)));
-    connect(enableCheckbox_, SIGNAL(toggled(bool)), SIGNAL(enableFilter(bool)));
-    connect(notCheckbox_, SIGNAL(toggled(bool)), SIGNAL(invertFilter(bool)));
-    connect(moveUpButton, SIGNAL(released()), SIGNAL(moveFilterUp()));
-    connect(moveDownButton, SIGNAL(released()), SIGNAL(moveFilterDown()));
-    connect(closeButton, SIGNAL(released()), SIGNAL(removeFilterRequested()));
+    connect(toggleButton_, &QToolButton::clicked, this, &DataSetFilterWidget::onToggleButtonClicked);
+    connect(enableCheckbox_, &QCheckBox::toggled, [this](bool checked){ emit enableFilter(this, checked); });
+    connect(notCheckbox_, &QCheckBox::toggled, [this](bool checked){ emit invertFilter(this, checked); });
+    connect(moveUpButton, &QToolButton::released, [this](){ emit moveFilterUp(this); });
+    connect(moveDownButton, &QToolButton::released, [this](){ emit moveFilterDown(this); });
+    connect(closeButton, &QToolButton::released, [this](){ emit removeFilterRequested(this); });
 }
 
 // ----------------------------------------------------------------------------
@@ -120,16 +121,16 @@ QWidget* DataSetFilterWidget::contentWidget()
 }
 
 // ----------------------------------------------------------------------------
-DataSetFilter* DataSetFilterWidget::filter() const
+uh::DataSetFilter* DataSetFilterWidget::filter() const
 {
-    return nullptr;
+    return filter_;
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget::setExpanded(bool expanded)
 {
     toggleButton_->setChecked(expanded);
-    onToolButtonClicked(expanded);
+    onToggleButtonClicked(expanded);
 }
 
 // ----------------------------------------------------------------------------
@@ -163,7 +164,7 @@ void DataSetFilterWidget::updateSize()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterWidget::onToolButtonClicked(bool checked)
+void DataSetFilterWidget::onToggleButtonClicked(bool checked)
 {
     toggleButton_->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
     toggleAnimation_->setDirection(checked ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);

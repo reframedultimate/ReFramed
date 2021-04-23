@@ -62,7 +62,7 @@ public:
      * \brief Applies every filter in the chain in succession to the input
      * data set.
      */
-    void apply(DataSet* ds);
+    DataSet* apply(const DataSet* ds);
 
 private:
     DataSetFilterChainData* d;

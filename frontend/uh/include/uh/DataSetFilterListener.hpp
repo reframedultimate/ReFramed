@@ -2,11 +2,12 @@
 
 namespace uh {
 
+class DataSetFilter;
+
 class DataSetFilterListener
 {
 public:
-    virtual void onDataSetFilterEnabledChanged(bool enabled) = 0;
-    virtual void onDataSetFilterInvertedChanged(bool inverted) = 0;
+    virtual void onDataSetFilterDirtied(DataSetFilter* filter) = 0;
 };
 
 }

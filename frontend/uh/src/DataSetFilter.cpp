@@ -7,7 +7,7 @@ namespace uh {
 DataSetFilter& DataSetFilter::setEnabled(bool enable)
 {
     enabled_ = enable;
-    dispatcher.dispatch(&DataSetFilterListener::onDataSetFilterEnabledChanged, enable);
+    notifyDirty();
     return *this;
 }
 
@@ -15,8 +15,14 @@ DataSetFilter& DataSetFilter::setEnabled(bool enable)
 DataSetFilter& DataSetFilter::setInverted(bool invert)
 {
     inverted_ = invert;
-    dispatcher.dispatch(&DataSetFilterListener::onDataSetFilterInvertedChanged, invert);
+    notifyDirty();
     return *this;
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilter::notifyDirty()
+{
+    dispatcher.dispatch(&DataSetFilterListener::onDataSetFilterDirtied, this);
 }
 
 }

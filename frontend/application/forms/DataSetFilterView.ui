@@ -13,8 +13,8 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -46,27 +46,7 @@
       <attribute name="title">
        <string>2 Filter Recordings</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_2" columnstretch="4,2">
-       <item row="1" column="0">
-        <widget class="QScrollArea" name="scrollArea_filters">
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents_filters">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>871</width>
-            <height>874</height>
-           </rect>
-          </property>
-         </widget>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QListWidget" name="listWidget_outputGroup"/>
-       </item>
+      <layout class="QGridLayout" name="gridLayout_3" columnstretch="4,2">
        <item row="0" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
@@ -144,6 +124,44 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="1" column="1">
+        <widget class="QListWidget" name="listWidget_outputGroup"/>
+       </item>
+       <item row="2" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_outputInfo">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QProgressBar" name="progressBar">
+           <property name="value">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0" rowspan="2">
+        <widget class="QScrollArea" name="scrollArea_filters">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_filters">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>871</width>
+            <height>874</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
        </item>
       </layout>
      </widget>

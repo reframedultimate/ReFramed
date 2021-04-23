@@ -4,6 +4,7 @@
 #include "application/listeners/RecordingManagerListener.hpp"
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
+#include "uh/DataSetFilterListener.hpp"
 #include "uh/Reference.hpp"
 #include <unordered_map>
 
@@ -29,6 +30,7 @@ class DataSetFilterView : public QWidget
                         , public RecordingManagerListener
                         , public RecordingGroupListener
                         , public DataSetBackgroundLoaderListener
+                        , public uh::DataSetFilterListener
 {
     Q_OBJECT
 
@@ -42,6 +44,12 @@ protected:
 private slots:
     void onToolButtonAddFilterTriggered(QAction* action);
     void onInputGroupItemChanged(QListWidgetItem* item);
+    void onFilterEnabled(DataSetFilterWidget* filter, bool enable);
+    void onFilterInverted(DataSetFilterWidget* filter, bool inverted);
+    void onFilterMoveUp(DataSetFilterWidget* filter);
+    void onFilterMoveDown(DataSetFilterWidget* filter);
+    void onRemoveFilterRequested(DataSetFilterWidget* filter);
+    void reprocessInputDataSet();
 
 private:
     void addNewFilterWidget(DataSetFilterWidget* widget);
@@ -49,6 +57,8 @@ private:
     void addGroupToInputRecordingsList(RecordingGroup* group);
     void removeGroupFromInputRecordingsList(RecordingGroup* group);
     void removeGroupFromInputDataSet(RecordingGroup* group);
+    void moveFilterWidgetInLayout(DataSetFilterWidget* widget, int layoutIndex);
+    void dirtyDataSetFilters();
 
 private:
     void onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
@@ -59,6 +69,8 @@ private:
     void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
 
     void onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet) override;
+
+    void onDataSetFilterDirtied(uh::DataSetFilter* filter);
 
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override { (void)path; }
     void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
@@ -77,6 +89,7 @@ private:
     std::unique_ptr<uh::DataSet> inputDataSetMerged_;
     uh::Reference<uh::DataSet> outputDataSet_;
     std::unordered_map<const RecordingGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
+    bool dataSetFiltersDirty_ = true;
 };
 
 }
