@@ -176,9 +176,7 @@ void RecordingGroupView::onRecordingGroupFileRemoved(RecordingGroup* group, cons
 {
     (void)group;
     for (const auto& item : ui_->listWidget_recordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
-    {
-        ui_->listWidget_recordings->removeItemWidget(item);
-    }
+        delete item;
 }
 
 }

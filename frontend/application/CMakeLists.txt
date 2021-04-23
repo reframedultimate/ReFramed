@@ -8,6 +8,7 @@ find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/models/ActiveRecordingManager.hpp"
+    "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/plot/DeltaPlotPicker.hpp"
     "include/application/plot/Panner.hpp"
@@ -60,6 +61,7 @@ add_executable (ultimate-hindsight WIN32
     "src/models/ActiveRecordingManager.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
+    "src/models/DataSetBackgroundLoader.cpp"
     "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
     "src/models/RecordingGroup.cpp"
