@@ -8,6 +8,7 @@
 #include "application/views/DataSetFilterWidget_Stage.hpp"
 #include "application/models/RecordingManager.hpp"
 #include "application/models/RecordingGroup.hpp"
+#include "application/models/DataSetBackgroundLoader.hpp"
 #include "uh/DataSetFilterChain.hpp"
 #include "uh/DataSet.hpp"
 #include "uh/PlayerState.hpp"
@@ -33,6 +34,7 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
     , ui_(new Ui::DataSetFilterView)
     , filterWidgetsLayout_(new QVBoxLayout)
     , recordingManager_(recordingManager)
+    , dataSetBackgroundLoader_(new DataSetBackgroundLoader(this))
     , dataSetFilterChain_(new uh::DataSetFilterChain)
 {
     ui_->setupUi(this);
@@ -62,11 +64,13 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
             this, &DataSetFilterView::onInputGroupItemChanged);
 
     recordingManager_->dispatcher.addListener(this);
+    dataSetBackgroundLoader_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 DataSetFilterView::~DataSetFilterView()
 {
+    dataSetBackgroundLoader_->dispatcher.removeListener(this);
     recordingManager_->dispatcher.removeListener(this);
     delete ui_;
 }
@@ -102,11 +106,12 @@ void DataSetFilterView::onInputGroupItemChanged(QListWidgetItem* item)
 
     if (item->checkState() == Qt::Checked)
     {
-        addGroupToInputDataSet(group);
+        dataSetBackgroundLoader_->loadGroup(group);
         addGroupToInputRecordingsList(group);
     }
     else
     {
+        dataSetBackgroundLoader_->cancelGroup(group);
         removeGroupFromInputDataSet(group);
         removeGroupFromInputRecordingsList(group);
     }
@@ -145,17 +150,6 @@ void DataSetFilterView::removeGroupFromInputRecordingsList(RecordingGroup* group
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::addGroupToInputDataSet(RecordingGroup* group)
-{
-    for (const auto& fileInfo : group->absFilePathList())
-    {
-        uh::Reference<uh::Recording> recording = uh::SavedRecording::load(fileInfo.absoluteFilePath().toStdString());
-        if (recording.isNull())
-            continue;
-    }
-}
-
-// ----------------------------------------------------------------------------
 void DataSetFilterView::removeGroupFromInputDataSet(RecordingGroup* group)
 {
 
@@ -180,8 +174,7 @@ void DataSetFilterView::onRecordingGroupNameChanged(RecordingGroup* group, const
 void DataSetFilterView::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    QListWidgetItem* item = new QListWidgetItem(absPathToFile.completeBaseName());
-    ui_->listWidget_inputRecordings->addItem(item);
+    ui_->listWidget_inputRecordings->addItem(absPathToFile.completeBaseName());
     ui_->listWidget_inputRecordings->sortItems(Qt::DescendingOrder);
 }
 
@@ -189,15 +182,8 @@ void DataSetFilterView::onRecordingGroupFileAdded(RecordingGroup* group, const Q
 void DataSetFilterView::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)
-    {
-        QListWidgetItem* item = ui_->listWidget_inputGroups->item(i);
-        if (item->text() == absPathToFile.completeBaseName())
-        {
-            ui_->listWidget_inputRecordings->removeItemWidget(item);
-            break;
-        }
-    }
+    for (const auto& item : ui_->listWidget_inputRecordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
+        delete item;
 }
 
 // ----------------------------------------------------------------------------
@@ -225,6 +211,12 @@ void DataSetFilterView::onRecordingManagerGroupRemoved(RecordingGroup* group)
             break;
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet)
+{
+    puts("Data set loaded");
 }
 
 }
