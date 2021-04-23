@@ -112,14 +112,14 @@ static std::string decompressQtZFile(const std::string& fileName)
     } while (ret != Z_STREAM_END);
     assert(ret == Z_STREAM_END);
 
-    deflateEnd(&s);
+    inflateEnd(&s);
     delete[] buf;
     fclose(fp);
 
     return out;
 
 read_error :
-    deflateEnd(&s);
+    inflateEnd(&s);
 init_stream_failed :
     delete[] buf;
     fclose(fp);
