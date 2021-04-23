@@ -4,7 +4,6 @@ project ("uh-tests"
 	
 add_executable (uh-tests
     "src/test_Reference.cpp"
-    "src/test_DataSet.cpp"
 	"src/main.cpp")
 target_link_libraries (uh-tests
 	PRIVATE uh
