@@ -16,7 +16,6 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
     for (const auto& playerName : dataSet->playerNames())
-    {
         for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
         {
             const Recording* rec = dp.recording();
@@ -27,7 +26,25 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
             if (lengthInRange && formatType && formatName)
                 out->appendDataPoint(playerName, dp);
         }
-    }
+
+    return out;
+}
+
+// ----------------------------------------------------------------------------
+DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
+{
+    DataSet* out = new DataSet;
+    for (const auto& playerName : dataSet->playerNames())
+        for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
+        {
+            const Recording* rec = dp.recording();
+            uint64_t length = rec->gameLengthMs();
+            bool lengthInRange = (length >= minLength_ && length <= maxLength_);
+            bool formatType = (anySetFormat_ ? true : rec->format().type() == format_.type());
+            bool formatName = (rec->format().type() == SetFormat::OTHER ? rec->format().description() == format_.description() : true);
+            if (!(lengthInRange && formatType && formatName))
+                out->appendDataPoint(playerName, dp);
+        }
 
     return out;
 }

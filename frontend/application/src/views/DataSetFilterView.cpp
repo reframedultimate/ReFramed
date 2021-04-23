@@ -145,7 +145,7 @@ void DataSetFilterView::onFilterInverted(DataSetFilterWidget* widget, bool inver
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterMoveUp(DataSetFilterWidget* widget)
 {
-    int newIndex = dataSetFilterChain_->moveLater(widget->filter());
+    int newIndex = dataSetFilterChain_->moveEarlier(widget->filter());
     moveFilterWidgetInLayout(widget, newIndex);
 
     dirtyDataSetFilters();
@@ -154,7 +154,7 @@ void DataSetFilterView::onFilterMoveUp(DataSetFilterWidget* widget)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterMoveDown(DataSetFilterWidget* widget)
 {
-    int newIndex = dataSetFilterChain_->moveEarlier(widget->filter());
+    int newIndex = dataSetFilterChain_->moveLater(widget->filter());
     moveFilterWidgetInLayout(widget, newIndex);
 
     dirtyDataSetFilters();

@@ -13,6 +13,7 @@ public:
     DataSetFilter_Game();
 
     DataSet* apply(const DataSet* dataSet) override;
+    DataSet* applyInverse(const DataSet* dataSet) override;
 
     void setSetFormat(const SetFormat& format);
     void setAnySetFormat(bool filter);

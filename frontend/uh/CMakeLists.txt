@@ -60,6 +60,7 @@ add_library (uh SHARED
     "src/DataSetFilter.cpp"
     "src/DataSetFilter_Date.cpp"
     "src/DataSetFilter_Game.cpp"
+    "src/DataSetFilter_Matchup.cpp"
     "src/DataSetFilterChain.cpp"
 	"src/DecisionGraph.cpp"
 	"src/FighterIDMapping.cpp"
