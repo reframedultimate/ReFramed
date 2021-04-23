@@ -1,3 +1,4 @@
+#include "application/Util.hpp"
 #include "application/listeners/ActiveRecordingManagerListener.hpp"
 #include "application/models/ActiveRecordingManager.hpp"
 #include "application/models/RecordingManager.hpp"
@@ -210,31 +211,6 @@ void ActiveRecordingManager::onProtocolRecordingEnded(uh::ActiveRecording* recor
     recording->dispatcher.removeListener(this);
     pastRecordings_.push_back(recording);
     activeRecording_.reset();
-}
-
-// ----------------------------------------------------------------------------
-QString ActiveRecordingManager::composeFileName(const uh::ActiveRecording* recording) const
-{
-    QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString("yyyy-MM-dd");
-    QStringList playerList;
-    for (int i = 0; i < recording->playerCount(); ++i)
-    {
-        const std::string* fighterName = recording->mappingInfo().fighterID.map(
-                    recording->playerFighterID(i));
-        if (fighterName)
-            playerList.append(QString::fromStdString(recording->playerName(i) + " (" + *fighterName + ")"));
-        else
-            playerList.append(QString::fromStdString(recording->playerName(i)));
-    }
-    QString players = playerList.join(" vs ");
-    QString formatDesc = QString::fromStdString(recording->format().description());
-    QString setNumber = QString::number(recording->setNumber());
-    QString gameNumber = QString::number(recording->gameNumber());
-
-    if (recording->setNumber() == 1)
-        return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".uhr";
-
-    return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".uhr";
 }
 
 // ----------------------------------------------------------------------------

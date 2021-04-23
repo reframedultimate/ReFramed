@@ -2,6 +2,7 @@
 #include "uh/ActiveRecording.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/time.h"
+#include <cassert>
 
 namespace uh {
 
@@ -22,6 +23,7 @@ ActiveRecording::ActiveRecording(MappingInfo&& mapping,
 // ----------------------------------------------------------------------------
 void ActiveRecording::setPlayerName(int index, const std::string& name)
 {
+    assert(name.length() > 0);
     playerNames_[index] = name;
     dispatcher.dispatch(&RecordingListener::onActiveRecordingPlayerNameChanged, index, name);
 }

@@ -1,4 +1,5 @@
 #include "application/ui_DataSetFilterView.h"
+#include "application/Util.hpp"
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/DataSetFilterWidget_Date.hpp"
 #include "application/views/DataSetFilterWidget_Game.hpp"
@@ -18,6 +19,8 @@
 #include <QMenu>
 #include <QListWidgetItem>
 
+#include <unordered_set>
+
 #define FILTER_LIST \
     X(Date) \
     X(Game) \
@@ -36,6 +39,8 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
     , recordingManager_(recordingManager)
     , dataSetBackgroundLoader_(new DataSetBackgroundLoader(this))
     , dataSetFilterChain_(new uh::DataSetFilterChain)
+    , inputDataSetMerged_(new uh::DataSet)
+    , outputDataSet_(new uh::DataSet)
 {
     ui_->setupUi(this);
 
@@ -152,7 +157,23 @@ void DataSetFilterView::removeGroupFromInputRecordingsList(RecordingGroup* group
 // ----------------------------------------------------------------------------
 void DataSetFilterView::removeGroupFromInputDataSet(RecordingGroup* group)
 {
+    inputDataSets_.erase(group);
 
+    inputDataSetMerged_->clear();
+    for (const auto& [group, dataSet] : inputDataSets_)
+        inputDataSetMerged_->mergeDataFrom(dataSet);
+
+    outputDataSet_->replaceDataWith(inputDataSetMerged_.get());
+    dataSetFilterChain_->apply(outputDataSet_);
+
+    std::unordered_set<uh::Recording*> uniqueRecordings;
+    for (const auto& playerName : outputDataSet_->playerNames())
+        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
+            uniqueRecordings.emplace(dataPoint.recording());
+
+    ui_->listWidget_outputGroup->clear();
+    for (const auto& recording : uniqueRecordings)
+        ui_->listWidget_outputGroup->addItem(composeFileName(recording));
 }
 
 // ----------------------------------------------------------------------------
@@ -216,7 +237,21 @@ void DataSetFilterView::onRecordingManagerGroupRemoved(RecordingGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet)
 {
-    puts("Data set loaded");
+    inputDataSets_.emplace(group, dataSet);
+
+    inputDataSetMerged_->mergeDataFrom(dataSet);
+
+    outputDataSet_->replaceDataWith(inputDataSetMerged_.get());
+    dataSetFilterChain_->apply(outputDataSet_);
+
+    std::unordered_set<uh::Recording*> uniqueRecordings;
+    for (const auto& playerName : outputDataSet_->playerNames())
+        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
+            uniqueRecordings.emplace(dataPoint.recording());
+
+    ui_->listWidget_outputGroup->clear();
+    for (const auto& recording : uniqueRecordings)
+        ui_->listWidget_outputGroup->addItem(composeFileName(recording));
 }
 
 }

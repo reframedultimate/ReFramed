@@ -15,6 +15,9 @@ public:
     void removePlayerStatesForRecording(int player, Recording* recording);
     void clear();
 
+    void mergeDataFrom(const DataSetPlayer& other);
+    void replaceDataWith(const DataSetPlayer& other);
+
     const std::string& playerName() const { return playerName_; }
     const std::vector<DataPoint>& dataPoints() const { return points_; }
 

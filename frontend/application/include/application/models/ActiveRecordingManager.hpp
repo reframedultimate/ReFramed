@@ -57,7 +57,6 @@ private slots:
 private:
     void findUniqueGameAndSetNumbers(uh::ActiveRecording* recording);
     bool shouldStartNewSet(const uh::ActiveRecording* recording);
-    QString composeFileName(const uh::ActiveRecording* recording) const;
 
 private:
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
