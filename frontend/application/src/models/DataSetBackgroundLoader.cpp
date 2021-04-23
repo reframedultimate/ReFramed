@@ -40,11 +40,13 @@ private:
             mutex_->lock();
 
             if (recording)
+            {
                 out_->enqueue({recording, info.group});
 #ifndef NDEBUG
-            for (int i = 0; i < recording->playerCount(); ++i)
-                assert(recording->playerStateCount(i) > 0);
+                for (int i = 0; i < recording->playerCount(); ++i)
+                    assert(recording->playerStateCount(i) > 0);
 #endif
+            }
         }
 
         // The reading thread (which dequeues our output queue) will want to know
