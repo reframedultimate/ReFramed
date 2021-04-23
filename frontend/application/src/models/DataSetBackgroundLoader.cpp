@@ -41,6 +41,10 @@ private:
 
             if (recording)
                 out_->enqueue({recording, info.group});
+#ifndef NDEBUG
+            for (int i = 0; i < recording->playerCount(); ++i)
+                assert(recording->playerStateCount(i) > 0);
+#endif
         }
 
         // The reading thread (which dequeues our output queue) will want to know
@@ -147,6 +151,21 @@ void DataSetBackgroundLoader::onDataSetLoaded(RecordingGroup* group)
             dataSets_.erase(it);
         }
     mutex_.unlock();
+
+    // Some sanity checks. There was a case where recordings had 0 player states
+#ifndef NDEBUG
+    if (ds.notNull())
+    {
+        for (const auto& playerName : ds->playerNames())
+        {
+            const uh::DataSetPlayer* dsp = ds->playerDataSet(playerName);
+            assert(dsp->dataPoints().size() > 0);
+            for (const auto& dp : dsp->dataPoints())
+                for (int i = 0; i < dp.recording()->playerCount(); ++i)
+                    assert(dp.recording()->playerStateCount(i) > 0);
+        }
+    }
+#endif
 
     if (ds.notNull())
         dispatcher.dispatch(&DataSetBackgroundLoaderListener::onDataSetBackgroundLoaderDataSetLoaded, group, ds);

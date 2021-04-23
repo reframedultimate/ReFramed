@@ -215,6 +215,9 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
             return recording;
     }
 
+    for (int i = 0; i != recording->playerCount(); ++i)
+        assert(recording->playerStateCount(i) > 0);
+
     return nullptr;
 }
 

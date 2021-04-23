@@ -4,6 +4,8 @@
 #include "application/listeners/RecordingManagerListener.hpp"
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
+#include "uh/Reference.hpp"
+#include <unordered_map>
 
 class QVBoxLayout;
 class QListWidgetItem;
@@ -72,7 +74,9 @@ private:
     RecordingManager* recordingManager_;
     DataSetBackgroundLoader* dataSetBackgroundLoader_;
     std::unique_ptr<uh::DataSetFilterChain> dataSetFilterChain_;
-    std::unique_ptr<uh::DataSet> inputDataSet_;
+    std::unique_ptr<uh::DataSet> inputDataSetMerged_;
+    uh::Reference<uh::DataSet> outputDataSet_;
+    std::unordered_map<const RecordingGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
 };
 
 }

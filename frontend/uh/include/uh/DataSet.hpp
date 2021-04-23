@@ -20,8 +20,11 @@ class UH_PUBLIC_API DataSet : public RefCounted
 public:
     void appendRecording(Recording* recording);
     void removeRecording(Recording* recording);
+    void mergeDataFrom(const DataSet* other);
+    void replaceDataWith(const DataSet* other);
+    void clear();
 
-    const DataSetPlayer* playerDataSet(const std::string& name);
+    const DataSetPlayer* playerDataSet(const std::string& name) const;
     std::vector<std::string> playerNames() const;
 
 private:

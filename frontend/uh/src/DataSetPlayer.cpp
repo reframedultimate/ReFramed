@@ -25,7 +25,7 @@ void DataSetPlayer::appendPlayerStatesFromRecording(int player, Recording* recor
     for (int i = 0; i != recording->playerStateCount(player); ++i)
         newPoints.emplace_back(recording->playerState(player, i), recording);
 
-    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), newPoints[0], [](const DataPoint& lhs, const DataPoint&rhs) -> bool {
+    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), newPoints[0], [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
         return lhs.state().timeStampMs() < rhs.state().timeStampMs();
     });
 
@@ -65,6 +65,25 @@ void DataSetPlayer::removePlayerStatesForRecording(int player, Recording* record
 void DataSetPlayer::clear()
 {
     points_.clear();
+}
+
+// ----------------------------------------------------------------------------
+void DataSetPlayer::mergeDataFrom(const DataSetPlayer& other)
+{
+    if (other.points_.size() == 0)
+        return;
+
+    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), other.points_[0], [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    });
+
+    points_.insert(insertIt, other.points_.begin(), other.points_.end());
+}
+
+// ----------------------------------------------------------------------------
+void DataSetPlayer::replaceDataWith(const DataSetPlayer& other)
+{
+    points_ = other.points_;
 }
 
 }

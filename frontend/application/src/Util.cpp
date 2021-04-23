@@ -1,10 +1,13 @@
 #include "application/Util.hpp"
+#include "uh/Recording.hpp"
+#include "uh/PlayerState.hpp"
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
 #include <QStackedWidget>
 #include <QDir>
 #include <QFileInfo>
+#include <QDateTime>
 #include <cstring>
 
 // ----------------------------------------------------------------------------
@@ -41,6 +44,31 @@ void clearStackedWidget(QStackedWidget* sw)
         sw->removeWidget(widget);
         widget->deleteLater();
     }
+}
+
+// ----------------------------------------------------------------------------
+QString composeFileName(const uh::Recording* recording)
+{
+    QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString("yyyy-MM-dd");
+    QStringList playerList;
+    for (int i = 0; i < recording->playerCount(); ++i)
+    {
+        const std::string* fighterName = recording->mappingInfo().fighterID.map(
+                    recording->playerFighterID(i));
+        if (fighterName)
+            playerList.append(QString::fromStdString(recording->playerName(i) + " (" + *fighterName + ")"));
+        else
+            playerList.append(QString::fromStdString(recording->playerName(i)));
+    }
+    QString players = playerList.join(" vs ");
+    QString formatDesc = QString::fromStdString(recording->format().description());
+    QString setNumber = QString::number(recording->setNumber());
+    QString gameNumber = QString::number(recording->gameNumber());
+
+    if (recording->setNumber() == 1)
+        return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".uhr";
+
+    return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".uhr";
 }
 
 }

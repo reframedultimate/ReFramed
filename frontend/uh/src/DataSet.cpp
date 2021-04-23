@@ -33,7 +33,31 @@ void DataSet::removeRecording(Recording* recording)
 }
 
 // ----------------------------------------------------------------------------
-const DataSetPlayer* DataSet::playerDataSet(const std::string& name)
+void DataSet::mergeDataFrom(const DataSet* other)
+{
+    for (const auto& playerName : other->playerNames())
+    {
+        auto result = players_.emplace(playerName, DataSetPlayer(playerName));
+        DataSetPlayer& ds = result.first->second;
+        ds.mergeDataFrom(*other->playerDataSet(playerName));
+    }
+}
+
+// ----------------------------------------------------------------------------
+void DataSet::replaceDataWith(const DataSet* other)
+{
+    clear();
+    mergeDataFrom(other);
+}
+
+// ----------------------------------------------------------------------------
+void DataSet::clear()
+{
+    players_.clear();
+}
+
+// ----------------------------------------------------------------------------
+const DataSetPlayer* DataSet::playerDataSet(const std::string& name) const
 {
     auto it = players_.find(name);
     if (it != players_.end())
@@ -44,7 +68,8 @@ const DataSetPlayer* DataSet::playerDataSet(const std::string& name)
 // ----------------------------------------------------------------------------
 std::vector<std::string> DataSet::playerNames() const
 {
-    std::vector<std::string> names(players_.size());
+    std::vector<std::string> names;
+    names.reserve(players_.size());
     for (const auto& [name, dp] : players_)
         names.push_back(name);
     return names;

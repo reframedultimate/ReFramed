@@ -2,11 +2,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <QString>
 
 class QDir;
 class QFileInfo;
 class QLayout;
 class QStackedWidget;
+
+namespace uh {
+    class Recording;
+}
 
 using qhash_result_t = size_t;
 qhash_result_t qHash(const QDir& c, qhash_result_t seed=0) noexcept;
@@ -24,9 +29,6 @@ void clearLayout(QLayout* layout);
  */
 void clearStackedWidget(QStackedWidget* sw);
 
-uint32_t crc32(const void* buf, size_t len, uint32_t crc=0);
-uint32_t crc32(const char* str, uint32_t crc=0);
-uint64_t hash40(const void* buf, size_t len);
-uint64_t hash40(const char* str);
+QString composeFileName(const uh::Recording* recording);
 
 }
