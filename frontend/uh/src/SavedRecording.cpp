@@ -351,6 +351,8 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     }
 
     recording->winner_ = recording->findWinner();
+    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
+    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
@@ -520,6 +522,8 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     }
 
     recording->winner_ = recording->findWinner();
+    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
+    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
@@ -713,6 +717,8 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     }
 
     recording->winner_ = recording->findWinner();
+    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
+    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
@@ -926,6 +932,8 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     }
 
     recording->winner_ = recording->findWinner();
+    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
+    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }

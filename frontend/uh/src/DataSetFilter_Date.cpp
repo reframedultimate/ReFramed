@@ -8,13 +8,13 @@ namespace uh {
 DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    for (const auto& playerName : dataSet->playerNames())
-        for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
-        {
-            const PlayerState& state = dp.state();
-            if (state.timeStampMs() >= startTime_ && state.timeStampMs() <= endTime_)
-                out->appendDataPoint(playerName, dp);
-        }
+    out->reserve(dataSet->dataPointCount());
+    for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
+    {
+        const PlayerState& state = p->state();
+        if (state.timeStampMs() >= startTime_ && state.timeStampMs() <= endTime_)
+            out->addDataPointToEnd(*p);
+    }
 
     return out;
 }
@@ -23,13 +23,13 @@ DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
 DataSet* DataSetFilter_Date::applyInverse(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    for (const auto& playerName : dataSet->playerNames())
-        for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
-        {
-            const PlayerState& state = dp.state();
-            if (state.timeStampMs() < startTime_ || state.timeStampMs() > endTime_)
-                out->appendDataPoint(playerName, dp);
-        }
+    out->reserve(dataSet->dataPointCount());
+    for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
+    {
+        const PlayerState& state = p->state();
+        if (state.timeStampMs() < startTime_ || state.timeStampMs() > endTime_)
+            out->addDataPointToEnd(*p);
+    }
 
     return out;
 }

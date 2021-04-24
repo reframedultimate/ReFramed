@@ -1,54 +1,71 @@
 #include "uh/DataSet.hpp"
-#include "uh/DataSetPlayer.hpp"
 #include "uh/Recording.hpp"
+#include <algorithm>
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-void DataSet::appendDataPoint(const std::string& playerName, const DataPoint& dataPoint)
+void DataSet::reserve(int count)
 {
-    auto result = players_.emplace(playerName, DataSetPlayer(playerName));
-    DataSetPlayer& ds = result.first->second;
-    ds.appendDataPoint(dataPoint);
+    points_.reserve(count);
 }
 
 // ----------------------------------------------------------------------------
-void DataSet::appendRecording(Recording* recording)
+/*
+void DataSet::addDataPoint(const DataPoint& dataPoint)
 {
-    for (int i = 0; i != recording->playerCount(); ++i)
-    {
-        const std::string& name = recording->playerName(i);
-        auto result = players_.emplace(name, DataSetPlayer(name));
-        DataSetPlayer& ds = result.first->second;
-        ds.appendPlayerStatesFromRecording(i, recording);
-    }
+    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), dataPoint, [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    });
+
+    points_.insert(insertIt, dataPoint);
+}*/
+
+// ----------------------------------------------------------------------------
+void DataSet::addDataPointToEnd(const DataPoint& dataPoint)
+{
+#ifndef NDEBUG
+    if (points_.size() > 0)
+        assert(points_.back().state().timeStampMs() <= dataPoint.state().timeStampMs());
+#endif
+    points_.push_back(dataPoint);
 }
 
 // ----------------------------------------------------------------------------
-void DataSet::removeRecording(Recording* recording)
+void DataSet::addRecording(Recording* recording)
 {
-    for (int i = 0; i != recording->playerCount(); ++i)
-    {
-        auto it = players_.find(recording->playerName(i));
-        if (it == players_.end())
-            continue;
+    int dataPointCount = 0;
+    for (int p = 0; p != recording->playerCount(); ++p)
+        dataPointCount += recording->playerStateCount(p);
 
-        DataSetPlayer& ds = it->second;;
-        ds.removePlayerStatesForRecording(i, recording);
-        if (ds.dataPoints().size() == 0)
-            players_.erase(it);
-    }
+    std::vector<DataPoint> newPoints;
+    newPoints.reserve(dataPointCount);
+    for (int p = 0; p != recording->playerCount(); ++p)
+        for (int i = 0; i != recording->playerStateCount(p); ++i)
+            newPoints.emplace_back(recording->playerStateAt(p, i), recording, p);
+
+    const int insertOffset = std::lower_bound(points_.begin(), points_.end(), DataPoint(recording->firstReceivedState(), recording, 0), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    }) - points_.begin();
+
+    points_.insert(points_.begin() + insertOffset, std::make_move_iterator(newPoints.begin()), std::make_move_iterator(newPoints.end()));
+
+    std::sort(points_.begin() + insertOffset, points_.end(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    });
 }
 
 // ----------------------------------------------------------------------------
 void DataSet::mergeDataFrom(const DataSet* other)
 {
-    for (const auto& playerName : other->playerNames())
-    {
-        auto result = players_.emplace(playerName, DataSetPlayer(playerName));
-        DataSetPlayer& ds = result.first->second;
-        ds.mergeDataFrom(*other->playerDataSet(playerName));
-    }
+    if (other->dataPointCount() == 0)
+        return;
+
+    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), *other->dataPointsBegin(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    });
+
+    points_.insert(insertIt, other->dataPointsBegin(), other->dataPointsEnd());
 }
 
 // ----------------------------------------------------------------------------
@@ -61,26 +78,7 @@ void DataSet::replaceDataWith(const DataSet* other)
 // ----------------------------------------------------------------------------
 void DataSet::clear()
 {
-    players_.clear();
-}
-
-// ----------------------------------------------------------------------------
-const DataSetPlayer* DataSet::playerDataSet(const std::string& name) const
-{
-    auto it = players_.find(name);
-    if (it != players_.end())
-        return &it->second;
-    return nullptr;
-}
-
-// ----------------------------------------------------------------------------
-std::vector<std::string> DataSet::playerNames() const
-{
-    std::vector<std::string> names;
-    names.reserve(players_.size());
-    for (const auto& [name, dp] : players_)
-        names.push_back(name);
-    return names;
+    points_.clear();
 }
 
 }

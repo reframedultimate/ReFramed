@@ -9,10 +9,6 @@ namespace uh {
 DataSet* DataSetFilter_Player::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    for (const auto& playerName : dataSet->playerNames())
-        for (const auto& dp : dataSet->playerDataSet(playerName)->dataPoints())
-        {
-        }
 
     return out;
 }

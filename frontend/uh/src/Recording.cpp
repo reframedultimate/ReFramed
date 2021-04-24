@@ -229,6 +229,12 @@ uint64_t Recording::gameLengthMs() const
 }
 
 // ----------------------------------------------------------------------------
+const PlayerState* Recording::playerStatesEnd(int player) const
+{ 
+    return playerStates_[player].data() + playerStateCount(player);
+}
+
+// ----------------------------------------------------------------------------
 int Recording::findWinner() const
 {
     // The winner is the player with most stocks and least damage
@@ -238,8 +244,8 @@ int Recording::findWinner() const
         if (playerStateCount(i) == 0 || playerStateCount(winneridx) == 0)
             continue;
 
-        const auto& current = playerState(i, playerStateCount(i) - 1);
-        const auto& winner = playerState(winneridx, playerStateCount(winneridx) - 1);
+        const auto& current = playerStateAt(i, playerStateCount(i) - 1);
+        const auto& winner = playerStateAt(winneridx, playerStateCount(winneridx) - 1);
 
         if (current.stocks() > winner.stocks())
             winneridx = i;

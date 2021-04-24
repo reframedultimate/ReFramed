@@ -2,7 +2,7 @@
 
 #include "uh/config.hpp"
 #include "uh/RefCounted.hpp"
-#include "uh/DataSetPlayer.hpp"
+#include "uh/DataPoint.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -18,18 +18,20 @@ class Recording;
 class UH_PUBLIC_API DataSet : public RefCounted
 {
 public:
-    void appendDataPoint(const std::string& playerName, const DataPoint& dataPoint);
-    void appendRecording(Recording* recording);
-    void removeRecording(Recording* recording);
+    void reserve(int count);
+    //void addDataPoint(const DataPoint& dataPoint);
+    void addDataPointToEnd(const DataPoint& dataPoint);
+    void addRecording(Recording* recording);
     void mergeDataFrom(const DataSet* other);
     void replaceDataWith(const DataSet* other);
     void clear();
 
-    const DataSetPlayer* playerDataSet(const std::string& name) const;
-    std::vector<std::string> playerNames() const;
+    int dataPointCount() const { return static_cast<int>(points_.size()); }
+    const DataPoint* dataPointsBegin() const { return points_.data(); }
+    const DataPoint* dataPointsEnd() const { return points_.data() + dataPointCount(); }
 
 private:
-    std::unordered_map<std::string, DataSetPlayer> players_;
+    std::vector<DataPoint> points_;
 };
 
 }

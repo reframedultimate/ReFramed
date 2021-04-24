@@ -87,6 +87,7 @@ DataSetBackgroundLoader::~DataSetBackgroundLoader()
     mutex_.unlock();
 
     wait();
+    QThreadPool::globalInstance()->waitForDone();
 }
 
 // ----------------------------------------------------------------------------
@@ -157,16 +158,7 @@ void DataSetBackgroundLoader::onDataSetLoaded(RecordingGroup* group)
     // Some sanity checks. There was a case where recordings had 0 player states
 #ifndef NDEBUG
     if (ds.notNull())
-    {
-        for (const auto& playerName : ds->playerNames())
-        {
-            const uh::DataSetPlayer* dsp = ds->playerDataSet(playerName);
-            assert(dsp->dataPoints().size() > 0);
-            for (const auto& dp : dsp->dataPoints())
-                for (int i = 0; i < dp.recording()->playerCount(); ++i)
-                    assert(dp.recording()->playerStateCount(i) > 0);
-        }
-    }
+        assert(ds->dataPointCount() > 0);
 #endif
 
     if (ds.notNull())
@@ -189,7 +181,7 @@ void DataSetBackgroundLoader::run()
             InData data = in_.dequeue();
             auto it = dataSets_.find(data.group);
             if (it != dataSets_.end())
-                it->second->appendRecording(data.recording);
+                it->second->addRecording(data.recording);
         }
 
         if (in_.isEmpty() && activeWorkers_ == 0)

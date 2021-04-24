@@ -14,21 +14,23 @@ PlayerState::PlayerState(
         uint64_t motion,
         uint8_t hit_status,
         uint8_t stocks,
-        bool attack_connected,
-        bool facing_direction)
+        bool attackConnected,
+        bool facingDirection)
     : timeStampMs_(timeStampMs)
-    , motion_(motion)
     , frame_(frame)
     , posx_(posx)
     , posy_(posy)
     , damage_(damage)
     , hitstun_(hitstun)
     , shield_(shield)
-    , status_(status)
     , hitStatus_(hit_status)
     , stocks_(stocks)
-    , attackConnected_(attack_connected)
-    , facingDirection_(facing_direction)
+    , flags_(
+        (static_cast<uint8_t>(attackConnected) << 0)
+      | (static_cast<uint8_t>(facingDirection) << 1))
+    , motionL_(static_cast<uint32_t>(motion & 0xFFFFFFFF))
+    , motionH_(static_cast<uint8_t>((motion >> 32) & 0xFF))
+    , status_(status)
 {
 }
 

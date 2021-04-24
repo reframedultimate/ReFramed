@@ -317,7 +317,7 @@ void RecordingDataView::ensurePlayerDataTablesPopulated()
         int row = 0;
         for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
-            setPlayerDataTableRow(player, row, recording_->playerState(player, i));
+            setPlayerDataTableRow(player, row, recording_->playerStateAt(player, i));
             row++;
         }
         playerDataTables_[player]->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
