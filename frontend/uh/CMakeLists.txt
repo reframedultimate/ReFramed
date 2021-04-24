@@ -53,6 +53,7 @@ configure_file ("templates/Endian.hpp.in" "include/uh/Endian.hpp")
 
 add_library (uh SHARED
 	"src/ActiveRecording.cpp"
+    "src/AnalysisResult.cpp"
     "src/crc32.c"
 	"src/DataPoint.cpp"
 	"src/DataSet.cpp"
