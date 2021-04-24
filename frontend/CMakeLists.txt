@@ -36,6 +36,17 @@ set (ZLIB_PIC ON CACHE INTERNAL "")
 # Don't install thirdparty libs
 set (INSTALL_GTEST OFF CACHE INTERNAL "")
 
+set (COMPILER_FLAGS
+	CMAKE_CXX_FLAGS
+	CMAKE_CXX_FLAGS_DEBUG
+	CMAKE_CXX_FLAGS_RELEASE
+	CMAKE_C_FLAGS
+	CMAKE_C_FLAGS_DEBUG
+	CMAKE_C_FLAGS_RELEASE)
+foreach (FLAG ${COMPILER_FLAGS})
+	string (REPLACE "/MD" "/MT" ${FLAG} "${${FLAG}}")
+endforeach ()
+
 add_subdirectory ("thirdparty/qwt-6.1.6")
 add_subdirectory ("thirdparty/googletest-1.10.0")
 add_subdirectory ("thirdparty/json")

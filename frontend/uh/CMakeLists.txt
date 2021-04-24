@@ -81,7 +81,7 @@ add_library (uh SHARED
     "src/StreamBuffer.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
-	"src/platform/time.c")
+	"src/platform/time.cpp")
 target_include_directories (uh
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 	PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
@@ -106,6 +106,12 @@ if (UNIX)
     find_package (DL REQUIRED)
     target_link_libraries (uh PRIVATE DL::DL)
 endif ()
+
+if (WIN32)
+	target_link_libraries (uh
+		PRIVATE wsock32
+		PRIVATE ws2_32)
+endif()
 
 install (
 	TARGETS uh

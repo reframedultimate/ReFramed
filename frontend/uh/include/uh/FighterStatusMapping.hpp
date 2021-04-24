@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include <unordered_map>
 #include <string>
 #include <cstdint>
@@ -28,7 +29,7 @@ namespace uh {
  * mapping to user defined names, as this application lets the user give their
  * own names to states.
  */
-class FighterStatusMapping
+class UH_PUBLIC_API FighterStatusMapping
 {
 public:
     const std::string* statusToBaseEnumName(uint16_t status) const;

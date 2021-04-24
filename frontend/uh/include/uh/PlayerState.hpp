@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -9,7 +10,7 @@ namespace uh {
  * \brief Stores information about a single state of one player. This includes
  * the animation state, frame it occurred on, damage, and stock count.
  */
-class PlayerState
+class UH_PUBLIC_API PlayerState
 {
 public:
     PlayerState(
