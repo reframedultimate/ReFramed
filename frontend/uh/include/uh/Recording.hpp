@@ -1,5 +1,7 @@
 #pragma once
 
+#include "uh/config.hpp"
+#include "uh/Types.hpp"
 #include "uh/ListenerDispatcher.hpp"
 #include "uh/MappingInfo.hpp"
 #include "uh/SetFormat.hpp"
@@ -11,7 +13,7 @@ namespace uh {
 class PlayerState;
 class RecordingListener;
 
-class Recording : public RefCounted
+class UH_PUBLIC_API Recording : public RefCounted
 {
 public:
     Recording(MappingInfo&& mapping,
@@ -63,13 +65,13 @@ public:
      * \brief Gets the current game number. Starts at 1 and counts upwards as
      * sets progress.
      */
-    int gameNumber() const { return gameNumber_; }
+    GameNumber gameNumber() const { return gameNumber_; }
 
     /*!
      * \brief Gets the set number. Usually 1. This number is used to disambiguate
      * sets where the same two players play the same characters on the same day.
      */
-    int setNumber() const { return setNumber_; }
+    SetNumber setNumber() const { return setNumber_; }
 
     /*!
      * \brief Returns the player index of the player that won.
@@ -110,8 +112,8 @@ protected:
     std::vector<uint8_t> playerFighterIDs_;
     std::vector<std::vector<PlayerState>> playerStates_;
     SetFormat format_;
-    int gameNumber_ = 1;
-    int setNumber_ = 1;
+    GameNumber gameNumber_ = 1;
+    SetNumber setNumber_ = 1;
     int winner_ = 0;
     uint16_t stageID_;
 };

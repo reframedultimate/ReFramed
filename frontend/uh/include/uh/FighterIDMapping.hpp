@@ -1,11 +1,12 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include <string>
 #include <unordered_map>
 
 namespace uh {
 
-class FighterIDMapping
+class UH_PUBLIC_API FighterIDMapping
 {
 public:
     const std::string* map(uint8_t fighterID) const;

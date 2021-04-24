@@ -4,6 +4,7 @@
 #include "application/listeners/ActiveRecordingManagerListener.hpp"
 #include <QMainWindow>
 #include <QDir>
+#include <memory>
 
 class QStackedWidget;
 class QTreeWidgetItem;

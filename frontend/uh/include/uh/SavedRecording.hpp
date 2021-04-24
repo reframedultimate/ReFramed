@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include "uh/Recording.hpp"
 
 namespace uh {
 
-class SavedRecording : public Recording
+class UH_PUBLIC_API SavedRecording : public Recording
 {
 public:
     static SavedRecording* load(const std::string& fileName);

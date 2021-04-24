@@ -7,6 +7,7 @@
 #include "uh/DataSetFilterListener.hpp"
 #include "uh/Reference.hpp"
 #include <unordered_map>
+#include <memory>
 
 class QVBoxLayout;
 class QListWidgetItem;

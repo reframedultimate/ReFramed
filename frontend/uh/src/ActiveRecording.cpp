@@ -29,14 +29,14 @@ void ActiveRecording::setPlayerName(int index, const std::string& name)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecording::setGameNumber(int number)
+void ActiveRecording::setGameNumber(GameNumber number)
 {
     gameNumber_ = number;
     dispatcher.dispatch(&RecordingListener::onActiveRecordingGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecording::setSetNumber(int number)
+void ActiveRecording::setSetNumber(SetNumber number)
 {
     setNumber_ = number;
     dispatcher.dispatch(&RecordingListener::onActiveRecordingSetNumberChanged, number);

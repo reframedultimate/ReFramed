@@ -106,12 +106,6 @@ set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
 
-if (WIN32)
-	target_link_libraries (ultimate-hindsight
-		PRIVATE wsock32
-		PRIVATE ws2_32)
-endif()
-
 # output qwt dll to bin directory
 set_target_properties (qwtinternal
 	PROPERTIES

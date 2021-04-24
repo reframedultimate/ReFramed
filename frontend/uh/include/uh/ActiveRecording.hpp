@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include "uh/Recording.hpp"
 
 namespace uh {
@@ -7,7 +8,7 @@ namespace uh {
 class RecordingListener;
 class PlayerState;
 
-class ActiveRecording : public Recording
+class UH_PUBLIC_API ActiveRecording : public Recording
 {
 public:
     ActiveRecording(MappingInfo&& mapping,
@@ -16,8 +17,8 @@ public:
                     StageID stageID);
 
     void setPlayerName(int index, const std::string& name);
-    void setGameNumber(int number);
-    void setSetNumber(int number);
+    void setGameNumber(GameNumber number);
+    void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
     void addPlayerState(int index, PlayerState&& state);
 };

@@ -1,4 +1,6 @@
 #include "uh/time.h"
+#include <iomanip>
+#include <sstream>
 
 #if defined(WIN32)
 #   include <windows.h>
@@ -41,7 +43,8 @@ uint64_t time_milli_seconds_since_epoch(void)
 /* ------------------------------------------------------------------------- */
 uint64_t time_qt_to_milli_seconds_since_epoch(const char* str)
 {
-    struct tm t;
-    strptime(str, "%a %b %d %H:%M:%S %Y %Z", &t);
+    std::tm t;
+    std::stringstream ss(str);
+    ss >> std::get_time(&t, "%a %b %d %H:%M:%S %Y %Z");
     return (uint64_t)mktime(&t) * 1000;
 }
