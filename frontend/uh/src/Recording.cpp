@@ -149,6 +149,7 @@ bool Recording::saveAs(const std::string& fileName)
         stateBufferSize += 4; // state count
         for (const auto& state : states)
             stateBufferSize +=
+                    sizeof(state.timeStampMs()) +
                     sizeof(state.frame()) +
                     sizeof(state.posx()) +
                     sizeof(state.posy()) +
@@ -161,7 +162,6 @@ bool Recording::saveAs(const std::string& fileName)
                     sizeof(state.stocks()) +
                     1;  // flags
     }
-
 
     StreamBuffer stream(stateBufferSize);
     for (const auto& states : playerStates_)
