@@ -48,6 +48,12 @@ RecordingView::~RecordingView()
 }
 
 // ----------------------------------------------------------------------------
+void RecordingView::showDamagePlot()
+{
+    ui_->tabWidget->setCurrentWidget(ui_->tab_damage_vs_time);
+}
+
+// ----------------------------------------------------------------------------
 void RecordingView::setRecording(uh::Recording* recording)
 {
     recordingDataView_->setRecording(recording);

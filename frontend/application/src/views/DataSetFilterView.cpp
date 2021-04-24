@@ -80,6 +80,10 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
 // ----------------------------------------------------------------------------
 DataSetFilterView::~DataSetFilterView()
 {
+    // Have to do this so we unregister as listeners to every recording group
+    for (const auto& it : recordingManager_->recordingGroups())
+        onRecordingManagerGroupRemoved(it.second.get());
+
     dataSetBackgroundLoader_->dispatcher.removeListener(this);
     recordingManager_->dispatcher.removeListener(this);
     delete ui_;

@@ -221,11 +221,11 @@ void Protocol::run()
 
             // Do this as early as possible to reduce latency as much as possible
             // (reading data might skew the time)
-            uint64_t frameTimeStamp = time_milli_seconds_since_epoch();
+            quint64 frameTimeStamp = time_milli_seconds_since_epoch();
 
-            uint8_t frame_[4], entryID, posx_[4], posy_[4], hitstun_[2];
-            uint8_t damage_[2], shield_[2], status_[2], motion_[5], hit_status;
-            uint8_t stocks, flags;
+            quint8 frame_[4], entryID, posx_[4], posy_[4], hitstun_[2];
+            quint8 damage_[2], shield_[2], status_[2], motion_[5], hit_status;
+            quint8 stocks, flags;
             if (tcp_socket_read(&socket_, &frame_[0], 4) != 4) break;
             if (tcp_socket_read(&socket_, &entryID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &posx_[0], 4) != 4) break;
@@ -269,8 +269,6 @@ void Protocol::run()
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            qDebug() << "motion: " << motion;
-
             // Map the entry ID to an index
             for (int i = 0; i != entryIDs.size(); ++i)
                 if (entryIDs[i] == entryID)
@@ -298,7 +296,7 @@ void Protocol::onReceiveMatchStarted(uh::ActiveRecording* recording)
 
 // ----------------------------------------------------------------------------
 void Protocol::onReceivePlayerState(
-        uint64_t frameTimeStamp,
+        quint64 frameTimeStamp,
         quint32 frame,
         quint8 playerID,
         float posx,

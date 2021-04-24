@@ -31,12 +31,11 @@ MainWindow::MainWindow(QWidget* parent)
     , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
     , recordingGroupView_(new RecordingGroupView)
+    , activeRecordingView_(new ActiveRecordingView(activeRecordingManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
-
-    ActiveRecordingView* activeRecordingView = new ActiveRecordingView(activeRecordingManager_.get());
 
     /*
     if (pluginManager_->loadPlugin("share/uh/plugins/videoplayer.so"))
@@ -53,7 +52,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
-    mainView_->addWidget(activeRecordingView);
+    mainView_->addWidget(activeRecordingView_);
     setCentralWidget(mainView_);
 
     QDockWidget* categoryDock = new QDockWidget(this);
@@ -95,7 +94,8 @@ MainWindow::~MainWindow()
 void MainWindow::setStateConnected()
 {
     // Be (hopefully) helpful and switch to the active recording view
-    mainView_->setCurrentIndex(2);
+    mainView_->setCurrentIndex(5);
+    activeRecordingView_->showDamagePlot();  // This seems to be the most useful page so set it as a default
 
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);

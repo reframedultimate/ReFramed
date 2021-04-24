@@ -87,8 +87,8 @@ public:
      * frame of gameplay, immediately after the 3-2-1-Go countdown completes.
      * May be slightly off by 1 second or so.
      */
-    uint64_t timeStampStartedMs() const;
-    uint64_t timeStampEndedMs() const;
+    uint64_t timeStampStartedMs() const { return timeStarted_; }
+    uint64_t timeStampEndedMs() const { return timeEnded_; }
 
     uint64_t gameLengthMs() const;
 
@@ -102,6 +102,8 @@ protected:
     int findWinner() const;
 
 protected:
+    uint64_t timeStarted_;
+    uint64_t timeEnded_;
     MappingInfo mappingInfo_;
     std::vector<std::string> playerTags_;
     std::vector<std::string> playerNames_;

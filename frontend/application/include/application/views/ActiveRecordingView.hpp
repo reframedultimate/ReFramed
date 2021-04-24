@@ -27,6 +27,8 @@ public:
     ActiveRecordingView(ActiveRecordingManager* manager, QWidget* parent=nullptr);
     ~ActiveRecordingView();
 
+    void showDamagePlot();
+
 private slots:
     void onComboBoxFormatIndexChanged(int index);
     void onLineEditFormatChanged(const QString& formatDesc);

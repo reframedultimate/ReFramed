@@ -44,6 +44,12 @@ ActiveRecordingView::~ActiveRecordingView()
 }
 
 // ----------------------------------------------------------------------------
+void ActiveRecordingView::showDamagePlot()
+{
+    recordingView_->showDamagePlot();
+}
+
+// ----------------------------------------------------------------------------
 void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
 {
     if (static_cast<uh::SetFormat::Type>(index) == uh::SetFormat::OTHER)

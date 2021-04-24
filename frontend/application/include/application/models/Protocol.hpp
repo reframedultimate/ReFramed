@@ -46,7 +46,7 @@ signals:
     void _receiveMatchStarted(uh::ActiveRecording* newRecording);
     void _receiveMatchEnded();
     void _receivePlayerState(
-            uint64_t frameTimeStamp,
+            quint64 frameTimeStamp,
             quint32 frame,
             quint8 playerID,
             float posx,
@@ -66,7 +66,7 @@ private slots:
     void onReceiveMatchStarted(uh::ActiveRecording* newRecording);
     void onReceiveMatchEnded();
     void onReceivePlayerState(
-            uint64_t frameTimeStamp,
+            quint64 frameTimeStamp,
             quint32 frame,
             quint8 playerID,
             float posx,
