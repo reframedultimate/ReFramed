@@ -18,7 +18,9 @@ Recording::Recording(MappingInfo&& mapping,
                      std::vector<FighterID>&& playerFighterIDs,
                      std::vector<std::string>&& playerTags,
                      StageID stageID)
-    : mappingInfo_(std::move(mapping))
+    : timeStarted_(time_milli_seconds_since_epoch())
+    , timeEnded_(timeStarted_)
+    , mappingInfo_(std::move(mapping))
     , playerTags_(playerTags)
     , playerNames_(playerTags)
     , playerFighterIDs_(std::move(playerFighterIDs))
@@ -218,18 +220,6 @@ bool Recording::saveAs(const std::string& fileName)
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
     return false;
-}
-
-// ----------------------------------------------------------------------------
-uint64_t Recording::timeStampStartedMs() const
-{
-    return playerStates_[0][0].timeStampMs();
-}
-
-// ----------------------------------------------------------------------------
-uint64_t Recording::timeStampEndedMs() const
-{
-    return playerStates_.back().back().timeStampMs();
 }
 
 // ----------------------------------------------------------------------------

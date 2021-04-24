@@ -16,15 +16,21 @@ using nlohmann::json;
 // ----------------------------------------------------------------------------
 static std::string decompressGZFile(const std::string& fileName)
 {
-    int header;
+    unsigned char header;
     std::string out;
-    gzFile f = gzopen(fileName.c_str(), "rb");
-    if (f == nullptr)
-        goto open_failed;
+    gzFile f;
+    FILE* fp;
 
-    header = gzgetc(f); if (header != 0x1f) goto read_error;
-    header = gzgetc(f); if (header != 0x8b) goto read_error;
-    gzrewind(f);
+    fp = fopen(fileName.c_str(), "rb");
+    if (fp == nullptr)
+        goto fopen_failed;
+
+    fread(&header, 1, 1, fp); if (header != 0x1f) goto header_error;
+    fread(&header, 1, 1, fp); if (header != 0x8b) goto header_error;
+
+    f = gzopen(fileName.c_str(), "rb");
+    if (f == nullptr)
+        goto gzopen_failed;
 
     if (gzbuffer(f, 256 * 1024) != 0)
         goto read_error;
@@ -52,11 +58,17 @@ static std::string decompressGZFile(const std::string& fileName)
     }
 
     if (gzclose(f) != Z_OK)
+    {
+        fclose(fp);
         return "";
+    }
+
     return out;
 
     read_error      : gzclose(f);
-    open_failed     : return "";
+    gzopen_failed   :
+    header_error    : fclose(fp);
+    fopen_failed    : return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -214,9 +226,6 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
         if ((recording = loadVersion_1_0(static_cast<const void*>(&j))) != nullptr)
             return recording;
     }
-
-    for (int i = 0; i != recording->playerCount(); ++i)
-        assert(recording->playerStateCount(i) > 0);
 
     return nullptr;
 }
@@ -1121,6 +1130,8 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     }
 
     recording->winner_ = recording->findWinner();
+    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
+    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }

@@ -23,6 +23,8 @@ public:
     explicit RecordingView(QWidget* parent=nullptr);
     ~RecordingView();
 
+    void showDamagePlot();
+
 public slots:
     void setRecording(uh::Recording* recording);
 

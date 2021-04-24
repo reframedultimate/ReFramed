@@ -64,7 +64,14 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     if (playerStates_[index].size() == 1)
     {
         if (playerStates_[index][0].frame() == state.frame())
+        {
+            playerStates_[index][0] = std::move(state);
             return;  // has not started yet
+        }
+
+        // Update first frame timestamp
+        timeStarted_ = playerStates_[index][0].timeStampMs();
+        timeEnded_ = timeStarted_;
 
         playerStates_[index].push_back(std::move(state));
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index][0]);
@@ -77,8 +84,8 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     // Only add a new state if the previous one was different
     if (playerStates_[index].back() != state)
     {
-        playerStates_[index].push_back(std::move(state));
-        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index].back());
+        playerStates_[index].push_back(state);
+        dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, state);
 
         // Winner might have changed
         int winner = Recording::findWinner();
@@ -87,6 +94,9 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
             winner_ = winner;
             dispatcher.dispatch(&RecordingListener::onRecordingWinnerChanged, winner_);
         }
+
+        // update end timestamp
+        timeEnded_ = state.timeStampMs();
     }
 
     // The UI still cares about every frame
