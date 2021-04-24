@@ -4,7 +4,7 @@
 
 namespace uh {
 
-class VisualizerPlugin : public Plugin
+class TrainingModePlugin : public Plugin
 {
 public:
 };
