@@ -201,21 +201,16 @@ void DataSetFilterView::reprocessInputDataSet()
 
     outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
 
-    int numDataPoints = 0;
     std::unordered_set<uh::Recording*> uniqueRecordings;
-    for (const auto& playerName : outputDataSet_->playerNames())
-        for (const auto& dataPoint : outputDataSet_->playerDataSet(playerName)->dataPoints())
-        {
-            uniqueRecordings.emplace(dataPoint.recording());
-            numDataPoints++;
-        }
+    for (const uh::DataPoint* p = outputDataSet_->dataPointsBegin(); p != outputDataSet_->dataPointsEnd(); ++p)
+        uniqueRecordings.emplace(p->recording());
 
     ui_->listWidget_outputGroup->clear();
     for (const auto& recording : uniqueRecordings)
         ui_->listWidget_outputGroup->addItem(composeFileName(recording));
     ui_->listWidget_outputGroup->sortItems(Qt::DescendingOrder);
 
-    ui_->label_outputInfo->setText(QString("Found %1 data points in %2 recordings").arg(numDataPoints).arg(uniqueRecordings.size()));
+    ui_->label_outputInfo->setText(QString("Found %1 data points in %2 recordings").arg(outputDataSet_->dataPointCount()).arg(uniqueRecordings.size()));
 
     dataSetFiltersDirty_ = false;
 }

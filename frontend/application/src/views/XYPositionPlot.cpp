@@ -100,7 +100,7 @@ void XYPositionPlot::setRecording(uh::Recording* recording)
 
         for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
-            const auto& state = recording_->playerState(player, i);
+            const auto& state = recording_->playerStateAt(player, i);
             data->append(QPointF(state.posx(), state.posy()));
         }
     }

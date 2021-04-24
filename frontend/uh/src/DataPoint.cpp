@@ -4,18 +4,17 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-DataPoint::DataPoint(const PlayerState& state, Recording* recording)
+DataPoint::DataPoint(const PlayerState& state, Recording* recording, int player)
     : recording_(recording)
     , state_(state)
+    , playerIdx_(player)
 {
 }
 
 // ----------------------------------------------------------------------------
-void swap(DataPoint& a, DataPoint& b)
+const std::string& DataPoint::playerName() const
 {
-    using std::swap;
-    swap(a.recording_, b.recording_);
-    swap(a.state_, b.state_);
+    return recording_->playerName(playerIdx_);
 }
 
 // ----------------------------------------------------------------------------

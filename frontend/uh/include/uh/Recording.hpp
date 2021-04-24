@@ -54,12 +54,12 @@ public:
      * \brief Gets the fighter ID being used by the specified player.
      * \param index The player to get
      */
-    uint8_t playerFighterID(int index) const { return playerFighterIDs_[index]; }
+    FighterID playerFighterID(int index) const { return playerFighterIDs_[index]; }
 
     /*!
      * \brief Gets the stage ID being played on.
      */
-    uint16_t stageID() const { return stageID_; }
+    StageID stageID() const { return stageID_; }
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -96,7 +96,11 @@ public:
 
     int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].size()); }
 
-    const PlayerState& playerState(int player, int idx) const { return playerStates_[player][idx]; }
+    const PlayerState& playerStateAt(int player, int idx) const { return playerStates_[player][idx]; }
+    const PlayerState* playerStatesBegin(int player) const { return playerStates_[player].data(); }
+    const PlayerState* playerStatesEnd(int player) const;
+
+    const PlayerState& firstReceivedState() const { return playerStates_[0][0]; }
 
     ListenerDispatcher<RecordingListener> dispatcher;
 
@@ -109,13 +113,13 @@ protected:
     MappingInfo mappingInfo_;
     std::vector<std::string> playerTags_;
     std::vector<std::string> playerNames_;
-    std::vector<uint8_t> playerFighterIDs_;
+    std::vector<FighterID> playerFighterIDs_;
     std::vector<std::vector<PlayerState>> playerStates_;
     SetFormat format_;
     GameNumber gameNumber_ = 1;
     SetNumber setNumber_ = 1;
     int winner_ = 0;
-    uint16_t stageID_;
+    StageID stageID_;
 };
 
 }

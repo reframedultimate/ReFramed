@@ -35,26 +35,26 @@ public:
     float hitstun() const { return hitstun_; }
     float shield() const { return shield_; }
     uint16_t status() const { return status_; }
-    uint64_t motion() const { return motion_; }
+    uint64_t motion() const { return static_cast<uint64_t>(motionL_) | (static_cast<uint64_t>(motionH_) << 32); }
     uint8_t hitStatus() const { return hitStatus_; }
     uint8_t stocks() const { return stocks_; }
-    bool attackConnected() const { return attackConnected_; }
-    bool facingDirection() const { return facingDirection_; }
+    bool attackConnected() const { return !!(flags_ & 0x01); }
+    bool facingDirection() const { return !!(flags_ & 0x02); }
 
 private:
     uint64_t timeStampMs_;
-    uint64_t motion_;
     uint32_t frame_;
     float posx_;
     float posy_;
     float damage_;
     float hitstun_;
     float shield_;
-    uint16_t status_;
+    uint32_t motionL_;
+    uint8_t motionH_;
     uint8_t hitStatus_;
     uint8_t stocks_;
-    bool attackConnected_;
-    bool facingDirection_;
+    uint8_t flags_;
+    uint16_t status_;
 };
 
 inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)
