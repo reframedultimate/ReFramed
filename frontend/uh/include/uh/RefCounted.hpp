@@ -19,6 +19,7 @@ public:
 
     void incRef();
     void decRef();
+    void decRefNoSeppuku();
 
     int refs() const { return refs_; }
 

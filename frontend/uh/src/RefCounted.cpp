@@ -43,6 +43,13 @@ void RefCounted::decRef()
 }
 
 // ----------------------------------------------------------------------------
+void RefCounted::decRefNoSeppuku()
+{
+    assert(refs_ > 0);
+    refs_--;
+}
+
+// ----------------------------------------------------------------------------
 void RefCounted::seppuku()
 {
     delete this;

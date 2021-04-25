@@ -21,9 +21,10 @@ public:
     void reserve(int count);
     //void addDataPoint(const DataPoint& dataPoint);
     void addDataPointToEnd(const DataPoint& dataPoint);
-    void addRecording(Recording* recording);
+    void addRecordingNoSort(Recording* recording);
     void mergeDataFrom(const DataSet* other);
     void replaceDataWith(const DataSet* other);
+    void sort();
     void clear();
 
     int dataPointCount() const { return static_cast<int>(points_.size()); }

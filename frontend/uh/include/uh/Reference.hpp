@@ -101,6 +101,24 @@ public:
         return ptr_;
     }
 
+    T* steal()
+    {
+        T* ret = ptr_;
+        ptr_ = nullptr;
+        return ret;
+    }
+
+    T* detach()
+    {
+        T* ret = ptr_;
+        if (ptr_)
+        {
+            ptr_->decRefNoSeppuku();
+            ptr_ = nullptr;
+        }
+        return ret;
+    }
+
     int refs() const
     {
         return ptr_ ? ptr_->refs() : 0;
