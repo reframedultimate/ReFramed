@@ -6,6 +6,8 @@
 
 namespace uhapp {
 
+uint32_t DataSetBackgroundLoader::taskIDCounter_ = 0;
+
 class DataSetBackgroundLoaderWorker : public QRunnable
 {
 public:
@@ -34,14 +36,15 @@ private:
             if (in_->isEmpty())
                 break;
 
-            auto info = in_->dequeue();
+            auto item = in_->dequeue();
             mutex_->unlock();
-                uh::Recording* recording = uh::SavedRecording::load(info.recordingFile.absoluteFilePath().toStdString());
+                uh::Recording* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString());
             mutex_->lock();
 
             if (recording)
             {
-                out_->enqueue({recording, info.group});
+                out_->enqueue({recording, item.group, item.taskID});
+                cond_->wakeOne();
 #ifndef NDEBUG
                 for (int i = 0; i < recording->playerCount(); ++i)
                     assert(recording->playerStateCount(i) > 0);
@@ -53,8 +56,7 @@ private:
         // when all recordings were loaded, which will be the case when the
         // worker count drops to 0
         (*activeWorkers_)--;
-        if (*activeWorkers_ == 0)
-            cond_->wakeOne();
+        cond_->wakeOne();
 
         mutex_->unlock();
     }
@@ -93,10 +95,10 @@ DataSetBackgroundLoader::~DataSetBackgroundLoader()
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::loadGroup(RecordingGroup* group)
 {
+    printf("%d: loadGroup()\n", taskIDCounter_);
     mutex_.lock();
-        dataSets_.emplace(group, new uh::DataSet);
         for (const auto& fileInfo : group->absFilePathList())
-            out_.enqueue({fileInfo, group});
+            out_.enqueue({fileInfo, group, taskIDCounter_});
 
         while (activeWorkers_ < QThread::idealThreadCount())
         {
@@ -107,12 +109,22 @@ void DataSetBackgroundLoader::loadGroup(RecordingGroup* group)
             QThreadPool::globalInstance()->start(worker);
             activeWorkers_++;
         }
+
+        // Associate a new task ID with this group. If the same group was
+        // cancelled, then loaded again, and the threads are still stuck on
+        // processing the previous workload (of the same group), then the task
+        // ID lets the threads know which results can be discarded and which
+        // ones not.
+        pendingTasks_.emplace(taskIDCounter_, group);
     mutex_.unlock();
+
+    taskIDCounter_++;
 }
 
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::cancelGroup(RecordingGroup* group)
 {
+    printf("cancelGroup()\n");
     mutex_.lock();
         // Delete all pending recording file names in the output queue that
         // originated from the specified recording group so the workers don't
@@ -126,10 +138,17 @@ void DataSetBackgroundLoader::cancelGroup(RecordingGroup* group)
                 ++it;
         }
 
-        // Delete the dataset so that our reading thread won't append any more
-        // recordings to it. The remaining data in the input queue will be
-        // dequeued by the reading thread so don' thave to care about it here
-        dataSets_.erase(group);
+        // Remove the group and the task ID from the set of pending tasks
+        for (auto it = pendingTasks_.begin(); it != pendingTasks_.end(); )
+        {
+            if (it->second == group)
+            {
+                printf("%d: Cancelled group\n", it->first);
+                it = pendingTasks_.erase(it);
+            }
+            else
+                ++it;
+        }
     mutex_.unlock();
 }
 
@@ -138,57 +157,94 @@ void DataSetBackgroundLoader::cancelAll()
 {
     mutex_.lock();
         out_.clear();
-        dataSets_.clear();
+        pendingTasks_.clear();
     mutex_.unlock();
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::onDataSetLoaded(RecordingGroup* group)
+void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, RecordingGroup* group)
 {
-    uh::Reference<uh::DataSet> ds;
-    mutex_.lock();
-        auto it = dataSets_.find(group);
-        if (it != dataSets_.end())
-        {
-            ds = it->second;
-            dataSets_.erase(it);
-        }
-    mutex_.unlock();
+    uh::Reference<uh::DataSet> ds = dataSet;
 
     // Some sanity checks. There was a case where recordings had 0 player states
 #ifndef NDEBUG
-    if (ds.notNull())
-        assert(ds->dataPointCount() > 0);
+    assert(ds->dataPointCount() > 0);
 #endif
 
-    if (ds.notNull())
-        dispatcher.dispatch(&DataSetBackgroundLoaderListener::onDataSetBackgroundLoaderDataSetLoaded, group, ds);
+    // Discard any data sets that are from cancelled tasks
+    mutex_.lock();
+        auto it = pendingTasks_.find(taskID);
+        if (it == pendingTasks_.end())
+        {
+            printf("%d: Data set was cancelled, discarding...\n", taskID);
+            mutex_.unlock();
+            return;
+        }
+
+        // Task is complete
+        pendingTasks_.erase(it);
+    mutex_.unlock();
+
+    printf("%d: Data set loaded\n", taskID);
+    dispatcher.dispatch(&DataSetBackgroundLoaderListener::onDataSetBackgroundLoaderDataSetLoaded, group, ds);
 }
 
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::run()
 {
+    struct PendingDataSet
+    {
+        uh::Reference<uh::DataSet> dataSet;
+        RecordingGroup* group;
+    };
+
+    std::unordered_map<uint32_t, PendingDataSet> pendingDataSets;
+
     mutex_.lock();
     while (true)
     {
-        cond_.wait(&mutex_);
+        if (in_.isEmpty())
+            cond_.wait(&mutex_);
 
         if (requestShutdown_)
             break;
 
+        // There will usually be quite a few items in the queue (maybe 1000?)
+        // so they should be transferred to a local container before merging
+        // as to not block the main thread. Merging takes a bit of time as it
+        // turns out.
+        std::vector<InData> items;
         while (!in_.isEmpty())
-        {
-            InData data = in_.dequeue();
-            auto it = dataSets_.find(data.group);
-            if (it != dataSets_.end())
-                it->second->addRecording(data.recording);
-        }
+            items.emplace_back(in_.dequeue());
 
-        if (in_.isEmpty() && activeWorkers_ == 0)
-        {
-            for (const auto& [group, dataSet] : dataSets_)
-                emit _dataSetLoaded(group);
-        }
+        // The only way to know right now if all of the recordings are done
+        // loading is by checking the active worker count
+        bool completeDataSets = (activeWorkers_ == 0);
+
+        mutex_.unlock();
+
+            for (const auto& item : items)
+            {
+                // Ensure that we've created a target dataset for each task
+                auto it = pendingDataSets.find(item.taskID);
+                if (it == pendingDataSets.end())
+                    it = pendingDataSets.emplace(item.taskID, PendingDataSet{new uh::DataSet, item.group}).first;
+
+                it->second.dataSet->addRecordingNoSort(item.recording);
+            }
+
+            if (completeDataSets)
+            {
+                for (auto& [taskID, pending] : pendingDataSets)
+                {
+                    printf("%d: sorting\n", taskID);
+                    pending.dataSet->sort();
+                    emit _dataSetLoaded(taskID, pending.dataSet.detach(), pending.group);
+                }
+                pendingDataSets.clear();
+            }
+
+        mutex_.lock();
     }
     mutex_.unlock();
 }

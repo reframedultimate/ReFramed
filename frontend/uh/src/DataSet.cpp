@@ -32,27 +32,11 @@ void DataSet::addDataPointToEnd(const DataPoint& dataPoint)
 }
 
 // ----------------------------------------------------------------------------
-void DataSet::addRecording(Recording* recording)
+void DataSet::addRecordingNoSort(Recording* recording)
 {
-    int dataPointCount = 0;
-    for (int p = 0; p != recording->playerCount(); ++p)
-        dataPointCount += recording->playerStateCount(p);
-
-    std::vector<DataPoint> newPoints;
-    newPoints.reserve(dataPointCount);
     for (int p = 0; p != recording->playerCount(); ++p)
         for (int i = 0; i != recording->playerStateCount(p); ++i)
-            newPoints.emplace_back(recording->playerStateAt(p, i), recording, p);
-
-    const int insertOffset = std::lower_bound(points_.begin(), points_.end(), DataPoint(recording->firstReceivedState(), recording, 0), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
-        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
-    }) - points_.begin();
-
-    points_.insert(points_.begin() + insertOffset, std::make_move_iterator(newPoints.begin()), std::make_move_iterator(newPoints.end()));
-
-    std::sort(points_.begin() + insertOffset, points_.end(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
-        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
-    });
+            points_.emplace_back(recording->playerStateAt(p, i), recording, p);
 }
 
 // ----------------------------------------------------------------------------
@@ -61,11 +45,17 @@ void DataSet::mergeDataFrom(const DataSet* other)
     if (other->dataPointCount() == 0)
         return;
 
-    const auto insertIt = std::lower_bound(points_.begin(), points_.end(), *other->dataPointsBegin(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+    const int offset = std::lower_bound(points_.begin(), points_.end(), *other->dataPointsBegin(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    }) - points_.begin();
+
+    points_.reserve(points_.size() + other->dataPointCount());
+    for (const DataPoint* p = other->dataPointsBegin(); p != other->dataPointsEnd(); ++p)
+        points_.emplace_back(*p);
+
+    std::sort(points_.begin() + offset, points_.end(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
         return lhs.state().timeStampMs() < rhs.state().timeStampMs();
     });
-
-    points_.insert(insertIt, other->dataPointsBegin(), other->dataPointsEnd());
 }
 
 // ----------------------------------------------------------------------------
@@ -73,6 +63,14 @@ void DataSet::replaceDataWith(const DataSet* other)
 {
     clear();
     mergeDataFrom(other);
+}
+
+// ----------------------------------------------------------------------------
+void DataSet::sort()
+{
+    std::sort(points_.begin(), points_.end(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+        return lhs.state().timeStampMs() < rhs.state().timeStampMs();
+    });
 }
 
 // ----------------------------------------------------------------------------
