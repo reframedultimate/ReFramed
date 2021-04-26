@@ -14,7 +14,7 @@ const String* HitStatusMapping::map(FighterHitStatus status) const
 // ----------------------------------------------------------------------------
 void HitStatusMapping::add(FighterHitStatus status, const String& name)
 {
-    map_.insert(status, name);
+    map_.insertOrGet(status, name);
 }
 
 }

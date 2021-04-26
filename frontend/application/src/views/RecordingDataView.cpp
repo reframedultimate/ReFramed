@@ -209,11 +209,12 @@ void RecordingDataView::repopulateStageMappingTable()
 
     // Fill in data
     int i = 0;
-    ui_->tableWidget_stageIDs->setRowCount(stageMapping.size());
-    for (auto it = stageMapping.begin(); it != stageMapping.end(); ++it, ++i)
+    ui_->tableWidget_stageIDs->setRowCount(stageMapping.count());
+    for (const auto& it : stageMapping)
     {
-        ui_->tableWidget_stageIDs->setItem(i, 0, new IntegerTableWidgetItem(it->first));
-        ui_->tableWidget_stageIDs->setItem(i, 1, new QTableWidgetItem(it->second.cStr()));
+        ui_->tableWidget_stageIDs->setItem(i, 0, new IntegerTableWidgetItem(it->key()));
+        ui_->tableWidget_stageIDs->setItem(i, 1, new QTableWidgetItem(it->value().cStr()));
+        i++;
     }
     ui_->tableWidget_stageIDs->sortByColumn(0, Qt::AscendingOrder);
     ui_->tableWidget_stageIDs->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
@@ -250,25 +251,26 @@ void RecordingDataView::repopulateStatusMappingTable()
 
     // Fill in base status mapping info
     int i = 0;
-    ui_->tableWidget_baseStatusIDs->setRowCount(baseStatusMapping.size());
+    ui_->tableWidget_baseStatusIDs->setRowCount(baseStatusMapping.count());
     for (const auto& it : baseStatusMapping)
     {
-        ui_->tableWidget_baseStatusIDs->setItem(i, 0, new IntegerTableWidgetItem(it.first));
-        ui_->tableWidget_baseStatusIDs->setItem(i, 1, new QTableWidgetItem(it.second.cStr()));
+        ui_->tableWidget_baseStatusIDs->setItem(i, 0, new IntegerTableWidgetItem(it.key()));
+        ui_->tableWidget_baseStatusIDs->setItem(i, 1, new QTableWidgetItem(it.value().cStr()));
         ++i;
     }
 
     // Fill in fighter specific status mapping info
     i = 0;
+    ui_->tableWidget_specificStatusIDs->setRowCount(0);
     for (const auto& fighter : specificStatusMappings)
     {
         ui_->tableWidget_specificStatusIDs->setRowCount(
-                    ui_->tableWidget_specificStatusIDs->rowCount() + fighter.second.size());
-        for (const auto& it : fighter.second)
+                    ui_->tableWidget_specificStatusIDs->rowCount() + fighter.value().count());
+        for (const auto& it : fighter.value())
         {
-            ui_->tableWidget_specificStatusIDs->setItem(i, 0, new DoubleIntegerTableWidgetItem(fighter.first, it.first));
-            ui_->tableWidget_specificStatusIDs->setItem(i, 1, new IntegerTableWidgetItem(it.first));
-            ui_->tableWidget_specificStatusIDs->setItem(i, 2, new QTableWidgetItem(it.second.cStr()));
+            ui_->tableWidget_specificStatusIDs->setItem(i, 0, new DoubleIntegerTableWidgetItem(fighter.key(), it.key()));
+            ui_->tableWidget_specificStatusIDs->setItem(i, 1, new IntegerTableWidgetItem(it.key()));
+            ui_->tableWidget_specificStatusIDs->setItem(i, 2, new QTableWidgetItem(it.value().cStr()));
             ++i;
         }
     }

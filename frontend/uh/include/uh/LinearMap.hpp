@@ -44,11 +44,16 @@ public:
         swap(first.values_, second.values_);
     }
 
-    V& insert(const K& key, const V& value)
+    Iterator insertOrGet(const K& key, const V& value)
     {
         S offset = std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin();
-        keys_.insert(offset, key);
-        return values_.insert(offset, value);
+        if (keys_[offset] != key)
+        {
+            keys_.insert(offset, key);
+            values_.insert(offset, value);
+        }
+
+        return Iterator(keys_, values_, offset);
     }
 
     Iterator find(const K& key)
