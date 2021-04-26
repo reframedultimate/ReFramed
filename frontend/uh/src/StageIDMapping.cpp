@@ -3,7 +3,7 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const std::string* StageIDMapping::map(StageID stageID) const
+const String* StageIDMapping::map(StageID stageID) const
 {
     auto it = map_.find(stageID);
     if (it == map_.end())
@@ -12,7 +12,7 @@ const std::string* StageIDMapping::map(StageID stageID) const
 }
 
 // ----------------------------------------------------------------------------
-void StageIDMapping::add(StageID stageID, const std::string& name)
+void StageIDMapping::add(StageID stageID, const String& name)
 {
     map_.emplace(stageID, name);
 }

@@ -73,7 +73,7 @@ private:
     void onRecordingManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onActiveRecordingSetNumberChanged(uh::SetNumber number) override;
     void onActiveRecordingGameNumberChanged(uh::GameNumber number) override;
     void onActiveRecordingFormatChanged(const uh::SetFormat& format) override;
@@ -86,8 +86,8 @@ private:
     std::vector<uh::Reference<uh::ActiveRecording>> pastRecordings_;
     uh::Reference<uh::ActiveRecording> activeRecording_;
     RecordingManager* recordingManager_;
-    std::string p1Name_;
-    std::string p2Name_;
+    QString p1Name_;
+    QString p2Name_;
     uh::SetFormat format_;
     uh::GameNumber gameNumber_ = 1;
     uh::SetNumber setNumber_ = 1;

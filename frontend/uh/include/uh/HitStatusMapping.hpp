@@ -1,7 +1,8 @@
 #pragma once
 
 #include "uh/config.hpp"
-#include <string>
+#include "uh/Types.hpp"
+#include "uh/String.hpp"
 #include <unordered_map>
 
 namespace uh {
@@ -9,13 +10,13 @@ namespace uh {
 class UH_PUBLIC_API HitStatusMapping
 {
 public:
-    const std::string* map(uint8_t status) const;
-    void add(uint8_t stageID, const std::string& name);
+    const String* map(FighterHitStatus status) const;
+    void add(FighterHitStatus status, const String& name);
 
-    const std::unordered_map<uint8_t, std::string>& get() const { return map_; }
+    const std::unordered_map<FighterHitStatus, String>& get() const { return map_; }
 
 private:
-    std::unordered_map<uint8_t, std::string> map_;
+    std::unordered_map<FighterHitStatus, String> map_;
 };
 
 }

@@ -4,6 +4,10 @@ project ("uh-tests"
 	
 add_executable (uh-tests
     "src/test_Reference.cpp"
+    "src/test_SmallString.cpp"
+    "src/test_SmallVector.cpp"
+    "src/test_String.cpp"
+    "src/test_Vector.cpp"
 	"src/main.cpp")
 target_link_libraries (uh-tests
 	PRIVATE uh

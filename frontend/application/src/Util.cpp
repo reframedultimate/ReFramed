@@ -53,12 +53,12 @@ QString composeFileName(const uh::Recording* recording)
     QStringList playerList;
     for (int i = 0; i < recording->playerCount(); ++i)
     {
-        const std::string* fighterName = recording->mappingInfo().fighterID.map(
+        const uh::String* fighterName = recording->mappingInfo().fighterID.map(
                     recording->playerFighterID(i));
         if (fighterName)
-            playerList.append(QString::fromStdString(recording->playerName(i) + " (" + *fighterName + ")"));
+            playerList.append((recording->playerName(i) + " (" + *fighterName + ")").cStr());
         else
-            playerList.append(QString::fromStdString(recording->playerName(i)));
+            playerList.append(recording->playerName(i).cStr());
     }
     QString players = playerList.join(" vs ");
     QString formatDesc = QString::fromStdString(recording->format().description());

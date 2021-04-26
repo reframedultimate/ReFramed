@@ -12,11 +12,11 @@ class UH_PUBLIC_API ActiveRecording : public Recording
 {
 public:
     ActiveRecording(MappingInfo&& mapping,
-                    std::vector<FighterID>&& playerFighterIDs,
-                    std::vector<std::string>&& playerTags,
+                    SmallVector<FighterID, 8>&& playerFighterIDs,
+                    SmallVector<SmallString<15>, 8>&& playerTags,
                     StageID stageID);
 
-    void setPlayerName(int index, const std::string& name);
+    void setPlayerName(int index, const SmallString<15>& name);
     void setGameNumber(GameNumber number);
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);

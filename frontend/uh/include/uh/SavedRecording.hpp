@@ -18,8 +18,8 @@ public:
 
 private:
     SavedRecording(MappingInfo&& mapping,
-                   std::vector<uint8_t>&& playerFighterIDs,
-                   std::vector<std::string>&& playerTags,
+                   SmallVector<FighterID, 8>&& playerFighterIDs,
+                   SmallVector<SmallString<15>, 8>&& playerTags,
                    uint16_t stageID);
 
     // Using void* here to avoid json objects leaking into the rest of the

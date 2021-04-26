@@ -15,8 +15,8 @@ using nlohmann::json;
 
 // ----------------------------------------------------------------------------
 Recording::Recording(MappingInfo&& mapping,
-                     std::vector<FighterID>&& playerFighterIDs,
-                     std::vector<std::string>&& playerTags,
+                     SmallVector<FighterID, 8>&& playerFighterIDs,
+                     SmallVector<SmallString<15>, 8>&& playerTags,
                      StageID stageID)
     : timeStarted_(time_milli_seconds_since_epoch())
     , timeEnded_(timeStarted_)
@@ -24,13 +24,13 @@ Recording::Recording(MappingInfo&& mapping,
     , playerTags_(playerTags)
     , playerNames_(playerTags)
     , playerFighterIDs_(std::move(playerFighterIDs))
-    , playerStates_(playerTags.size())
+    , playerStates_(playerTags.count())
     , format_(SetFormat::FRIENDLIES)
     , stageID_(stageID)
 {
-    assert(playerTags_.size() == playerNames_.size());
-    assert(playerTags_.size() == playerFighterIDs_.size());
-    assert(playerStates_.size() == playerFighterIDs_.size());
+    assert(playerTags_.count() == playerNames_.count());
+    assert(playerTags_.count() == playerFighterIDs_.count());
+    assert(playerTags_.count() == playerStates_.count());
 }
 
 // ----------------------------------------------------------------------------
@@ -77,7 +77,7 @@ bool Recording::saveAs(const std::string& fileName)
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-        fighterBaseStatusMapping[std::to_string(it->first)] = {it->second, "", ""};
+        fighterBaseStatusMapping[std::to_string(it->first)] = {it->second.cStr(), "", ""};
     }
 
     json fighterSpecificStatusMapping;
@@ -98,7 +98,7 @@ bool Recording::saveAs(const std::string& fileName)
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-            specificMapping[std::to_string(it->first)] = {it->second, "", ""};
+            specificMapping[std::to_string(it->first)] = {it->second.cStr(), "", ""};
         }
 
         if (specificMapping.size() > 0)
@@ -114,19 +114,19 @@ bool Recording::saveAs(const std::string& fileName)
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
     for (auto it = fighterIDMap.begin(); it != fighterIDMap.end(); ++it)
         if (usedFighterIDs.find(it->first) != usedFighterIDs.end())
-            fighterIDMapping[std::to_string(it->first)] = it->second;
+            fighterIDMapping[std::to_string(it->first)] = it->second.cStr();
 
     json stageIDMapping;
     const auto& stageIDMap = mappingInfo_.stageID.get();
     for (auto it = stageIDMap.begin(); it != stageIDMap.end(); ++it)
         if (it->first == stageID_)  // Only care about saving the stage that was played on
-            stageIDMapping[std::to_string(it->first)] = it->second;
+            stageIDMapping[std::to_string(it->first)] = it->second.cStr();
 
     json hitStatusMapping;
     const auto& hitStatusMap = mappingInfo_.hitStatus.get();
     for (auto it = hitStatusMap.begin(); it != hitStatusMap.end(); ++it)
         if (usedHitStatuses.find(it->first) != usedHitStatuses.end())
-            hitStatusMapping[std::to_string(it->first)] = it->second;
+            hitStatusMapping[std::to_string(it->first)] = it->second.cStr();
 
     json mappingInfo = {
         {"fighterstatus", fighterStatusMapping},
@@ -139,8 +139,8 @@ bool Recording::saveAs(const std::string& fileName)
     for (int i = 0; i < playerCount(); ++i)
     {
         playerInfo += {
-            {"tag", playerTags_[i]},
-            {"name", playerNames_[i]},
+            {"tag", playerTags_[i].cStr()},
+            {"name", playerNames_[i].cStr()},
             {"fighterid", playerFighterIDs_[i]}
         };
     }
@@ -168,7 +168,7 @@ bool Recording::saveAs(const std::string& fileName)
     StreamBuffer stream(stateBufferSize);
     for (const auto& states : playerStates_)
     {
-        stream.writeLU32(states.size());
+        stream.writeLU32(states.count());
         for (const auto& state : states)
         {
             uint8_t flags = (state.attackConnected() << 0)
@@ -230,7 +230,7 @@ uint64_t Recording::gameLengthMs() const
 
 // ----------------------------------------------------------------------------
 const PlayerState* Recording::playerStatesEnd(int player) const
-{ 
+{
     return playerStates_[player].data() + playerStateCount(player);
 }
 

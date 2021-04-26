@@ -1,8 +1,9 @@
 #pragma once
 
 #include "uh/config.hpp"
+#include "uh/Types.hpp"
+#include "uh/String.hpp"
 #include <unordered_map>
-#include <string>
 #include <cstdint>
 
 namespace uh {
@@ -32,18 +33,18 @@ namespace uh {
 class UH_PUBLIC_API FighterStatusMapping
 {
 public:
-    const std::string* statusToBaseEnumName(uint16_t status) const;
-    const std::string* statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const;
+    const String* statusToBaseEnumName(FighterStatus status) const;
+    const String* statusToFighterSpecificEnumName(FighterStatus status, FighterID fighterID) const;
 
-    void addBaseEnumName(uint16_t status, const std::string& name);
-    void addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const std::string& name);
+    void addBaseEnumName(FighterStatus status, const String& name);
+    void addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name);
 
-    const std::unordered_map<uint16_t, std::string>& baseEnumNames() const { return baseEnumNames_; }
-    const std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
+    const std::unordered_map<FighterStatus, String>& baseEnumNames() const { return baseEnumNames_; }
+    const std::unordered_map<FighterID, std::unordered_map<FighterStatus, String>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
 
 private:
-    std::unordered_map<uint16_t, std::string> baseEnumNames_;
-    std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>> fighterSpecificEnumNames_;
+    std::unordered_map<FighterStatus, String> baseEnumNames_;
+    std::unordered_map<FighterID, std::unordered_map<FighterStatus, String>> fighterSpecificEnumNames_;
 };
 
 }

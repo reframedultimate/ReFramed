@@ -3,7 +3,7 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const std::string* FighterIDMapping::map(uint8_t fighterID) const
+const String* FighterIDMapping::map(FighterID fighterID) const
 {
     auto it = map_.find(fighterID);
     if (it == map_.end())
@@ -12,7 +12,7 @@ const std::string* FighterIDMapping::map(uint8_t fighterID) const
 }
 
 // ----------------------------------------------------------------------------
-void FighterIDMapping::add(uint8_t fighterID, const std::string& name)
+void FighterIDMapping::add(FighterID fighterID, const String& name)
 {
     map_.emplace(fighterID, name);
 }

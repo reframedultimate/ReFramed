@@ -14,13 +14,13 @@ public:
         : ptr_(nullptr)
     {}
 
-    Reference(const Reference<T>& other)
+    Reference(const Reference& other)
         : ptr_(other.ptr_)
     {
         ref();
     }
 
-    Reference(Reference<T>&& other)
+    Reference(Reference&& other)
         : Reference()
     {
         swap(*this, other);
@@ -45,20 +45,20 @@ public:
         unref();
     }
 
-    Reference<T>& operator=(Reference<T> rhs)
+    Reference& operator=(Reference rhs)
     {
         swap(*this, rhs);
         return *this;
     }
 
     template <typename U>
-    Reference<T>& operator=(Reference<U> rhs)
+    Reference& operator=(Reference<U> rhs)
     {
         swap(*this, rhs);
         return *this;
     }
 
-    friend void swap(Reference<T>& first, Reference<T>& second) noexcept
+    friend void swap(Reference& first, Reference& second) noexcept
     {
         using std::swap;
         swap(first.ptr_, second.ptr_);

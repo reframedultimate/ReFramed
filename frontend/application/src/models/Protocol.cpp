@@ -154,8 +154,8 @@ void Protocol::run()
             uh::StageID stageID = (stageID_h << 8)
                                 | (stageID_l << 0);
 
-            std::vector<uh::FighterID> fighterIDs(playerCount);
-            std::vector<std::string> tags(playerCount);
+            uh::SmallVector<uh::FighterID, 8> fighterIDs(playerCount);
+            uh::SmallVector<uh::SmallString<15>, 8> tags(playerCount);
             entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {

@@ -2,7 +2,7 @@
 
 #include "uh/SetFormat.hpp"
 #include "uh/Types.hpp"
-#include <string>
+#include "uh/String.hpp"
 
 namespace uh {
 
@@ -11,7 +11,7 @@ class PlayerState;
 class RecordingListener
 {
 public:
-    virtual void onActiveRecordingPlayerNameChanged(int player, const std::string& name) = 0;
+    virtual void onActiveRecordingPlayerNameChanged(int player, const SmallString<15>& name) = 0;
     virtual void onActiveRecordingSetNumberChanged(SetNumber number) = 0;
     virtual void onActiveRecordingGameNumberChanged(GameNumber number) = 0;
     virtual void onActiveRecordingFormatChanged(const SetFormat& format) = 0;
