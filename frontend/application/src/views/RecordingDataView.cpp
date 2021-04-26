@@ -228,11 +228,11 @@ void RecordingDataView::repopulateFighterMappingTable()
 
     // Fill in data
     int i = 0;
-    ui_->tableWidget_fighterIDs->setRowCount(fighterMapping.size());
+    ui_->tableWidget_fighterIDs->setRowCount(fighterMapping.count());
     for (const auto& it : fighterMapping)
     {
-        ui_->tableWidget_fighterIDs->setItem(i, 0, new IntegerTableWidgetItem(it.first));
-        ui_->tableWidget_fighterIDs->setItem(i, 1, new QTableWidgetItem(it.second.cStr()));
+        ui_->tableWidget_fighterIDs->setItem(i, 0, new IntegerTableWidgetItem(it->key()));
+        ui_->tableWidget_fighterIDs->setItem(i, 1, new QTableWidgetItem(it->value().cStr()));
         ++i;
     }
     ui_->tableWidget_fighterIDs->sortByColumn(0, Qt::AscendingOrder);

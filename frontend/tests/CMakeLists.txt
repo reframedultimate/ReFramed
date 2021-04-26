@@ -3,7 +3,9 @@ project ("uh-tests"
 	LANGUAGES CXX)
 	
 add_executable (uh-tests
+    "src/test_HashMap.cpp"
     "src/test_Reference.cpp"
+    "src/test_SmallLinearMap.cpp"
     "src/test_SmallString.cpp"
     "src/test_SmallVector.cpp"
     "src/test_String.cpp"

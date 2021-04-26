@@ -3,7 +3,7 @@
 #include "uh/config.hpp"
 #include "uh/Types.hpp"
 #include "uh/String.hpp"
-#include <unordered_map>
+#include "uh/HashMap.hpp"
 
 namespace uh {
 
@@ -13,10 +13,10 @@ public:
     const String* map(FighterID fighterID) const;
     void add(FighterID fighterId, const String& name);
 
-    const std::unordered_map<FighterID, String>& get() const { return map_; }
+    const HashMap<FighterID, String>& get() const { return map_; }
 
 private:
-    std::unordered_map<FighterID, String> map_;
+    HashMap<FighterID, String> map_;
 };
 
 }

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <utility>
+#include <new>
 
 namespace uh {
 
@@ -247,6 +248,15 @@ public:
         return this->back();
     }
 
+    void pop()
+    {
+        if (this->count_ == 0)
+            return;
+
+        this->count_--;
+        this->begin_[this->count_].~T();
+    }
+
     template <typename... Args>
     T& emplace(Args&&... args)
     {
@@ -264,8 +274,38 @@ public:
 
     void resize(S count)
     {
-        while (count--)
-            emplace();
+        S prevCount = this->count_;
+        if (prevCount < count)
+        {
+            ensureCapacity(count, this->count_, 0);
+            while (this->count_ < count)
+                emplace();
+        }
+        else if (prevCount > count)
+        {
+            while (this->count_ > count)
+                pop();
+
+            if (prevCount > N && count > N)
+            {
+                // Both old and new sizes are on the heap, realloc into smaller
+                // buffer
+                char* buffer = allocate<T>(count);
+                this->relocateElementsTo(reinterpret_cast<T*>(buffer), this->begin_, this->begin_ + count);
+                deallocate(reinterpret_cast<char*>(this->begin_));
+                this->capacity_ = count;
+                this->begin_ = std::launder(reinterpret_cast<T*>(buffer));
+            }
+            else if (prevCount > N && count <= N)
+            {
+                // We've shrunk from the heap to the stack, move elements into
+                // stack buffer
+                this->relocateElementsTo(reinterpret_cast<T*>(buffer_), this->begin_, this->begin_ + count);
+                deallocate(reinterpret_cast<char*>(this->begin_));
+                this->capacity_ = count;
+                this->begin_ = std::launder(reinterpret_cast<T*>(buffer_));
+            }
+        }
     }
 
     void clear()
@@ -285,7 +325,7 @@ public:
         {
             deallocate(reinterpret_cast<char*>(this->begin_));
             this->capacity_ = N;
-            this->begin_ = reinterpret_cast<T*>(buffer_);
+            this->begin_ = std::launder(reinterpret_cast<T*>(buffer_));
         }
         else
         {
@@ -312,7 +352,7 @@ protected:
                 deallocate(reinterpret_cast<char*>(this->begin_));
 
             this->capacity_ = newCapacity;
-            this->begin_ = reinterpret_cast<T*>(buffer);
+            this->begin_ = std::launder(reinterpret_cast<T*>(buffer));
         }
         else
         {
@@ -427,6 +467,15 @@ public:
         return this->back();
     }
 
+    void pop()
+    {
+        if (this->count_ == 0)
+            return;
+
+        this->back().~T();
+        this->count_--;
+    }
+
     template <typename... Args>
     T& emplace(Args&&... args)
     {
@@ -444,8 +493,25 @@ public:
 
     void resize(S count)
     {
-        while (count--)
-            emplace();
+        S prevCount = this->count_;
+        if (prevCount < count)
+        {
+            ensureCapacity(count, this->count_, 0);
+            while (this->count_ < count)
+                emplace();
+        }
+        else if (prevCount > count)
+        {
+            while (this->count_ > count)
+                pop();
+
+            // realloc into smaller buffer
+            char* buffer = allocate<T>(count);
+            this->relocateElementsTo(reinterpret_cast<T*>(buffer), this->begin_, this->begin_ + count);
+            deallocate(reinterpret_cast<char*>(this->begin_));
+            this->capacity_ = count;
+            this->begin_ = std::launder(reinterpret_cast<T*>(buffer));
+        }
     }
 
     void clear()
