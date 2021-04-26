@@ -3,7 +3,7 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const std::string* FighterStatusMapping::statusToBaseEnumName(uint16_t status) const
+const String* FighterStatusMapping::statusToBaseEnumName(FighterStatus status) const
 {
     auto it = baseEnumNames_.find(status);
     if (it == baseEnumNames_.end())
@@ -12,7 +12,7 @@ const std::string* FighterStatusMapping::statusToBaseEnumName(uint16_t status) c
 }
 
 // ----------------------------------------------------------------------------
-const std::string* FighterStatusMapping::statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const
+const String* FighterStatusMapping::statusToFighterSpecificEnumName(FighterStatus status, FighterID fighterID) const
 {
     auto fighter = fighterSpecificEnumNames_.find(fighterID);
     if (fighter == fighterSpecificEnumNames_.end())
@@ -26,15 +26,15 @@ const std::string* FighterStatusMapping::statusToFighterSpecificEnumName(uint16_
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatusMapping::addBaseEnumName(uint16_t status, const std::string& name)
+void FighterStatusMapping::addBaseEnumName(FighterStatus status, const String& name)
 {
     baseEnumNames_.emplace(status, name);
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatusMapping::addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const std::string& name)
+void FighterStatusMapping::addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name)
 {
-    auto result = fighterSpecificEnumNames_.emplace(fighterID, std::unordered_map<uint16_t, std::string>());
+    auto result = fighterSpecificEnumNames_.emplace(fighterID, std::unordered_map<FighterStatus, String>());
     result.first->second.emplace(status, name);
 }
 

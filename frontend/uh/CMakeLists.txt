@@ -77,6 +77,7 @@ add_library (uh SHARED
 	"src/SetFormat.cpp"
 	"src/StageIDMapping.cpp"
     "src/StreamBuffer.cpp"
+    "src/Vector.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
 	"src/platform/time.cpp")

@@ -1,10 +1,9 @@
 #pragma once
 
 #include "uh/config.hpp"
+#include "uh/String.hpp"
 #include "uh/Reference.hpp"
 #include "uh/PlayerState.hpp"
-#include <cstdint>
-#include <string>
 
 namespace uh {
 
@@ -27,7 +26,7 @@ public:
     Recording* recording() const { return recording_; }
     int player() const { return playerIdx_;  }
 
-    const std::string& playerName() const;
+    const SmallString<15>& playerName() const;
 
     uint32_t combinedState() const;
 

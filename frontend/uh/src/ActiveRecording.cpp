@@ -8,8 +8,8 @@ namespace uh {
 
 // ----------------------------------------------------------------------------
 ActiveRecording::ActiveRecording(MappingInfo&& mapping,
-                                 std::vector<FighterID>&& playerFighterIDs,
-                                 std::vector<std::string>&& playerTags,
+                                 SmallVector<FighterID, 8>&& playerFighterIDs,
+                                 SmallVector<SmallString<15>, 8>&& playerTags,
                                  StageID stageID)
     : Recording(
           std::move(mapping),
@@ -21,7 +21,7 @@ ActiveRecording::ActiveRecording(MappingInfo&& mapping,
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecording::setPlayerName(int index, const std::string& name)
+void ActiveRecording::setPlayerName(int index, const SmallString<15>& name)
 {
     assert(name.length() > 0);
     playerNames_[index] = name;
@@ -54,14 +54,14 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
 {
     // If this is the first state we receive just store it. Need at least 1
     // past state to determine if the game started yet
-    if (playerStates_[index].size() == 0)
+    if (playerStates_[index].count() == 0)
     {
-        playerStates_[index].push_back(std::move(state));
+        playerStates_[index].push(std::move(state));
         return;
     }
 
     // Check to see if the game has started yet
-    if (playerStates_[index].size() == 1)
+    if (playerStates_[index].count() == 1)
     {
         if (playerStates_[index][0].frame() == state.frame())
         {
@@ -73,7 +73,7 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
         timeStarted_ = playerStates_[index][0].timeStampMs();
         timeEnded_ = timeStarted_;
 
-        playerStates_[index].push_back(std::move(state));
+        playerStates_[index].push(std::move(state));
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index][0]);
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewPlayerState, index, playerStates_[index][0]);
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, playerStates_[index][1]);
@@ -84,7 +84,7 @@ void ActiveRecording::addPlayerState(int index, PlayerState&& state)
     // Only add a new state if the previous one was different
     if (playerStates_[index].back() != state)
     {
-        playerStates_[index].push_back(state);
+        playerStates_[index].push(state);
         dispatcher.dispatch(&RecordingListener::onActiveRecordingNewUniquePlayerState, index, state);
 
         // Winner might have changed

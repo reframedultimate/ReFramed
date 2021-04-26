@@ -118,7 +118,7 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(QString::fromStdString(recording_->playerName(player)));
+        curve->setTitle(recording_->playerName(player).cStr());
         curve->attach(this);
         curves_.push_back(curve);
 
@@ -133,9 +133,9 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
+void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
-    curves_[player]->setTitle(QString::fromStdString(name));
+    curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 

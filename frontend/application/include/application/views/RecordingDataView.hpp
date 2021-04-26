@@ -44,7 +44,7 @@ private:
     void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onActiveRecordingSetNumberChanged(uh::SetNumber number) override;
     void onActiveRecordingGameNumberChanged(uh::GameNumber number) override;
     void onActiveRecordingFormatChanged(const uh::SetFormat& format) override;
@@ -60,8 +60,8 @@ private:
     QTreeWidgetItem* baseStatusIDMappingsItem_ = nullptr;
     QTreeWidgetItem* specificStatusIDMappingsItem_ = nullptr;
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
-    std::vector<QTreeWidgetItem*> playerDataItems_;
-    std::vector<QTableWidget*> playerDataTables_;
+    uh::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
+    uh::SmallVector<QTableWidget*, 8> playerDataTables_;
     uh::Reference<uh::Recording> recording_;
     bool playerDataTableRowsLoaded_ = false;
 };

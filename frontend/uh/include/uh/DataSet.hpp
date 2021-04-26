@@ -3,6 +3,7 @@
 #include "uh/config.hpp"
 #include "uh/RefCounted.hpp"
 #include "uh/DataPoint.hpp"
+#include "uh/Vector.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -27,12 +28,12 @@ public:
     void sort();
     void clear();
 
-    int dataPointCount() const { return static_cast<int>(points_.size()); }
-    const DataPoint* dataPointsBegin() const { return points_.data(); }
-    const DataPoint* dataPointsEnd() const { return points_.data() + dataPointCount(); }
+    int dataPointCount() const { return static_cast<int>(points_.count()); }
+    const DataPoint* dataPointsBegin() const { return points_.begin(); }
+    const DataPoint* dataPointsEnd() const { return points_.end(); }
 
 private:
-    std::vector<DataPoint> points_;
+    Vector<DataPoint> points_;
 };
 
 }

@@ -6,7 +6,7 @@
 #include "uh/MappingInfo.hpp"
 #include "uh/SetFormat.hpp"
 #include "uh/RefCounted.hpp"
-#include <string>
+#include "uh/String.hpp"
 
 namespace uh {
 
@@ -17,8 +17,8 @@ class UH_PUBLIC_API Recording : public RefCounted
 {
 public:
     Recording(MappingInfo&& mapping,
-              std::vector<FighterID>&& playerFighterIDs,
-              std::vector<std::string>&& playerTags,
+              SmallVector<FighterID, 8>&& playerFighterIDs,
+              SmallVector<SmallString<15>, 8>&& playerTags,
               StageID stageID);
 
     bool saveAs(const std::string& fileName);
@@ -32,14 +32,14 @@ public:
     /*!
      * \brief Gets the number of players
      */
-    int playerCount() const { return static_cast<int>(playerTags_.size()); }
+    int playerCount() const { return static_cast<int>(playerTags_.count()); }
 
     /*!
      * \brief Gets the tag used by the player. This is the string that appears
      * above the player in-game and is created when the player sets their controls.
      * \param index Which player to get
      */
-    const std::string& playerTag(int index) const { return playerTags_[index]; }
+    const SmallString<15>& playerTag(int index) const { return playerTags_[index]; }
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
@@ -48,7 +48,7 @@ public:
      * Unlike tags, there is also no character limit to a player's name.
      * \param index Which player to get
      */
-    const std::string& playerName(int index) const { return playerNames_[index]; }
+    const SmallString<15>& playerName(int index) const { return playerNames_[index]; }
 
     /*!
      * \brief Gets the fighter ID being used by the specified player.
@@ -94,7 +94,7 @@ public:
 
     uint64_t gameLengthMs() const;
 
-    int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].size()); }
+    int playerStateCount(int player) const { return static_cast<int>(playerStates_[player].count()); }
 
     const PlayerState& playerStateAt(int player, int idx) const { return playerStates_[player][idx]; }
     const PlayerState* playerStatesBegin(int player) const { return playerStates_[player].data(); }
@@ -111,10 +111,10 @@ protected:
     uint64_t timeStarted_;
     uint64_t timeEnded_;
     MappingInfo mappingInfo_;
-    std::vector<std::string> playerTags_;
-    std::vector<std::string> playerNames_;
-    std::vector<FighterID> playerFighterIDs_;
-    std::vector<std::vector<PlayerState>> playerStates_;
+    SmallVector<SmallString<15>, 8> playerTags_;
+    SmallVector<SmallString<15>, 8> playerNames_;
+    SmallVector<FighterID, 8> playerFighterIDs_;
+    SmallVector<Vector<PlayerState>, 8> playerStates_;
     SetFormat format_;
     GameNumber gameNumber_ = 1;
     SetNumber setNumber_ = 1;

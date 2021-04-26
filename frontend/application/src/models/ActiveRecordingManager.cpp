@@ -48,13 +48,14 @@ void ActiveRecordingManager::setP1Name(const QString& name)
         if (name == "")
             activeRecording_->setPlayerName(0, activeRecording_->playerTag(0));
         else
-            activeRecording_->setPlayerName(0, name.toStdString());
+            activeRecording_->setPlayerName(0, name.toStdString().c_str());
 
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, QString::fromStdString(activeRecording_->playerName(0)));
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged,
+                            QString(activeRecording_->playerName(0).cStr()));
     }
     else
     {
-        p1Name_ = name.toStdString();
+        p1Name_ = name;
         dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, name);
     }
 }
@@ -67,13 +68,14 @@ void ActiveRecordingManager::setP2Name(const QString& name)
         if (name == "")
             activeRecording_->setPlayerName(1, activeRecording_->playerTag(1));
         else
-            activeRecording_->setPlayerName(1, name.toStdString());
+            activeRecording_->setPlayerName(1, name.toStdString().c_str());
 
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, QString::fromStdString(activeRecording_->playerName(1)));
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged,
+                            QString(activeRecording_->playerName(1).cStr()));
     }
     else
     {
-        p2Name_ = name.toStdString();
+        p2Name_ = name;
         dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, name);
     }
 }
@@ -142,9 +144,9 @@ void ActiveRecordingManager::onProtocolRecordingStarted(uh::ActiveRecording* rec
     if (recording->playerCount() == 2)
     {
         if (p1Name_.length() > 0)
-            recording->setPlayerName(0, p1Name_);
+            recording->setPlayerName(0, p1Name_.toStdString().c_str());
         if (p2Name_.length() > 0)
-            recording->setPlayerName(1, p2Name_);
+            recording->setPlayerName(1, p2Name_.toStdString().c_str());
     }
 
     if (shouldStartNewSet(recording))
@@ -170,8 +172,10 @@ void ActiveRecordingManager::onProtocolRecordingStarted(uh::ActiveRecording* rec
     dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerFormatChanged, recording->format());
     if (recording->playerCount() == 2)
     {
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, QString::fromStdString(recording->playerName(0)));
-        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, QString::fromStdString(recording->playerName(1)));
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged,
+                            QString(recording->playerName(0).cStr()));
+        dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged,
+                            QString(recording->playerName(1).cStr()));
     }
 }
 
@@ -204,8 +208,8 @@ void ActiveRecordingManager::onProtocolRecordingEnded(uh::ActiveRecording* recor
     setNumber_ = recording->setNumber();
     if (recording->playerCount() == 2)
     {
-        p1Name_ = recording->playerName(0);
-        p2Name_ = recording->playerName(1);
+        p1Name_ = recording->playerName(0).cStr();
+        p2Name_ = recording->playerName(1).cStr();
     }
 
     recording->dispatcher.removeListener(this);
@@ -319,14 +323,14 @@ void ActiveRecordingManager::onRecordingManagerDefaultRecordingLocationChanged(c
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingManager::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
+void ActiveRecordingManager::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
     if (activeRecording_->playerCount() == 2)
     {
         if (player == 0)
-            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, QString::fromStdString(name));
+            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP1NameChanged, QString(name.cStr()));
         else
-            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, QString::fromStdString(name));
+            dispatcher.dispatch(&ActiveRecordingManagerListener::onActiveRecordingManagerP2NameChanged, QString(name.cStr()));
     }
 }
 

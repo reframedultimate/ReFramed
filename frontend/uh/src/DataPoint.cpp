@@ -12,7 +12,7 @@ DataPoint::DataPoint(const PlayerState& state, Recording* recording, int player)
 }
 
 // ----------------------------------------------------------------------------
-const std::string& DataPoint::playerName() const
+const SmallString<15>& DataPoint::playerName() const
 {
     return recording_->playerName(playerIdx_);
 }

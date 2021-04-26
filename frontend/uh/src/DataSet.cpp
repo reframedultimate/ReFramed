@@ -25,10 +25,10 @@ void DataSet::addDataPoint(const DataPoint& dataPoint)
 void DataSet::addDataPointToEnd(const DataPoint& dataPoint)
 {
 #ifndef NDEBUG
-    if (points_.size() > 0)
+    if (points_.count() > 0)
         assert(points_.back().state().timeStampMs() <= dataPoint.state().timeStampMs());
 #endif
-    points_.push_back(dataPoint);
+    points_.push(dataPoint);
 }
 
 // ----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ void DataSet::addRecordingNoSort(Recording* recording)
 {
     for (int p = 0; p != recording->playerCount(); ++p)
         for (int i = 0; i != recording->playerStateCount(p); ++i)
-            points_.emplace_back(recording->playerStateAt(p, i), recording, p);
+            points_.emplace(recording->playerStateAt(p, i), recording, p);
 }
 
 // ----------------------------------------------------------------------------
@@ -49,9 +49,9 @@ void DataSet::mergeDataFrom(const DataSet* other)
         return lhs.state().timeStampMs() < rhs.state().timeStampMs();
     }) - points_.begin();
 
-    points_.reserve(points_.size() + other->dataPointCount());
+    points_.reserve(points_.count() + other->dataPointCount());
     for (const DataPoint* p = other->dataPointsBegin(); p != other->dataPointsEnd(); ++p)
-        points_.emplace_back(*p);
+        points_.emplace(*p);
 
     std::sort(points_.begin() + offset, points_.end(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
         return lhs.state().timeStampMs() < rhs.state().timeStampMs();
@@ -76,7 +76,7 @@ void DataSet::sort()
 // ----------------------------------------------------------------------------
 void DataSet::clear()
 {
-    points_.clear();
+    points_.clearCompact();
 }
 
 }

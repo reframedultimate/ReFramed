@@ -168,8 +168,8 @@ static std::string readUncompressedFile(const std::string& fileName)
 
 // ----------------------------------------------------------------------------
 SavedRecording::SavedRecording(MappingInfo&& mapping,
-                               std::vector<uint8_t>&& playerFighterIDs,
-                               std::vector<std::string>&& playerTags,
+                               SmallVector<FighterID, 8>&& playerFighterIDs,
+                               SmallVector<SmallString<15>, 8>&& playerTags,
                                uint16_t stageID)
     : Recording(std::move(mapping),
                 std::move(playerFighterIDs),
@@ -265,7 +265,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -277,14 +277,14 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
     // skip loading status mappings, it was broken in 1.0
     /*const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];*/
 
-    std::vector<FighterID> playerFighterIDs;
-    std::vector<std::string> playerTags;
+    SmallVector<FighterID, 8> playerFighterIDs;
+    SmallVector<SmallString<15>, 8> playerTags;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -292,8 +292,8 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
-        playerTags.push_back(info["tag"].get<std::string>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerTags.emplace(info["tag"].get<std::string>().c_str());
     }
 
     if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_string() == false)
@@ -345,7 +345,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false);
 
         }
     }
@@ -403,7 +403,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
@@ -427,7 +427,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
             if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
                 return nullptr;
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
         }
     }
 
@@ -440,7 +440,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -452,11 +452,11 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
-    std::vector<FighterID> playerFighterIDs;
-    std::vector<std::string> playerTags;
+    SmallVector<FighterID, 8> playerFighterIDs;
+    SmallVector<SmallString<15>, 8> playerTags;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -464,8 +464,8 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
-        playerTags.push_back(info["tag"].get<std::string>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerTags.emplace(info["tag"].get<std::string>().c_str());
     }
 
     if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_string() == false)
@@ -517,7 +517,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false));
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false);
         }
     }
 
@@ -577,7 +577,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
@@ -604,7 +604,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
         }
     }
 
@@ -617,7 +617,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -629,12 +629,12 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
-    std::vector<FighterID> playerFighterIDs;
-    std::vector<std::string> playerTags;
-    std::vector<std::string> playerNames;
+    SmallVector<FighterID, 8> playerFighterIDs;
+    SmallVector<SmallString<15>, 8> playerTags;
+    SmallVector<SmallString<15>, 8> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -644,9 +644,9 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
-        playerTags.push_back(info["tag"].get<std::string>());
-        playerNames.push_back(info["name"].get<std::string>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerTags.emplace(info["tag"].get<std::string>().c_str());
+        playerNames.emplace(info["name"].get<std::string>().c_str());
     }
 
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
@@ -712,7 +712,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
         }
     }
 
@@ -774,7 +774,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
@@ -801,7 +801,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
         }
     }
 
@@ -814,7 +814,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -826,7 +826,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
@@ -838,12 +838,12 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>());
+        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
 
-    std::vector<FighterID> playerFighterIDs;
-    std::vector<std::string> playerTags;
-    std::vector<std::string> playerNames;
+    SmallVector<FighterID, 8> playerFighterIDs;
+    SmallVector<SmallString<15>, 8> playerTags;
+    SmallVector<SmallString<15>, 8> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -853,9 +853,9 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
-        playerTags.push_back(info["tag"].get<std::string>());
-        playerNames.push_back(info["name"].get<std::string>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerTags.emplace(info["tag"].get<std::string>().c_str());
+        playerNames.emplace(info["name"].get<std::string>().c_str());
     }
 
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
@@ -927,7 +927,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
         }
     }
 
@@ -989,7 +989,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>());
+        mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
@@ -1016,7 +1016,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>());
+            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
         }
     }
 
@@ -1029,7 +1029,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>());
+        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -1041,7 +1041,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>());
+        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
@@ -1053,12 +1053,12 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>());
+        mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
 
-    std::vector<FighterID> playerFighterIDs;
-    std::vector<std::string> playerTags;
-    std::vector<std::string> playerNames;
+    SmallVector<FighterID, 8> playerFighterIDs;
+    SmallVector<SmallString<15>, 8> playerTags;
+    SmallVector<SmallString<15>, 8> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -1068,9 +1068,9 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.push_back(info["fighterid"].get<FighterID>());
-        playerTags.push_back(info["tag"].get<std::string>());
-        playerNames.push_back(info["name"].get<std::string>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerTags.emplace(info["tag"].get<std::string>().c_str());
+        playerNames.emplace(info["name"].get<std::string>().c_str());
     }
 
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
@@ -1133,7 +1133,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].push_back(PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
         }
     }
 

@@ -3,7 +3,7 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-const std::string* HitStatusMapping::map(uint8_t status) const
+const String* HitStatusMapping::map(FighterHitStatus status) const
 {
     auto it = map_.find(status);
     if (it == map_.end())
@@ -12,7 +12,7 @@ const std::string* HitStatusMapping::map(uint8_t status) const
 }
 
 // ----------------------------------------------------------------------------
-void HitStatusMapping::add(uint8_t status, const std::string& name)
+void HitStatusMapping::add(FighterHitStatus status, const String& name)
 {
     map_.emplace(status, name);
 }

@@ -27,7 +27,7 @@ public slots:
     void setRecording(uh::Recording* recording);
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
 
     void onActiveRecordingSetNumberChanged(uh::SetNumber number) override { (void)number; }

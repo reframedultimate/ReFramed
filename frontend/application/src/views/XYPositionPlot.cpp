@@ -93,7 +93,7 @@ void XYPositionPlot::setRecording(uh::Recording* recording)
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(QString::fromStdString(recording_->playerName(player)));
+        curve->setTitle(recording_->playerName(player).cStr());
         curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
@@ -119,7 +119,7 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
         return;
     for (int i = 0; i != recording_->playerCount(); ++i)
     {
-        QAction* a = menu->addAction(QString::fromStdString(recording_->playerName(i)));
+        QAction* a = menu->addAction(recording_->playerName(i).cStr());
         a->setCheckable(true);
         a->setChecked(curves_[i]->isVisible());
         connect(a, &QAction::triggered, [=](bool checked) {
@@ -130,9 +130,9 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
+void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
-    curves_[player]->setTitle(QString::fromStdString(name));
+    curves_[player]->setTitle(name.cStr());
 }
 
 // ----------------------------------------------------------------------------
