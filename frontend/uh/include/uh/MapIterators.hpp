@@ -62,8 +62,8 @@ public:
         return tmp;
     }
 
-    inline bool operator==(const LinearMapIterator& rhs) const  { return keyIt_ == rhs.keyIt_; }
-    inline bool operator!=(const LinearMapIterator& rhs) const  { return !operator==(rhs); }
+    inline bool operator==(const LinearMapIterator& rhs) const { return keyIt_ == rhs.keyIt_; }
+    inline bool operator!=(const LinearMapIterator& rhs) const { return !operator==(rhs); }
 
 private:
     typename SmallVector<K, N, S>::Iterator keyIt_;

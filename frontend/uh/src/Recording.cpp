@@ -112,9 +112,9 @@ bool Recording::saveAs(const std::string& fileName)
 
     json fighterIDMapping;
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
-    for (auto it = fighterIDMap.begin(); it != fighterIDMap.end(); ++it)
-        if (usedFighterIDs.find(it->first) != usedFighterIDs.end())
-            fighterIDMapping[std::to_string(it->first)] = it->second.cStr();
+    for (auto it : fighterIDMap)
+        if (usedFighterIDs.find(it->key()) != usedFighterIDs.end())
+            fighterIDMapping[std::to_string(it->key())] = it->value().cStr();
 
     json stageIDMapping;
     const auto& stageIDMap = mappingInfo_.stageID.get();
