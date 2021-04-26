@@ -84,6 +84,7 @@ void RecordingDataView::setRecording(uh::Recording* recording)
     repopulateStageMappingTable();
     repopulateFighterMappingTable();
     repopulateStatusMappingTable();
+    repopulateHitStatusMappingTable();
     repopulatePlayerDataTables();
 
     ui_->stackedWidget->setCurrentIndex(storeCurrentPageIndex);
@@ -147,7 +148,8 @@ void RecordingDataView::repopulateTree()
     QTreeWidgetItem* mappings = new QTreeWidgetItem({"Mapping Info"});
     stageIDMappingsItem_ = new QTreeWidgetItem({"Stage IDs"});
     fighterIDMappingsItem_ = new QTreeWidgetItem({"Fighter IDs"});
-    mappings->addChildren({stageIDMappingsItem_, fighterIDMappingsItem_, statusMappings});
+    hitStatusIDMappingsItem_ = new QTreeWidgetItem({"Hit Status IDs"});
+    mappings->addChildren({stageIDMappingsItem_, fighterIDMappingsItem_, statusMappings, hitStatusIDMappingsItem_});
     ui_->treeWidget->addTopLevelItem(mappings);
 
     // Player states
@@ -276,6 +278,26 @@ void RecordingDataView::repopulateStatusMappingTable()
 
     ui_->tableWidget_baseStatusIDs->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
     ui_->tableWidget_specificStatusIDs->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+}
+
+// ----------------------------------------------------------------------------
+void RecordingDataView::repopulateHitStatusMappingTable()
+{
+    // Clear
+    const auto& hitStatusMapping = recording_->mappingInfo().hitStatus.get();
+    ui_->tableWidget_hitStatusIDs->clearContents();
+
+    // Fill in data
+    int i = 0;
+    ui_->tableWidget_hitStatusIDs->setRowCount(hitStatusMapping.count());
+    for (const auto& it : hitStatusMapping)
+    {
+        ui_->tableWidget_hitStatusIDs->setItem(i, 0, new IntegerTableWidgetItem(it.key()));
+        ui_->tableWidget_hitStatusIDs->setItem(i, 1, new QTableWidgetItem(it.value().cStr()));
+        ++i;
+    }
+    ui_->tableWidget_hitStatusIDs->sortByColumn(0, Qt::AscendingOrder);
+    ui_->tableWidget_hitStatusIDs->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 }
 
 // ----------------------------------------------------------------------------

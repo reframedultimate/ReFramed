@@ -124,9 +124,9 @@ bool Recording::saveAs(const std::string& fileName)
 
     json hitStatusMapping;
     const auto& hitStatusMap = mappingInfo_.hitStatus.get();
-    for (auto it = hitStatusMap.begin(); it != hitStatusMap.end(); ++it)
-        if (usedHitStatuses.find(it->first) != usedHitStatuses.end())
-            hitStatusMapping[std::to_string(it->first)] = it->second.cStr();
+    for (const auto& it : hitStatusMap)
+        if (usedHitStatuses.find(it.key()) != usedHitStatuses.end())
+            hitStatusMapping[std::to_string(it.key())] = it.value().cStr();
 
     json mappingInfo = {
         {"fighterstatus", fighterStatusMapping},

@@ -22,10 +22,13 @@ template <typename T, typename S>
 class VectorBase
 {
 public:
-    T* begin() { return begin_; }
-    T* end() { return begin_ + count_; }
-    const T* begin() const { return begin_; }
-    const T* end() const { return begin_ + count_; }
+    typedef T* Iterator;
+    typedef const T* ConstIterator;
+
+    Iterator begin() { return begin_; }
+    Iterator end() { return begin_ + count_; }
+    ConstIterator begin() const { return begin_; }
+    ConstIterator end() const { return begin_ + count_; }
     T* data() { return begin_; }
     const T* data() const { return begin_; }
     S count() const { return count_; }
@@ -216,10 +219,20 @@ public:
         return this->at(pos);
     }
 
+    T& insert(T* insertIt, const T& value)
+    {
+        return insert(insertIt - this->begin_, value);
+    }
+
     T& insert(S pos, T&& value)
     {
         insertMove(this->begin_ + pos, &value, &value + 1);
         return this->at(pos);
+    }
+
+    T& insert(T* insertIt, T&& value)
+    {
+        return insert(insertIt - this->begin_, std::move(value));
     }
 
     T& push(const T& value)
