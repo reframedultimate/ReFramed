@@ -40,6 +40,7 @@ private:
     void repopulateFighterMappingTable();
     void repopulateStatusMappingTable();
     void repopulatePlayerDataTables();
+    void repopulateHitStatusMappingTable();
     void ensurePlayerDataTablesPopulated();
     void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 

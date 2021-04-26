@@ -3,7 +3,7 @@
 #include "uh/config.hpp"
 #include "uh/Types.hpp"
 #include "uh/String.hpp"
-#include <unordered_map>
+#include "uh/LinearMap.hpp"
 
 namespace uh {
 
@@ -13,10 +13,10 @@ public:
     const String* map(FighterHitStatus status) const;
     void add(FighterHitStatus status, const String& name);
 
-    const std::unordered_map<FighterHitStatus, String>& get() const { return map_; }
+    const SmallLinearMap<FighterHitStatus, String, 6>& get() const { return map_; }
 
 private:
-    std::unordered_map<FighterHitStatus, String> map_;
+    SmallLinearMap<FighterHitStatus, String, 6> map_;
 };
 
 }
