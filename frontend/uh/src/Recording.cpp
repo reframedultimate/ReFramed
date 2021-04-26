@@ -68,41 +68,41 @@ bool Recording::saveAs(const std::string& fileName)
 
     json fighterBaseStatusMapping;
     const auto& baseEnumNames = mappingInfo_.fighterStatus.baseEnumNames();
-    for (auto it = baseEnumNames.begin(); it != baseEnumNames.end(); ++it)
+    for (const auto& it : baseEnumNames)
     {
         // Skip saving enums that aren't actually used in the set of player states
-        if (usedStatuses.find(it->first) == usedStatuses.end())
+        if (usedStatuses.find(it->key()) == usedStatuses.end())
             continue;
 
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-        fighterBaseStatusMapping[std::to_string(it->first)] = {it->second.cStr(), "", ""};
+        fighterBaseStatusMapping[std::to_string(it->key())] = {it->value().cStr(), "", ""};
     }
 
     json fighterSpecificStatusMapping;
     const auto& specificEnumNames = mappingInfo_.fighterStatus.fighterSpecificEnumNames();
-    for (auto fighter = specificEnumNames.begin(); fighter != specificEnumNames.end(); ++fighter)
+    for (const auto& fighter : specificEnumNames)
     {
         // Skip saving enums for fighters that aren't being used
-        if (usedFighterIDs.find(fighter->first) == usedFighterIDs.end())
+        if (usedFighterIDs.find(fighter->key()) == usedFighterIDs.end())
             continue;
 
         json specificMapping = json::object();
-        for (auto it = fighter->second.begin(); it != fighter->second.end(); ++it)
+        for (const auto& it : fighter->value())
         {
             // Skip saving enums that aren't actually used in the set of player states
-            if (usedStatuses.find(it->first) == usedStatuses.end())
+            if (usedStatuses.find(it->key()) == usedStatuses.end())
                 continue;
 
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-            specificMapping[std::to_string(it->first)] = {it->second.cStr(), "", ""};
+            specificMapping[std::to_string(it->key())] = {it->value().cStr(), "", ""};
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[std::to_string(fighter->first)] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(fighter->key())] = specificMapping;
     }
 
     json fighterStatusMapping = {
@@ -112,15 +112,15 @@ bool Recording::saveAs(const std::string& fileName)
 
     json fighterIDMapping;
     const auto& fighterIDMap = mappingInfo_.fighterID.get();
-    for (auto it : fighterIDMap)
+    for (const auto& it : fighterIDMap)
         if (usedFighterIDs.find(it->key()) != usedFighterIDs.end())
             fighterIDMapping[std::to_string(it->key())] = it->value().cStr();
 
     json stageIDMapping;
     const auto& stageIDMap = mappingInfo_.stageID.get();
-    for (auto it = stageIDMap.begin(); it != stageIDMap.end(); ++it)
-        if (it->first == stageID_)  // Only care about saving the stage that was played on
-            stageIDMapping[std::to_string(it->first)] = it->second.cStr();
+    for (const auto& it : stageIDMap)
+        if (it->key() == stageID_)  // Only care about saving the stage that was played on
+            stageIDMapping[std::to_string(it->key())] = it->value().cStr();
 
     json hitStatusMapping;
     const auto& hitStatusMap = mappingInfo_.hitStatus.get();

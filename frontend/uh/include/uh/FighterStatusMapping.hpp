@@ -3,8 +3,7 @@
 #include "uh/config.hpp"
 #include "uh/Types.hpp"
 #include "uh/String.hpp"
-#include <unordered_map>
-#include <cstdint>
+#include "uh/HashMap.hpp"
 
 namespace uh {
 
@@ -39,12 +38,12 @@ public:
     void addBaseEnumName(FighterStatus status, const String& name);
     void addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name);
 
-    const std::unordered_map<FighterStatus, String>& baseEnumNames() const { return baseEnumNames_; }
-    const std::unordered_map<FighterID, std::unordered_map<FighterStatus, String>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
+    const HashMap<FighterStatus, String>& baseEnumNames() const { return baseEnumNames_; }
+    const HashMap<FighterID, HashMap<FighterStatus, String>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
 
 private:
-    std::unordered_map<FighterStatus, String> baseEnumNames_;
-    std::unordered_map<FighterID, std::unordered_map<FighterStatus, String>> fighterSpecificEnumNames_;
+    HashMap<FighterStatus, String> baseEnumNames_;
+    HashMap<FighterID, HashMap<FighterStatus, String>> fighterSpecificEnumNames_;
 };
 
 }

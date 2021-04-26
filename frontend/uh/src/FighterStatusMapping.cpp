@@ -8,7 +8,7 @@ const String* FighterStatusMapping::statusToBaseEnumName(FighterStatus status) c
     auto it = baseEnumNames_.find(status);
     if (it == baseEnumNames_.end())
         return nullptr;
-    return &it->second;
+    return &it->value();
 }
 
 // ----------------------------------------------------------------------------
@@ -18,24 +18,24 @@ const String* FighterStatusMapping::statusToFighterSpecificEnumName(FighterStatu
     if (fighter == fighterSpecificEnumNames_.end())
         return nullptr;
 
-    auto it = fighter->second.find(status);
-    if (it == fighter->second.end())
+    auto it = fighter->value().find(status);
+    if (it == fighter->value().end())
         return nullptr;
 
-    return &it->second;
+    return &it->value();
 }
 
 // ----------------------------------------------------------------------------
 void FighterStatusMapping::addBaseEnumName(FighterStatus status, const String& name)
 {
-    baseEnumNames_.emplace(status, name);
+    baseEnumNames_.insertOrGet(status, name);
 }
 
 // ----------------------------------------------------------------------------
 void FighterStatusMapping::addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name)
 {
-    auto result = fighterSpecificEnumNames_.emplace(fighterID, std::unordered_map<FighterStatus, String>());
-    result.first->second.emplace(status, name);
+    auto result = fighterSpecificEnumNames_.insertOrGet(fighterID, HashMap<FighterStatus, String>());
+    result->value().insertOrGet(status, name);
 }
 
 }

@@ -263,6 +263,12 @@ public:
         swap(first.count_, second.count_);
     }
 
+    HashMap& operator=(HashMap other)
+    {
+        swap(*this, other);
+        return *this;
+    }
+
     void rehash()
     {
         Vector<H, S> newTable(table_.count());
