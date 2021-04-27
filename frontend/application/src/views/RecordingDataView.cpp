@@ -179,7 +179,7 @@ void RecordingDataView::repopulateGameInfoTable()
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
     ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(recording_->timeStampStartedMs()).toString()));
     ui_->tableWidget_gameInfo->setItem(1, 0, new QTableWidgetItem("Format"));
-    ui_->tableWidget_gameInfo->setItem(1, 1, new QTableWidgetItem(QString::fromStdString(recording_->format().description())));
+    ui_->tableWidget_gameInfo->setItem(1, 1, new QTableWidgetItem(recording_->format().description().cStr()));
     ui_->tableWidget_gameInfo->setItem(2, 0, new QTableWidgetItem("Set Number"));
     ui_->tableWidget_gameInfo->setItem(2, 1, new QTableWidgetItem(QString::number(recording_->setNumber())));
     ui_->tableWidget_gameInfo->setItem(3, 0, new QTableWidgetItem("Game Number"));
@@ -402,7 +402,7 @@ void RecordingDataView::onActiveRecordingGameNumberChanged(uh::GameNumber number
 // ----------------------------------------------------------------------------
 void RecordingDataView::onActiveRecordingFormatChanged(const uh::SetFormat& format)
 {
-    ui_->tableWidget_gameInfo->item(1, 1)->setText(QString::fromStdString(format.description()));
+    ui_->tableWidget_gameInfo->item(1, 1)->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------

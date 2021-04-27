@@ -34,7 +34,7 @@ Recording::Recording(MappingInfo&& mapping,
 }
 
 // ----------------------------------------------------------------------------
-bool Recording::saveAs(const std::string& fileName)
+bool Recording::saveAs(const String& fileName)
 {
     // Create sets of the IDs that were used in game so we don't end up saving
     // every ID
@@ -54,7 +54,7 @@ bool Recording::saveAs(const std::string& fileName)
         {"stageid", stageID_},
         {"timestampstart", timeStampStartedMs()},
         {"timestampend", timeStampEndedMs()},
-        {"format", format_.description()},
+        {"format", format_.description().cStr()},
         {"number", gameNumber_},
         {"set", setNumber_},
         {"winner", winner_}
@@ -201,7 +201,7 @@ bool Recording::saveAs(const std::string& fileName)
     };
 
     std::string s = j.dump();
-    gzFile f = gzopen(fileName.c_str(), "wb");
+    gzFile f = gzopen(fileName.cStr(), "wb");
     if (f == nullptr)
         goto gz_open_fail;
     if (gzsetparams(f, 9, Z_DEFAULT_STRATEGY) != Z_OK)

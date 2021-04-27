@@ -58,14 +58,14 @@ void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
         ui_->lineEdit_formatOther->setVisible(false);
     activeRecordingManager_->setFormat(uh::SetFormat(
         static_cast<uh::SetFormat::Type>(index),
-        ui_->lineEdit_formatOther->text().toStdString()
+        ui_->lineEdit_formatOther->text().toStdString().c_str()
     ));
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString()));
+    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
 }
 
@@ -193,7 +193,7 @@ void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const uh::SetFor
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
 
     if (format.type() == uh::SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(QString::fromStdString(format.description()));
+        ui_->lineEdit_formatOther->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------

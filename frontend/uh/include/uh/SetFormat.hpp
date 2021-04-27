@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uh/config.hpp"
-#include <string>
+#include "uh/String.hpp"
 
 #define SET_FORMAT_LIST          \
     X(FRIENDLIES, "Friendlies")  \
@@ -24,19 +24,19 @@ public:
 #undef X
     };
 
-    SetFormat(Type type, const std::string& otherDesc="");
-    SetFormat(const std::string& description);
+    SetFormat(Type type, const String& otherDesc="");
+    SetFormat(const String& description);
 
     Type type() const { return type_; }
 
     /*!
      * \brief Gets a string representation of the set's format.
      */
-    std::string description() const;
+    String description() const;
 
 private:
     Type type_;
-    std::string otherDesc_;
+    String otherDesc_;
 };
 
 }

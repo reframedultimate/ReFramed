@@ -67,12 +67,24 @@ protected:
 
     void relocateElementsTo(T* dst, T* begin, T* end)
     {
-        dst += end - begin;
-        while (begin != end)
+        if (dst < begin)
         {
-            end--;
-            new (--dst) T(std::move(*end));
-            end->~T();
+            while (begin != end)
+            {
+                new (dst++) T(std::move(*begin));
+                begin->~T();
+                begin++;
+            }
+        }
+        else if (dst > begin)
+        {
+            dst += end - begin;
+            while (end != begin)
+            {
+                end--;
+                new (--dst) T(std::move(*end));
+                end->~T();
+            }
         }
     }
 
@@ -87,6 +99,9 @@ template <typename T, int N, typename S=int32_t>
 class SmallVector : public VectorBase<T, S>, private VectorAlloc
 {
 public:
+    typedef typename VectorBase<T, S>::Iterator Iterator;
+    typedef typename VectorBase<T, S>::ConstIterator ConstIterator;
+
     SmallVector()
         : VectorBase<T, S>(reinterpret_cast<T*>(buffer_), N)
     {}
@@ -267,6 +282,13 @@ public:
         return this->back();
     }
 
+    void erase(Iterator it)
+    {
+        it->~T();
+        this->relocateElementsTo(it, it + 1, this->end());
+        this->count_--;
+    }
+
     void reserve(S count)
     {
         ensureCapacity(count, this->count_, 0);
@@ -392,6 +414,13 @@ public:
     {
         reserve(resizeCount);
         resize(resizeCount);
+    }
+
+    Vector(const T* data, S len)
+        : VectorBase<T, S>()
+    {
+        reserve(len);
+        insertCopy(this->begin_, data, data + len);
     }
 
     ~Vector()

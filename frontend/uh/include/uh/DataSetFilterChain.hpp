@@ -1,6 +1,8 @@
 #pragma once
 
 #include "uh/config.hpp"
+#include "uh/Reference.hpp"
+#include "uh/Vector.hpp"
 
 namespace uh {
 
@@ -11,9 +13,6 @@ class DataSetFilterChainData;
 class UH_PUBLIC_API DataSetFilterChain
 {
 public:
-    DataSetFilterChain();
-    ~DataSetFilterChain();
-
     /*!
      * \brief Adds a new data set filter to the end of the chain. The chain
      * will incref the filter until it is removed again.
@@ -65,7 +64,7 @@ public:
     DataSet* apply(const DataSet* ds);
 
 private:
-    DataSetFilterChainData* d;
+    SmallVector<Reference<DataSetFilter>, 8> filters_;
 };
 
 }

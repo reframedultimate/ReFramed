@@ -68,7 +68,7 @@ void DataSetFilter_Game::setAnySetFormat(bool filter)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilter_Game::setWinner(const std::string& name)
+void DataSetFilter_Game::setWinner(const String& name)
 {
     winner_ = name;
     notifyDirty();

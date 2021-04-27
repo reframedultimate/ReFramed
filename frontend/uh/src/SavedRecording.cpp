@@ -14,21 +14,21 @@ namespace uh {
 using nlohmann::json;
 
 // ----------------------------------------------------------------------------
-static std::string decompressGZFile(const std::string& fileName)
+static std::string decompressGZFile(const String& fileName)
 {
     unsigned char header;
     std::string out;
     gzFile f;
     FILE* fp;
 
-    fp = fopen(fileName.c_str(), "rb");
+    fp = fopen(fileName.cStr(), "rb");
     if (fp == nullptr)
         goto fopen_failed;
 
     fread(&header, 1, 1, fp); if (header != 0x1f) goto header_error;
     fread(&header, 1, 1, fp); if (header != 0x8b) goto header_error;
 
-    f = gzopen(fileName.c_str(), "rb");
+    f = gzopen(fileName.cStr(), "rb");
     if (f == nullptr)
         goto gzopen_failed;
 
@@ -72,11 +72,11 @@ static std::string decompressGZFile(const std::string& fileName)
 }
 
 // ----------------------------------------------------------------------------
-static std::string decompressQtZFile(const std::string& fileName)
+static std::string decompressQtZFile(const String& fileName)
 {
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName.c_str(), "rb");
+    FILE* fp = fopen(fileName.cStr(), "rb");
     if (fp == nullptr)
         return "";
 
@@ -140,11 +140,11 @@ init_stream_failed :
 }
 
 // ----------------------------------------------------------------------------
-static std::string readUncompressedFile(const std::string& fileName)
+static std::string readUncompressedFile(const String& fileName)
 {
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName.c_str(), "rb");
+    FILE* fp = fopen(fileName.cStr(), "rb");
     if (fp == nullptr)
         goto open_failed;
 
@@ -179,7 +179,7 @@ SavedRecording::SavedRecording(MappingInfo&& mapping,
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::load(const std::string& fileName)
+SavedRecording* SavedRecording::load(const String& fileName)
 {
     json j;
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
@@ -313,10 +313,11 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     ));
 
     uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
 
-    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -485,10 +486,11 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     ));
 
     uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<int>();
 
-    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -668,12 +670,13 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     ));
 
     uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
     recording->playerNames_ = std::move(playerNames);
 
-    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -879,12 +882,13 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     ));
 
     uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
     recording->playerNames_ = std::move(playerNames);
 
-    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -1095,12 +1099,13 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>());
+    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
     recording->playerNames_ = std::move(playerNames);
 
-    StreamBuffer stream(base64_decode(j["playerstates"].get<std::string>()));
+    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;

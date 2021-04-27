@@ -4,14 +4,14 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(Type type, const std::string& otherDesc)
+SetFormat::SetFormat(Type type, const String& otherDesc)
     : type_(type)
     , otherDesc_(otherDesc)
 {
 }
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(const std::string& desc)
+SetFormat::SetFormat(const String& desc)
     : type_([&desc]() -> Type {
         if (desc == "Friendlies") return FRIENDLIES;
         if (desc == "Practice")   return PRACTICE;
@@ -28,7 +28,7 @@ SetFormat::SetFormat(const std::string& desc)
 }
 
 // ----------------------------------------------------------------------------
-std::string SetFormat::description() const
+String SetFormat::description() const
 {
     switch (type_)
     {
