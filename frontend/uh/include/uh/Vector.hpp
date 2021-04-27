@@ -547,7 +547,8 @@ protected:
                                this->begin_ + insertPos,
                                this->begin_ + this->count_);
 
-            deallocate(reinterpret_cast<char*>(this->begin_));
+            if (this->begin_)
+                deallocate(reinterpret_cast<char*>(this->begin_));
 
             this->capacity_ = newCapacity;
             this->begin_ = reinterpret_cast<T*>(buffer);
