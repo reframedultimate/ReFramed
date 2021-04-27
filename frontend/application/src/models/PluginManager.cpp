@@ -1,5 +1,7 @@
 #include "application/models/PluginManager.hpp"
 #include "uh/PluginInterface.hpp"
+#include "uh/AnalyzerPlugin.hpp"
+#include "uh/TrainingModePlugin.hpp"
 #include "uh/VisualizerPlugin.hpp"
 #include "uh/dynlib.h"
 #include <cassert>

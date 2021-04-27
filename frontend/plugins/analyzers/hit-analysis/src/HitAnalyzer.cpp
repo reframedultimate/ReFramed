@@ -1,23 +1,38 @@
+#include "ui_HitAnalyzer.h"
 #include "hit-analysis/HitAnalyzer.hpp"
 #include "uh/DataSet.hpp"
 #include "uh/DataPoint.hpp"
 
-class HitAnalyzerData
-{
-public:
-};
-
 // ----------------------------------------------------------------------------
 HitAnalyzer::HitAnalyzer(QWidget *parent)
     : QWidget(parent)
-    , d(new HitAnalyzerData)
+    , ui_(new Ui::HitAnalyzer)
 {
+    ui_->setupUi(this);
 }
 
 // ----------------------------------------------------------------------------
 HitAnalyzer::~HitAnalyzer()
 {
-    delete d;
+    delete ui_;
+}
+
+// ----------------------------------------------------------------------------
+void HitAnalyzer::setPointOfView(const uh::String& playerName)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void HitAnalyzer::dataSetPreparing(float progress, const uh::String& info)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void HitAnalyzer::dataSetCancelled()
+{
+
 }
 
 // ----------------------------------------------------------------------------

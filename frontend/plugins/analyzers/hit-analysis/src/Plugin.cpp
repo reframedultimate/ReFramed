@@ -16,7 +16,7 @@ static void destroy(uh::Plugin* plugin)
 }
 
 static PluginFactory factories[] = {
-    {createHitAnalyzer, destroy, uh::PluginType::ANALYZER, PLUGIN_VERSION,
+    {createHitAnalyzer, destroy, uh::PluginType::ANALYZER,
      "Hit Analysis", "TheComet", "alex.murray@gmx.ch", "Finds all instances where you got hit"},
     {NULL}
 };
@@ -31,7 +31,8 @@ static void stop()
 }
 
 PLUGIN_API PluginInterface plugin_interface = {
+    PLUGIN_VERSION,
+    factories,
     start,
-    stop,
-    factories
+    stop
 };

@@ -3,7 +3,9 @@
 #include "uh/AnalyzerPlugin.hpp"
 #include <QWidget>
 
-class HitAnalyzerData;
+namespace Ui {
+    class HitAnalyzer;
+}
 
 class HitAnalyzer : public QWidget
                   , public uh::AnalyzerPlugin
@@ -14,8 +16,11 @@ public:
     explicit HitAnalyzer(QWidget* parent=nullptr);
     ~HitAnalyzer();
 
+    void setPointOfView(const uh::String& playerName) override;
+    void dataSetPreparing(float progress, const uh::String& info) override;
+    void dataSetCancelled() override;
     void processDataSet(const uh::DataSet* dataSet) override;
 
 private:
-    HitAnalyzerData* d;
+    Ui::HitAnalyzer* ui_;
 };
