@@ -1,20 +1,19 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include "uh/Plugin.hpp"
-#include <string>
+#include "uh/DataSetProcessor.hpp"
 
 namespace uh {
 
 class AnalysisResult;
 class DataSet;
 
-class AnalyzerPlugin : public Plugin
+class UH_PUBLIC_API AnalyzerPlugin : public Plugin
+                                   , public DataSetProcessor
 {
 public:
-    virtual void processDataSet(const DataSet* dataSet) = 0;
-
-    void notifyAnalysisProgress(float percent, const std::string& info);
-    void giveAnalysisResult(AnalysisResult* result);
+    virtual void setPointOfView(const String& playerName) = 0;
 };
 
 }

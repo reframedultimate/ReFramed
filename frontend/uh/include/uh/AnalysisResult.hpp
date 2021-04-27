@@ -2,8 +2,9 @@
 
 #include "uh/config.hpp"
 #include "uh/RefCounted.hpp"
-#include <string>
-#include <unordered_map>
+#include "uh/Reference.hpp"
+#include "uh/String.hpp"
+#include "uh/HashMap.hpp"
 
 namespace uh {
 
@@ -12,7 +13,10 @@ class DataSet;
 class UH_PUBLIC_API AnalysisResult : public RefCounted
 {
 public:
-    DataSet& getOrCreateDataSet(const std::string& name);
+    void addDataSet(const String& name, DataSet* dataSet);
+
+private:
+    HashMap<String, Reference<DataSet>> dataSets_;
 };
 
 }

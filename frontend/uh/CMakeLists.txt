@@ -65,6 +65,7 @@ add_library (uh SHARED
     "src/DataSetFilter_PlayerCount.cpp"
     "src/DataSetFilter_Stage.cpp"
     "src/DataSetFilterChain.cpp"
+    "src/DataSetProcessor.cpp"
 	"src/DecisionGraph.cpp"
 	"src/FighterIDMapping.cpp"
 	"src/FighterStatusMapping.cpp"
