@@ -47,7 +47,7 @@ public:
     Iterator insertOrGet(const K& key, const V& value)
     {
         S offset = std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin();
-        if (keys_[offset] != key)
+        if (offset == keys_.count() || keys_[offset] != key)
         {
             keys_.insert(offset, key);
             values_.insert(offset, value);
@@ -68,8 +68,14 @@ public:
         return ConstIterator(keys_, values_, it - keys_.begin());
     }
 
+    void clear()
+    {
+        keys_.clear();
+        values_.clear();
+    }
+
     S count() { return keys_.count(); }
-    const S count() const { return keys_.count(); }
+    S count() const { return keys_.count(); }
     Iterator begin() { return Iterator(keys_, values_, 0); }
     ConstIterator begin() const { return ConstIterator(keys_, values_, 0); }
     Iterator end() { return Iterator(keys_, values_, count()); }
