@@ -78,6 +78,8 @@ void DamageTimePlot::clear()
     for (auto& curve : curves_)
         delete curve;
     curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
     largestTimeSeen_ = 0.0;
 }
 
@@ -120,12 +122,26 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
         curve->setData(data);
         curve->setTitle(recording_->playerName(player).cStr());
         curve->attach(this);
-        curves_.push_back(curve);
+        curves_.push(curve);
 
+        prevFrames_.push(0);
+        prevDamageValues_.push(0.0);
         for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
             const auto& state = recording_->playerStateAt(player, i);
-            appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+
+            if (i == 0 || i == recording_->playerStateCount(player) - 1)
+            {
+                prevDamageValues_[player] = state.damage();
+                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+            }
+            else if (state.damage() != prevDamageValues_[player])
+            {
+                appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
+                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+                prevDamageValues_[player] = state.damage();
+            }
+            prevFrames_[player] = state.frame();
         }
     }
 
@@ -143,7 +159,19 @@ void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const uh::Sm
 void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
-    appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+
+    if (prevFrames_[player] == 0)
+    {
+        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+    }
+    else if (state.damage() != prevDamageValues_[player])
+    {
+        appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
+        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+        prevDamageValues_[player] = state.damage();
+    }
+    prevFrames_[player] = state.frame();
+
     conditionalAutoScale();
 }
 
