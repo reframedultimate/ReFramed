@@ -198,7 +198,7 @@ void DataSetBackgroundLoader::run()
         RecordingGroup* group;
     };
 
-    std::unordered_map<uint32_t, PendingDataSet> pendingDataSets;
+    uh::SmallLinearMap<uint32_t, PendingDataSet, 4> pendingDataSets;
 
     mutex_.lock();
     while (true)
@@ -228,18 +228,18 @@ void DataSetBackgroundLoader::run()
                 // Ensure that we've created a target dataset for each task
                 auto it = pendingDataSets.find(item.taskID);
                 if (it == pendingDataSets.end())
-                    it = pendingDataSets.emplace(item.taskID, PendingDataSet{new uh::DataSet, item.group}).first;
+                    it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new uh::DataSet, item.group});
 
-                it->second.dataSet->addRecordingNoSort(item.recording);
+                it->value().dataSet->addRecordingNoSort(item.recording);
             }
 
             if (completeDataSets)
             {
-                for (auto& [taskID, pending] : pendingDataSets)
+                for (auto it : pendingDataSets)
                 {
-                    printf("%d: sorting\n", taskID);
-                    pending.dataSet->sort();
-                    emit _dataSetLoaded(taskID, pending.dataSet.detach(), pending.group);
+                    printf("%d: sorting\n", it->key());
+                    it->value().dataSet->sort();
+                    emit _dataSetLoaded(it->key(), it->value().dataSet.detach(), it->value().group);
                 }
                 pendingDataSets.clear();
             }

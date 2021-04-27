@@ -46,6 +46,24 @@ public:
         , valueIt_(values.begin() + offset)
     {}
 
+    LinearMapIterator(const LinearMapIterator& other)
+        : keyIt_(other.keyIt_)
+        , valueIt_(other.valueIt_)
+    {}
+
+    LinearMapIterator& operator=(LinearMapIterator rhs)
+    {
+        swap(*this, rhs);
+        return *this;
+    }
+
+    friend void swap(LinearMapIterator& first, LinearMapIterator& second) noexcept
+    {
+        using std::swap;
+        swap(first.keyIt_, second.keyIt_);
+        swap(first.valueIt_, second.valueIt_);
+    }
+
     KeyValueRef<K, V, S> operator*() { return KeyValueRef<K, V, S>(*keyIt_, *valueIt_); }
     KeyValueRef<K, V, S> operator->() { return KeyValueRef<K, V, S>(*keyIt_, *valueIt_); }
 
@@ -79,8 +97,25 @@ public:
         , valueIt_(values.begin() + offset)
     {}
 
+    ConstLinearMapIterator(const ConstLinearMapIterator& other)
+        : keyIt_(other.keyIt_)
+        , valueIt_(other.valueIt_)
+    {}
+
+    ConstLinearMapIterator& operator=(ConstLinearMapIterator rhs)
+    {
+        swap(*this, rhs);
+    }
+
+    friend void swap(ConstLinearMapIterator& first, ConstLinearMapIterator& second) noexcept
+    {
+        using std::swap;
+        swap(first.keyIt_, second.keyIt_);
+        swap(first.valueIt_, second.valueIt_);
+    }
+
     ConstKeyValueRef<K, V, S> operator*() const { return ConstKeyValueRef<K, V, S>(*keyIt_, *valueIt_); }
-    ConstKeyValueRef<K, V, S> operator->() { return ConstKeyValueRef<K, V, S>(*keyIt_, *valueIt_); }
+    ConstKeyValueRef<K, V, S> operator->() const { return ConstKeyValueRef<K, V, S>(*keyIt_, *valueIt_); }
 
     ConstLinearMapIterator& operator++()
     {
