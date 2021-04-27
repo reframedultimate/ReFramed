@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include "uh/Vector.hpp"
 
 namespace uh {
 
@@ -56,9 +56,9 @@ class ListenerDispatcher
 {
 public:
 
-    typedef typename std::vector<LISTENER_CLASS*> container_type;
-    typedef typename container_type::iterator iterator;
-    typedef typename container_type::const_iterator const_iterator;
+    typedef SmallVector<LISTENER_CLASS*, 4> container_type;
+    typedef typename container_type::Iterator iterator;
+    typedef typename container_type::ConstIterator const_iterator;
 
     /*!
      * @brief Default constructor
@@ -147,7 +147,7 @@ void ListenerDispatcher<LISTENER_CLASS>::addListener(LISTENER_CLASS* listener)
         if(*it == listener)
             return;
 
-    listeners_.push_back(listener);
+    listeners_.push(listener);
 }
 
 // ----------------------------------------------------------------------------

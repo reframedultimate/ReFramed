@@ -189,7 +189,7 @@ void ActiveRecordingManager::onProtocolRecordingEnded(uh::ActiveRecording* recor
         recordingManager_->defaultRecordingSourceDirectory(),
         composeFileName(recording)
     );
-    if (recording->saveAs(fileInfo.absoluteFilePath().toStdString()))
+    if (recording->saveAs(fileInfo.absoluteFilePath().toStdString().c_str()))
     {
         // Add the new recording to the "All" recording group
         recordingManager_->allRecordingGroup()->addFile(fileInfo.absoluteFilePath());

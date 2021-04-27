@@ -61,7 +61,7 @@ QString composeFileName(const uh::Recording* recording)
             playerList.append(recording->playerName(i).cStr());
     }
     QString players = playerList.join(" vs ");
-    QString formatDesc = QString::fromStdString(recording->format().description());
+    QString formatDesc = recording->format().description().cStr();
     QString setNumber = QString::number(recording->setNumber());
     QString gameNumber = QString::number(recording->gameNumber());
 

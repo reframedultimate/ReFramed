@@ -21,7 +21,7 @@ public:
               SmallVector<SmallString<15>, 8>&& playerTags,
               StageID stageID);
 
-    bool saveAs(const std::string& fileName);
+    bool saveAs(const String& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to

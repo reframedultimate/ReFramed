@@ -141,7 +141,7 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (fileName.completeBaseName() == current->text())
         {
-            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString());
+            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString().c_str());
             if (recording)
                 recordingView_->setRecording(recording);
             break;

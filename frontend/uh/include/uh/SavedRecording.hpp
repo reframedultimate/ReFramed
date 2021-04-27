@@ -8,7 +8,7 @@ namespace uh {
 class UH_PUBLIC_API SavedRecording : public Recording
 {
 public:
-    static SavedRecording* load(const std::string& fileName);
+    static SavedRecording* load(const String& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to

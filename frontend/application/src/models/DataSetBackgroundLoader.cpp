@@ -38,7 +38,7 @@ private:
 
             auto item = in_->dequeue();
             mutex_->unlock();
-                uh::Recording* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString());
+                uh::Recording* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
             mutex_->lock();
 
             if (recording)
