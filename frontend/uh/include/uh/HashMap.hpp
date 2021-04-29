@@ -1,8 +1,9 @@
 #pragma once
 
 #include "uh/config.hpp"
-#include "uh/Vector.hpp"
+#include "uh/String.hpp"
 #include <limits>
+#include <cassert>
 
 namespace uh {
 
@@ -37,7 +38,7 @@ template <typename H>
 struct HashMapHasher<uint8_t, H>
 {
     typedef uint32_t HashType;
-    HashType operator()(uint8_t value) {
+    HashType operator()(uint8_t value) const {
         return hash32_combine(
             static_cast<uint32_t>(value) << 0,
             hash32_combine(
@@ -55,7 +56,7 @@ template <typename H>
 struct HashMapHasher<uint16_t, H>
 {
     typedef uint32_t HashType;
-    HashType operator()(uint16_t value) {
+    HashType operator()(uint16_t value) const {
         return hash32_combine(
             static_cast<HashType>(value) << 0,
             static_cast<HashType>(value) << 16
@@ -67,7 +68,7 @@ template <typename H>
 struct HashMapHasher<uint32_t, H>
 {
     typedef uint32_t HashType;
-    HashType operator()(uint32_t value) {
+    HashType operator()(uint32_t value) const {
         return hash32_jenkins_oaat(&value, 4);
     }
 };
@@ -76,11 +77,41 @@ template <typename H>
 struct HashMapHasher<int, H>
 {
     typedef H HashType;
-    H operator()(int value) { return value; }
+    H operator()(int value) const { return value; }
+};
+
+template <typename H>
+struct HashMapHasher<String, H>
+{
+    typedef H HashType;
+    H operator()(const String& s) const {
+        return hash32_jenkins_oaat(s.data(), s.length());
+    }
+};
+
+template <typename P, typename H>
+struct HashMapHasher<P*, H>
+{
+    typedef H HashType;
+    H operator()(P* p) const {
+        return hash32_combine(
+            reinterpret_cast<size_t>(p) / sizeof(P*),
+            (reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32
+        );
+    }
+};
+
+class HashMapAlloc
+{
+public:
+    template <typename T>
+    char* allocate(size_t count) { return allocate(count, sizeof(T)); }
+    static char* allocate(size_t count, size_t size);
+    static void deallocate(char* p);
 };
 
 template <typename K, typename V, typename Hasher=HashMapHasher<K>, typename S=int32_t>
-class HashMap
+class HashMap : private HashMapAlloc
 {
     typedef typename Hasher::HashType H;
 
@@ -133,7 +164,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(Vector<H, S>& table, Vector<K, S>& keys, Vector<V, S>& values, S offset)
+        Iterator(Vector<H, S>& table, K* keys, V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -165,16 +196,17 @@ public:
         inline bool operator!=(const Iterator& rhs) const { return !operator==(rhs); }
 
     private:
+        friend class HashMap;
         Vector<H, S>& table_;
-        Vector<K, S>& keys_;
-        Vector<V, S>& values_;
+        K* keys_;
+        V* values_;
         S pos_;
     };
 
     class ConstIterator
     {
     public:
-        ConstIterator(const Vector<H, S>& table, const Vector<K, S>& keys, const Vector<V, S>& values, S offset)
+        ConstIterator(const Vector<H, S>& table, const K* keys, const V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -206,9 +238,10 @@ public:
         inline bool operator!=(const ConstIterator& rhs) const { return !operator==(rhs); }
 
     private:
+        friend class HashMap;
         const Vector<H, S>& table_;
-        const Vector<K, S>& keys_;
-        const Vector<V, S>& values_;
+        const K* keys_;
+        const V* values_;
         S pos_;
     };
 
@@ -220,38 +253,77 @@ public:
         return p;
     }
 
-    HashMap(S initialTableSize)
-        : table_(initialTableSize)
-        , keys_(initialTableSize)
-        , values_(initialTableSize)
-        , count_(0)
-    {}
-
-    void resize(S newSize)
+    void resize(S newCount)
     {
-        table_.resize(newSize);
-        keys_.resize(newSize);
-        values_.resize(newSize);
+        K* newKeys = reinterpret_cast<K*>(allocate<K>(newCount));
+        V* newValues = reinterpret_cast<V*>(allocate<V>(newCount));
+
+        for (S pos = 0; pos != table_.count(); ++pos)
+        {
+            if (table_[pos] == UNUSED || table_[pos] == RIP)
+                continue;
+
+            new (newKeys + pos) K(std::move(keys_[pos]));
+            new (newValues + pos) V(std::move(values_[pos]));
+            keys_[pos].~K();
+            values_[pos].~V();
+        }
+
+        if (table_.count())
+        {
+            deallocate(reinterpret_cast<char*>(keys_));
+            deallocate(reinterpret_cast<char*>(values_));
+        }
+
+        table_.resize(newCount);
+        keys_ = newKeys;
+        values_ = newValues;
 
         rehash();
     }
 
 public:
     HashMap()
-        : HashMap(128)
+        : keys_(nullptr)
+        , values_(nullptr)
+        , count_(0)
     {}
+
+    HashMap(S initialTableSize)
+        : table_(nextPowerOf2(initialTableSize))
+        , keys_(nullptr)
+        , values_(nullptr)
+        , count_(0)
+    {
+        keys_ = reinterpret_cast<K*>(allocate<K>(table_.count()));
+        values_ = reinterpret_cast<V*>(allocate<V>(table_.count()));
+    }
 
     HashMap(const HashMap& other)
         : table_(other.table_)
-        , keys_(other.keys_)
-        , values_(other.values_)
-        , count_(0)
-    {}
+        , keys_(reinterpret_cast<K*>(allocate<K>(table_.count())))
+        , values_(reinterpret_cast<V*>(allocate<V>(table_.count())))
+        , count_(other.count_)
+    {
+        for (S pos = 0; pos != table_.count(); ++pos)
+        {
+            if (table_[pos] == UNUSED || table_[pos] == RIP)
+                continue;
+
+            new (keys_ + pos) K(other.keys_[pos]);
+            new (values_ + pos) V(other.values_[pos]);
+        }
+    }
 
     HashMap(HashMap&& other)
         : HashMap(0)
     {
         swap(*this, other);
+    }
+
+    ~HashMap()
+    {
+        clear();
     }
 
     friend void swap(HashMap& first, HashMap& second) noexcept
@@ -273,47 +345,47 @@ public:
     {
         Vector<H, S> newTable(table_.count());
 
-        for (S it = 0; it != table_.count(); ++it)
+        for (S oldPos = 0; oldPos != table_.count(); ++oldPos)
         {
-            if (table_[it] == UNUSED || table_[it] == RIP)
+            if (table_[oldPos] == UNUSED || table_[oldPos] == RIP)
                 continue;
 
-            H hash = table_[it];
-            S pos = hash % newTable.count();
+            H hash = table_[oldPos];
+            S newPos = hash % newTable.count();
             S i = 0;
             S lastTombtone = newTable.count();
-            while (newTable[pos] != UNUSED)
+            while (newTable[newPos] != UNUSED)
             {
-                if (newTable[pos] == hash && newTable[pos] == RIP)
-                    lastTombtone = pos;
+                if (newTable[newPos] == hash && newTable[newPos] == RIP)
+                    lastTombtone = newPos;
                 i++;
-                pos += i;
-                pos = pos % newTable.count();
+                newPos += i;
+                newPos = newPos % newTable.count();
             }
 
             if (lastTombtone != newTable.count())
-                pos = lastTombtone;
+                newPos = lastTombtone;
 
-            newTable[pos] = hash;
-            if (pos != it)
+            newTable[newPos] = hash;
+            if (newPos != oldPos)
             {
-                std::swap(keys_[it], keys_[pos]);
-                std::swap(values_[it], values_[pos]);
+                new (keys_ + newPos) K(std::move(keys_[oldPos]));
+                new (values_ + newPos) V(std::move(values_[oldPos]));
+                keys_[oldPos].~K();
+                values_[oldPos].~V();
             }
         }
 
         table_ = std::move(newTable);
     }
 
-    Iterator insertOrGet(const K& key, const V& value)
+private:
+    bool findFreeInsertSlot(const K& key, H& hash, S& pos)
     {
-        if (count_ * 100 / table_.count() >= 70)
-            resize(table_.count() * 2);
-
-        H hash = hashWrapper(key);
-        S pos = hash % table_.count();
         S i = 0;
         S lastTombtone = table_.count();
+        hash = hashWrapper(key);
+        pos = hash % table_.count();
 
         while (table_[pos] != UNUSED)
         {
@@ -323,7 +395,7 @@ public:
             if (table_[pos] == hash)
             {
                 if (keys_[pos] == key)
-                    return Iterator(table_, keys_, values_, pos);
+                    return false;
             }
             else
             {
@@ -342,32 +414,130 @@ public:
         if (lastTombtone != table_.count())
             pos = lastTombtone;
 
-        table_[pos] = hash;
-        keys_[pos] = key;
-        values_[pos] = value;
-        count_++;
+        return true;
+    }
+
+public:
+    /*!
+     * \brief If the key does not exist, inserts the key/value pair and returns
+     * an interator to the new insertion. If the key does exist, returns end()
+     * and nothing is inserted.
+     */
+    Iterator insertNew(const K& key, const V& value)
+    {
+        if (table_.count() == 0)
+            resize(128);
+        else if (count_ * 100 / table_.count() >= 70)
+            resize(table_.count() * 2);
+
+        H hash;
+        S pos;
+        if (findFreeInsertSlot(key, hash, pos))
+        {
+            table_[pos] = hash;
+            new (keys_ + pos) K(key);
+            new (values_ + pos) V(value);
+            count_++;
+            return Iterator(table_, keys_, values_, pos);
+        }
+
+        return end();
+    }
+
+    Iterator insertOrGet(const K& key, const V& value)
+    {
+        if (table_.count() == 0)
+            resize(128);
+        else if (count_ * 100 / table_.count() >= 70)
+            resize(table_.count() * 2);
+
+        H hash;
+        S pos;
+        if (findFreeInsertSlot(key, hash, pos))
+        {
+            table_[pos] = hash;
+            new (keys_ + pos) K(key);
+            new (values_ + pos) V(value);
+            count_++;
+        }
 
         return Iterator(table_, keys_, values_, pos);
     }
 
-    void insertReplace(const K& key, const V& value)
+    Iterator insertReplace(const K& key, const V& value)
     {
+        if (table_.count() == 0)
+            resize(128);
+        else if (count_ * 100 / table_.count() >= 70)
+            resize(table_.count() * 2);
+
+        H hash;
+        S pos;
+        if (findFreeInsertSlot(key, hash, pos))
+            return end();
+
+        table_[pos] = hash;
+        new (keys_ + pos) K(key);
+        new (values_ + pos) V(value);
+        count_++;
+        return Iterator(table_, keys_, values_, pos);
     }
 
-    Iterator erase(const K& key)
+    S erase(const K& key)
     {
         S pos = findImpl(key);
         if (pos != count_)
         {
             count_--;
             table_[pos] = RIP;
+            keys_[pos].~K();
+            values_[pos].~V();
+            return 1;
         }
-        return Iterator(table_, keys_, values_, pos);
+
+        return 0;
+    }
+
+    Iterator erase(Iterator it)
+    {
+        S pos = it.pos_;
+        assert (pos != table_.count());
+
+        count_--;
+        table_[pos] = RIP;
+        keys_[pos].~K();
+        values_[pos].~V();
+        it++;
+        return it;
+    }
+
+    void clear()
+    {
+        for (S pos = 0; pos != table_.count(); ++pos)
+        {
+            if (table_[pos] == UNUSED || table_[pos] == RIP)
+                continue;
+
+            keys_[pos].~K();
+            values_[pos].~V();
+        }
+
+        if (table_.count())
+        {
+            deallocate(reinterpret_cast<char*>(keys_));
+            deallocate(reinterpret_cast<char*>(values_));
+            table_.clear();
+        }
+
+        count_ = 0;
     }
 
 private:
     S findImpl(const K& key) const
     {
+        if (table_.count() == 0)
+            return 0;
+
         H hash = hashWrapper(key);
         S pos = hash % table_.count();
         S i = 0;
@@ -381,7 +551,7 @@ private:
             else
             {
                 if (table_[pos] == UNUSED)
-                    return count_;
+                    return table_.count();
             }
 
             // Quadratic probing following p(K,i)=(i^2+i)/2. If the hash table
@@ -427,8 +597,8 @@ public:
 
 private:
     Vector<H, S> table_;
-    Vector<K, S> keys_;
-    Vector<V, S> values_;
+    K* keys_;
+    V* values_;
     S count_;
 };
 

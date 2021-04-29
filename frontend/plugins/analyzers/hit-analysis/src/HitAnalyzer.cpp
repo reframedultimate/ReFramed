@@ -40,3 +40,16 @@ void HitAnalyzer::processDataSet(const uh::DataSet* dataSet)
 {
 
 }
+
+// ----------------------------------------------------------------------------
+QWidget* HitAnalyzer::takeWidget()
+{
+    return this;
+}
+
+// ----------------------------------------------------------------------------
+void HitAnalyzer::giveWidget(QWidget* widget)
+{
+
+}
+

@@ -393,6 +393,9 @@ template <typename T, typename S=int32_t>
 class Vector : public VectorBase<T, S>, private VectorAlloc
 {
 public:
+    typedef typename VectorBase<T, S>::Iterator Iterator;
+    typedef typename VectorBase<T, S>::ConstIterator ConstIterator;
+
     Vector()
         : VectorBase<T, S>()
     {}
@@ -472,28 +475,28 @@ public:
         insertMove(insertIt - this->begin_, begin, end);
     }
 
-    T& insert(S pos, const T& value)
+    Iterator insert(S pos, const T& value)
     {
         insertCopy(this->begin_ + pos, &value, &value + 1);
-        return this->at(pos);
+        return &this->at(pos);
     }
 
-    T& insert(S pos, T&& value)
+    Iterator insert(S pos, T&& value)
     {
         insertMove(this->begin_ + pos, &value, &value + 1);
-        return this->at(pos);
+        return &this->at(pos);
     }
 
-    T& push(const T& value)
+    Iterator push(const T& value)
     {
         insert(this->count_, value);
-        return this->back();
+        return &this->back();
     }
 
-    T& push(T&& value)
+    Iterator push(T&& value)
     {
         insert(this->count_, std::move(value));
-        return this->back();
+        return &this->back();
     }
 
     void pop()
@@ -513,6 +516,13 @@ public:
         new (dst) T(std::forward<Args>(args)...);
         this->count_++;
         return this->back();
+    }
+
+    void erase(Iterator it)
+    {
+        it->~T();
+        this->relocateElementsTo(it, it + 1, this->end());
+        this->count_--;
     }
 
     void reserve(S count)

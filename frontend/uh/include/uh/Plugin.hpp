@@ -11,7 +11,7 @@ class Plugin
 public:
     virtual ~Plugin() {}
     virtual QWidget* takeWidget() = 0;
-    virtual void giveWidget() = 0;
+    virtual void giveWidget(QWidget* widget) = 0;
 };
 
 }

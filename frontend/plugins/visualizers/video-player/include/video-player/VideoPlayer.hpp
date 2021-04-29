@@ -17,7 +17,7 @@ public:
     bool openFile(const std::string& fileName);
 
     QWidget* takeWidget() override { return this; }
-    void giveWidget() override { setParent(nullptr); }
+    void giveWidget(QWidget* widget) override {}
 
 private:
     VideoPlayerData* d;

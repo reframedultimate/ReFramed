@@ -4,6 +4,7 @@
 #include "application/models/PluginManager.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/ActiveRecordingView.hpp"
+#include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/views/DataSetFilterView.hpp"
@@ -37,19 +38,13 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    /*
-    if (pluginManager_->loadPlugin("share/uh/plugins/videoplayer.so"))
-    {
-        uh::VisualizerPlugin* video = pluginManager_->createVisualizer("Video Player");
-        if (video)
-            mainView_->addWidget(video->takeWidget());
-        else
-            mainView_->addWidget()
-    }*/
+    QDir pluginDir("share/uh/plugins");
+    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so", QDir::Files))
+        pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 
     mainView_->addWidget(recordingGroupView_);
     mainView_->addWidget(new DataSetFilterView(recordingManager_.get()));
-    mainView_->addWidget(new QWidget);
+    mainView_->addWidget(new AnalysisView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeRecordingView_);
@@ -78,14 +73,14 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    // Removes all widgets created by plugins and unloads the shared libraries
-    pluginManager_->unloadAllPlugins();
-
     // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
     // will try to unregister as a listener of ActiveRecordingManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the
     // ActiveRecordingManager which gets deleted in this destructor.
     delete takeCentralWidget();
+
+    // Removes all widgets created by plugins and unloads the shared libraries
+    pluginManager_->unloadAllPlugins();
 
     delete ui_;
 }
