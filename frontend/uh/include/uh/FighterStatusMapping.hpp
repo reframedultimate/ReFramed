@@ -7,6 +7,10 @@
 
 namespace uh {
 
+template class UH_PUBLIC_API Vector<uint32_t, int32_t>;
+template class UH_PUBLIC_API HashMap<FighterStatus, String>;
+template class UH_PUBLIC_API HashMap<FighterID, HashMap<FighterStatus, String>>;
+
 /*!
  * \brief Character animation states are all described with a single u16 integer
  * value. This class stores information for mapping a state value to a name.

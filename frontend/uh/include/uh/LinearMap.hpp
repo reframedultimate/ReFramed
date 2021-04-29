@@ -8,7 +8,7 @@
 namespace uh {
 
 template <typename K, typename V, int N, typename S=int32_t>
-class SmallLinearMap
+class UH_TEMPLATE_EXPORT SmallLinearMap
 {
 public:
     typedef SmallVector<K, N, S> Keys;
@@ -25,7 +25,7 @@ public:
         , values_(other.values_)
     {}
 
-    SmallLinearMap(SmallLinearMap&& other)
+    SmallLinearMap(SmallLinearMap&& other) noexcept
         : SmallLinearMap()
     {
         swap(*this, other);
@@ -46,7 +46,7 @@ public:
 
     Iterator insertOrGet(const K& key, const V& value)
     {
-        S offset = std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin();
+        S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
         if (offset == keys_.count() || keys_[offset] != key)
         {
             keys_.insert(offset, key);
@@ -65,7 +65,7 @@ public:
     ConstIterator find(const K& key) const
     {
         auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
-        return ConstIterator(keys_, values_, it - keys_.begin());
+        return ConstIterator(keys_, values_, static_cast<S>(it - keys_.begin()));
     }
 
     void clear()

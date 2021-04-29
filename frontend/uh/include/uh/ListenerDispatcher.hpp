@@ -1,5 +1,6 @@
 #pragma once
 
+#include "uh/config.hpp"
 #include "uh/Vector.hpp"
 
 namespace uh {
@@ -52,10 +53,9 @@ namespace uh {
  * ```
  */
 template <class LISTENER_CLASS>
-class ListenerDispatcher
+class UH_TEMPLATE_EXPORT ListenerDispatcher
 {
 public:
-
     typedef SmallVector<LISTENER_CLASS*, 4> container_type;
     typedef typename container_type::Iterator iterator;
     typedef typename container_type::ConstIterator const_iterator;

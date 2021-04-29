@@ -24,7 +24,7 @@ RecordingManager::RecordingManager(Config* config)
 
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
-    recordingGroups_.insert({"All", std::make_unique<RecordingGroup>("All")});
+    recordingGroups_.insertNew("All", std::make_unique<RecordingGroup>("All"));
 
     scanForRecordings();
 }
@@ -126,11 +126,11 @@ bool RecordingManager::removeVideoSource(const QString& name)
 // ----------------------------------------------------------------------------
 RecordingGroup* RecordingManager::allRecordingGroup()
 {
-    return recordingGroups_["All"].get();
+    return recordingGroups_.find("All")->value().get();
 }
 
 // ----------------------------------------------------------------------------
-const std::unordered_map<QString, std::unique_ptr<RecordingGroup>>& RecordingManager::recordingGroups() const
+const uh::HashMap<QString, std::unique_ptr<RecordingGroup>, QStringHasher<>>& RecordingManager::recordingGroups() const
 {
     return recordingGroups_;
 }
@@ -141,7 +141,7 @@ RecordingGroup* RecordingManager::recordingGroup(const QString& name)
     auto it = recordingGroups_.find(name);
     if (it == recordingGroups_.end())
         return nullptr;
-    return it->second.get();
+    return it->value().get();
 }
 
 // ----------------------------------------------------------------------------
@@ -151,9 +151,9 @@ RecordingGroup* RecordingManager::getOrCreateRecordingGroup(const QString& name)
     if (group)
         return group;
 
-    auto it = recordingGroups_.insert({name, std::make_unique<RecordingGroup>(name)});
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupAdded, it.first->second.get());
-    return it.first->second.get();
+    auto it = recordingGroups_.insertOrGet(name, std::make_unique<RecordingGroup>(name));
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupAdded, it->value().get());
+    return it->value().get();
 }
 
 // ----------------------------------------------------------------------------

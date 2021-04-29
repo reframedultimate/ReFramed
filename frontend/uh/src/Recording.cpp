@@ -206,7 +206,7 @@ bool Recording::saveAs(const String& fileName)
         goto gz_open_fail;
     if (gzsetparams(f, 9, Z_DEFAULT_STRATEGY) != Z_OK)
         goto gz_fail;
-    if (gzwrite(f, s.data(), s.length()) == 0)
+    if (gzwrite(f, s.data(), static_cast<unsigned int>(s.length())) == 0)
         goto gz_fail;
     gzclose(f);
 

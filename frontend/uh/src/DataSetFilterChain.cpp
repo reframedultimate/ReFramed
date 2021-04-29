@@ -19,7 +19,7 @@ int DataSetFilterChain::remove(DataSetFilter* filter)
     const auto it = std::find(filters_.begin(), filters_.end(), filter);
     if (it == filters_.end())
         return -1;
-    int pos = it - filters_.begin();
+    int pos = static_cast<int>(it - filters_.begin());
     filters_.erase(it);
     return pos;
 }
@@ -36,7 +36,7 @@ int DataSetFilterChain::moveLater(DataSetFilter* filter)
         return filterCount() - 1;
 
     std::iter_swap(it, it + 1);
-    return it - filters_.begin() + 1;
+    return static_cast<int>(it - filters_.begin() + 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -51,7 +51,7 @@ int DataSetFilterChain::moveEarlier(DataSetFilter* filter)
         return 0;
 
     std::iter_swap(it, it - 1);
-    return it - filters_.begin() - 1;
+    return static_cast<int>(it - filters_.begin() - 1);
 }
 
 // ----------------------------------------------------------------------------

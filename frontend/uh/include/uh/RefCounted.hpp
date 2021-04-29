@@ -2,7 +2,7 @@
 
 #include "uh/config.hpp"
 
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
 #   include <atomic>
 #endif
 
@@ -23,7 +23,7 @@ public:
 
     int refs() const { return refs_; }
 
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
     static int total() { return total_.load(); }
 #endif
 
@@ -33,7 +33,7 @@ protected:
 private:
     int refs_;
 
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
     static std::atomic<int> total_;
 #endif
 };
