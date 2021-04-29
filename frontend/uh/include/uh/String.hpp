@@ -7,7 +7,7 @@
 namespace uh {
 
 template <int N, typename S=int32_t>
-class UH_TEMPLATE_EXPORT SmallString : protected SmallVector<char, N+1, S>
+class SmallString : protected SmallVector<char, N+1, S>
 {
 public:
     char* begin() { return this->begin_; }

@@ -8,7 +8,7 @@
 namespace uh {
 
 template <typename K, typename V, int N, typename S=int32_t>
-class UH_TEMPLATE_EXPORT SmallLinearMap
+class SmallLinearMap
 {
 public:
     typedef SmallVector<K, N, S> Keys;

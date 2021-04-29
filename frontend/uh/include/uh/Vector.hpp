@@ -20,7 +20,7 @@ public:
 
 // ----------------------------------------------------------------------------
 template <typename T, typename S>
-class UH_TEMPLATE_EXPORT VectorBase
+class VectorBase
 {
 public:
     typedef T* Iterator;
@@ -96,7 +96,7 @@ protected:
 
 // ----------------------------------------------------------------------------
 template <typename T, int N, typename S=int32_t>
-class UH_TEMPLATE_EXPORT SmallVector : public VectorBase<T, S>, private VectorAlloc
+class SmallVector : public VectorBase<T, S>, private VectorAlloc
 {
 public:
     typedef typename VectorBase<T, S>::Iterator Iterator;
@@ -390,7 +390,7 @@ private:
 
 // ----------------------------------------------------------------------------
 template <typename T, typename S=int32_t>
-class UH_TEMPLATE_EXPORT Vector : public VectorBase<T, S>, private VectorAlloc
+class Vector : public VectorBase<T, S>, private VectorAlloc
 {
 public:
     typedef typename VectorBase<T, S>::Iterator Iterator;

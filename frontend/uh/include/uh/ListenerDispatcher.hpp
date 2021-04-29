@@ -52,8 +52,8 @@ namespace uh {
  * }
  * ```
  */
-template <class LISTENER_CLASS>
-class UH_TEMPLATE_EXPORT ListenerDispatcher
+template <typename LISTENER_CLASS>
+class ListenerDispatcher
 {
 public:
     typedef SmallVector<LISTENER_CLASS*, 4> container_type;
