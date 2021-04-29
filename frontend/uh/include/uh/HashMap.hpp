@@ -486,7 +486,7 @@ public:
     S erase(const K& key)
     {
         S pos = findImpl(key);
-        if (pos != count_)
+        if (pos != table_.count())
         {
             count_--;
             table_[pos] = RIP;
@@ -603,3 +603,4 @@ private:
 };
 
 }
+
