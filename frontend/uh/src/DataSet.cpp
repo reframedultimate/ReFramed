@@ -45,7 +45,7 @@ void DataSet::mergeDataFrom(const DataSet* other)
     if (other->dataPointCount() == 0)
         return;
 
-    const int offset = std::lower_bound(points_.begin(), points_.end(), *other->dataPointsBegin(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
+    const size_t offset = std::lower_bound(points_.begin(), points_.end(), *other->dataPointsBegin(), [](const DataPoint& lhs, const DataPoint& rhs) -> bool {
         return lhs.state().timeStampMs() < rhs.state().timeStampMs();
     }) - points_.begin();
 

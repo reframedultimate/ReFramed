@@ -7,7 +7,7 @@
 namespace uh {
 
 template <typename T>
-class Reference
+class UH_TEMPLATE_EXPORT Reference
 {
 public:
     Reference()
@@ -20,7 +20,7 @@ public:
         ref();
     }
 
-    Reference(Reference&& other)
+    Reference(Reference&& other) noexcept
         : Reference()
     {
         swap(*this, other);

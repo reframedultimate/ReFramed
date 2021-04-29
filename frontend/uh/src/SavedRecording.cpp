@@ -98,7 +98,7 @@ static std::string decompressQtZFile(const String& fileName)
 
     int ret;
     do {
-        s.avail_in = fread(buf, 1, CHUNK, fp);
+        s.avail_in = static_cast<uInt>(fread(buf, 1, CHUNK, fp));
         if (ferror(fp))
             goto read_error;
         if (s.avail_in == 0)
@@ -122,7 +122,6 @@ static std::string decompressQtZFile(const String& fileName)
                 out.resize(prevSize + have);
         } while (s.avail_out == 0);
     } while (ret != Z_STREAM_END);
-    assert(ret == Z_STREAM_END);
 
     inflateEnd(&s);
     delete[] buf;
@@ -190,7 +189,7 @@ SavedRecording* SavedRecording::load(const String& fileName)
             try {
                 j = json::parse(std::move(s));
                 break;
-            } catch (const json::parse_error& e) {
+            } catch (const json::parse_error&) {
                 return nullptr;
             }
         }
@@ -259,7 +258,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(key, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -271,7 +270,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = std::stoul(key, &pos);
+        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -317,7 +316,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
+    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -331,7 +330,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
         {
             Frame frame = stream.readBU32(&error);
             FighterStatus status = stream.readBU16(&error);
-            float damage = stream.readBF64(&error);
+            float damage = static_cast<float>(stream.readBF64(&error));
             FighterStocks stocks = stream.readU8(&error);
 
             if (error)
@@ -346,7 +345,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false);
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
 
         }
     }
@@ -393,7 +392,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = std::stoul(key, &pos);
+        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -409,7 +408,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(fighter, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -417,7 +416,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = std::stoul(key, &pos);
+            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -435,7 +434,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(key, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -447,7 +446,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = std::stoul(key, &pos);
+        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -490,7 +489,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     recording->gameNumber_ = jsonGameInfo["number"].get<int>();
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
+    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -504,7 +503,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         {
             Frame frame = stream.readBU32(&error);
             FighterStatus status = stream.readBU16(&error);
-            float damage = stream.readBF64(&error);
+            float damage = static_cast<float>(stream.readBF64(&error));
             FighterStocks stocks = stream.readU8(&error);
 
             if (error)
@@ -519,7 +518,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0, 0.0, damage, 0.0, 50.0, status, 0, 0, stocks, false, false);
+            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
         }
     }
 
@@ -565,7 +564,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = std::stoul(key, &pos);
+        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -584,7 +583,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(fighter, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -592,7 +591,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = std::stoul(key, &pos);
+            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -613,7 +612,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(key, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -625,7 +624,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = std::stoul(key, &pos);
+        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -676,7 +675,7 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
+    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -689,11 +688,11 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         for (Frame f = 0; f < stateCount; ++f)
         {
             Frame frame = stream.readBU32(&error);
-            float posx = stream.readBF64(&error);
-            float posy = stream.readBF64(&error);
-            float damage = stream.readBF64(&error);
-            float hitstun = stream.readBF64(&error);
-            float shield = stream.readBF64(&error);
+            float posx = static_cast<float>(stream.readBF64(&error));
+            float posy = static_cast<float>(stream.readBF64(&error));
+            float damage = static_cast<float>(stream.readBF64(&error));
+            float hitstun = static_cast<float>(stream.readBF64(&error));
+            float shield = static_cast<float>(stream.readBF64(&error));
             FighterStatus status = stream.readBU16(&error);
             FighterMotion motion = stream.readBU64(&error);
             FighterHitStatus hit_status = stream.readU8(&error);
@@ -763,7 +762,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = std::stoul(key, &pos);
+        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -782,7 +781,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(fighter, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -790,7 +789,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = std::stoul(key, &pos);
+            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -811,7 +810,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(key, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -823,7 +822,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = std::stoul(key, &pos);
+        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -835,7 +834,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID = std::stoul(key, &pos);
+        FighterHitStatus hitStatusID = static_cast<FighterHitStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -888,7 +887,7 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
+    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;
@@ -979,7 +978,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = std::stoul(key, &pos);
+        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -998,7 +997,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(fighter, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -1006,7 +1005,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = std::stoul(key, &pos);
+            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -1027,7 +1026,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = std::stoul(key, &pos);
+        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1039,7 +1038,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = std::stoul(key, &pos);
+        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1051,7 +1050,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID = std::stoul(key, &pos);
+        FighterHitStatus hitStatusID = static_cast<FighterHitStatus>(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1105,7 +1104,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), streamDecoded.length());
+    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
     for (int i = 0; i < recording->playerCount(); ++i)
     {
         int error = 0;

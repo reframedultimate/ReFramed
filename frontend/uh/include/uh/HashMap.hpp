@@ -34,8 +34,8 @@ struct HashMapHasher
     typedef H HashType;
 };
 
-template <typename H>
-struct HashMapHasher<uint8_t, H>
+template <>
+struct HashMapHasher<uint8_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint8_t value) const {
@@ -52,8 +52,8 @@ struct HashMapHasher<uint8_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<uint16_t, H>
+template <>
+struct HashMapHasher<uint16_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint16_t value) const {
@@ -64,8 +64,8 @@ struct HashMapHasher<uint16_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<uint32_t, H>
+template <>
+struct HashMapHasher<uint32_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint32_t value) const {
@@ -73,30 +73,32 @@ struct HashMapHasher<uint32_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<int, H>
+template <>
+struct HashMapHasher<int, uint32_t>
 {
-    typedef H HashType;
-    H operator()(int value) const { return value; }
+    typedef uint32_t HashType;
+    uint32_t operator()(int value) const {
+        return hash32_jenkins_oaat(&value, 4);
+    }
 };
 
-template <typename H>
-struct HashMapHasher<String, H>
+template <>
+struct HashMapHasher<String, uint32_t>
 {
-    typedef H HashType;
-    H operator()(const String& s) const {
+    typedef uint32_t HashType;
+    uint32_t operator()(const String& s) const {
         return hash32_jenkins_oaat(s.data(), s.length());
     }
 };
 
-template <typename P, typename H>
-struct HashMapHasher<P*, H>
+template <typename P>
+struct HashMapHasher<P*, uint32_t>
 {
-    typedef H HashType;
-    H operator()(P* p) const {
+    typedef uint32_t HashType;
+    uint32_t operator()(P* p) const {
         return hash32_combine(
-            reinterpret_cast<size_t>(p) / sizeof(P*),
-            (reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32
+            static_cast<uint32_t>(reinterpret_cast<size_t>(p) / sizeof(P*)),
+            static_cast<uint32_t>((reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32)
         );
     }
 };
@@ -111,7 +113,7 @@ public:
 };
 
 template <typename K, typename V, typename Hasher=HashMapHasher<K>, typename S=int32_t>
-class HashMap : private HashMapAlloc
+class UH_TEMPLATE_EXPORT HashMap : private HashMapAlloc
 {
     typedef typename Hasher::HashType H;
 
@@ -229,7 +231,7 @@ public:
         }
         ConstIterator operator++(int)
         {
-            Iterator tmp(*this);
+            ConstIterator tmp(*this);
             operator++();
             return tmp;
         }
@@ -603,4 +605,3 @@ private:
 };
 
 }
-
