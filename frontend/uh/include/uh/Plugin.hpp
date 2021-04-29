@@ -6,7 +6,7 @@ class QWidget;
 
 namespace uh {
 
-class Plugin
+class UH_PUBLIC_API Plugin
 {
 public:
     virtual ~Plugin() {}

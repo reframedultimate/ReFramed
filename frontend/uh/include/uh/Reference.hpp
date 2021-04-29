@@ -20,7 +20,7 @@ public:
         ref();
     }
 
-    Reference(Reference&& other)
+    Reference(Reference&& other) noexcept
         : Reference()
     {
         swap(*this, other);

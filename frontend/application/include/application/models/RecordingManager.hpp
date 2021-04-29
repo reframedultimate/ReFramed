@@ -4,22 +4,21 @@
 #include "application/models/RecordingGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
 #include "uh/ListenerDispatcher.hpp"
+#include "uh/HashMap.hpp"
 #include <QString>
 #include <QDir>
-#include <unordered_map>
 #include <memory>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 2)
-namespace std {
-    template<> struct hash<QString> {
-        std::size_t operator()(const QString& s) const noexcept {
-            return (size_t)qHash(s);
-        }
-    };
-}
-#endif
-
 namespace uhapp {
+
+template <typename H=uint32_t>
+struct QStringHasher
+{
+    typedef H HashType;
+    HashType operator()(const QString& s) const {
+        return qHash(s);
+    }
+};
 
 class RecordingManagerListener;
 class Settings;
@@ -70,7 +69,7 @@ public:
      * user. Gets all groups.
      * \return A list of groups.
      */
-    const std::unordered_map<QString, std::unique_ptr<RecordingGroup>>& recordingGroups() const;
+    const uh::HashMap<QString, std::unique_ptr<RecordingGroup>, QStringHasher<>>& recordingGroups() const;
 
     /*!
      * \brief Individual recordings can be organized into named groups by the
@@ -96,7 +95,7 @@ private:
     Settings* settings_;
     QHash<QString, QDir> recordingSources_;
     QHash<QString, QDir> videoDirectories_;
-    std::unordered_map<QString, std::unique_ptr<RecordingGroup>> recordingGroups_;
+    uh::HashMap<QString, std::unique_ptr<RecordingGroup>, QStringHasher<>> recordingGroups_;
 };
 
 }
