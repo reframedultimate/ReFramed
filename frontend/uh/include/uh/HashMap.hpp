@@ -34,8 +34,8 @@ struct HashMapHasher
     typedef H HashType;
 };
 
-template <typename H>
-struct HashMapHasher<uint8_t, H>
+template <>
+struct HashMapHasher<uint8_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint8_t value) const {
@@ -52,8 +52,8 @@ struct HashMapHasher<uint8_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<uint16_t, H>
+template <>
+struct HashMapHasher<uint16_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint16_t value) const {
@@ -64,8 +64,8 @@ struct HashMapHasher<uint16_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<uint32_t, H>
+template <>
+struct HashMapHasher<uint32_t, uint32_t>
 {
     typedef uint32_t HashType;
     HashType operator()(uint32_t value) const {
@@ -73,30 +73,32 @@ struct HashMapHasher<uint32_t, H>
     }
 };
 
-template <typename H>
-struct HashMapHasher<int, H>
+template <>
+struct HashMapHasher<int, uint32_t>
 {
-    typedef H HashType;
-    H operator()(int value) const { return value; }
+    typedef uint32_t HashType;
+    uint32_t operator()(int value) const {
+        return hash32_jenkins_oaat(&value, 4);
+    }
 };
 
-template <typename H>
-struct HashMapHasher<String, H>
+template <>
+struct HashMapHasher<String, uint32_t>
 {
-    typedef H HashType;
-    H operator()(const String& s) const {
+    typedef uint32_t HashType;
+    uint32_t operator()(const String& s) const {
         return hash32_jenkins_oaat(s.data(), s.length());
     }
 };
 
-template <typename P, typename H>
-struct HashMapHasher<P*, H>
+template <typename P>
+struct HashMapHasher<P*, uint32_t>
 {
-    typedef H HashType;
-    H operator()(P* p) const {
+    typedef uint32_t HashType;
+    uint32_t operator()(P* p) const {
         return hash32_combine(
-            reinterpret_cast<size_t>(p) / sizeof(P*),
-            (reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32
+            static_cast<uint32_t>(reinterpret_cast<size_t>(p) / sizeof(P*)),
+            static_cast<uint32_t>((reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32)
         );
     }
 };
@@ -229,7 +231,7 @@ public:
         }
         ConstIterator operator++(int)
         {
-            Iterator tmp(*this);
+            ConstIterator tmp(*this);
             operator++();
             return tmp;
         }
@@ -417,13 +419,26 @@ private:
         return true;
     }
 
+    template <typename T, typename U>
+    T* construct(T* dst, U&& src, std::enable_if_t<std::is_rvalue_reference<U&&>::value>*_=0)
+    {
+        return new (dst) T(std::move(src));
+    }
+
+    template <typename T, typename U>
+    T* construct(T* dst, U&& src, std::enable_if_t<!std::is_rvalue_reference<U&&>::value>*_=0)
+    {
+        return new (dst) T(src);
+    }
+
 public:
     /*!
      * \brief If the key does not exist, inserts the key/value pair and returns
      * an interator to the new insertion. If the key does exist, returns end()
      * and nothing is inserted.
      */
-    Iterator insertNew(const K& key, const V& value)
+    template <typename KK, typename VV>
+    Iterator insertNew(KK&& key, VV&& value)
     {
         if (table_.count() == 0)
             resize(128);
@@ -435,8 +450,8 @@ public:
         if (findFreeInsertSlot(key, hash, pos))
         {
             table_[pos] = hash;
-            new (keys_ + pos) K(key);
-            new (values_ + pos) V(value);
+            construct(keys_ + pos, std::forward<KK&&>(key));
+            construct(values_ + pos, std::forward<VV&&>(value));
             count_++;
             return Iterator(table_, keys_, values_, pos);
         }
@@ -444,7 +459,8 @@ public:
         return end();
     }
 
-    Iterator insertOrGet(const K& key, const V& value)
+    template <typename KK, typename VV>
+    Iterator insertOrGet(KK&& key, VV&& value)
     {
         if (table_.count() == 0)
             resize(128);
@@ -456,15 +472,16 @@ public:
         if (findFreeInsertSlot(key, hash, pos))
         {
             table_[pos] = hash;
-            new (keys_ + pos) K(key);
-            new (values_ + pos) V(value);
+            construct(keys_ + pos, std::forward<KK&&>(key));
+            construct(values_ + pos, std::forward<VV&&>(value));
             count_++;
         }
 
         return Iterator(table_, keys_, values_, pos);
     }
 
-    Iterator insertReplace(const K& key, const V& value)
+    template <typename KK, typename VV>
+    Iterator insertReplace(KK&& key, VV&& value)
     {
         if (table_.count() == 0)
             resize(128);
@@ -477,8 +494,8 @@ public:
             return end();
 
         table_[pos] = hash;
-        new (keys_ + pos) K(key);
-        new (values_ + pos) V(value);
+        construct(keys_ + pos, std::forward<KK&&>(key));
+        construct(values_ + pos, std::forward<VV&&>(value));
         count_++;
         return Iterator(table_, keys_, values_, pos);
     }
@@ -486,7 +503,7 @@ public:
     S erase(const K& key)
     {
         S pos = findImpl(key);
-        if (pos != count_)
+        if (pos != table_.count())
         {
             count_--;
             table_[pos] = RIP;

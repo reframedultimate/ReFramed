@@ -45,7 +45,7 @@ public:
     }
 
     SmallString(const char* cStr)
-        : SmallString(cStr, strlen(cStr))
+        : SmallString(cStr, static_cast<S>(strlen(cStr)))
     {}
 
     SmallString(const SmallString& other)
@@ -53,7 +53,7 @@ public:
     {
     }
 
-    SmallString(SmallString&& other)
+    SmallString(SmallString&& other) noexcept
         : SmallString()
     {
         swap(*this, other);

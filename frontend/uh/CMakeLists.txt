@@ -5,6 +5,8 @@ include (CheckCXXSourceCompiles)
 project ("uh"
 	VERSION 0.0.1
     LANGUAGES CXX C)
+    
+option (UH_REFCOUNTED_DEBUG "Adds members to the uh::RefCounted class to help find memory leaks" OFF)
 	
 test_visibility_macros (
 	UH_API_EXPORT 

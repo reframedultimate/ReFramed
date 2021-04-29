@@ -1,5 +1,7 @@
 #pragma once
 
+#cmakedefine UH_REFCOUNTED_DEBUG
+
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x) STRINGIFY_(x)
 

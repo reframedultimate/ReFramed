@@ -66,7 +66,7 @@ DataSetFilterView::DataSetFilterView(RecordingManager* recordingManager, QWidget
 
     // Fill in input groups list
     for (const auto& it : recordingManager_->recordingGroups())
-        onRecordingManagerGroupAdded(it.second.get());
+        onRecordingManagerGroupAdded(it.value().get());
 
     connect(ui_->toolButton_addFilter, &QToolButton::triggered,
             this, &DataSetFilterView::onToolButtonAddFilterTriggered);
@@ -82,7 +82,7 @@ DataSetFilterView::~DataSetFilterView()
 {
     // Have to do this so we unregister as listeners to every recording group
     for (const auto& it : recordingManager_->recordingGroups())
-        onRecordingManagerGroupRemoved(it.second.get());
+        onRecordingManagerGroupRemoved(it.value().get());
 
     dataSetBackgroundLoader_->dispatcher.removeListener(this);
     recordingManager_->dispatcher.removeListener(this);

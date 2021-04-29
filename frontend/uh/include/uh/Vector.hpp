@@ -115,7 +115,7 @@ public:
         insertCopy(0, other.begin_, other.end());
     }
 
-    SmallVector(SmallVector&& other)
+    SmallVector(SmallVector&& other) noexcept
         : SmallVector()
     {
         swap(*this, other);
@@ -201,7 +201,7 @@ public:
 
     void insertCopy(S insertPos, const T* begin, const T* end)
     {
-        S insertCount = end - begin;
+        S insertCount = static_cast<S>(end - begin);
         ensureCapacity(this->count_ + insertCount, insertPos, insertCount);
         T* dst = this->begin_ + insertPos;
         while (begin != end)
@@ -221,12 +221,12 @@ public:
 
     void insertCopy(T* insertIt, const T* begin, const T* end)
     {
-        insertCopy(insertIt - this->begin_, begin, end);
+        insertCopy(static_cast<S>(insertIt - this->begin_), begin, end);
     }
 
     void insertMove(T* insertIt, T* begin, T* end)
     {
-        insertMove(insertIt - this->begin_, begin, end);
+        insertMove(static_cast<S>(insertIt - this->begin_), begin, end);
     }
 
     T& insert(S pos, const T& value)
@@ -237,7 +237,7 @@ public:
 
     T& insert(T* insertIt, const T& value)
     {
-        return insert(insertIt - this->begin_, value);
+        return insert(static_cast<S>(insertIt - this->begin_), value);
     }
 
     T& insert(S pos, T&& value)
@@ -248,7 +248,7 @@ public:
 
     T& insert(T* insertIt, T&& value)
     {
-        return insert(insertIt - this->begin_, std::move(value));
+        return insert(static_cast<S>(insertIt - this->begin_), std::move(value));
     }
 
     T& push(const T& value)
@@ -447,7 +447,7 @@ public:
 
     void insertCopy(S insertPos, const T* begin, const T* end)
     {
-        S insertCount = end - begin;
+        S insertCount = static_cast<S>(end - begin);
         ensureCapacity(this->count_ + insertCount, insertPos, insertCount);
         T* dst = this->begin_ + insertPos;
         while (begin != end)
@@ -457,7 +457,7 @@ public:
 
     void insertMove(S insertPos, T* begin, T* end)
     {
-        S insertCount = end - begin;
+        S insertCount = static_cast<S>(end - begin);
         ensureCapacity(this->count_ + insertCount, insertPos, insertCount);
         T* dst = this->begin_ + insertPos;
         while (begin != end)
@@ -467,12 +467,12 @@ public:
 
     void insertCopy(T* insertIt, const T* begin, const T* end)
     {
-        insertCopy(insertIt - this->begin_, begin, end);
+        insertCopy(static_cast<S>(insertIt - this->begin_), begin, end);
     }
 
     void insertMove(T* insertIt, T* begin, T* end)
     {
-        insertMove(insertIt - this->begin_, begin, end);
+        insertMove(static_cast<S>(insertIt - this->begin_), begin, end);
     }
 
     Iterator insert(S pos, const T& value)
