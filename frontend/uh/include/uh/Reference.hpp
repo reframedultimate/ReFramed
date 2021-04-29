@@ -7,7 +7,7 @@
 namespace uh {
 
 template <typename T>
-class UH_TEMPLATE_EXPORT Reference
+class Reference
 {
 public:
     Reference()

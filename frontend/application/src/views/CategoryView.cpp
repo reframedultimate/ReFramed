@@ -28,7 +28,7 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     setActiveRecordingViewDisabled(true);
 
     for (const auto& group : recordingManager->recordingGroups())
-        onRecordingManagerGroupAdded(group.second.get());
+        onRecordingManagerGroupAdded(group.value().get());
     const auto& recordingSources = recordingManager->recordingSources();
     for (auto it = recordingSources.begin(); it != recordingSources.end(); ++it)
         onRecordingManagerRecordingSourceAdded(it.key(), it.value());
