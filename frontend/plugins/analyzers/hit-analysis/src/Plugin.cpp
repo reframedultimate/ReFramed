@@ -1,4 +1,5 @@
 #include "hit-analysis/PluginConfig.hpp"
+#include "hit-analysis/HitAnalyzer.hpp"
 #include "uh/PluginInterface.hpp"
 #include "uh/PluginType.hpp"
 
@@ -6,13 +7,12 @@
 
 static uh::Plugin* createHitAnalyzer()
 {
-    //return new HitAnalyzer;;
-    return nullptr;
+    return new HitAnalyzer;
 }
 
 static void destroy(uh::Plugin* plugin)
 {
-    //delete plugin;
+    delete plugin;
 }
 
 static PluginFactory factories[] = {

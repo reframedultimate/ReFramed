@@ -7,6 +7,7 @@
 #elif defined(__APPLE__)
 #elif defined(__linux__)
 #   include <dlfcn.h>
+#   include <stdio.h>
 #endif
 
 /* ------------------------------------------------------------------------- */
@@ -21,7 +22,10 @@ struct uh_dynlib* uh_dynlib_open(const char* fileName)
 #elif defined(__linux__)
     void* handle = dlopen(fileName, RTLD_NOW);
     if (handle == NULL)
+    {
+        printf("dlopen() failed: %s\n", dlerror());
         return NULL;
+    }
     return (struct uh_dynlib*)handle;
 #endif
 }

@@ -21,6 +21,9 @@ public:
     void dataSetCancelled() override;
     void processDataSet(const uh::DataSet* dataSet) override;
 
+    QWidget* takeWidget() override;
+    void giveWidget(QWidget* widget) override;
+
 private:
     Ui::HitAnalyzer* ui_;
 };

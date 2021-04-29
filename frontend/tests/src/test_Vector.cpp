@@ -41,9 +41,9 @@ TEST(NAME, construct_with_size)
 TEST(NAME, copy_construct)
 {
     Vector<Obj> v1;
-    EXPECT_THAT(v1.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v1.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v1.push(Obj(3)).x, Eq(3));
+    EXPECT_THAT(v1.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v1.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v1.push(Obj(3))->x, Eq(3));
 
     Vector<Obj> v2(v1);
     EXPECT_THAT(v1[0].x, Eq(COPIED));
@@ -57,9 +57,9 @@ TEST(NAME, copy_construct)
 TEST(NAME, move_construct)
 {
     Vector<Obj> v1;
-    EXPECT_THAT(v1.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v1.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v1.push(Obj(3)).x, Eq(3));
+    EXPECT_THAT(v1.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v1.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v1.push(Obj(3))->x, Eq(3));
 
     Vector<Obj> v2(std::move(v1));
     EXPECT_THAT(v1.count(), Eq(0));
@@ -74,9 +74,9 @@ TEST(NAME, push_copy_elements)
     Obj o1(1);
     Obj o2(2);
     Obj o3(3);
-    EXPECT_THAT(v.push(o1).x, Eq(1));
-    EXPECT_THAT(v.push(o2).x, Eq(2));
-    EXPECT_THAT(v.push(o3).x, Eq(3));
+    EXPECT_THAT(v.push(o1)->x, Eq(1));
+    EXPECT_THAT(v.push(o2)->x, Eq(2));
+    EXPECT_THAT(v.push(o3)->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -91,9 +91,9 @@ TEST(NAME, push_move_elements)
     Obj o1(1);
     Obj o2(2);
     Obj o3(3);
-    EXPECT_THAT(v.push(std::move(o1)).x, Eq(1));
-    EXPECT_THAT(v.push(std::move(o2)).x, Eq(2));
-    EXPECT_THAT(v.push(std::move(o3)).x, Eq(3));
+    EXPECT_THAT(v.push(std::move(o1))->x, Eq(1));
+    EXPECT_THAT(v.push(std::move(o2))->x, Eq(2));
+    EXPECT_THAT(v.push(std::move(o3))->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -107,11 +107,11 @@ TEST(NAME, insert_copy_single_without_realloc)
     Vector<Obj> v;
     v.reserve(5);
     Obj o = Obj(3);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(4)).x, Eq(4));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
-    EXPECT_THAT(v.insert(2, o).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(4))->x, Eq(4));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
+    EXPECT_THAT(v.insert(2, o)->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -125,11 +125,11 @@ TEST(NAME, insert_move_single_without_realloc)
     Vector<Obj> v;
     v.reserve(5);
     Obj o = Obj(3);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(4)).x, Eq(4));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
-    EXPECT_THAT(v.insert(2, std::move(o)).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(4))->x, Eq(4));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
+    EXPECT_THAT(v.insert(2, std::move(o))->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -142,8 +142,8 @@ TEST(NAME, insert_copy_multiple_without_realloc)
 {
     Vector<Obj> v;
     v.reserve(5);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
     Obj toInsert[3] = {Obj(2), Obj(3), Obj(4)};
     v.insertCopy(1, toInsert, toInsert + 3);
     EXPECT_THAT(v[0].x, Eq(1));
@@ -161,8 +161,8 @@ TEST(NAME, insert_move_multiple_without_realloc)
 {
     Vector<Obj> v;
     v.reserve(5);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
     Obj toInsert[3] = {Obj(2), Obj(3), Obj(4)};
     v.insertMove(1, toInsert, toInsert + 3);
     EXPECT_THAT(v[0].x, Eq(1));
@@ -181,11 +181,11 @@ TEST(NAME, insert_copy_single_with_realloc)
     Vector<Obj> v;
     v.reserve(4);
     Obj o = Obj(3);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(4)).x, Eq(4));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
-    EXPECT_THAT(v.insert(2, o).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(4))->x, Eq(4));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
+    EXPECT_THAT(v.insert(2, o)->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -199,11 +199,11 @@ TEST(NAME, insert_move_single_with_realloc)
     Vector<Obj> v;
     v.reserve(4);
     Obj o = Obj(3);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(4)).x, Eq(4));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
-    EXPECT_THAT(v.insert(2, std::move(o)).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(4))->x, Eq(4));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
+    EXPECT_THAT(v.insert(2, std::move(o))->x, Eq(3));
     EXPECT_THAT(v[0].x, Eq(1));
     EXPECT_THAT(v[1].x, Eq(2));
     EXPECT_THAT(v[2].x, Eq(3));
@@ -216,8 +216,8 @@ TEST(NAME, insert_copy_multiple_with_realloc)
 {
     Vector<Obj> v;
     v.reserve(4);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
     Obj toInsert[3] = {Obj(2), Obj(3), Obj(4)};
     v.insertCopy(1, toInsert, toInsert + 3);
     EXPECT_THAT(v[0].x, Eq(1));
@@ -235,8 +235,8 @@ TEST(NAME, insert_move_multiple_with_realloc)
 {
     Vector<Obj> v;
     v.reserve(4);
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(5)).x, Eq(5));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(5))->x, Eq(5));
     Obj toInsert[3] = {Obj(2), Obj(3), Obj(4)};
     v.insertMove(1, toInsert, toInsert + 3);
     EXPECT_THAT(v[0].x, Eq(1));
@@ -253,9 +253,9 @@ TEST(NAME, insert_move_multiple_with_realloc)
 TEST(NAME, iterate_begin_end)
 {
     Vector<Obj> v;
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(3)).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(3))->x, Eq(3));
     int i = 1;
     for (const auto& o : v)
         EXPECT_THAT(o.x, Eq(i++));
@@ -264,9 +264,9 @@ TEST(NAME, iterate_begin_end)
 TEST(NAME, front_and_back_is_correct)
 {
     Vector<Obj> v;
-    EXPECT_THAT(v.push(Obj(1)).x, Eq(1));
-    EXPECT_THAT(v.push(Obj(2)).x, Eq(2));
-    EXPECT_THAT(v.push(Obj(3)).x, Eq(3));
+    EXPECT_THAT(v.push(Obj(1))->x, Eq(1));
+    EXPECT_THAT(v.push(Obj(2))->x, Eq(2));
+    EXPECT_THAT(v.push(Obj(3))->x, Eq(3));
     EXPECT_THAT(v.front().x, Eq(1));
     EXPECT_THAT(v.back().x, Eq(3));
 }

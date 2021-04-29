@@ -70,6 +70,7 @@ add_library (uh SHARED
 	"src/FighterIDMapping.cpp"
 	"src/FighterStatusMapping.cpp"
     "src/hash40.c"
+    "src/HashMap.cpp"
 	"src/HitStatusMapping.cpp"
     "src/init.c"
 	"src/PlayerState.cpp"
