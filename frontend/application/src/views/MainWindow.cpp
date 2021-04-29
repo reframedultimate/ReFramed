@@ -11,6 +11,7 @@
 #include "application/views/MainWindow.hpp"
 #include "application/views/RecordingGroupView.hpp"
 #include "application/views/RecordingView.hpp"
+#include "application/views/VisualizerView.hpp"
 
 #include "uh/VisualizerPlugin.hpp"
 
@@ -44,11 +45,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     mainView_->addWidget(recordingGroupView_);
     mainView_->addWidget(new DataSetFilterView(recordingManager_.get()));
-    mainView_->addWidget(new AnalysisView(pluginManager_.get()));
+    mainView_->addWidget(new VisualizerView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeRecordingView_);
     setCentralWidget(mainView_);
+    mainView_->setCurrentIndex(2);
 
     QDockWidget* categoryDock = new QDockWidget(this);
     categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
