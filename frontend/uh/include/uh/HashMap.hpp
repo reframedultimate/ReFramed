@@ -353,7 +353,7 @@ public:
                 continue;
 
             H hash = table_[oldPos];
-            S newPos = hash % newTable.count();
+            S newPos = hash & (newTable.count() - 1);
             S i = 0;
             S lastTombtone = newTable.count();
             while (newTable[newPos] != UNUSED)
@@ -362,7 +362,7 @@ public:
                     lastTombtone = newPos;
                 i++;
                 newPos += i;
-                newPos = newPos % newTable.count();
+                newPos = newPos & (newTable.count() - 1);
             }
 
             if (lastTombtone != newTable.count())
@@ -384,10 +384,12 @@ public:
 private:
     bool findFreeInsertSlot(const K& key, H& hash, S& pos)
     {
+        assert(table_.count());
+
         S i = 0;
         S lastTombtone = table_.count();
         hash = hashWrapper(key);
-        pos = hash % table_.count();
+        pos = hash & (table_.count() - 1);
 
         while (table_[pos] != UNUSED)
         {
@@ -409,7 +411,7 @@ private:
             // size is a power of two, this will visit every slot
             i++;
             pos += i;
-            pos = pos % table_.count();
+            pos = pos & (table_.count() - 1);
         }
 
         // It's safe to insert new values at the end of a probing sequence
@@ -422,12 +424,14 @@ private:
     template <typename T, typename U>
     T* construct(T* dst, U&& src, std::enable_if_t<std::is_rvalue_reference<U&&>::value>*_=0)
     {
+        (void)_;
         return new (dst) T(std::move(src));
     }
 
     template <typename T, typename U>
     T* construct(T* dst, U&& src, std::enable_if_t<!std::is_rvalue_reference<U&&>::value>*_=0)
     {
+        (void)_;
         return new (dst) T(src);
     }
 
@@ -556,7 +560,7 @@ private:
             return 0;
 
         H hash = hashWrapper(key);
-        S pos = hash % table_.count();
+        S pos = hash & (table_.count() - 1);
         S i = 0;
         while (true)
         {
@@ -575,7 +579,7 @@ private:
             // size is a power of two, this will visit every slot
             i++;
             pos += i;
-            pos = pos % table_.count();
+            pos = pos & (table_.count() - 1);
         }
 
         return pos;
