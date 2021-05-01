@@ -24,8 +24,8 @@ public:
     ~DamageTimePlot();
 
 public slots:
-    void clear();
     void setRecording(uh::Recording* recording);
+    void clear();
 
 private:
     void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;

@@ -69,21 +69,6 @@ DamageTimePlot::~DamageTimePlot()
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::clear()
-{
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
-    recording_ = nullptr;
-
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    prevFrames_.clear();
-    prevDamageValues_.clear();
-    largestTimeSeen_ = 0.0;
-}
-
-// ----------------------------------------------------------------------------
 static void appendDataPoint(CurveData* data, float frame, float damage, float* largestTimeSeen)
 {
     float time = static_cast<float>(frame) / 60.0;
@@ -146,6 +131,22 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
     }
 
     forceAutoScale();
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlot::clear()
+{
+    if (recording_)
+        recording_->dispatcher.removeListener(this);
+    recording_ = nullptr;
+
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
+    largestTimeSeen_ = 0.0;
+    replot();
 }
 
 // ----------------------------------------------------------------------------

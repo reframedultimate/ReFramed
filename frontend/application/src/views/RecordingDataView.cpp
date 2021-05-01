@@ -73,8 +73,7 @@ RecordingDataView::~RecordingDataView()
 // ----------------------------------------------------------------------------
 void RecordingDataView::setRecording(uh::Recording* recording)
 {
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
+    clear();
     recording_ = recording;
 
     int storeCurrentPageIndex = ui_->stackedWidget->currentIndex();
@@ -93,6 +92,35 @@ void RecordingDataView::setRecording(uh::Recording* recording)
         ensurePlayerDataTablesPopulated();
 
     recording_->dispatcher.addListener(this);
+}
+
+// ----------------------------------------------------------------------------
+void RecordingDataView::clear()
+{
+    if (recording_)
+        recording_->dispatcher.removeListener(this);
+    recording_.reset();
+
+    storeCurrentPageIndex_ = ui_->stackedWidget_playerData->currentIndex();
+
+    ui_->treeWidget->clear();
+    ui_->tableWidget_gameInfo->clearContents();
+    ui_->tableWidget_gameInfo->setRowCount(0);
+    ui_->tableWidget_stageIDs->clearContents();
+    ui_->tableWidget_stageIDs->setRowCount(0);
+    ui_->tableWidget_fighterIDs->clearContents();
+    ui_->tableWidget_fighterIDs->setRowCount(0);
+    ui_->tableWidget_baseStatusIDs->clearContents();
+    ui_->tableWidget_baseStatusIDs->setRowCount(0);
+    ui_->tableWidget_specificStatusIDs->clearContents();
+    ui_->tableWidget_specificStatusIDs->setRowCount(0);
+    ui_->tableWidget_hitStatusIDs->clearContents();
+    ui_->tableWidget_hitStatusIDs->setRowCount(0);
+
+    clearStackedWidget(ui_->stackedWidget_playerData);
+
+    playerDataItems_.clear();
+    playerDataTables_.clear();
 }
 
 // ----------------------------------------------------------------------------
@@ -132,9 +160,6 @@ void RecordingDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateTree()
 {
-    ui_->treeWidget->clear();
-    playerDataItems_.clear();
-
     // Game info
     gameInfoItem_ = new QTreeWidgetItem({"Game Info"});
     ui_->treeWidget->addTopLevelItem(gameInfoItem_);
@@ -171,9 +196,6 @@ void RecordingDataView::repopulateTree()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateGameInfoTable()
 {
-    // Clear
-    ui_->tableWidget_gameInfo->clearContents();
-
     // Fill in data
     ui_->tableWidget_gameInfo->setRowCount(6 + recording_->playerCount());
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
@@ -203,12 +225,9 @@ void RecordingDataView::repopulateGameInfoTable()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateStageMappingTable()
 {
-    // Clear
-    const auto& stageMapping = recording_->mappingInfo().stageID.get();
-    ui_->tableWidget_stageIDs->clearContents();
-
     // Fill in data
     int i = 0;
+    const auto& stageMapping = recording_->mappingInfo().stageID.get();
     ui_->tableWidget_stageIDs->setRowCount(stageMapping.count());
     for (const auto& it : stageMapping)
     {
@@ -223,12 +242,9 @@ void RecordingDataView::repopulateStageMappingTable()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateFighterMappingTable()
 {
-    // Clear
-    const auto& fighterMapping = recording_->mappingInfo().fighterID.get();
-    ui_->tableWidget_fighterIDs->clearContents();
-
     // Fill in data
     int i = 0;
+    const auto& fighterMapping = recording_->mappingInfo().fighterID.get();
     ui_->tableWidget_fighterIDs->setRowCount(fighterMapping.count());
     for (const auto& it : fighterMapping)
     {
@@ -243,14 +259,10 @@ void RecordingDataView::repopulateFighterMappingTable()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateStatusMappingTable()
 {
-    // Clear
-    const auto& baseStatusMapping = recording_->mappingInfo().fighterStatus.baseEnumNames();
-    const auto& specificStatusMappings = recording_->mappingInfo().fighterStatus.fighterSpecificEnumNames();
-    ui_->tableWidget_baseStatusIDs->clearContents();
-    ui_->tableWidget_specificStatusIDs->clearContents();
-
     // Fill in base status mapping info
     int i = 0;
+    const auto& baseStatusMapping = recording_->mappingInfo().fighterStatus.baseEnumNames();
+    const auto& specificStatusMappings = recording_->mappingInfo().fighterStatus.fighterSpecificEnumNames();
     ui_->tableWidget_baseStatusIDs->setRowCount(baseStatusMapping.count());
     for (const auto& it : baseStatusMapping)
     {
@@ -285,12 +297,9 @@ void RecordingDataView::repopulateStatusMappingTable()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulateHitStatusMappingTable()
 {
-    // Clear
-    const auto& hitStatusMapping = recording_->mappingInfo().hitStatus.get();
-    ui_->tableWidget_hitStatusIDs->clearContents();
-
     // Fill in data
     int i = 0;
+    const auto& hitStatusMapping = recording_->mappingInfo().hitStatus.get();
     ui_->tableWidget_hitStatusIDs->setRowCount(hitStatusMapping.count());
     for (const auto& it : hitStatusMapping)
     {
@@ -305,12 +314,6 @@ void RecordingDataView::repopulateHitStatusMappingTable()
 // ----------------------------------------------------------------------------
 void RecordingDataView::repopulatePlayerDataTables()
 {
-    int storeCurrentPageIndex = ui_->stackedWidget_playerData->currentIndex();
-
-    // Clear
-    clearStackedWidget(ui_->stackedWidget_playerData);
-    playerDataTables_.clear();
-
     // Fill in data
     for (int player = 0; player != recording_->playerCount(); ++player)
     {
@@ -320,10 +323,13 @@ void RecordingDataView::repopulatePlayerDataTables()
         table->setHorizontalHeaderLabels({"Frame", "Position", "Facing", "Damage", "Hitstun", "Shield", "Status", "Motion", "Hit Status", "Stocks", "Attack Connected"});
     }
 
-    if (storeCurrentPageIndex >= recording_->playerCount())
+    // Since we cleared the stacked widget, it won't remember which one was
+    // selected. storeCurrentPageIndex_ is saved in clear() and we try to
+    // select the same player index again
+    if (storeCurrentPageIndex_ >= recording_->playerCount())
         ui_->stackedWidget_playerData->setCurrentIndex(0);
     else
-        ui_->stackedWidget_playerData->setCurrentIndex(storeCurrentPageIndex);
+        ui_->stackedWidget_playerData->setCurrentIndex(storeCurrentPageIndex_);
 
     // Defer populating tables because there's a lot of data and it takes half
     // a second or so

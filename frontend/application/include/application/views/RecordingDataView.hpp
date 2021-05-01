@@ -29,6 +29,7 @@ public:
 
 public slots:
     void setRecording(uh::Recording* recording);
+    void clear();
 
 private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
@@ -64,6 +65,7 @@ private:
     uh::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     uh::SmallVector<QTableWidget*, 8> playerDataTables_;
     uh::Reference<uh::Recording> recording_;
+    int storeCurrentPageIndex_ = 0;
     bool playerDataTableRowsLoaded_ = false;
 };
 
