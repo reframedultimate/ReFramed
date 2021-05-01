@@ -54,7 +54,7 @@ qt5_add_resources (UH_RESOURCES_GEN
 qt5_add_translation (UH_QM_FILES
     "")
 
-add_executable (ultimate-hindsight
+add_executable (ultimate-hindsight WIN32
     ${UH_SOURCES_MOC}
     ${UH_FORMS_MOC}
     ${UH_RESOURCES_GEN}
