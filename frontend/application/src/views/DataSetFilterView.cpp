@@ -276,21 +276,6 @@ void DataSetFilterView::removeGroupFromInputDataSet(RecordingGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
-{
-    (void)group;
-    for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)
-    {
-        QListWidgetItem* item = ui_->listWidget_inputGroups->item(i);
-        if (item->text() == oldName)
-        {
-            item->setText(newName);
-            break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
 void DataSetFilterView::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
@@ -318,19 +303,26 @@ void DataSetFilterView::onRecordingManagerGroupAdded(RecordingGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onRecordingManagerGroupRemoved(RecordingGroup* group)
+void DataSetFilterView::onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
 {
-    group->dispatcher.removeListener(this);
-
+    (void)group;
     for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)
     {
         QListWidgetItem* item = ui_->listWidget_inputGroups->item(i);
-        if (item->text() == group->name())
+        if (item->text() == oldName)
         {
-            ui_->listWidget_inputGroups->removeItemWidget(item);
+            item->setText(newName);
             break;
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+void DataSetFilterView::onRecordingManagerGroupRemoved(RecordingGroup* group)
+{
+    group->dispatcher.removeListener(this);
+    for (const auto& item : ui_->listWidget_inputGroups->findItems(group->name(), Qt::MatchExactly))
+        delete item;
 }
 
 // ----------------------------------------------------------------------------
