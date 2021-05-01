@@ -8,6 +8,7 @@
 namespace uhapp {
 
 class RecordingGroupListener;
+class RecordingManager;
 
 class RecordingGroup
 {
@@ -21,7 +22,6 @@ public:
 
     const QSet<QFileInfo>& absFilePathList() const;
 
-    void setName(const QString& name);
     void addFile(const QFileInfo& absPathToFile);
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
@@ -29,8 +29,11 @@ public:
     uh::ListenerDispatcher<RecordingGroupListener> dispatcher;
 
 private:
-    RecordingGroup() {}
-    friend class QVector<RecordingGroup>;
+    // Only the recording manager is allowed to change names of recording groups
+    // because the hash table keys must remain in sync with the name stored in
+    // the recording group object
+    friend class RecordingManager;
+    void setName(const QString& name);
 
 private:
     QString name_;

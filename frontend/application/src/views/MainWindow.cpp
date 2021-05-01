@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
     , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
     , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
-    , recordingGroupView_(new RecordingGroupView)
+    , recordingGroupView_(new RecordingGroupView(recordingManager_.get()))
     , activeRecordingView_(new ActiveRecordingView(activeRecordingManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
@@ -58,14 +58,20 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
-    connect(activeRecordingManager_.get(), SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
-    connect(activeRecordingManager_.get(), SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::connectedToServer,
+            this, &MainWindow::onActiveRecordingManagerConnectedToServer);
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::disconnectedFromServer,
+            this, &MainWindow::onActiveRecordingManagerDisconnectedFromServer);
 
-    connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
-    connect(categoryView_, SIGNAL(recordingGroupSelected(RecordingGroup*)), recordingGroupView_, SLOT(setRecordingGroupWeakRef(RecordingGroup*)));
+    connect(categoryView_, &CategoryView::categoryChanged,
+            this, &MainWindow::onCategoryChanged);
+    connect(categoryView_, &CategoryView::recordingGroupSelected,
+            recordingGroupView_, &RecordingGroupView::setRecordingGroup);
 
-    connect(ui_->action_connect, SIGNAL(triggered(bool)), this, SLOT(onConnectActionTriggered()));
-    connect(ui_->action_disconnect, SIGNAL(triggered(bool)), this, SLOT(onDisconnectActionTriggered()));
+    connect(ui_->action_connect, &QAction::triggered,
+            this, &MainWindow::onConnectActionTriggered);
+    connect(ui_->action_disconnect, &QAction::triggered,
+            this, &MainWindow::onDisconnectActionTriggered);
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird

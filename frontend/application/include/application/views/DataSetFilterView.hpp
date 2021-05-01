@@ -62,11 +62,11 @@ private:
     void dirtyDataSetFilters();
 
 private:
-    void onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
     void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile) override;
     void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile) override;
 
     void onRecordingManagerGroupAdded(RecordingGroup* group) override;
+    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
     void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
 
     void onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet) override;
