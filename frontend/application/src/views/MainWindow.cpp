@@ -173,6 +173,8 @@ void MainWindow::onCategoryChanged(CategoryType category)
     switch (category)
     {
         case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+            recordingGroupView_->clear();
+            [[fallthrough]];
         case CategoryType::RECORDING_GROUP_ITEM:
             mainView_->setCurrentIndex(0);
             break;

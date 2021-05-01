@@ -78,6 +78,7 @@ void XYPositionPlot::clear()
     for (auto& curve : curves_)
         delete curve;
     curves_.clear();
+    replot();
 }
 
 // ----------------------------------------------------------------------------

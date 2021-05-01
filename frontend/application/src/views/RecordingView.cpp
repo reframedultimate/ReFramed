@@ -61,4 +61,12 @@ void RecordingView::setRecording(uh::Recording* recording)
     xyPositionPlot_->setRecording(recording);
 }
 
+// ----------------------------------------------------------------------------
+void RecordingView::clear()
+{
+    recordingDataView_->clear();
+    damageTimePlot_->clear();
+    xyPositionPlot_->clear();
+}
+
 }

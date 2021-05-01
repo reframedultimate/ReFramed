@@ -134,7 +134,9 @@ void RecordingGroupView::clear()
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
+
     ui_->listWidget_recordings->clear();
+    recordingView_->clear();
     /*filterCompleter_->recordingGroupExpired();*/
 }
 
@@ -150,6 +152,9 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
             uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString().c_str());
             if (recording)
                 recordingView_->setRecording(recording);
+            else
+                recordingView_->clear();
+
             break;
         }
 }
