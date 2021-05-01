@@ -31,6 +31,15 @@ bool VideoPlayer::openFile(const QString& fileName)
 {
     info("Opening file " + fileName);
 
+    int videoStreamIdx = -1;
+    int audioStreamIdx = -1;
+    AVCodec* videoCodec;
+    AVCodec* audioCodec;
+    AVCodecContext* videoCodecContext;
+    AVFrame* videoFrame;
+    AVPacket* packet;
+    int readFrames;
+
     // AVFormatContext holds the header information from the format (Container)
     // Allocating memory for this component
     // http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
@@ -68,31 +77,139 @@ bool VideoPlayer::openFile(const QString& fileName)
         goto find_stream_info_failed;
     }
 
+    videoStreamIdx = -1;
+    audioStreamIdx = -1;
     for (int i = 0; i < formatContext_->nb_streams; ++i)
     {
         AVStream* stream = formatContext_->streams[i];
         AVCodecParameters* codecParams = stream->codecpar;
-        info(QString("time_base %1/%2").arg(stream->time_base.num).arg(stream->time_base.den));
-        info(QString("r_frame_rate %1/%2").arg(stream->r_frame_rate.num).arg(stream->r_frame_rate.den));
-        info(QString("start_time %1").arg(stream->start_time));
-        info(QString("duration %1").arg(stream->duration));
-
         AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
         if (codec == nullptr)
         {
             error("Unsupported codec");
             continue;
         }
+
+        switch (codecParams->codec_type)
+        {
+            case AVMEDIA_TYPE_VIDEO: {
+                videoStreamIdx = i;
+                videoCodec = codec;
+            } break;
+
+            case AVMEDIA_TYPE_AUDIO: {
+                audioStreamIdx = i;
+                audioCodec = codec;
+            } break;
+
+            default: break;
+        }
+    }
+    if (videoStreamIdx == -1)
+    {
+        error("Input does not contain a video stream");
+        goto video_stream_not_found;
+    }
+    if (audioStreamIdx == -1)
+        info("Input does not contain an audio stream");
+
+    // https://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
+    videoCodecContext = avcodec_alloc_context3(videoCodec);
+    if (videoCodecContext == nullptr)
+    {
+        error("Failed to allocate video codec context");
+        goto alloc_video_codec_context_failed;
     }
 
+    // Fill the codec context based on the values from the supplied codec parameters
+    // https://ffmpeg.org/doxygen/trunk/group__lavc__core.html#gac7b282f51540ca7a99416a3ba6ee0d16
+    if (avcodec_parameters_to_context(videoCodecContext, formatContext_->streams[videoStreamIdx]->codecpar) < 0)
+    {
+        error("Failed to copy video codec params to video codec context");
+        goto copy_video_codec_params_failed;
+    }
+
+    // Initialize the AVCodecContext to use the given AVCodec.
+    // https://ffmpeg.org/doxygen/trunk/group__lavc__core.html#ga11f785a188d7d9df71621001465b0f1d
+    if (avcodec_open2(videoCodecContext, videoCodec, NULL) < 0)
+    {
+        error("Failed to open video codec");
+        goto open_video_codec_failed;
+    }
+
+    // https://ffmpeg.org/doxygen/trunk/structAVFrame.html
+    videoFrame = av_frame_alloc();
+    if (videoFrame == nullptr)
+    {
+        error("Failed to allocate video frame");
+        goto alloc_video_frame_failed;
+    }
+
+    // https://ffmpeg.org/doxygen/trunk/structAVPacket.html
+    packet = av_packet_alloc();
+    if (packet == nullptr)
+    {
+        error("failed to allocate packet");
+        goto alloc_video_packet_failed;
+    }
+
+    readFrames = 1;
+    while (av_read_frame(formatContext_, packet) >= 0)
+    {
+        if (packet->stream_index == videoStreamIdx)
+        {
+            int response = avcodec_send_packet(videoCodecContext, packet);
+            if (response < 0)
+            {
+                error("Decoder error");
+                goto exit;
+            }
+
+            while (response >= 0)
+            {
+                response = avcodec_receive_frame(videoCodecContext, videoFrame);
+                if (response == AVERROR(EAGAIN))
+                    goto need_next_packet;
+                else if (response == AVERROR_EOF)
+                    goto exit;
+                else if (response < 0)
+                {
+                    error("Decoder error");
+                    goto exit;
+                }
+
+                info(QString("Decoded frame: %1x%2").arg(videoCodecContext->width).arg(videoCodecContext->height));
+
+                if (readFrames-- <= 0)
+                    goto exit;
+            }
+        }
+
+        need_next_packet : av_packet_unref(packet);
+        continue;
+
+        exit : av_packet_unref(packet);
+        break;
+    }
+
+    av_packet_free(&packet);
+    av_frame_free(&videoFrame);
+    avcodec_close(videoCodecContext);
+    avcodec_free_context(&videoCodecContext);
     avformat_close_input(&formatContext_);
     avformat_free_context(formatContext_);
 
     return true;
 
-    find_stream_info_failed : avformat_close_input(&formatContext_);
-    open_input_failed       : avformat_free_context(formatContext_);
-    alloc_context_failed    : return false;
+    alloc_video_packet_failed        : av_frame_free(&videoFrame);
+    alloc_video_frame_failed         : avcodec_close(videoCodecContext);
+    open_video_codec_failed          :
+    copy_video_codec_params_failed   : avcodec_free_context(&videoCodecContext);
+    alloc_video_codec_context_failed :
+    video_stream_not_found           :
+    find_stream_info_failed          : avformat_close_input(&formatContext_);
+    open_input_failed                : avformat_free_context(formatContext_);
+    alloc_context_failed             : return false;
 }
 
 // ----------------------------------------------------------------------------
