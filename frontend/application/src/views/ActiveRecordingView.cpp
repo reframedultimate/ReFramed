@@ -58,14 +58,14 @@ void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
         ui_->lineEdit_formatOther->setVisible(false);
     activeRecordingManager_->setFormat(uh::SetFormat(
         static_cast<uh::SetFormat::Type>(index),
-        ui_->lineEdit_formatOther->text().toStdString()
+        ui_->lineEdit_formatOther->text().toStdString().c_str()
     ));
 }
 
 // ----------------------------------------------------------------------------
 void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString()));
+    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
 }
 
@@ -114,15 +114,15 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRec
     for (int i = 0; i != count; ++i)
     {
         fighterName_[i] = new QLabel();
-        const std::string* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
-        fighterName_[i]->setText(fighterNameStr ? QString::fromStdString(*fighterNameStr) : "(Unknown Fighter)");
+        const uh::String* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
+        fighterName_[i]->setText(fighterNameStr ? fighterNameStr->cStr() : "(Unknown Fighter)");
 
         fighterStatus_[i] = new QLabel();
         fighterDamage_[i] = new QLabel();
         fighterStocks_[i] = new QLabel();
 
         names_[i] = new QGroupBox;
-        names_[i]->setTitle(QString::fromStdString(recording->playerName(i)));
+        names_[i]->setTitle(recording->playerName(i).cStr());
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
@@ -142,8 +142,8 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRec
     }
 
     // Set game info
-    const std::string* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
-    ui_->label_stage->setText(stageStr ? QString::fromStdString(*stageStr) : "(Unknown Stage)");
+    const uh::String* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
+    ui_->label_stage->setText(stageStr ? stageStr->cStr() : "(Unknown Stage)");
     ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString());
     ui_->label_timeRemaining->setText("");
 
@@ -193,7 +193,7 @@ void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const uh::SetFor
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
 
     if (format.type() == uh::SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(QString::fromStdString(format.description()));
+        ui_->lineEdit_formatOther->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------

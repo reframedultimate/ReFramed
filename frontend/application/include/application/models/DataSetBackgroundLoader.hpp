@@ -10,6 +10,7 @@
 #include <QQueue>
 #include <QWaitCondition>
 #include <QFileInfo>
+#include <unordered_map>
 
 namespace uh {
     class DataSet;
@@ -28,11 +29,13 @@ public:
     struct OutData {
         QFileInfo recordingFile;
         RecordingGroup* group;
+        uint32_t taskID;
     };
 
     struct InData {
         uh::Reference<uh::Recording> recording;
         RecordingGroup* group;
+        uint32_t taskID;
     };
 
     explicit DataSetBackgroundLoader(QObject* parent=nullptr);
@@ -46,10 +49,10 @@ public:
 
 signals:
     // NOTE: For internal use only
-    void _dataSetLoaded(RecordingGroup* group);
+    void _dataSetLoaded(quint32 taskID, uh::DataSet* dataSet, RecordingGroup* group);
 
 private slots:
-    void onDataSetLoaded(RecordingGroup* group);
+    void onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, RecordingGroup* group);
 
 private:
     void run() override;
@@ -59,8 +62,9 @@ private:
     QQueue<OutData> out_;
     QQueue<InData> in_;
     QWaitCondition cond_;
-    std::unordered_map<RecordingGroup*, uh::Reference<uh::DataSet>> dataSets_;
+    std::unordered_map<uint32_t, RecordingGroup*> pendingTasks_;
     int activeWorkers_ = 0;
+    static uint32_t taskIDCounter_;
     bool requestShutdown_ = false;
 };
 

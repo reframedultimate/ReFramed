@@ -1,9 +1,17 @@
 #pragma once
 
 #include "uh/VisualizerPlugin.hpp"
+#include "uh/String.hpp"
 #include <QWidget>
 
-struct VideoPlayerData;
+extern "C" {
+typedef struct AVFormatContext AVFormatContext;
+typedef struct AVCodec AVCodec;
+typedef struct AVCodecParameters AVCodecParameters;
+typedef struct AVStream AVStream;
+}
+
+class QPlainTextEdit;
 
 class VideoPlayer : public QWidget
                   , public uh::VisualizerPlugin
@@ -14,11 +22,16 @@ public:
     explicit VideoPlayer(QWidget* parent=nullptr);
     ~VideoPlayer();
 
-    bool openFile(const std::string& fileName);
+    bool openFile(const QString& fileName);
 
     QWidget* takeWidget() override { return this; }
-    void giveWidget() override { setParent(nullptr); }
+    void giveWidget(QWidget* widget) override {}
 
 private:
-    VideoPlayerData* d;
+    void info(const QString& msg);
+    void error(const QString& msg);
+
+private:
+    QPlainTextEdit* logWidget_;
+    AVFormatContext* formatContext_ = nullptr;
 };

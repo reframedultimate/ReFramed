@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <QString>
+#include <QHash>
 
 class QDir;
 class QFileInfo;
@@ -18,6 +19,18 @@ qhash_result_t qHash(const QDir& c, qhash_result_t seed=0) noexcept;
 qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed=0) noexcept;
 
 namespace uhapp {
+
+/*!
+ * \brief Allows QString to be used in uh::HashMap
+ */
+template <typename H=uint32_t>
+struct QStringHasher
+{
+    typedef H HashType;
+    HashType operator()(const QString& s) const {
+        return qHash(s);
+    }
+};
 
 /*!
  * \brief Deletes all widgets/layouts from a layout

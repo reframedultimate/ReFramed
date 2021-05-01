@@ -24,7 +24,7 @@ RecordingManager::RecordingManager(Config* config)
 
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
-    recordingGroups_.insert({"All", std::make_unique<RecordingGroup>("All")});
+    recordingGroups_.emplace("All", std::make_unique<RecordingGroup>("All"));
 
     scanForRecordings();
 }
@@ -124,36 +124,72 @@ bool RecordingManager::removeVideoSource(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroup* RecordingManager::allRecordingGroup()
+RecordingGroup* RecordingManager::recordingGroup(const QString& name) const
 {
-    return recordingGroups_["All"].get();
-}
-
-// ----------------------------------------------------------------------------
-const std::unordered_map<QString, std::unique_ptr<RecordingGroup>>& RecordingManager::recordingGroups() const
-{
-    return recordingGroups_;
-}
-
-// ----------------------------------------------------------------------------
-RecordingGroup* RecordingManager::recordingGroup(const QString& name)
-{
-    auto it = recordingGroups_.find(name);
+    auto it = recordingGroups_.find(name.toStdString());
     if (it == recordingGroups_.end())
         return nullptr;
     return it->second.get();
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroup* RecordingManager::getOrCreateRecordingGroup(const QString& name)
+RecordingGroup* RecordingManager::allRecordingGroup() const
 {
-    RecordingGroup* group = recordingGroup(name);
-    if (group)
-        return group;
+    return recordingGroups_.find("All")->second.get();
+}
 
-    auto it = recordingGroups_.insert({name, std::make_unique<RecordingGroup>(name)});
+// ----------------------------------------------------------------------------
+const std::unordered_map<std::string, std::unique_ptr<RecordingGroup>>& RecordingManager::recordingGroups() const
+{
+    return recordingGroups_;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::addRecordingGroup(const QString& name)
+{
+    if (name.length() == 0)
+        return false;
+
+    auto it = recordingGroups_.emplace(name.toStdString(), std::make_unique<RecordingGroup>(name));
+    if (it.second == false)
+        return false;
+
     dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupAdded, it.first->second.get());
-    return it.first->second.get();
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::renameRecordingGroup(const QString& oldName, const QString& newName)
+{
+    if (newName.length() == 0)
+        return false;
+
+    auto result = recordingGroups_.emplace(newName.toStdString(), std::make_unique<RecordingGroup>(nullptr));
+    if (result.second == false)
+        return false;
+
+    auto newIt = result.first;
+    auto oldIt = recordingGroups_.find(oldName.toStdString());
+    assert(oldIt != recordingGroups_.end());
+
+    oldIt->second->setName(newName);
+    newIt->second = std::move(oldIt->second);
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupNameChanged, newIt->second.get(), oldName, newName);
+    recordingGroups_.erase(oldIt);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool RecordingManager::removeRecordingGroup(const QString& name)
+{
+    auto it = recordingGroups_.find(name.toStdString());
+    if (it == recordingGroups_.end())
+        return false;
+
+    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupRemoved, it->second.get());
+    recordingGroups_.erase(it);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -178,11 +214,6 @@ void RecordingManager::setDefaultRecordingSourceDirectory(const QDir& path)
     saveConfig();
 
     dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerDefaultRecordingLocationChanged, QDir(canonicalPath));
-}
-
-// ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
-{
 }
 
 // ----------------------------------------------------------------------------

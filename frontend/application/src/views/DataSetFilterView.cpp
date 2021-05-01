@@ -276,7 +276,7 @@ void DataSetFilterView::removeGroupFromInputDataSet(RecordingGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
+void DataSetFilterView::onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
 {
     (void)group;
     for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)

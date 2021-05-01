@@ -2,6 +2,8 @@
 
 #include "application/listeners/RecordingManagerListener.hpp"
 #include "application/models/CategoryType.hpp"
+#include "application/Util.hpp"
+#include <QHash>
 #include <QTreeWidget>
 
 namespace uhapp {
@@ -14,6 +16,7 @@ class CategoryView : public QTreeWidget
     Q_OBJECT
 public:
     explicit CategoryView(RecordingManager* recordingManager, QWidget* parent=nullptr);
+    ~CategoryView();
 
     void setActiveRecordingViewDisabled(bool enable);
 
@@ -32,7 +35,8 @@ signals:
 
 private slots:
     void onCustomContextMenuRequested(const QPoint& pos);
-    void onTreeWidgetCategoriesCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+    void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+    void onItemChanged(QTreeWidgetItem* item, int column);
 
 private:
     CategoryType categoryOf(const QTreeWidgetItem* item) const;
@@ -41,6 +45,7 @@ private:
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
 
     void onRecordingManagerGroupAdded(RecordingGroup* group) override;
+    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
     void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
 
     void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override;
@@ -53,12 +58,14 @@ private:
 
 private:
     RecordingManager* recordingManager_;
-    QTreeWidgetItem* recordingGroupsItem_;
     QTreeWidgetItem* dataSetsItem_;
     QTreeWidgetItem* analysisCategoryItem_;
+    QTreeWidgetItem* recordingGroupsItem_;
     QTreeWidgetItem* recordingSourcesItem_;
     QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* activeRecordingItem_;
+
+    QHash<QTreeWidgetItem*, QString> oldGroupNames_;
 };
 
 }

@@ -1,11 +1,15 @@
 #pragma once
 
 #include "uh/config.hpp"
-#include <unordered_map>
-#include <string>
-#include <cstdint>
+#include "uh/Types.hpp"
+#include "uh/String.hpp"
+#include "uh/HashMap.hpp"
 
 namespace uh {
+
+template class UH_PUBLIC_API Vector<uint32_t, int32_t>;
+template class UH_PUBLIC_API HashMap<FighterStatus, String>;
+template class UH_PUBLIC_API HashMap<FighterID, HashMap<FighterStatus, String>>;
 
 /*!
  * \brief Character animation states are all described with a single u16 integer
@@ -32,18 +36,18 @@ namespace uh {
 class UH_PUBLIC_API FighterStatusMapping
 {
 public:
-    const std::string* statusToBaseEnumName(uint16_t status) const;
-    const std::string* statusToFighterSpecificEnumName(uint16_t status, uint8_t fighterID) const;
+    const String* statusToBaseEnumName(FighterStatus status) const;
+    const String* statusToFighterSpecificEnumName(FighterStatus status, FighterID fighterID) const;
 
-    void addBaseEnumName(uint16_t status, const std::string& name);
-    void addFighterSpecificEnumName(uint16_t status, uint8_t fighterID, const std::string& name);
+    void addBaseEnumName(FighterStatus status, const String& name);
+    void addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name);
 
-    const std::unordered_map<uint16_t, std::string>& baseEnumNames() const { return baseEnumNames_; }
-    const std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
+    const HashMap<FighterStatus, String>& baseEnumNames() const { return baseEnumNames_; }
+    const HashMap<FighterID, HashMap<FighterStatus, String>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
 
 private:
-    std::unordered_map<uint16_t, std::string> baseEnumNames_;
-    std::unordered_map<uint8_t, std::unordered_map<uint16_t, std::string>> fighterSpecificEnumNames_;
+    HashMap<FighterStatus, String> baseEnumNames_;
+    HashMap<FighterID, HashMap<FighterStatus, String>> fighterSpecificEnumNames_;
 };
 
 }

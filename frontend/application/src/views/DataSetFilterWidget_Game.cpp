@@ -57,7 +57,7 @@ void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
         uh::SetFormat::Type type = static_cast<uh::SetFormat::Type>(index - 1);
         f->setAnySetFormat(false);
         if (type == uh::SetFormat::OTHER)
-            f->setSetFormat(uh::SetFormat(type, ui_->lineEdit_formatName->text().toStdString()));
+            f->setSetFormat(uh::SetFormat(type, ui_->lineEdit_formatName->text().toStdString().c_str()));
         else
             f->setSetFormat(uh::SetFormat(type));
     }
@@ -88,7 +88,7 @@ void DataSetFilterWidget_Game::onFormatDescChanged(const QString& text)
 void DataSetFilterWidget_Game::onWinnerTextChanged(const QString& text)
 {
     uh::DataSetFilter_Game* f = static_cast<uh::DataSetFilter_Game*>(filter());
-    f->setWinner(text.toStdString());
+    f->setWinner(text.toStdString().c_str());
 }
 
 // ----------------------------------------------------------------------------

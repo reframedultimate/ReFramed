@@ -14,13 +14,13 @@ public:
         : ptr_(nullptr)
     {}
 
-    Reference(const Reference<T>& other)
+    Reference(const Reference& other)
         : ptr_(other.ptr_)
     {
         ref();
     }
 
-    Reference(Reference<T>&& other)
+    Reference(Reference&& other) noexcept
         : Reference()
     {
         swap(*this, other);
@@ -45,20 +45,20 @@ public:
         unref();
     }
 
-    Reference<T>& operator=(Reference<T> rhs)
+    Reference& operator=(Reference rhs)
     {
         swap(*this, rhs);
         return *this;
     }
 
     template <typename U>
-    Reference<T>& operator=(Reference<U> rhs)
+    Reference& operator=(Reference<U> rhs)
     {
         swap(*this, rhs);
         return *this;
     }
 
-    friend void swap(Reference<T>& first, Reference<T>& second) noexcept
+    friend void swap(Reference& first, Reference& second) noexcept
     {
         using std::swap;
         swap(first.ptr_, second.ptr_);
@@ -99,6 +99,24 @@ public:
     T* get() const
     {
         return ptr_;
+    }
+
+    T* steal()
+    {
+        T* ret = ptr_;
+        ptr_ = nullptr;
+        return ret;
+    }
+
+    T* detach()
+    {
+        T* ret = ptr_;
+        if (ptr_)
+        {
+            ptr_->decRefNoSeppuku();
+            ptr_ = nullptr;
+        }
+        return ret;
     }
 
     int refs() const

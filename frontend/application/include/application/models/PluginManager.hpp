@@ -1,9 +1,9 @@
 #pragma once
 
 #include "uh/PluginType.hpp"
-#include <unordered_map>
-#include <string>
-#include <vector>
+#include <QString>
+#include <QVector>
+#include <QHash>
 
 struct uh_dynlib;
 struct PluginFactory;
@@ -21,21 +21,21 @@ namespace uhapp {
 class PluginManager
 {
 public:
-    bool loadPlugin(const std::string& fileName);
-    bool unloadPlugin(const std::string& fileName);
+    bool loadPlugin(const QString& fileName);
+    bool unloadPlugin(const QString& fileName);
     void unloadAllPlugins();
 
-    std::vector<std::string> availableNames(uh::PluginType type) const;
+    QVector<QString> availableNames(uh::PluginType type) const;
 
-    uh::TrainingModePlugin* createTrainingMode(const char* name);
-    uh::AnalyzerPlugin* createAnalyzer(const char* name);
-    uh::VisualizerPlugin* createVisualizer(const char* name);
+    uh::TrainingModePlugin* createTrainingMode(const QString& name);
+    uh::AnalyzerPlugin* createAnalyzer(const QString& name);
+    uh::VisualizerPlugin* createVisualizer(const QString& name);
     void destroy(uh::Plugin* plugin);
 
 private:
-    std::unordered_map<std::string, PluginFactory*> factories_;
-    std::unordered_map<uh::Plugin*, PluginFactory*> activePlugins_;
-    std::vector<uh_dynlib*> libraries_;
+    QHash<QString, PluginFactory*> factories_;
+    QHash<uh::Plugin*, PluginFactory*> activePlugins_;
+    QVector<uh_dynlib*> libraries_;
 };
 
 }
