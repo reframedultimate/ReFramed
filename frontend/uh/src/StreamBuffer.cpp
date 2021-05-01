@@ -7,15 +7,15 @@ namespace uh {
 
 // ----------------------------------------------------------------------------
 StreamBuffer::StreamBuffer(int bytes)
-    : buffer_(bytes, '\0')
+    : buffer_(bytes)
     , writePtr_(buffer_.data())
     , readPtr_(buffer_.data())
 {}
 
 // ----------------------------------------------------------------------------
-StreamBuffer::StreamBuffer(std::string&& data)
-    : buffer_(std::move(data))
-    , writePtr_(buffer_.data() + buffer_.size())
+StreamBuffer::StreamBuffer(const char* data, int len)
+    : buffer_(data, len)
+    , writePtr_(buffer_.data() + len)
     , readPtr_(buffer_.data())
 {}
 

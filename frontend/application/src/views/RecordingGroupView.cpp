@@ -1,5 +1,6 @@
 #include "application/ui_RecordingGroupView.h"
 #include "application/views/RecordingGroupView.hpp"
+#include "application/models/RecordingManager.hpp"
 #include "application/models/RecordingGroup.hpp"
 #include "application/views/RecordingView.hpp"
 #include "uh/SavedRecording.hpp"
@@ -80,9 +81,10 @@ QStringList RecordingNameCompleter::splitPath(const QString &path) const
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroupView::RecordingGroupView(QWidget* parent)
+RecordingGroupView::RecordingGroupView(RecordingManager* recordingManager, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::RecordingGroupView)
+    , recordingManager_(recordingManager)
     , recordingView_(new RecordingView)
     /*, filterCompleter_(new RecordingNameCompleter)*/
 {
@@ -94,6 +96,8 @@ RecordingGroupView::RecordingGroupView(QWidget* parent)
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
+    recordingManager_->dispatcher.addListener(this);
+
     connect(ui_->listWidget_recordings, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
             this, SLOT(onCurrentItemChanged(QListWidgetItem*,QListWidgetItem*)));
     connect(ui_->lineEdit_filters, SIGNAL(textChanged(const QString&)),
@@ -103,14 +107,16 @@ RecordingGroupView::RecordingGroupView(QWidget* parent)
 // ----------------------------------------------------------------------------
 RecordingGroupView::~RecordingGroupView()
 {
-    recordingGroupExpired();
+    if (currentGroup_)
+        currentGroup_->dispatcher.removeListener(this);
+    recordingManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::setRecordingGroupWeakRef(RecordingGroup* group)
+void RecordingGroupView::setRecordingGroup(RecordingGroup* group)
 {
-    recordingGroupExpired();
+    clear();
 
     currentGroup_ = group;
     currentGroup_->dispatcher.addListener(this);
@@ -123,12 +129,14 @@ void RecordingGroupView::setRecordingGroupWeakRef(RecordingGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::recordingGroupExpired()
+void RecordingGroupView::clear()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
+
     ui_->listWidget_recordings->clear();
+    recordingView_->clear();
     /*filterCompleter_->recordingGroupExpired();*/
 }
 
@@ -141,9 +149,12 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (fileName.completeBaseName() == current->text())
         {
-            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString());
+            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString().c_str());
             if (recording)
                 recordingView_->setRecording(recording);
+            else
+                recordingView_->clear();
+
             break;
         }
 }
@@ -159,7 +170,14 @@ void RecordingGroupView::onFiltersTextChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
+void RecordingGroupView::onRecordingManagerGroupRemoved(RecordingGroup* group)
+{
+    if (currentGroup_ == group)
+        clear();
+}
+
+// ----------------------------------------------------------------------------
+void RecordingGroupView::onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
 {
 }
 

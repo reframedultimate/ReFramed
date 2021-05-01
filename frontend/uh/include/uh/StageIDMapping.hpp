@@ -2,21 +2,21 @@
 
 #include "uh/config.hpp"
 #include "uh/Types.hpp"
-#include <unordered_map>
-#include <string>
+#include "uh/String.hpp"
+#include "uh/LinearMap.hpp"
 
 namespace uh {
 
 class UH_PUBLIC_API StageIDMapping
 {
 public:
-    const std::string* map(StageID stageID) const;
-    void add(StageID stageID, const std::string& name);
+    const String* map(StageID stageID) const;
+    void add(StageID stageID, const String& name);
 
-    const std::unordered_map<StageID, std::string>& get() const { return map_; }
+    const SmallLinearMap<StageID, String, 10>& get() const { return map_; }
 
 private:
-    std::unordered_map<StageID, std::string> map_;
+    SmallLinearMap<StageID, String, 10> map_;
 };
 
 }

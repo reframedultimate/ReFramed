@@ -7,6 +7,11 @@ project ("plugin-hit-analysis"
 uh_add_plugin (plugin-hit-analysis
     SOURCES
         "src/Plugin.cpp"
+        "src/HitAnalyzer.cpp"
+    MOC_HEADERS
+        "include/hit-analysis/HitAnalyzer.hpp"
+    FORMS
+        "forms/HitAnalyzer.ui"
     INCLUDE_DIRECTORIES
         "include")
 

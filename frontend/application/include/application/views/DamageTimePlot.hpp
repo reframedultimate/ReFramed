@@ -3,6 +3,7 @@
 #include "application/views/RealtimePlot.hpp"
 #include "uh/RecordingListener.hpp"
 #include "uh/Reference.hpp"
+#include "uh/Vector.hpp"
 #include <QExplicitlySharedDataPointer>
 
 class QwtPlotDirectPainter;
@@ -23,11 +24,11 @@ public:
     ~DamageTimePlot();
 
 public slots:
-    void clear();
     void setRecording(uh::Recording* recording);
+    void clear();
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const std::string& name) override;
+    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
 
     void onActiveRecordingSetNumberChanged(uh::SetNumber number) override { (void)number; }
@@ -37,7 +38,9 @@ private:
     void onRecordingWinnerChanged(int winner) override { (void)winner; }
 
 private:
-    std::vector<QwtPlotCurve*> curves_;
+    uh::SmallVector<QwtPlotCurve*, 8> curves_;
+    uh::SmallVector<uint32_t, 8> prevFrames_;
+    uh::SmallVector<float, 8> prevDamageValues_;
     uh::Reference<uh::Recording> recording_;
     float largestTimeSeen_ = 0.0;
 };

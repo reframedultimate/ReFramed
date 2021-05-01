@@ -69,19 +69,6 @@ DamageTimePlot::~DamageTimePlot()
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::clear()
-{
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
-    recording_ = nullptr;
-
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    largestTimeSeen_ = 0.0;
-}
-
-// ----------------------------------------------------------------------------
 static void appendDataPoint(CurveData* data, float frame, float damage, float* largestTimeSeen)
 {
     float time = static_cast<float>(frame) / 60.0;
@@ -118,14 +105,28 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(QString::fromStdString(recording_->playerName(player)));
+        curve->setTitle(recording_->playerName(player).cStr());
         curve->attach(this);
-        curves_.push_back(curve);
+        curves_.push(curve);
 
+        prevFrames_.push(0);
+        prevDamageValues_.push(0.0);
         for (int i = 0; i < recording_->playerStateCount(player); ++i)
         {
             const auto& state = recording_->playerStateAt(player, i);
-            appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+
+            if (i == 0 || i == recording_->playerStateCount(player) - 1)
+            {
+                prevDamageValues_[player] = state.damage();
+                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+            }
+            else if (state.damage() != prevDamageValues_[player])
+            {
+                appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
+                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+                prevDamageValues_[player] = state.damage();
+            }
+            prevFrames_[player] = state.frame();
         }
     }
 
@@ -133,9 +134,25 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const std::string& name)
+void DamageTimePlot::clear()
 {
-    curves_[player]->setTitle(QString::fromStdString(name));
+    if (recording_)
+        recording_->dispatcher.removeListener(this);
+    recording_ = nullptr;
+
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
+    largestTimeSeen_ = 0.0;
+    replot();
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
+{
+    curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 
@@ -143,7 +160,19 @@ void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const std::s
 void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
-    appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+
+    if (prevFrames_[player] == 0)
+    {
+        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+    }
+    else if (state.damage() != prevDamageValues_[player])
+    {
+        appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
+        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+        prevDamageValues_[player] = state.damage();
+    }
+    prevFrames_[player] = state.frame();
+
     conditionalAutoScale();
 }
 

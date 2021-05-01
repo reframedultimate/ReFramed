@@ -4,12 +4,14 @@
 #include "application/models/PluginManager.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/ActiveRecordingView.hpp"
+#include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/RecordingGroupView.hpp"
 #include "application/views/RecordingView.hpp"
+#include "application/views/VisualizerView.hpp"
 
 #include "uh/VisualizerPlugin.hpp"
 
@@ -30,30 +32,25 @@ MainWindow::MainWindow(QWidget* parent)
     , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
     , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
-    , recordingGroupView_(new RecordingGroupView)
+    , recordingGroupView_(new RecordingGroupView(recordingManager_.get()))
     , activeRecordingView_(new ActiveRecordingView(activeRecordingManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
 
-    /*
-    if (pluginManager_->loadPlugin("share/uh/plugins/videoplayer.so"))
-    {
-        uh::VisualizerPlugin* video = pluginManager_->createVisualizer("Video Player");
-        if (video)
-            mainView_->addWidget(video->takeWidget());
-        else
-            mainView_->addWidget()
-    }*/
+    QDir pluginDir("share/uh/plugins");
+    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so", QDir::Files))
+        pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 
     mainView_->addWidget(recordingGroupView_);
     mainView_->addWidget(new DataSetFilterView(recordingManager_.get()));
-    mainView_->addWidget(new QWidget);
+    mainView_->addWidget(new VisualizerView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeRecordingView_);
     setCentralWidget(mainView_);
+    mainView_->setCurrentIndex(2);
 
     QDockWidget* categoryDock = new QDockWidget(this);
     categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -61,14 +58,20 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
-    connect(activeRecordingManager_.get(), SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
-    connect(activeRecordingManager_.get(), SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::connectedToServer,
+            this, &MainWindow::onActiveRecordingManagerConnectedToServer);
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::disconnectedFromServer,
+            this, &MainWindow::onActiveRecordingManagerDisconnectedFromServer);
 
-    connect(categoryView_, SIGNAL(categoryChanged(CategoryType)), this, SLOT(onCategoryChanged(CategoryType)));
-    connect(categoryView_, SIGNAL(recordingGroupSelected(RecordingGroup*)), recordingGroupView_, SLOT(setRecordingGroupWeakRef(RecordingGroup*)));
+    connect(categoryView_, &CategoryView::categoryChanged,
+            this, &MainWindow::onCategoryChanged);
+    connect(categoryView_, &CategoryView::recordingGroupSelected,
+            recordingGroupView_, &RecordingGroupView::setRecordingGroup);
 
-    connect(ui_->action_connect, SIGNAL(triggered(bool)), this, SLOT(onConnectActionTriggered()));
-    connect(ui_->action_disconnect, SIGNAL(triggered(bool)), this, SLOT(onDisconnectActionTriggered()));
+    connect(ui_->action_connect, &QAction::triggered,
+            this, &MainWindow::onConnectActionTriggered);
+    connect(ui_->action_disconnect, &QAction::triggered,
+            this, &MainWindow::onDisconnectActionTriggered);
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
@@ -78,14 +81,15 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    // Removes all widgets created by plugins and unloads the shared libraries
-    pluginManager_->unloadAllPlugins();
-
     // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
     // will try to unregister as a listener of ActiveRecordingManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the
     // ActiveRecordingManager which gets deleted in this destructor.
     delete takeCentralWidget();
+    delete categoryView_;
+
+    // Removes all widgets created by plugins and unloads the shared libraries
+    pluginManager_->unloadAllPlugins();
 
     delete ui_;
 }
@@ -170,6 +174,8 @@ void MainWindow::onCategoryChanged(CategoryType category)
     switch (category)
     {
         case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+            recordingGroupView_->clear();
+            [[fallthrough]];
         case CategoryType::RECORDING_GROUP_ITEM:
             mainView_->setCurrentIndex(0);
             break;

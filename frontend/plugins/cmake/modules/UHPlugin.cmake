@@ -37,7 +37,8 @@ macro (uh_add_plugin PLUGIN)
 		target_include_directories (${PLUGIN}
 			PRIVATE
 				${${PLUGIN}_INCLUDE_DIRECTORIES}
-				"${PROJECT_BINARY_DIR}/include")
+                "${PROJECT_BINARY_DIR}/include"  # For generated header files
+                ${PROJECT_BINARY_DIR})           # For MOC files
 		target_compile_definitions (${PLUGIN}
 			PRIVATE
 				PLUGIN_BUILDING)

@@ -2,7 +2,7 @@
 
 #include "uh/DataSetFilter.hpp"
 #include "uh/SetFormat.hpp"
-#include <string>
+#include "uh/String.hpp"
 #include <cstdint>
 
 namespace uh {
@@ -17,12 +17,12 @@ public:
 
     void setSetFormat(const SetFormat& format);
     void setAnySetFormat(bool filter);
-    void setWinner(const std::string& name);
+    void setWinner(const String& name);
     void setMinLengthMs(uint64_t length);
     void setMaxLengthMs(uint64_t length);
 
 private:
-    std::string winner_;
+    String winner_;
     uint64_t minLength_ = 0;
     uint64_t maxLength_ = 8 * 60 * 1000;
     SetFormat format_;

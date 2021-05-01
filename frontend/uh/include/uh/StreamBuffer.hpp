@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uh/config.hpp"
-#include <string>
+#include "uh/Vector.hpp"
 #include <cstdint>
 
 namespace uh {
@@ -10,7 +10,7 @@ class UH_PUBLIC_API StreamBuffer
 {
 public:
     StreamBuffer(int bytes);
-    StreamBuffer(std::string&& data);
+    StreamBuffer(const char* data, int len);
 
     StreamBuffer& writeU8(uint8_t value);
 
@@ -42,10 +42,10 @@ public:
 
     void* get() { return static_cast<void*>(buffer_.data()); }
     const void* get() const { return static_cast<const void*>(buffer_.data()); }
-    int size() const { return buffer_.size(); }
+    int size() const { return buffer_.count(); }
 
 private:
-    std::string buffer_;
+    Vector<char> buffer_;
     void* writePtr_;
     void* readPtr_;
 };

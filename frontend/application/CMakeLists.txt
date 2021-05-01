@@ -15,6 +15,7 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/plot/RectangleZoomer.hpp"
     "include/application/plot/Zoomer.hpp"
     "include/application/views/ActiveRecordingView.hpp"
+    "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
     "include/application/views/ConnectView.hpp"
     "include/application/views/DamageTimePlot.hpp"
@@ -31,9 +32,11 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/views/RealtimePlot.hpp"
     "include/application/views/RecordingGroupView.hpp"
     "include/application/views/RecordingView.hpp"
+    "include/application/views/VisualizerView.hpp"
     "include/application/views/XYPositionPlot.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
     "forms/ActiveRecordingView.ui"
+    "forms/AnalysisInputView.ui"
     "forms/ConnectView.ui"
     "forms/DataSetFilterView.ui"
     "forms/DataSetFilterWidget_Date.ui"
@@ -74,6 +77,7 @@ add_executable (ultimate-hindsight
     "src/plot/RectangleZoomer.cpp"
     "src/plot/Zoomer.cpp"
     "src/views/ActiveRecordingView.cpp"
+    "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"
     "src/views/DamageTimePlot.cpp"
@@ -89,6 +93,7 @@ add_executable (ultimate-hindsight
     "src/views/RealtimePlot.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
+    "src/views/VisualizerView.cpp"
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight

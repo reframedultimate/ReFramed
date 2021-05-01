@@ -6,10 +6,12 @@
 
 using namespace testing;
 
+namespace {
 class Obj : public uh::RefCounted
 {
 public:
 };
+}
 
 TEST(NAME, default_refcounted_constructor_has_refcount_0)
 {

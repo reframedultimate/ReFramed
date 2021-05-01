@@ -27,6 +27,7 @@ public:
 
 public slots:
     void setRecording(uh::Recording* recording);
+    void clear();
 
 private slots:
     // This is still broken, see

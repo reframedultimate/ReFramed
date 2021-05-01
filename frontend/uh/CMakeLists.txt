@@ -5,6 +5,8 @@ include (CheckCXXSourceCompiles)
 project ("uh"
 	VERSION 0.0.1
     LANGUAGES CXX C)
+    
+option (UH_REFCOUNTED_DEBUG "Adds members to the uh::RefCounted class to help find memory leaks" OFF)
 	
 test_visibility_macros (
 	UH_API_EXPORT 
@@ -53,6 +55,8 @@ configure_file ("templates/Endian.hpp.in" "include/uh/Endian.hpp")
 
 add_library (uh SHARED
 	"src/ActiveRecording.cpp"
+    "src/AnalyzerPlugin.cpp"
+    "src/AnalysisResult.cpp"
     "src/crc32.c"
 	"src/DataPoint.cpp"
 	"src/DataSet.cpp"
@@ -64,10 +68,12 @@ add_library (uh SHARED
     "src/DataSetFilter_PlayerCount.cpp"
     "src/DataSetFilter_Stage.cpp"
     "src/DataSetFilterChain.cpp"
+    "src/DataSetProcessor.cpp"
 	"src/DecisionGraph.cpp"
 	"src/FighterIDMapping.cpp"
 	"src/FighterStatusMapping.cpp"
     "src/hash40.c"
+    "src/HashMap.cpp"
 	"src/HitStatusMapping.cpp"
     "src/init.c"
 	"src/PlayerState.cpp"
@@ -77,6 +83,7 @@ add_library (uh SHARED
 	"src/SetFormat.cpp"
 	"src/StageIDMapping.cpp"
     "src/StreamBuffer.cpp"
+    "src/Vector.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
 	"src/platform/time.cpp")

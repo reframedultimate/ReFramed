@@ -3,7 +3,7 @@
 
 namespace uh {
 
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
 std::atomic<int> RefCounted::total_;
 #endif
 
@@ -11,7 +11,7 @@ std::atomic<int> RefCounted::total_;
 RefCounted::RefCounted()
     : refs_(0)
 {
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
     total_++;
 #endif
 }
@@ -21,7 +21,7 @@ RefCounted::~RefCounted()
 {
     assert(refs_ == 0);
     refs_ = -1;
-#ifndef DEBUG
+#ifdef UH_REFCOUNTED_DEBUG
     total_--;
 #endif
 }
@@ -40,6 +40,13 @@ void RefCounted::decRef()
     refs_--;
     if (refs_ == 0)
         seppuku();
+}
+
+// ----------------------------------------------------------------------------
+void RefCounted::decRefNoSeppuku()
+{
+    assert(refs_ > 0);
+    refs_--;
 }
 
 // ----------------------------------------------------------------------------

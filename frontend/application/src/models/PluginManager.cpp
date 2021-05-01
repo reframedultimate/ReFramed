@@ -1,5 +1,7 @@
 #include "application/models/PluginManager.hpp"
 #include "uh/PluginInterface.hpp"
+#include "uh/AnalyzerPlugin.hpp"
+#include "uh/TrainingModePlugin.hpp"
 #include "uh/VisualizerPlugin.hpp"
 #include "uh/dynlib.h"
 #include <cassert>
@@ -7,10 +9,10 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-bool PluginManager::loadPlugin(const std::string& fileName)
+bool PluginManager::loadPlugin(const QString& fileName)
 {
     PluginInterface* i;
-    uh_dynlib* dl = uh_dynlib_open(fileName.c_str());
+    uh_dynlib* dl = uh_dynlib_open(fileName.toStdString().c_str());
     if (dl == nullptr)
         goto open_failed;
 
@@ -22,9 +24,9 @@ bool PluginManager::loadPlugin(const std::string& fileName)
 
     for (PluginFactory* factory = i->factories; factory->name != nullptr; ++factory)
     {
-        auto result = factories_.emplace(factory->name, factory);
-        if (result.second == false)
+        if (factories_.contains(factory->name))
             goto duplicate_factory_name;
+        factories_.insert(factory->name, factory);
     }
 
     libraries_.push_back(dl);
@@ -45,7 +47,7 @@ bool PluginManager::loadPlugin(const std::string& fileName)
 }
 
 // ----------------------------------------------------------------------------
-bool PluginManager::unloadPlugin(const std::string& fileName)
+bool PluginManager::unloadPlugin(const QString& fileName)
 {
     return false;
 }
@@ -53,9 +55,10 @@ bool PluginManager::unloadPlugin(const std::string& fileName)
 // ----------------------------------------------------------------------------
 void PluginManager::unloadAllPlugins()
 {
-    for (const auto& [plugin, factory] : activePlugins_)
+    for (auto it = activePlugins_.begin(); it != activePlugins_.end(); ++it)
     {
-        plugin->giveWidget();
+        uh::Plugin* plugin = it.key();
+        PluginFactory* factory = it.value();
         factory->destroy(plugin);
     }
 
@@ -72,25 +75,25 @@ void PluginManager::unloadAllPlugins()
 }
 
 // ----------------------------------------------------------------------------
-std::vector<std::string> PluginManager::availableNames(uh::PluginType type) const
+QVector<QString> PluginManager::availableNames(uh::PluginType type) const
 {
-    std::vector<std::string> list;
-    for (const auto& [name, factory] : factories_)
+    QVector<QString> list;
+    for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
     {
-        if (factory->type == type)
-            list.emplace_back(factory->name);
+        if (factory.value()->type == type)
+            list.push_back(factory.value()->name);
     }
     return list;
 }
 
 // ----------------------------------------------------------------------------
-uh::TrainingModePlugin* PluginManager::createTrainingMode(const char* name)
+uh::TrainingModePlugin* PluginManager::createTrainingMode(const QString& name)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
-    PluginFactory* factory = it->second;
+    PluginFactory* factory = it.value();
     if (factory->type != uh::PluginType::TRAINING_MODE)
         return nullptr;
 
@@ -98,18 +101,18 @@ uh::TrainingModePlugin* PluginManager::createTrainingMode(const char* name)
     if (plugin == nullptr)
         return nullptr;
 
-    activePlugins_.emplace(plugin, factory);
+    activePlugins_.insert(plugin, factory);
     return plugin;
 }
 
 // ----------------------------------------------------------------------------
-uh::AnalyzerPlugin* PluginManager::createAnalyzer(const char* name)
+uh::AnalyzerPlugin* PluginManager::createAnalyzer(const QString& name)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
-    PluginFactory* factory = it->second;
+    PluginFactory* factory = it.value();
     if (factory->type != uh::PluginType::ANALYZER)
         return nullptr;
 
@@ -117,18 +120,18 @@ uh::AnalyzerPlugin* PluginManager::createAnalyzer(const char* name)
     if (plugin == nullptr)
         return nullptr;
 
-    activePlugins_.emplace(plugin, factory);
+    activePlugins_.insert(plugin, factory);
     return plugin;
 }
 
 // ----------------------------------------------------------------------------
-uh::VisualizerPlugin* PluginManager::createVisualizer(const char* name)
+uh::VisualizerPlugin* PluginManager::createVisualizer(const QString& name)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
-    PluginFactory* factory = it->second;
+    PluginFactory* factory = it.value();
     if (factory->type != uh::PluginType::VISUALIZER)
         return nullptr;
 
@@ -136,7 +139,7 @@ uh::VisualizerPlugin* PluginManager::createVisualizer(const char* name)
     if (plugin == nullptr)
         return nullptr;
 
-    activePlugins_.emplace(plugin, factory);
+    activePlugins_.insert(plugin, factory);
     return plugin;
 }
 
@@ -145,10 +148,10 @@ void PluginManager::destroy(uh::Plugin* plugin)
 {
     auto it = activePlugins_.find(plugin);
     assert(it != activePlugins_.end());
-    PluginFactory* factory = it->second;
+    PluginFactory* factory = it.value();
 
-    plugin->giveWidget();
     factory->destroy(plugin);
+    activePlugins_.erase(it);
 }
 
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <unordered_set>
-#include <cstdint>
+#include "uh/config.hpp"
+#include "uh/Vector.hpp"
+#include "uh/HashMap.hpp"
 
 namespace uh {
 
@@ -21,8 +21,8 @@ public:
     void addEdge(uint16_t from, uint16_t to, uint32_t frame, float damage);
 
 private:
-    std::unordered_set<uint16_t> states_;
-    std::vector<Edge> edges_;
+    HashMap<uint16_t, char> states_;
+    Vector<Edge> edges_;
 };
 
 }

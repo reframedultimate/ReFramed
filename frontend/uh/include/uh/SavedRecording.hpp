@@ -8,7 +8,7 @@ namespace uh {
 class UH_PUBLIC_API SavedRecording : public Recording
 {
 public:
-    static SavedRecording* load(const std::string& fileName);
+    static SavedRecording* load(const String& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
@@ -18,8 +18,8 @@ public:
 
 private:
     SavedRecording(MappingInfo&& mapping,
-                   std::vector<uint8_t>&& playerFighterIDs,
-                   std::vector<std::string>&& playerTags,
+                   SmallVector<FighterID, 8>&& playerFighterIDs,
+                   SmallVector<SmallString<15>, 8>&& playerTags,
                    uint16_t stageID);
 
     // Using void* here to avoid json objects leaking into the rest of the
