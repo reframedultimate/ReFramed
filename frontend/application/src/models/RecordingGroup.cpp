@@ -25,9 +25,7 @@ const QString& RecordingGroup::name() const
 // ----------------------------------------------------------------------------
 void RecordingGroup::setName(const QString& name)
 {
-    QString oldName = name_;
     name_ = name;
-    dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupNameChanged, this, oldName, name);
 }
 
 // ----------------------------------------------------------------------------
@@ -44,7 +42,7 @@ bool RecordingGroup::removeFile(const QFileInfo& absPathToFile)
         if (*it == absPathToFile)
         {
             fileList_.erase(it);
-            dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, this, absPathToFile);
+            dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileRemoved, this, absPathToFile);
             return true;
         }
     return false;
@@ -53,6 +51,8 @@ bool RecordingGroup::removeFile(const QFileInfo& absPathToFile)
 // ----------------------------------------------------------------------------
 void RecordingGroup::removeAllFiles()
 {
+    for (const auto& fileInfo : fileList_)
+        dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileRemoved, this, fileInfo);
     fileList_.clear();
 }
 

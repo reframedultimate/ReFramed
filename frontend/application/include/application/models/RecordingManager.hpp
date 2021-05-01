@@ -3,6 +3,7 @@
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/models/RecordingGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
+#include "application/Util.hpp"
 #include "uh/ListenerDispatcher.hpp"
 #include "uh/HashMap.hpp"
 #include <QString>
@@ -10,15 +11,6 @@
 #include <memory>
 
 namespace uhapp {
-
-template <typename H=uint32_t>
-struct QStringHasher
-{
-    typedef H HashType;
-    HashType operator()(const QString& s) const {
-        return qHash(s);
-    }
-};
 
 class RecordingManagerListener;
 class Settings;
@@ -62,15 +54,6 @@ public:
     bool changeVideoSourceName(const QString& oldName, const QString& newName);
     bool removeVideoSource(const QString& name);
 
-    RecordingGroup* allRecordingGroup();
-
-    /*!
-     * \brief Individual recordings can be organized into named groups by the
-     * user. Gets all groups.
-     * \return A list of groups.
-     */
-    const uh::HashMap<QString, std::unique_ptr<RecordingGroup>, QStringHasher<>>& recordingGroups() const;
-
     /*!
      * \brief Individual recordings can be organized into named groups by the
      * user. Gets a specific group by name.
@@ -78,16 +61,26 @@ public:
      * \return A pointer to the group if it was found, or nullptr if it was not
      * found.
      */
-    RecordingGroup* recordingGroup(const QString& name);
+    RecordingGroup* recordingGroup(const QString& name) const;
 
-    RecordingGroup* getOrCreateRecordingGroup(const QString& name);
+    /*!
+     * \brief Individual recordings can be organized into named groups by the
+     * user. Gets all groups.
+     * \return A list of groups.
+     */
+    RecordingGroup* allRecordingGroup() const;
+
+    const uh::HashMap<QString, std::unique_ptr<RecordingGroup>, QStringHasher<>>& recordingGroups() const;
+
+    bool addRecordingGroup(const QString& name);
+    bool renameRecordingGroup(const QString& oldName, const QString& newName);
+    bool removeRecordingGroup(const QString& name);
 
     uh::ListenerDispatcher<RecordingManagerListener> dispatcher;
 
 private:
     void scanForRecordings();
 
-    void onRecordingGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
     void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& name) override;
     void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& name) override;
 

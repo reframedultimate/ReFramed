@@ -173,8 +173,17 @@ public:
             , pos_(offset)
         {}
 
-        KeyValueRef operator*() { return KeyValueRef(keys_[pos_], values_[pos_]); }
-        KeyValueRef operator->() { return KeyValueRef(keys_[pos_], values_[pos_]); }
+        KeyValueRef operator*()
+        {
+            assert(pos_ != table_.count());
+            return KeyValueRef(keys_[pos_], values_[pos_]);
+        }
+
+        KeyValueRef operator->()
+        {
+            assert(pos_ != table_.count());
+            return KeyValueRef(keys_[pos_], values_[pos_]);
+        }
 
         Iterator& operator++()
         {
@@ -215,8 +224,17 @@ public:
             , pos_(offset)
         {}
 
-        ConstKeyValueRef operator*() const { return ConstKeyValueRef(keys_[pos_], values_[pos_]); }
-        ConstKeyValueRef operator->() const { return ConstKeyValueRef(keys_[pos_], values_[pos_]); }
+        ConstKeyValueRef operator*() const
+        {
+            assert(pos_ != table_.count());
+            return ConstKeyValueRef(keys_[pos_], values_[pos_]);
+        }
+
+        ConstKeyValueRef operator->() const
+        {
+            assert(pos_ != table_.count());
+            return ConstKeyValueRef(keys_[pos_], values_[pos_]);
+        }
 
         ConstIterator& operator++()
         {
@@ -502,6 +520,30 @@ public:
         construct(values_ + pos, std::forward<VV&&>(value));
         count_++;
         return Iterator(table_, keys_, values_, pos);
+    }
+
+    template <typename K1, typename K2>
+    Iterator reinsert(K1&& oldKey, K2&& newKey)
+    {
+        if (table_.count() == 0)
+            return end();
+
+        S oldPos = findImpl(oldKey);
+        assert(oldPos != table_.count());
+
+        H newHash;
+        S newPos;
+        if (findFreeInsertSlot(newKey, newHash, newPos) == false)
+            return end();
+
+        table_[newPos] = newHash;
+        construct(keys_ + newPos, std::forward<K2&&>(newKey));
+        construct(values_ + newPos, std::move(values_[oldPos]));
+
+        table_[oldPos] = RIP;
+        keys_[oldPos].~K();
+        values_[oldPos].~V();
+        return Iterator(table_, keys_, values_, newPos);
     }
 
     S erase(const K& key)

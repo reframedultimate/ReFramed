@@ -62,6 +62,7 @@ private:
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
 
     void onRecordingManagerGroupAdded(RecordingGroup* group) override { (void)group; }
+    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override { (void)group; (void)oldName; (void)newName; }
     void onRecordingManagerGroupRemoved(RecordingGroup* group) override { (void)group; }
 
     void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
