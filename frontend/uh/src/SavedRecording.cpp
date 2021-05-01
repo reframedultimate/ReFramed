@@ -185,15 +185,12 @@ SavedRecording* SavedRecording::load(const std::string& fileName)
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
     {
         std::string s = readFile(fileName);
-        if (s.length())
-        {
-            try {
-                j = json::parse(std::move(s));
-                break;
-            } catch (const json::parse_error& e) {
-                return nullptr;
-            }
-        }
+        if (s.length() == 0)
+            continue;
+
+        j = json::parse(std::move(s), nullptr, false);
+        if (j == json::value_t::discarded)
+            return nullptr;
     }
 
     if (j.contains("version") == false || j["version"].is_string() == false)

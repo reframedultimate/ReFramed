@@ -115,10 +115,10 @@ protected:
     std::vector<std::string> playerNames_;
     std::vector<FighterID> playerFighterIDs_;
     std::vector<std::vector<PlayerState>> playerStates_;
+    int winner_ = 0;
     SetFormat format_;
     GameNumber gameNumber_ = 1;
     SetNumber setNumber_ = 1;
-    int winner_ = 0;
     StageID stageID_;
 };
 
