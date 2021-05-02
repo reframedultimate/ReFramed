@@ -42,7 +42,8 @@ private:
     void repopulateStatusMappingTable();
     void repopulatePlayerDataTables();
     void repopulateHitStatusMappingTable();
-    void ensurePlayerDataTablesPopulated();
+
+    void updatePlayerDataTableRowsIfDirty();
     void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 
 private:
@@ -65,8 +66,14 @@ private:
     uh::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     uh::SmallVector<QTableWidget*, 8> playerDataTables_;
     uh::Reference<uh::Recording> recording_;
+
+    // When a new recording is set, we want to remember which player was selected so the
+    // user doesn't have to keep clicking on the player when browsing recordings
     int storeCurrentPageIndex_ = 0;
-    bool playerDataTableRowsLoaded_ = false;
+
+    bool playerDataTableRowsDirty_ = true;
+    uint64_t lastTimePlayerDataTablesUpdated_ = 0;
+    uint64_t playerDataTablesUpdateTime_ = 0;
 };
 
 }

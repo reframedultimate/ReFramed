@@ -5,6 +5,8 @@
 #include "uh/PlayerState.hpp"
 #include <QDateTime>
 
+#include <QDebug>
+
 namespace uhapp {
 
 class IntegerTableWidgetItem : public QTableWidgetItem
@@ -88,8 +90,12 @@ void RecordingDataView::setRecording(uh::Recording* recording)
 
     ui_->stackedWidget->setCurrentIndex(storeCurrentPageIndex);
 
+    playerDataTableRowsDirty_ = true;
+    lastTimePlayerDataTablesUpdated_ = QDateTime::currentMSecsSinceEpoch();
+    playerDataTablesUpdateTime_ = 0;
+
     if (ui_->stackedWidget->currentWidget() == ui_->page_playerData)
-        ensurePlayerDataTablesPopulated();
+        updatePlayerDataTableRowsIfDirty();
 
     recording_->dispatcher.addListener(this);
 }
@@ -149,7 +155,7 @@ void RecordingDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
             {
                 ui_->stackedWidget->setCurrentWidget(ui_->page_playerData);
                 ui_->stackedWidget_playerData->setCurrentIndex(i);
-                ensurePlayerDataTablesPopulated();
+                updatePlayerDataTableRowsIfDirty();
                 break;
             }
             i++;
@@ -317,7 +323,7 @@ void RecordingDataView::repopulatePlayerDataTables()
     // Fill in data
     for (int player = 0; player != recording_->playerCount(); ++player)
     {
-        QTableWidget* table = new QTableWidget(recording_->playerStateCount(player), 11);
+        QTableWidget* table = new QTableWidget(0, 11);
         playerDataTables_.push(table);
         ui_->stackedWidget_playerData->addWidget(table);
         table->setHorizontalHeaderLabels({"Frame", "Position", "Facing", "Damage", "Hitstun", "Shield", "Status", "Motion", "Hit Status", "Stocks", "Attack Connected"});
@@ -333,27 +339,43 @@ void RecordingDataView::repopulatePlayerDataTables()
 
     // Defer populating tables because there's a lot of data and it takes half
     // a second or so
-    playerDataTableRowsLoaded_ = false;
+    playerDataTableRowsDirty_ = true;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::ensurePlayerDataTablesPopulated()
+void RecordingDataView::updatePlayerDataTableRowsIfDirty()
 {
-    if (playerDataTableRowsLoaded_ == true)
+    if (playerDataTableRowsDirty_ == false)
         return;
+
+    qDebug() << "Updating player data tables";
 
     for (int player = 0; player != recording_->playerCount(); ++player)
     {
-        int row = 0;
-        for (int i = 0; i < recording_->playerStateCount(player); ++i)
+        QTableWidget* table = playerDataTables_[player];
+
+        // This method can be called multiple times if the active recording is
+        // adding new player states. On Windows, growing the table is really
+        // slow, so it gets called once every few seconds. Figure out how many
+        // rows are already populated and how many need to be added using new
+        // data
+        int row = table->rowCount();
+        if (table->rowCount() < recording_->playerStateCount(player))
+            table->setRowCount(recording_->playerStateCount(player));
+        int endRow = table->rowCount();
+
+        while (row < endRow)
         {
-            setPlayerDataTableRow(player, row, recording_->playerStateAt(player, i));
+            const uh::PlayerState& state = recording_->playerStateAt(player, row);
+            setPlayerDataTableRow(player, row, state);
             row++;
         }
+
         playerDataTables_[player]->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+        table->scrollToBottom();
     }
 
-    playerDataTableRowsLoaded_ = true;
+    playerDataTableRowsDirty_ = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -417,8 +439,32 @@ void RecordingDataView::onActiveRecordingNewUniquePlayerState(int player, const 
     if (player >= playerDataTables_.count())
         return;
 
-    ensurePlayerDataTablesPopulated();
+    // The fact this callback was called means there's new data
+    playerDataTableRowsDirty_ = true;
 
+    // Updating this table is really slow on Windows, specifically, resizing
+    // the table (adding rows) so had to get a bit creative. This is a problem
+    // because we receive state updates 60 times per second, so if any listener
+    // is slower than that, the entire UI freezes as it tries to update the
+    // ever increasing amount of incoming data.
+    const uint64_t time = QDateTime::currentMSecsSinceEpoch();
+    const uint64_t leeway = playerDataTablesUpdateTime_ * 2;
+    if (ui_->stackedWidget->currentWidget() != ui_->page_playerData 
+     || ui_->stackedWidget_playerData->currentIndex() != player
+     || time - lastTimePlayerDataTablesUpdated_ < playerDataTablesUpdateTime_ + leeway)
+    {
+        return;
+    }
+
+    if (ui_->stackedWidget->currentWidget() == ui_->page_playerData)
+    {
+        updatePlayerDataTableRowsIfDirty();
+
+        const uint64_t timeAfterUpdate = QDateTime::currentMSecsSinceEpoch();
+        playerDataTablesUpdateTime_ = timeAfterUpdate - time;
+        lastTimePlayerDataTablesUpdated_ = timeAfterUpdate;
+    }
+    
     QTableWidget* table = playerDataTables_[player];
     int row = table->rowCount();
     table->setRowCount(row + 1);
