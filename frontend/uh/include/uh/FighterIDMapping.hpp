@@ -7,8 +7,8 @@
 
 namespace uh {
 
-template class UH_PUBLIC_API HashMap<FighterID, String>::TableContainer;
-template class UH_PUBLIC_API HashMap<FighterID, String>;
+extern template class UH_TEMPLATE_API Vector<uint32_t>;
+extern template class UH_TEMPLATE_API HashMap<FighterID, String>;
 
 class UH_PUBLIC_API FighterIDMapping
 {

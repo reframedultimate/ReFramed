@@ -148,8 +148,4 @@ private:
     T* ptr_;
 };
 
-// Explicit instantiations used by libuh (thanks MSVC)
-class Recording;
-template class UH_PUBLIC_API Reference<Recording>;
-
 }

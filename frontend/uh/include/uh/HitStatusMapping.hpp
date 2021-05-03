@@ -7,9 +7,9 @@
 
 namespace uh {
 
-template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>::KeyContainer;
-template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>::ValueContainer;
-template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>;
+extern template class UH_TEMPLATE_API SmallVector<FighterHitStatus, 6>;
+extern template class UH_TEMPLATE_API SmallVector<String, 6>;
+extern template class UH_TEMPLATE_API SmallLinearMap<FighterHitStatus, String, 6>;
 
 class UH_PUBLIC_API HitStatusMapping
 {

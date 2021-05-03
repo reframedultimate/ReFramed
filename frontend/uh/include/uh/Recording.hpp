@@ -13,12 +13,11 @@ namespace uh {
 class PlayerState;
 class RecordingListener;
 
-template class UH_PUBLIC_API ListenerDispatcher<RecordingListener>::container_type;
-template class UH_PUBLIC_API ListenerDispatcher<RecordingListener>;
-template class UH_PUBLIC_API SmallVector<SmallString<15>, 8>;
-template class UH_PUBLIC_API SmallVector<SmallString<15>, 8>;
-template class UH_PUBLIC_API SmallVector<FighterID, 8>;
-template class UH_PUBLIC_API SmallVector<Vector<PlayerState>, 8>;
+extern template class UH_TEMPLATE_API SmallVector<RecordingListener*, 4>;
+extern template class UH_TEMPLATE_API ListenerDispatcher<RecordingListener>;
+extern template class UH_TEMPLATE_API SmallVector<SmallString<15>, 8>;
+extern template class UH_TEMPLATE_API SmallVector<FighterID, 8>;
+extern template class UH_TEMPLATE_API SmallVector<Vector<PlayerState>, 8>;
 
 class UH_PUBLIC_API Recording : public RefCounted
 {
