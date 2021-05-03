@@ -52,13 +52,13 @@ namespace uh {
  * }
  * ```
  */
-template <typename LISTENER_CLASS>
+template <typename Listener>
 class ListenerDispatcher
 {
 public:
-    typedef SmallVector<LISTENER_CLASS*, 4> container_type;
-    typedef typename container_type::Iterator iterator;
-    typedef typename container_type::ConstIterator const_iterator;
+    using ContainerType = SmallVector<Listener*, 4>;
+    using Iterator = typename ContainerType::Iterator;
+    using ConstIterator = typename ContainerType::ConstIterator;
 
     /*!
      * @brief Default constructor
@@ -79,7 +79,7 @@ public:
      * @param listenerName A globally unique identifier string for this
      * listener.
      */
-    void addListener(LISTENER_CLASS* listener);
+    void addListener(Listener* listener);
 
     /*!
      * @brief Unregisters a listener by pointer
@@ -87,7 +87,7 @@ public:
      * silently fail.
      * @param listener A pointer to a listener to unregister
      */
-    void removeListener(LISTENER_CLASS* listener);
+    void removeListener(Listener* listener);
 
     /*!
      * @brief Removes all listeners
@@ -104,7 +104,7 @@ public:
      * in the listener interface.
      */
     template <class RET_TYPE, class... ARGS, class... PARAMS>
-    void dispatch(RET_TYPE (LISTENER_CLASS::*func)(ARGS...), PARAMS&&... params) const;
+    void dispatch(RET_TYPE (Listener::*func)(ARGS...), PARAMS&&... params) const;
 
     /*!
      * @brief Dispatches a message to all listeners
@@ -120,42 +120,42 @@ public:
      * in the listener interface.
      */
     template <class... ARGS, class... PARAMS>
-    bool dispatchAndFindFalse(bool (LISTENER_CLASS::*func)(ARGS...), PARAMS&&... params) const;
+    bool dispatchAndFindFalse(bool (Listener::*func)(ARGS...), PARAMS&&... params) const;
 
 private:
-    container_type listeners_;
+    ContainerType listeners_;
 };
 
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
-ListenerDispatcher<LISTENER_CLASS>::ListenerDispatcher()
+template <class Listener>
+ListenerDispatcher<Listener>::ListenerDispatcher()
 {
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
-ListenerDispatcher<LISTENER_CLASS>::~ListenerDispatcher()
+template <class Listener>
+ListenerDispatcher<Listener>::~ListenerDispatcher()
 {
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
-void ListenerDispatcher<LISTENER_CLASS>::addListener(LISTENER_CLASS* listener)
+template <class Listener>
+void ListenerDispatcher<Listener>::addListener(Listener* listener)
 {
-    for(const_iterator it = listeners_.begin(); it != listeners_.end(); ++it)
-        if(*it == listener)
+    for (const auto& l : listeners_)
+        if (l == listener)
             return;
 
     listeners_.push(listener);
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
-void ListenerDispatcher<LISTENER_CLASS>::removeListener(LISTENER_CLASS* listener)
+template <class Listener>
+void ListenerDispatcher<Listener>::removeListener(Listener* listener)
 {
-    for(iterator it = listeners_.begin(); it != listeners_.end(); ++it)
-        if(*it == listener)
+    for (auto it = listeners_.begin(); it != listeners_.end(); ++it)
+        if (*it == listener)
         {
             listeners_.erase(it);
             return;
@@ -163,27 +163,27 @@ void ListenerDispatcher<LISTENER_CLASS>::removeListener(LISTENER_CLASS* listener
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
-void ListenerDispatcher<LISTENER_CLASS>::removeAllListeners()
+template <class Listener>
+void ListenerDispatcher<Listener>::removeAllListeners()
 {
     listeners_.clear();
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
+template <class Listener>
 template <class RET_TYPE, typename... ARGS, typename... PARAMS>
-void ListenerDispatcher<LISTENER_CLASS>::
-    dispatch(RET_TYPE(LISTENER_CLASS::*func)(ARGS...), PARAMS&&... params) const
+void ListenerDispatcher<Listener>::
+    dispatch(RET_TYPE(Listener::*func)(ARGS...), PARAMS&&... params) const
 {
     for(auto listener : listeners_)
         (listener->*func)(std::forward<ARGS>(params)...);
 }
 
 // ----------------------------------------------------------------------------
-template <class LISTENER_CLASS>
+template <class Listener>
 template <class... ARGS, class... PARAMS>
-bool ListenerDispatcher<LISTENER_CLASS>::
-    dispatchAndFindFalse(bool (LISTENER_CLASS::*func)(ARGS...), PARAMS&&... params) const
+bool ListenerDispatcher<Listener>::
+    dispatchAndFindFalse(bool (Listener::*func)(ARGS...), PARAMS&&... params) const
 {
     for(auto listener : listeners_)
         if ((listener->*func)(std::forward<ARGS>(params)...) == false)

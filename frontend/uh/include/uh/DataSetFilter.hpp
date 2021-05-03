@@ -9,8 +9,8 @@ namespace uh {
 class DataSet;
 class DataSetFilterListener;
 
-template class UH_PUBLIC_API ListenerDispatcher<DataSetFilterListener>::container_type;
-template class UH_PUBLIC_API ListenerDispatcher<DataSetFilterListener>;
+extern template class UH_TEMPLATE_API SmallVector<DataSetFilterListener*, 4>;
+extern template class UH_TEMPLATE_API ListenerDispatcher<DataSetFilterListener>;
 
 class UH_PUBLIC_API DataSetFilter : public RefCounted
 {

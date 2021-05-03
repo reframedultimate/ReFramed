@@ -13,6 +13,13 @@ test_visibility_macros (
 	UH_API_IMPORT 
 	UH_API_LOCAL)
 
+# We need to define a special macro for exporting template instantiations for
+# Windows DLLs. MacOSX and Linux don't care about this.
+if (WIN32)
+    set (UH_TEMPLATE_EXPORT ${UH_API_EXPORT})
+    set (UH_TEMPLATE_IMPORT ${UH_API_IMPORT})
+endif ()
+
 # check endianness of system
 test_big_endian (I_AM_BIG)
 
@@ -83,6 +90,7 @@ add_library (uh SHARED
 	"src/SetFormat.cpp"
 	"src/StageIDMapping.cpp"
     "src/StreamBuffer.cpp"
+    "src/TemplateInstantiations.cpp"
     "src/Vector.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"

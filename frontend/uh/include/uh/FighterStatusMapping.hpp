@@ -7,9 +7,9 @@
 
 namespace uh {
 
-template class UH_PUBLIC_API Vector<uint32_t, int32_t>;
-template class UH_PUBLIC_API HashMap<FighterStatus, String>;
-template class UH_PUBLIC_API HashMap<FighterID, HashMap<FighterStatus, String>>;
+extern template class UH_TEMPLATE_API Vector<uint32_t>;
+extern template class UH_TEMPLATE_API HashMap<FighterStatus, String>;
+extern template class UH_TEMPLATE_API HashMap<FighterID, HashMap<FighterStatus, String>>;
 
 /*!
  * \brief Character animation states are all described with a single u16 integer

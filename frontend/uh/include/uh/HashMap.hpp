@@ -115,10 +115,8 @@ public:
 template <typename K, typename V, typename Hasher=HashMapHasher<K>, typename S=int32_t>
 class HashMap : private HashMapAlloc
 {
-    typedef typename Hasher::HashType H;
-    typedef typename Vector<H, S> TableContainer;
-    typedef H HashType;
-    typedef S SizeType;
+    using H = typename Hasher::HashType;
+    using TableContainer = Vector<H, S>;
 
     enum SlotState
     {
