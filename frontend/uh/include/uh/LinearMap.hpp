@@ -11,8 +11,8 @@ template <typename K, typename V, int N, typename S=int32_t>
 class SmallLinearMap
 {
 public:
-    typedef SmallVector<K, N, S> Keys;
-    typedef SmallVector<V, N, S> Values;
+    typedef SmallVector<K, N, S> KeyContainer;
+    typedef SmallVector<V, N, S> ValueContainer;
     typedef LinearMapIterator<K, V, N, S> Iterator;
     typedef ConstLinearMapIterator<K, V, N, S> ConstIterator;
 
@@ -59,7 +59,7 @@ public:
     Iterator find(const K& key)
     {
         auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
-        return Iterator(keys_, values_, it - keys_.begin());
+        return Iterator(keys_, values_, static_cast<S>(it - keys_.begin()));
     }
 
     ConstIterator find(const K& key) const
@@ -82,8 +82,8 @@ public:
     ConstIterator end() const { return ConstIterator(keys_, values_, count()); }
 
 private:
-    Keys keys_;
-    Values values_;
+    KeyContainer keys_;
+    ValueContainer values_;
 };
 
 }

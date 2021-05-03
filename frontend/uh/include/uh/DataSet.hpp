@@ -12,6 +12,8 @@ namespace uh {
 
 class Recording;
 
+template class UH_PUBLIC_API Vector<DataPoint>;
+
 /*!
  * \brief This is the top-level structure used to hold the player state data
  * for analyzers to work with.

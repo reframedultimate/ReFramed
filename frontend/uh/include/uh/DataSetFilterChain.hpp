@@ -10,6 +10,9 @@ class DataSet;
 class DataSetFilter;
 class DataSetFilterChainData;
 
+template class UH_PUBLIC_API Reference<DataSetFilter>;
+template class UH_PUBLIC_API SmallVector<Reference<DataSetFilter>, 8>;
+
 class UH_PUBLIC_API DataSetFilterChain
 {
 public:

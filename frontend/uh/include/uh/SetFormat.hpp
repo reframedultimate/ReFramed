@@ -15,6 +15,8 @@
 
 namespace uh {
 
+template class UH_PUBLIC_API SmallString<0>;
+
 class UH_PUBLIC_API SetFormat
 {
 public:

@@ -7,6 +7,10 @@
 
 namespace uh {
 
+template class UH_PUBLIC_API SmallVector<StageID, 10>;
+template class UH_PUBLIC_API SmallVector<String, 10>;
+template class UH_PUBLIC_API SmallLinearMap<StageID, String, 10>;
+
 class UH_PUBLIC_API StageIDMapping
 {
 public:

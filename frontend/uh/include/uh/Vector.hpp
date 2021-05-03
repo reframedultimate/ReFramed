@@ -211,7 +211,7 @@ public:
 
     void insertMove(S insertPos, T* begin, T* end)
     {
-        S insertCount = end - begin;
+        S insertCount = static_cast<S>(end - begin);
         ensureCapacity(this->count_ + insertCount, insertPos, insertCount);
         T* dst = this->begin_ + insertPos;
         while (begin != end)
@@ -602,3 +602,4 @@ protected:
 };
 
 }
+

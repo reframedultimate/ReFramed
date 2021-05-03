@@ -31,6 +31,11 @@ public:
     uint32_t combinedState() const;
 
 private:
+    // Fix MSVC complaining about Vector::resize() requiring a default constructor. It
+    // never gets called
+    friend class Vector<DataPoint>;
+    DataPoint() { assert(false); }
+
     Reference<Recording> recording_;
     PlayerState state_;
     int playerIdx_;

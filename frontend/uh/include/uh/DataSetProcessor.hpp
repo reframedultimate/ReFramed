@@ -9,6 +9,9 @@ namespace uh {
 class AnalysisResult;
 class DataSet;
 
+template class UH_PUBLIC_API ListenerDispatcher<DataSetProcessorListener>::container_type;
+template class UH_PUBLIC_API ListenerDispatcher<DataSetProcessorListener>;
+
 class UH_PUBLIC_API DataSetProcessor : public DataSetProcessorListener
 {
 public:

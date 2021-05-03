@@ -3,6 +3,7 @@
 #include "uh/config.hpp"
 #include <cstdint>
 #include <vector>
+#include <cassert>
 
 namespace uh {
 
@@ -42,6 +43,11 @@ public:
     bool facingDirection() const { return !!(flags_ & 0x02); }
 
 private:
+    // Fix MSVC complaining about Vector::resize() requiring a default constructor. It
+    // never gets called
+    friend class DataPoint;
+    PlayerState() { assert(false); }
+
     uint64_t timeStampMs_;
     uint32_t frame_;
     float posx_;
