@@ -4,6 +4,7 @@
 #include "uh/ListenerDispatcher.hpp"
 #include "uh/Reference.hpp"
 #include "uh/DataSet.hpp"  // required by MOC
+#include "uh/Recording.hpp"  // required by MOC, required by explicit template instantiation of Reference<Recording>
 #include <QThread>
 #include <QMutex>
 #include <QObject>

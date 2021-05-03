@@ -9,6 +9,9 @@ namespace uh {
 class DataSet;
 class DataSetFilterListener;
 
+template class UH_PUBLIC_API ListenerDispatcher<DataSetFilterListener>::container_type;
+template class UH_PUBLIC_API ListenerDispatcher<DataSetFilterListener>;
+
 class UH_PUBLIC_API DataSetFilter : public RefCounted
 {
 public:

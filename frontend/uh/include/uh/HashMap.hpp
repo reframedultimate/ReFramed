@@ -116,6 +116,9 @@ template <typename K, typename V, typename Hasher=HashMapHasher<K>, typename S=i
 class HashMap : private HashMapAlloc
 {
     typedef typename Hasher::HashType H;
+    typedef typename Vector<H, S> TableContainer;
+    typedef H HashType;
+    typedef S SizeType;
 
     enum SlotState
     {
@@ -659,7 +662,7 @@ public:
     ConstIterator end() const { return ConstIterator(table_, keys_, values_, table_.count()); }
 
 private:
-    Vector<H, S> table_;
+    TableContainer table_;
     K* keys_;
     V* values_;
     S count_;

@@ -7,6 +7,10 @@
 
 namespace uh {
 
+template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>::KeyContainer;
+template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>::ValueContainer;
+template class UH_PUBLIC_API SmallLinearMap<FighterHitStatus, String, 6>;
+
 class UH_PUBLIC_API HitStatusMapping
 {
 public:

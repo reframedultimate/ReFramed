@@ -6,6 +6,8 @@
 
 namespace uh {
 
+template class UH_PUBLIC_API Vector<char>;
+
 class UH_PUBLIC_API StreamBuffer
 {
 public:
