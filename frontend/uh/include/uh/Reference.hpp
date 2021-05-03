@@ -148,4 +148,13 @@ private:
     T* ptr_;
 };
 
+// The following ensures that any clients that use uh::Reference will import
+// the explicit template instantiations from libuh instead of instantiating
+// new versions, causing multiple definition linker errors.
+class Recording;
+class DataSetFilter;
+
+extern template class UH_TEMPLATE_API Reference<Recording>;
+extern template class UH_TEMPLATE_API Reference<DataSetFilter>;
+
 }
