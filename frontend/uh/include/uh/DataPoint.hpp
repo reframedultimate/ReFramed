@@ -10,6 +10,8 @@ namespace uh {
 class Recording;
 class Video;
 
+extern template class UH_TEMPLATE_API Reference<Recording>;
+
 class UH_PUBLIC_API DataPoint
 {
 public:

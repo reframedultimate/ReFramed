@@ -23,6 +23,7 @@ template class ListenerDispatcher<DataSetFilterListener>;
 template class ListenerDispatcher<DataSetProcessorListener>;
 template class ListenerDispatcher<RecordingListener>;
 template class Reference<DataSetFilter>;
+template class Reference<Recording>;
 template class SmallLinearMap<FighterHitStatus, String, 6>;
 template class SmallLinearMap<StageID, String, 10>;
 template class SmallString<0>;
