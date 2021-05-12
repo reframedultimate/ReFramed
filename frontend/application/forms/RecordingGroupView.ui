@@ -32,14 +32,7 @@
         <widget class="QLineEdit" name="lineEdit_filters"/>
        </item>
        <item row="1" column="0" colspan="2">
-        <widget class="QListWidget" name="listWidget_recordings">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="layout_recordingList"/>
        </item>
       </layout>
      </widget>

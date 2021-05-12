@@ -2,6 +2,8 @@
 #include "application/listeners/RecordingGroupListener.hpp"
 #include "application/models/RecordingGroup.hpp"
 
+#include <QDebug>
+
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
@@ -31,6 +33,13 @@ void RecordingGroup::setName(const QString& name)
 // ----------------------------------------------------------------------------
 void RecordingGroup::addFile(const QFileInfo& absPathToFile)
 {
+    qDebug() << absPathToFile;
+    for (const auto& f : fileList_)
+        qDebug() << f;
+
+    if (fileList_.contains(absPathToFile))
+        return;
+
     fileList_.insert(absPathToFile);
     dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, this, absPathToFile);
 }

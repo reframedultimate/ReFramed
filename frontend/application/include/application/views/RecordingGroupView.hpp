@@ -17,6 +17,7 @@ class RecordingManager;
 class RecordingGroup;
 class RecordingView;
 class RecordingNameCompleter;
+class RecordingListWidget;
 
 class RecordingGroupView : public QWidget
                          , public RecordingManagerListener
@@ -63,6 +64,7 @@ private:
     Ui::RecordingGroupView* ui_;
     RecordingManager* recordingManager_;
     RecordingGroup* currentGroup_ = nullptr;
+    RecordingListWidget* recordingListWidget_;
     RecordingView* recordingView_;
     RecordingNameCompleter* filterCompleter_;
 };

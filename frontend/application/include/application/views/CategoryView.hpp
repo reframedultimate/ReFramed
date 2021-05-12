@@ -33,6 +33,11 @@ signals:
      */
     void recordingGroupSelected(RecordingGroup* group);
 
+protected:
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+
 private slots:
     void onCustomContextMenuRequested(const QPoint& pos);
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
