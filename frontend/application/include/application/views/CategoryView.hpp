@@ -46,6 +46,11 @@ private slots:
 private:
     CategoryType categoryOf(const QTreeWidgetItem* item) const;
 
+    // These get triggered by the context menu and drag/drop events
+    RecordingGroup* newGroup();
+    RecordingGroup* duplicateGroup(RecordingGroup* otherGroup);
+    void deleteGroup(RecordingGroup* group);
+
 private:
     void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
 

@@ -13,11 +13,11 @@
 // ----------------------------------------------------------------------------
 qhash_result_t qHash(const QDir& c, qhash_result_t seed) noexcept
 {
-    return qHash(c.canonicalPath().constData(), seed);
+    return qHash(c.canonicalPath().toUtf8(), seed);
 }
 qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed) noexcept
 {
-    return qHash(c.absoluteFilePath().constData(), seed);
+    return qHash(c.absoluteFilePath().toUtf8(), seed);
 }
 
 namespace uhapp {

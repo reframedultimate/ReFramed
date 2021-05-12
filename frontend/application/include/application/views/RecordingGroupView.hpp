@@ -41,6 +41,7 @@ public slots:
 private slots:
     void onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
     void onFiltersTextChanged(const QString& text);
+    void onDeleteKeyPressed();
 
 private:
     // In case a group gets deleted, we need remove ourselves as a listener

@@ -80,10 +80,13 @@ void CategoryView::setActiveRecordingViewDisabled(bool disable)
 // ----------------------------------------------------------------------------
 void CategoryView::dragEnterEvent(QDragEnterEvent* event)
 {
-    if (event->mimeData()->formats().contains("application/x-ultimate-hindsight-uhr"))
-        event->accept();
-    else
+    if (!event->mimeData()->formats().contains("application/x-ultimate-hindsight-uhr"))
+    {
         event->ignore();
+        return;
+    }
+
+    event->accept();
 }
 
 // ----------------------------------------------------------------------------
@@ -99,9 +102,21 @@ void CategoryView::dragMoveEvent(QDragMoveEvent* event)
     switch (categoryOf(targetItem))
     {
         case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
-        case CategoryType::RECORDING_GROUP_ITEM:
             event->accept();
             break;
+
+        case CategoryType::RECORDING_GROUP_ITEM: {
+            // Don't allow dropping on the all group
+            RecordingGroup* group = recordingManager_->recordingGroup(targetItem->text(0));
+            assert(group);
+            if (group == recordingManager_->allRecordingGroup())
+            {
+                event->ignore();
+                return;
+            }
+
+            event->accept();
+        } break;
 
         default:
             event->ignore();
@@ -112,24 +127,6 @@ void CategoryView::dragMoveEvent(QDragMoveEvent* event)
 // ----------------------------------------------------------------------------
 void CategoryView::dropEvent(QDropEvent* event)
 {
-    auto newGroup = [this]() -> RecordingGroup* {
-        int idx = 1;
-        RecordingGroup* group;
-        while (true)
-        {
-            QString name = QString("Group %1").arg(idx);
-            if (recordingManager_->addRecordingGroup(name))
-            {
-                group = recordingManager_->recordingGroup(name);
-                break;
-            }
-            idx++;
-        }
-
-        emit recordingGroupSelected(group);
-        return group;
-    };
-
     QTreeWidgetItem* targetItem = itemAt(event->pos());
     if (targetItem == nullptr)
     {
@@ -142,9 +139,19 @@ void CategoryView::dropEvent(QDropEvent* event)
     {
         case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
             group = newGroup();
+            [[fallthrough]];
         case CategoryType::RECORDING_GROUP_ITEM:
             group = group ? group : recordingManager_->recordingGroup(targetItem->text(0));
         {
+            assert(group);
+
+            // Don't allow dropping on the all group
+            if (group == recordingManager_->allRecordingGroup())
+            {
+                event->ignore();
+                return;
+            }
+
             QByteArray encodedData = event->mimeData()->data("application/x-ultimate-hindsight-uhr");
             QDataStream stream(&encodedData, QIODevice::ReadOnly);
             while (!stream.atEnd())
@@ -168,52 +175,6 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
     QTreeWidgetItem* item = itemAt(pos);
     if (item == nullptr)
         return;
-
-    auto newGroup = [this](){
-        int idx = 1;
-        RecordingGroup* group;
-        while (true)
-        {
-            QString name = QString("Group %1").arg(idx);
-            if (recordingManager_->addRecordingGroup(name))
-            {
-                group = recordingManager_->recordingGroup(name);
-                break;
-            }
-            idx++;
-        }
-
-        emit recordingGroupSelected(group);
-    };
-
-    auto deleteGroup = [this](RecordingGroup* group){
-        recordingManager_->removeRecordingGroup(group->name());
-        emit categoryChanged(CategoryType::TOP_LEVEL_RECORDING_GROUPS);
-    };
-
-    auto renameGroup = [this](QTreeWidgetItem* item){
-        editItem(item, 0);
-    };
-
-    auto duplicateGroup = [this](RecordingGroup* otherGroup){
-        int idx = 1;
-        RecordingGroup* group;
-        while (true)
-        {
-            QString name = QString("Group %1").arg(idx);
-            if (recordingManager_->addRecordingGroup(name))
-            {
-                group = recordingManager_->recordingGroup(name);
-                break;
-            }
-            idx++;
-        }
-
-        for (const auto& fileInfo : otherGroup->absFilePathList())
-            group->addFile(fileInfo);
-
-        emit recordingGroupSelected(group);
-    };
 
     switch (categoryOf(item))
     {
@@ -255,7 +216,7 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
             else if (result == deleteGroupAction)
                 deleteGroup(group);
             else if (result == renameGroupAction)
-                renameGroup(item);
+                editItem(item, 0);
             else if (result == clearRecordingsAction)
                 group->removeAllFiles();
             else if (result == duplicateGroupAction)
@@ -348,6 +309,56 @@ CategoryType CategoryView::categoryOf(const QTreeWidgetItem* item) const
     if (item == activeRecordingItem_)
         return CategoryType::TOP_LEVEL_ACTIVE_RECORDING;
     assert(false);
+}
+
+// ----------------------------------------------------------------------------
+RecordingGroup* CategoryView::newGroup()
+{
+    int idx = 1;
+    RecordingGroup* group;
+    while (true)
+    {
+        QString name = QString("Group %1").arg(idx);
+        if (recordingManager_->addRecordingGroup(name))
+        {
+            group = recordingManager_->recordingGroup(name);
+            break;
+        }
+        idx++;
+    }
+
+    emit recordingGroupSelected(group);
+    return group;
+}
+
+// ----------------------------------------------------------------------------
+RecordingGroup* CategoryView::duplicateGroup(RecordingGroup* otherGroup)
+{
+    int idx = 1;
+    RecordingGroup* group;
+    while (true)
+    {
+        QString name = QString("Group %1").arg(idx);
+        if (recordingManager_->addRecordingGroup(name))
+        {
+            group = recordingManager_->recordingGroup(name);
+            break;
+        }
+        idx++;
+    }
+
+    for (const auto& fileInfo : otherGroup->absFilePathList())
+        group->addFile(fileInfo);
+
+    emit recordingGroupSelected(group);
+    return group;
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::deleteGroup(RecordingGroup* group)
+{
+    recordingManager_->removeRecordingGroup(group->name());
+    emit categoryChanged(CategoryType::TOP_LEVEL_RECORDING_GROUPS);
 }
 
 // ----------------------------------------------------------------------------

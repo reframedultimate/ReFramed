@@ -43,6 +43,15 @@ bool RecordingListWidget::itemMatchesRecordingFileName(QListWidgetItem* item, co
 }
 
 // ----------------------------------------------------------------------------
+QVector<QFileInfo> RecordingListWidget::selectedRecordingFilePaths() const
+{
+    QVector<QFileInfo> recordings;
+    for (const auto& item : selectedItems())
+        recordings.push_back(item->data(Qt::UserRole).toString());
+    return recordings;
+}
+
+// ----------------------------------------------------------------------------
 QStringList RecordingListWidget::mimeTypes() const
 {
     QStringList types;

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QListWidget>
+#include <QVector>
+#include <QFileInfo>
 
 class QFileInfo;
 
@@ -17,6 +19,7 @@ public:
     void addRecordingFileName(const QFileInfo& absPathToFile);
     void removeRecordingFileName(const QFileInfo& absPathToFile);
     bool itemMatchesRecordingFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
+    QVector<QFileInfo> selectedRecordingFilePaths() const;
 
 protected:
     QStringList mimeTypes() const override;
