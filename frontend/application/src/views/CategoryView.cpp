@@ -3,6 +3,13 @@
 #include "application/models/RecordingGroup.hpp"
 
 #include <QMenu>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QByteArray>
+#include <QDataStream>
+
+#include <QDebug>
 
 namespace uhapp {
 
@@ -26,6 +33,10 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     addTopLevelItem(recordingSourcesItem_);
     addTopLevelItem(videoSourcesItem_);
     addTopLevelItem(activeRecordingItem_);
+
+    setAcceptDrops(true);
+
+    recordingGroupsItem_->setFlags(recordingGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
     // We're not connected by default
     setActiveRecordingViewDisabled(true);
@@ -64,6 +75,91 @@ CategoryView::~CategoryView()
 void CategoryView::setActiveRecordingViewDisabled(bool disable)
 {
     activeRecordingItem_->setDisabled(disable);
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->formats().contains("application/x-ultimate-hindsight-uhr"))
+        event->accept();
+    else
+        event->ignore();
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::dragMoveEvent(QDragMoveEvent* event)
+{
+    QTreeWidgetItem* targetItem = itemAt(event->pos());
+    if (targetItem == nullptr)
+    {
+        event->ignore();
+        return;
+    }
+
+    switch (categoryOf(targetItem))
+    {
+        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+        case CategoryType::RECORDING_GROUP_ITEM:
+            event->accept();
+            break;
+
+        default:
+            event->ignore();
+            break;
+    }
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::dropEvent(QDropEvent* event)
+{
+    auto newGroup = [this]() -> RecordingGroup* {
+        int idx = 1;
+        RecordingGroup* group;
+        while (true)
+        {
+            QString name = QString("Group %1").arg(idx);
+            if (recordingManager_->addRecordingGroup(name))
+            {
+                group = recordingManager_->recordingGroup(name);
+                break;
+            }
+            idx++;
+        }
+
+        emit recordingGroupSelected(group);
+        return group;
+    };
+
+    QTreeWidgetItem* targetItem = itemAt(event->pos());
+    if (targetItem == nullptr)
+    {
+        event->ignore();
+        return;
+    }
+
+    RecordingGroup* group = nullptr;
+    switch (categoryOf(targetItem))
+    {
+        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+            group = newGroup();
+        case CategoryType::RECORDING_GROUP_ITEM:
+            group = group ? group : recordingManager_->recordingGroup(targetItem->text(0));
+        {
+            QByteArray encodedData = event->mimeData()->data("application/x-ultimate-hindsight-uhr");
+            QDataStream stream(&encodedData, QIODevice::ReadOnly);
+            while (!stream.atEnd())
+            {
+                QString s; stream >> s;
+                group->addFile(s);
+            }
+
+            event->accept();
+        } break;
+
+        default:
+            event->ignore();
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------

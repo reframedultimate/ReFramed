@@ -3,6 +3,7 @@
 #include "application/models/RecordingManager.hpp"
 #include "application/models/RecordingGroup.hpp"
 #include "application/views/RecordingView.hpp"
+#include "application/views/RecordingListWidget.hpp"
 #include "uh/SavedRecording.hpp"
 #include "uh/PlayerState.hpp"
 
@@ -85,6 +86,7 @@ RecordingGroupView::RecordingGroupView(RecordingManager* recordingManager, QWidg
     : QWidget(parent)
     , ui_(new Ui::RecordingGroupView)
     , recordingManager_(recordingManager)
+    , recordingListWidget_(new RecordingListWidget)
     , recordingView_(new RecordingView)
     /*, filterCompleter_(new RecordingNameCompleter)*/
 {
@@ -92,16 +94,17 @@ RecordingGroupView::RecordingGroupView(RecordingManager* recordingManager, QWidg
     ui_->splitter->setStretchFactor(0, 0);
     ui_->splitter->setStretchFactor(1, 1);
     ui_->splitter->setSizes({600});
+    ui_->layout_recordingList->addWidget(recordingListWidget_);
     ui_->layout_data->addWidget(recordingView_);
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
     recordingManager_->dispatcher.addListener(this);
 
-    connect(ui_->listWidget_recordings, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
-            this, SLOT(onCurrentItemChanged(QListWidgetItem*,QListWidgetItem*)));
-    connect(ui_->lineEdit_filters, SIGNAL(textChanged(const QString&)),
-            this, SLOT(onFiltersTextChanged(const QString&)));
+    connect(recordingListWidget_, &QListWidget::currentItemChanged,
+            this, &RecordingGroupView::onCurrentItemChanged);
+    connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
+            this, &RecordingGroupView::onFiltersTextChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -122,8 +125,8 @@ void RecordingGroupView::setRecordingGroup(RecordingGroup* group)
     currentGroup_->dispatcher.addListener(this);
 
     for (const auto& fileName : group->absFilePathList())
-        ui_->listWidget_recordings->addItem(fileName.completeBaseName());
-    ui_->listWidget_recordings->sortItems(Qt::DescendingOrder);
+        recordingListWidget_->addRecordingFileName(fileName);
+    recordingListWidget_->sortItems(Qt::DescendingOrder);
 
     /*filterCompleter_->setRecordingGroupWeakRef(group);*/
 }
@@ -135,7 +138,7 @@ void RecordingGroupView::clear()
         currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
 
-    ui_->listWidget_recordings->clear();
+    recordingListWidget_->clear();
     recordingView_->clear();
     /*filterCompleter_->recordingGroupExpired();*/
 }
@@ -147,7 +150,7 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
         return;
 
     for (const auto& fileName : currentGroup_->absFilePathList())
-        if (fileName.completeBaseName() == current->text())
+        if (recordingListWidget_->itemMatchesRecordingFileName(current, fileName))
         {
             uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString().c_str());
             if (recording)
@@ -185,16 +188,15 @@ void RecordingGroupView::onRecordingManagerGroupNameChanged(RecordingGroup* grou
 void RecordingGroupView::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    ui_->listWidget_recordings->addItem(absPathToFile.completeBaseName());
-    ui_->listWidget_recordings->sortItems(Qt::DescendingOrder);
+    recordingListWidget_->addRecordingFileName(absPathToFile);
+    recordingListWidget_->sortItems(Qt::DescendingOrder);
 }
 
 // ----------------------------------------------------------------------------
 void RecordingGroupView::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    for (const auto& item : ui_->listWidget_recordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
-        delete item;
+    recordingListWidget_->removeRecordingFileName(absPathToFile);
 }
 
 }
