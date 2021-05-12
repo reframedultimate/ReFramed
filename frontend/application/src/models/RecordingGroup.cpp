@@ -33,10 +33,6 @@ void RecordingGroup::setName(const QString& name)
 // ----------------------------------------------------------------------------
 void RecordingGroup::addFile(const QFileInfo& absPathToFile)
 {
-    qDebug() << absPathToFile;
-    for (const auto& f : fileList_)
-        qDebug() << f;
-
     if (fileList_.contains(absPathToFile))
         return;
 

@@ -11,6 +11,10 @@
 #include <QListWidgetItem>
 #include <QCompleter>
 #include <QStringListModel>
+#include <QKeySequence>
+#include <QShortcut>
+
+#include <QDebug>
 
 namespace uhapp {
 
@@ -99,12 +103,16 @@ RecordingGroupView::RecordingGroupView(RecordingManager* recordingManager, QWidg
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
+    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), recordingListWidget_, nullptr, nullptr, Qt::WidgetShortcut);
+
     recordingManager_->dispatcher.addListener(this);
 
     connect(recordingListWidget_, &QListWidget::currentItemChanged,
             this, &RecordingGroupView::onCurrentItemChanged);
     connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
             this, &RecordingGroupView::onFiltersTextChanged);
+    connect(shortcut, &QShortcut::activated,
+            this, &RecordingGroupView::onDeleteKeyPressed);
 }
 
 // ----------------------------------------------------------------------------
@@ -170,6 +178,17 @@ void RecordingGroupView::onFiltersTextChanged(const QString& text)
     {
 
     }
+}
+
+// ----------------------------------------------------------------------------
+void RecordingGroupView::onDeleteKeyPressed()
+{
+    // Can't delete stuff in all group
+    if (currentGroup_ == nullptr || currentGroup_ == recordingManager_->allRecordingGroup())
+        return;
+
+    for (const auto& absFilePath : recordingListWidget_->selectedRecordingFilePaths())
+        currentGroup_->removeFile(absFilePath);
 }
 
 // ----------------------------------------------------------------------------
