@@ -195,33 +195,46 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
             if (group == nullptr)
                 return;
 
-            QMenu menu(this);
-            QAction* newGroupAction = menu.addAction("New group");
-            QAction* deleteGroupAction = nullptr;
-            QAction* clearRecordingsAction = nullptr;
-            QAction* renameGroupAction = nullptr;
             if (group != recordingManager_->allRecordingGroup())
             {
-                deleteGroupAction = menu.addAction("Delete group");
-                clearRecordingsAction = menu.addAction("Remove all recordings");
-                renameGroupAction = menu.addAction("Rename group");
-            }
-            QAction* duplicateGroupAction = menu.addAction("Duplicate group");
-            menu.addSeparator();
-            QAction* newDataSetAction = menu.addAction("New data set from group");
-            QAction* result = menu.exec(mapToGlobal(pos));
+                QMenu menu(this);
+                QAction* newGroupAction = menu.addAction("New group");
+                QAction* renameGroupAction = menu.addAction("Rename group");
+                QAction* duplicateGroupAction = menu.addAction("Duplicate group");
+                menu.addSeparator();
+                QAction* deleteGroupAction = menu.addAction("Delete group");
+                QAction* clearRecordingsAction = menu.addAction("Remove all recordings");
+                menu.addSeparator();
+                QAction* newDataSetAction = menu.addAction("New data set from group");
 
-            if (result == newGroupAction)
-                newGroup();
-            else if (result == deleteGroupAction)
-                deleteGroup(group);
-            else if (result == renameGroupAction)
-                editItem(item, 0);
-            else if (result == clearRecordingsAction)
-                group->removeAllFiles();
-            else if (result == duplicateGroupAction)
-                duplicateGroup(group);
-            else if (result == newDataSetAction) {}
+                QAction* result = menu.exec(mapToGlobal(pos));
+                if (result == newGroupAction)
+                    newGroup();
+                else if (result == renameGroupAction)
+                    editItem(item, 0);
+                else if (result == duplicateGroupAction)
+                    duplicateGroup(group);
+                else if (result == deleteGroupAction)
+                    deleteGroup(group);
+                else if (result == clearRecordingsAction)
+                    group->removeAllFiles();
+                else if (result == newDataSetAction) {}
+            }
+            else
+            {
+                QMenu menu(this);
+                QAction* newGroupAction = menu.addAction("New group");
+                QAction* duplicateGroupAction = menu.addAction("Duplicate group");
+                menu.addSeparator();
+                QAction* newDataSetAction = menu.addAction("New data set from group");
+
+                QAction* result = menu.exec(mapToGlobal(pos));
+                if (result == newGroupAction)
+                    newGroup();
+                else if (result == duplicateGroupAction)
+                    duplicateGroup(group);
+                else if (result == newDataSetAction) {}
+            }
         }
 
         default:
