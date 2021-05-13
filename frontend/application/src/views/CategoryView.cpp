@@ -182,7 +182,7 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
             QMenu menu(this);
             QAction* newGroupAction = menu.addAction("New group");
             menu.addSeparator();
-            QAction* newDataSetAction = menu.addAction("New data set from group");
+            QAction* newDataSetAction = menu.addAction("New data set");
             QAction* result = menu.exec(mapToGlobal(pos));
 
             if (result == newGroupAction)
