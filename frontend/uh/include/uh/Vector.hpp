@@ -150,12 +150,12 @@ public:
             T* secondPtr = second.begin_;
             for (S idx = 0; idx < first.count_ && idx < second.count_; ++idx)
                 swap(*firstPtr++, *secondPtr++);
-            while (firstPtr != first.end())
+            while (firstPtr < first.end())
             {
                 new (secondPtr++) T(std::move(*firstPtr));
                 firstPtr++->~T();
             }
-            while (secondPtr != second.end())
+            while (secondPtr < second.end())
             {
                 new (firstPtr++) T(std::move(*secondPtr));
                 secondPtr++->~T();
