@@ -55,6 +55,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     check_endian_intrinsic("_byteswap_ushort" "generic_bswap16" "intrin.h" UH_SWAP_ENDIAN_16)
     check_endian_intrinsic("_byteswap_ulong"  "generic_bswap32" "intrin.h" UH_SWAP_ENDIAN_32)
     check_endian_intrinsic("_byteswap_uint64" "generic_bswap64" "intrin.h" UH_SWAP_ENDIAN_64)
+else ()
+    message (FATAL_ERROR "Endian byteswap check was not implemented for this compiler (yet). Please check the above cmake code and see if you can implement it, or submit an issue")
 endif ()
     
 configure_file ("templates/config.hpp.in" "include/uh/config.hpp")
