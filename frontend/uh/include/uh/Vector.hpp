@@ -130,6 +130,10 @@ public:
 
     ~SmallVector()
     {
+        Iterator end = this->end();
+        while (end-- != this->begin_)
+            end->~T();
+
         if (this->capacity_ > N)
             deallocate(reinterpret_cast<char*>(this->begin_));
     }
@@ -332,12 +336,11 @@ public:
 
     void clear()
     {
-        T* o = this->begin_;
-        while (this->count_)
-        {
-            o->~T();
-            this->count_--;
-        }
+        Iterator end = this->end();
+        while (end-- != this->begin_)
+            end->~T();
+
+        this->count_ = 0;
     }
 
     void clearCompact()
@@ -428,6 +431,10 @@ public:
 
     ~Vector()
     {
+        Iterator end = this->end();
+        while (end-- != this->begin_)
+            end->~T();
+
         deallocate(reinterpret_cast<char*>(this->begin_));
     }
 
@@ -555,12 +562,11 @@ public:
 
     void clear()
     {
-        T* o = this->begin_;
-        while (this->count_)
-        {
-            o->~T();
-            this->count_--;
-        }
+        Iterator end = this->end();
+        while (end-- != this->begin_)
+            end->~T();
+
+        this->count_ = 0;
     }
 
     void clearCompact()

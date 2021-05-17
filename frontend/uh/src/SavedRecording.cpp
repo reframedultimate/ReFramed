@@ -57,11 +57,9 @@ static std::string decompressGZFile(const String& fileName)
         }
     }
 
+    fclose(fp);
     if (gzclose(f) != Z_OK)
-    {
-        fclose(fp);
         return "";
-    }
 
     return out;
 
