@@ -44,11 +44,14 @@ private:
             if (recording)
             {
                 out_->enqueue({recording, item.group, item.taskID});
-                cond_->wakeOne();
 #ifndef NDEBUG
                 for (int i = 0; i < recording->playerCount(); ++i)
                     assert(recording->playerStateCount(i) > 0);
 #endif
+            }
+            else
+            {
+                printf("%d: (worker) failed to load %s\n", item.taskID, item.recordingFile.fileName().toStdString().c_str());
             }
         }
 
@@ -203,11 +206,11 @@ void DataSetBackgroundLoader::run()
     mutex_.lock();
     while (true)
     {
-        if (in_.isEmpty())
-            cond_.wait(&mutex_);
-
         if (requestShutdown_)
             break;
+
+        if (in_.isEmpty() && pendingDataSets.count() == 0)
+            cond_.wait(&mutex_);
 
         // There will usually be quite a few items in the queue (maybe 1000?)
         // so they should be transferred to a local container before merging
@@ -216,6 +219,7 @@ void DataSetBackgroundLoader::run()
         std::vector<InData> items;
         while (!in_.isEmpty())
             items.emplace_back(in_.dequeue());
+        printf("(thread) popped %d items from in queue\n", (int)items.size());
 
         // The only way to know right now if all of the recordings are done
         // loading is by checking the active worker count
