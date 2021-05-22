@@ -46,7 +46,7 @@ macro (uh_add_plugin PLUGIN)
 			PRIVATE Qt5::Core
 			PRIVATE Qt5::Gui
 			PRIVATE Qt5::Widgets
-			PRIVATE uh)
+            PRIVATE uhplot)
 		set_target_properties (${PLUGIN}
 			PROPERTIES
 				PREFIX ""

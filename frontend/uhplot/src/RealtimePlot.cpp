@@ -1,8 +1,8 @@
-#include "application/views/RealtimePlot.hpp"
-#include "application/plot/Panner.hpp"
-#include "application/plot/Zoomer.hpp"
-#include "application/plot/RectangleZoomer.hpp"
-#include "application/plot/AutoScaler.hpp"
+#include "uhplot/RealtimePlot.hpp"
+#include "uhplot/Panner.hpp"
+#include "uhplot/Zoomer.hpp"
+#include "uhplot/RectangleZoomer.hpp"
+#include "uhplot/AutoScaler.hpp"
 
 #include <qwt_plot_grid.h>
 #include <qwt_plot_curve.h>

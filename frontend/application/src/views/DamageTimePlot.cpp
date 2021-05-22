@@ -1,4 +1,4 @@
-#include "application/plot/ColorPalette.hpp"
+#include "uhplot/ColorPalette.hpp"
 #include "application/views/DamageTimePlot.hpp"
 #include "uh/Recording.hpp"
 #include "uh/PlayerState.hpp"

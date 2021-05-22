@@ -10,10 +10,6 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/models/ActiveRecordingManager.hpp"
     "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
-    "include/application/plot/DeltaPlotPicker.hpp"
-    "include/application/plot/Panner.hpp"
-    "include/application/plot/RectangleZoomer.hpp"
-    "include/application/plot/Zoomer.hpp"
     "include/application/views/ActiveRecordingView.hpp"
     "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
@@ -30,7 +26,6 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/views/MainWindow.hpp"
     "include/application/views/RecordingDataView.hpp"
     "include/application/views/RecordingListWidget.hpp"
-    "include/application/views/RealtimePlot.hpp"
     "include/application/views/RecordingGroupView.hpp"
     "include/application/views/RecordingView.hpp"
     "include/application/views/VisualizerView.hpp"
@@ -70,13 +65,6 @@ add_executable (ultimate-hindsight #WIN32
     "src/models/Protocol.cpp"
     "src/models/RecordingGroup.cpp"
     "src/models/RecordingManager.cpp"
-    "src/plot/AutoScaler.cpp"
-    "src/plot/ColorPalette.cpp"
-    "src/plot/DeltaPlotPicker.cpp"
-    "src/plot/MousePlotPickerMachine.cpp"
-    "src/plot/Panner.cpp"
-    "src/plot/RectangleZoomer.cpp"
-    "src/plot/Zoomer.cpp"
     "src/views/ActiveRecordingView.cpp"
     "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
@@ -92,7 +80,6 @@ add_executable (ultimate-hindsight #WIN32
     "src/views/DataSetFilterWidget_Stage.cpp"
     "src/views/RecordingDataView.cpp"
     "src/views/RecordingListWidget.cpp"
-    "src/views/RealtimePlot.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
     "src/views/VisualizerView.cpp"
@@ -107,17 +94,10 @@ target_link_libraries (ultimate-hindsight
     PRIVATE Qt5::Core
     PRIVATE Qt5::Gui
     PRIVATE Qt5::Widgets
-    PRIVATE qwtinternal
-	PRIVATE uh)
+    PRIVATE uhplot)
 set_target_properties (ultimate-hindsight
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
-
-# output qwt dll to bin directory
-set_target_properties (qwtinternal
-	PROPERTIES
-		RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
-        LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR})
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
@@ -142,3 +122,4 @@ install (
 set_target_properties (ultimate-hindsight
     PROPERTIES
         INSTALL_RPATH ${UH_INSTALL_LIBDIR})
+

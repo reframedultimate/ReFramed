@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/plot/DeltaPlotPicker.hpp"
+#include "uhplot/DeltaPlotPicker.hpp"
 
 class QWidget;
 
