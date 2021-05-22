@@ -1,4 +1,4 @@
-#include "application/plot/MousePlotPickerMachine.hpp"
+#include "uhplot/MousePlotPickerMachine.hpp"
 
 #include <QEvent>
 #include <QMouseEvent>

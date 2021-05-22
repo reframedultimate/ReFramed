@@ -1,4 +1,4 @@
-#include "application/plot/RectangleZoomer.hpp"
+#include "uhplot/RectangleZoomer.hpp"
 
 #include <qwt_plot.h>
 #include <qwt_picker_machine.h>

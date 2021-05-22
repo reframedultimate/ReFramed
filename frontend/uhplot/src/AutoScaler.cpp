@@ -1,4 +1,4 @@
-#include "application/plot/AutoScaler.hpp"
+#include "uhplot/AutoScaler.hpp"
 #include "qwt_plot.h"
 #include "qwt_plot_canvas.h"
 #include <QMouseEvent>

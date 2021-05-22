@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/views/RealtimePlot.hpp"
+#include "uhplot/RealtimePlot.hpp"
 #include "uh/RecordingListener.hpp"
 #include "uh/Reference.hpp"
 #include <QExplicitlySharedDataPointer>

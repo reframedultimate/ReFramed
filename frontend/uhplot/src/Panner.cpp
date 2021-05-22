@@ -1,5 +1,5 @@
-#include "application/plot/Panner.hpp"
-#include "application/plot/MousePlotPickerMachine.hpp"
+#include "uhplot/Panner.hpp"
+#include "uhplot/MousePlotPickerMachine.hpp"
 
 #include "qwt_plot.h"
 #include "qwt_scale_div.h"

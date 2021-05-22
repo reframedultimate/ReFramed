@@ -1,4 +1,4 @@
-#include "application/plot/ColorPalette.hpp"
+#include "uhplot/ColorPalette.hpp"
 
 #include <QVector>
 

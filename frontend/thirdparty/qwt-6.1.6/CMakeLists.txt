@@ -59,7 +59,7 @@ if (QWT_SVG)
     find_package (Qt5 COMPONENTS Svg REQUIRED)
 endif ()
 
-add_library (qwtinternal ${QWT_LIB_TYPE}
+add_library (uhqwt ${QWT_LIB_TYPE}
     ###########################################################################
     # core
     ###########################################################################
@@ -164,11 +164,11 @@ add_library (qwtinternal ${QWT_LIB_TYPE}
     ###########################################################################
 
     $<$<BOOL:${QWT_SVG}>:src/qwt_plot_svgitem.cpp>)
-target_include_directories (qwtinternal
+target_include_directories (uhqwt
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
     PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
     PUBLIC $<INSTALL_INTERFACE:include>)
-target_link_libraries (qwtinternal
+target_link_libraries (uhqwt
     PRIVATE Qt5::Core
     PRIVATE Qt5::Gui
     PRIVATE Qt5::Widgets
@@ -176,15 +176,28 @@ target_link_libraries (qwtinternal
     PRIVATE Qt5::Concurrent
     PRIVATE $<$<BOOL:${QWT_SVG}>:Qt5::Svg>
     PRIVATE $<$<BOOL:${QWT_OPENGL}>:Qt5::OpenGL>)
-target_compile_definitions (qwtinternal
+target_compile_definitions (uhqwt
     PRIVATE QWT_BUILDING
     PRIVATE $<$<NOT:$<BOOL:${QWT_SVG}>>:QWT_NO_SVG>)
-set_target_properties (qwtinternal
+set_target_properties (uhqwt
     PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY "${UH_BUILD_LIBDIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${UH_BUILD_BINDIR}")
+        LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}
+        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
+
 install (
-    TARGETS qwtinternal
-    LIBRARY DESTINATION "${UH_INSTALL_LIBDIR}"
-    RUNTIME DESTINATION "${UH_INSTALL_BINDIR}")
+    TARGETS uhqwt
+    EXPORT uhqwtConfig
+    LIBRARY DESTINATION ${UH_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${UH_INSTALL_BINDIR})
+install (
+    DIRECTORY "src"
+    DESTINATION ${UH_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
+install (
+    DIRECTORY "${PROJECT_BINARY_DIR}/src"
+    DESTINATION ${UH_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h")
+install (
+    EXPORT uhqwtConfig
+    DESTINATION ${UH_INSTALL_CMAKEDIR})
 

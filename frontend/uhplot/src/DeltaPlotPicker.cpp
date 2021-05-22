@@ -1,5 +1,5 @@
-#include "application/plot/DeltaPlotPicker.hpp"
-#include "application/plot/MousePlotPickerMachine.hpp"
+#include "uhplot/DeltaPlotPicker.hpp"
+#include "uhplot/MousePlotPickerMachine.hpp"
 
 #include "qwt_plot.h"
 

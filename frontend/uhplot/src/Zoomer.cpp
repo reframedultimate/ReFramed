@@ -1,5 +1,5 @@
-#include "application/plot/Zoomer.hpp"
-#include "application/plot/MousePlotPickerMachine.hpp"
+#include "uhplot/Zoomer.hpp"
+#include "uhplot/MousePlotPickerMachine.hpp"
 
 #include "qwt_plot.h"
 #include "qwt_scale_div.h"

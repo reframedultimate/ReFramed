@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/plot/DeltaPlotPicker.hpp"
+#include "uhplot/DeltaPlotPicker.hpp"
 
 class QWidget;
 
@@ -10,20 +10,23 @@ namespace uhapp {
  * Provides a method for zooming in and out in real-time on both X/Y axes by
  * dragging the mouse.
  */
-class RectangleZoomer : public DeltaPlotPicker
+class Zoomer : public DeltaPlotPicker
 {
     Q_OBJECT
 
 public:
-    explicit RectangleZoomer(QWidget* canvas);
-    ~RectangleZoomer();
+    explicit Zoomer(QWidget* canvas);
+    ~Zoomer();
 
-public slots:
+protected slots:
     void doZoom(const QPointF& origin, const QPointF& current);
+
+private slots:
+    void onActivated(bool activated);
 
 private:
     bool userJustClicked_;
-    QPointF initialClickPosition_;
+    QRectF originalPlotDimension_;
 };
 
 }
