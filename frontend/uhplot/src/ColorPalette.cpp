@@ -2,7 +2,7 @@
 
 #include <QVector>
 
-namespace uhapp {
+namespace uhplot {
 
 static QVector<QColor> generateColorPalette()
 {
@@ -29,4 +29,4 @@ QColor ColorPalette::getColor(int index)
     return colors.at(index);
 }
 
-} // namespace uh
+}

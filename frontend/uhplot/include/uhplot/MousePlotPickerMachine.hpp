@@ -1,8 +1,9 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include "qwt_picker_machine.h"
 
-namespace uhapp {
+namespace uhplot {
 
 class MousePlotPickerMachine : public QwtPickerMachine
 {

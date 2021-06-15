@@ -103,7 +103,7 @@ void DamageTimePlot::setRecording(uh::Recording* recording)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(ColorPalette::getColor(player), 2.0));
+        curve->setPen(QPen(uhplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
         curve->setTitle(recording_->playerName(player).cStr());
         curve->attach(this);

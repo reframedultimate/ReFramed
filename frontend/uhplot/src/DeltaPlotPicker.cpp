@@ -3,7 +3,7 @@
 
 #include "qwt_plot.h"
 
-namespace uhapp {
+namespace uhplot {
 
 // ----------------------------------------------------------------------------
 DeltaPlotPicker::DeltaPlotPicker(QWidget* canvas) :
@@ -73,4 +73,4 @@ void DeltaPlotPicker::move(const QPoint& point)
     QwtPicker::move(point);
 }
 
-} // namespace uh
+}

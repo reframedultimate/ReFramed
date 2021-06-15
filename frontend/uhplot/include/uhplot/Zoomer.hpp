@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include "uhplot/DeltaPlotPicker.hpp"
 
 class QWidget;
 
-namespace uhapp {
+namespace uhplot {
 
 /*!
  * Provides a method for zooming in and out in real-time on both X/Y axes by

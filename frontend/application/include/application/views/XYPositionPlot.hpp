@@ -17,7 +17,7 @@ namespace uhapp {
 
 class XYPositionPlotContextMenuActions;
 
-class XYPositionPlot : public RealtimePlot
+class XYPositionPlot : public uhplot::RealtimePlot
                      , public uh::RecordingListener
 {
     Q_OBJECT

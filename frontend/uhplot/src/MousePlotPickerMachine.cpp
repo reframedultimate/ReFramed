@@ -4,7 +4,7 @@
 #include <QMouseEvent>
 #include "qwt_event_pattern.h"
 
-namespace uhapp {
+namespace uhplot {
 
 // ----------------------------------------------------------------------------
 MousePlotPickerMachine::MousePlotPickerMachine():
@@ -58,4 +58,4 @@ QList<QwtPickerMachine::Command> MousePlotPickerMachine::transition(
     return cmdList;
 }
 
-} // namespace uh
+}

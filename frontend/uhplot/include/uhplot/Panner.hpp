@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include "uhplot/DeltaPlotPicker.hpp"
 
 class QWidget;
 
-namespace uhapp {
+namespace uhplot {
 
 /*!
  * Provides a method for panning in real-time in both X/Y directions using the

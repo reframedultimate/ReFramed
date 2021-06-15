@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include <qwt_plot.h>
 
 class QMenu;
 
-namespace uhapp {
+namespace uhplot {
 
 class AutoScaler;
 //class UnitTracker;
@@ -14,7 +15,7 @@ class RealtimePlotListener;
 /*!
  *
  */
-class RealtimePlot : public QwtPlot
+class UHPLOT_PUBLIC_API RealtimePlot : public QwtPlot
 {
     Q_OBJECT
 

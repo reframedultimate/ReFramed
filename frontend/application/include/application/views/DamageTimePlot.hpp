@@ -15,7 +15,7 @@ namespace uh {
 
 namespace uhapp {
 
-class DamageTimePlot : public RealtimePlot
+class DamageTimePlot : public uhplot::RealtimePlot
                      , public uh::RecordingListener
 {
     Q_OBJECT
