@@ -14,7 +14,7 @@ static QPointF qPow(qreal base, const QPointF& exponent)
     );
 }
 
-namespace uhapp {
+namespace uhplot {
 
 // ----------------------------------------------------------------------------
 Zoomer::Zoomer(QWidget* canvas) :

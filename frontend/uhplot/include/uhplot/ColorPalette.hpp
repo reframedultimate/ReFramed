@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include <QColor>
 
-namespace uhapp {
+namespace uhplot {
 
-struct ColorPalette
+struct UHPLOT_PUBLIC_API ColorPalette
 {
     static QColor getColor(int index);
 };

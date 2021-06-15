@@ -1,10 +1,11 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include "uhplot/DeltaPlotPicker.hpp"
 
 class QWidget;
 
-namespace uhapp {
+namespace uhplot {
 
 /*!
  * Provides a method for auto-scaling the data in a plot when double-clicking.
@@ -27,4 +28,4 @@ private:
     QFlags<Qt::MouseButton> btn_;
 };
 
-} // namespace uh
+}

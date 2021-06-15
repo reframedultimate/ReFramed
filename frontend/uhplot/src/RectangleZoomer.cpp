@@ -4,7 +4,7 @@
 #include <qwt_picker_machine.h>
 #include <qwt_scale_div.h>
 
-namespace uhapp {
+namespace uhplot {
 
 // ----------------------------------------------------------------------------
 RectangleZoomer::RectangleZoomer(QWidget* canvas) :

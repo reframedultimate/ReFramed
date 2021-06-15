@@ -1,9 +1,10 @@
 #pragma once
 
+#include "uhplot/config.hpp"
 #include "qwt_plot_picker.h"
 #include "qwt_scale_map.h"
 
-namespace uhapp {
+namespace uhplot {
 
 /*!
  * Qwt provides QwtPlotPicker, which gives us absolute positions in the plot

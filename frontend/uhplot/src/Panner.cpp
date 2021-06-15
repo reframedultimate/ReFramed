@@ -4,7 +4,7 @@
 #include "qwt_plot.h"
 #include "qwt_scale_div.h"
 
-namespace uhapp {
+namespace uhplot {
 
 // ----------------------------------------------------------------------------
 Panner::Panner(QWidget* canvas) :
