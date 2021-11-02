@@ -28,6 +28,7 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/views/RecordingListWidget.hpp"
     "include/application/views/RecordingGroupView.hpp"
     "include/application/views/RecordingView.hpp"
+    "include/application/views/TrainingModeView.hpp"
     "include/application/views/VisualizerView.hpp"
     "include/application/views/XYPositionPlot.hpp")
 qt5_wrap_ui (UH_FORMS_MOC
@@ -44,6 +45,7 @@ qt5_wrap_ui (UH_FORMS_MOC
     "forms/RecordingDataView.ui"
     "forms/RecordingGroupView.ui"
     "forms/RecordingView.ui"
+    "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (UH_RESOURCES_GEN
     "")
@@ -65,6 +67,7 @@ add_executable (ultimate-hindsight WIN32
     "src/models/Protocol.cpp"
     "src/models/RecordingGroup.cpp"
     "src/models/RecordingManager.cpp"
+    "src/models/TrainingMode.cpp"
     "src/views/ActiveRecordingView.cpp"
     "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
@@ -82,6 +85,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/RecordingListWidget.cpp"
     "src/views/RecordingGroupView.cpp"
     "src/views/RecordingView.cpp"
+    "src/views/TrainingModeView.cpp"
     "src/views/VisualizerView.cpp"
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")

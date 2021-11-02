@@ -74,6 +74,7 @@ private:
     QTreeWidgetItem* recordingSourcesItem_;
     QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* activeRecordingItem_;
+    QTreeWidgetItem* trainingModeItem_;
 
     QHash<QTreeWidgetItem*, QString> oldGroupNames_;
 };

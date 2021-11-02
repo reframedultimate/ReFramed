@@ -9,6 +9,8 @@ namespace uhapp {
 
 enum MessageType
 {
+    TrainingStart,
+    TrainingEnd,
     MatchStart,
     MatchEnd,
     FighterState,
@@ -69,7 +71,34 @@ void Protocol::run()
         if (tcp_socket_read(&socket_, &msg, 1) != 1)
             break;
 
-        if (msg == FighterKinds)
+        if (msg == TrainingStart)
+        {
+            uint8_t stageID_l, stageID_h, playerFighterKind, cpuFighterKind;
+            if (tcp_socket_read(&socket_, &stageID_h, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &playerFighterKind, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &cpuFighterKind, 1) != 1) break;
+
+            static_assert(sizeof(uh::StageID) == 2);
+            uh::StageID stageID = (stageID_h << 8)
+                                | (stageID_l << 0);
+
+            qDebug() << "Training start: Stage: " << stageID << ", player fighter kind: " << playerFighterKind << ", cpu fighter kind: " << cpuFighterKind;
+
+            emit _receiveTrainingStarted(new uh::TrainingModeContext(
+                uh::MappingInfo(mappingInfo),
+                playerFighterKind,
+                cpuFighterKind,
+                stageID
+            ));
+            continue;
+        }
+        else if (msg == TrainingEnd)
+        {
+            qDebug() << "Traininig end";
+            emit _receiveTrainingEnded();
+        }
+        else if (msg == FighterKinds)
         {
             uh::FighterID fighterID;
             uint8_t len;
@@ -284,6 +313,27 @@ void Protocol::run()
 }
 
 // ----------------------------------------------------------------------------
+void Protocol::onReceiveTrainingStarted(uh::TrainingModeContext* training)
+{
+    // Handle case where match end is not sent (should never happen but you never know)
+    if (training_.notNull())
+        emit trainingEnded(training_);
+
+    training_ = training;
+    emit trainingStarted(training_);
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onReceiveTrainingEnded()
+{
+    if (training_.isNull())
+        return;
+
+    emit trainingEnded(training_);
+    training_.reset();
+}
+
+// ----------------------------------------------------------------------------
 void Protocol::onReceiveMatchStarted(uh::ActiveRecording* recording)
 {
     // Handle case where match end is not sent (should never happen but you never know)
@@ -311,10 +361,11 @@ void Protocol::onReceivePlayerState(
         bool attack_connected,
         bool facing_direction)
 {
-    if (recording_.isNull())
-        return;
+    if (recording_.notNull())
+        recording_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 
-    recording_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+    if (training_.notNull())
+        training_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 }
 
 // ----------------------------------------------------------------------------

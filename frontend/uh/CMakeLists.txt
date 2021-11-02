@@ -93,6 +93,7 @@ add_library (uh SHARED
     "src/StageIDMapping.cpp"
     "src/StreamBuffer.cpp"
     "src/TemplateInstantiations.cpp"
+    "src/TrainingModeContext.cpp"
     "src/Vector.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"

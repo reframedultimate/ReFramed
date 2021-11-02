@@ -15,8 +15,8 @@ static void destroy(uh::Plugin* plugin)
     delete plugin;
 }
 
-static PluginFactory factories[] = {
-    {createVideoPlayer, destroy, uh::PluginType::VISUALIZER,
+static UHPluginFactory factories[] = {
+    {createVideoPlayer, destroy, UHPluginType::VISUALIZER,
      "Video Player", "TheComet", "alex.murray@gmx.ch", "A video player"},
     {NULL}
 };
@@ -30,7 +30,7 @@ static void stop()
 {
 }
 
-PLUGIN_API PluginInterface plugin_interface = {
+PLUGIN_API UHPluginInterface plugin_interface = {
     PLUGIN_VERSION,
     factories,
     start,

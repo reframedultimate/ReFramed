@@ -23,6 +23,7 @@ class PluginManager;
 class Protocol;
 class RecordingGroupView;
 class RecordingManager;
+class TrainingMode;
 class Config;
 
 class MainWindow : public QMainWindow
@@ -66,6 +67,7 @@ private:
     std::unique_ptr<Config> config_;
     std::unique_ptr<RecordingManager> recordingManager_;
     std::unique_ptr<ActiveRecordingManager> activeRecordingManager_;
+    std::unique_ptr<TrainingMode> trainingMode_;
     std::unique_ptr<PluginManager> pluginManager_;
     CategoryView* categoryView_;
     RecordingGroupView* recordingGroupView_;
