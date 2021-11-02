@@ -22,7 +22,7 @@ AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
     setLayout(new QVBoxLayout);
     layout()->addWidget(tabWidget_);
 
-    for (const auto& name : pluginManager_->availableNames(uh::PluginType::ANALYZER))
+    for (const auto& name : pluginManager_->availableNames(UHPluginType::ANALYZER))
         addMenu_->addAction(name);
 
     QWidget* inputSettingsTab = new QWidget;

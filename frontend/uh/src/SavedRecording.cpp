@@ -969,7 +969,7 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
         return nullptr;
-    if (jsonFighterStatusMapping.contains("specific") == false || jsonFighterStatusMapping["specific"].is_object() == false)
+    if (jsonFighterStatusMapping.contains("specific") == false)
         return nullptr;
 
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
@@ -991,32 +991,36 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
 
         mappingInfo.fighterStatus.addBaseEnumName(status, value[0].get<std::string>().c_str());
     }
-    for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
+
+    if (!jsonFighterStatusMapping["specific"].is_null())
     {
-        std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
-        if (pos != fighter.length())
-            return nullptr;
-        if (jsonSpecificMapping.is_object() == false)
-            return nullptr;
-
-        for (const auto& [key, value] : jsonSpecificMapping.items())
+        for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
         {
-            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
-            if (pos != key.length())
+            std::size_t pos;
+            FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
+            if (pos != fighter.length())
                 return nullptr;
-            if (value.is_array() == false)
-                return nullptr;
-
-            if (value.size() != 3)
-                return nullptr;
-            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+            if (jsonSpecificMapping.is_object() == false)
                 return nullptr;
 
-            /*QString shortName  = arr[1].get<std::string>();
-            QString customName = arr[2].get<std::string>();*/
+            for (const auto& [key, value] : jsonSpecificMapping.items())
+            {
+                FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+                if (pos != key.length())
+                    return nullptr;
+                if (value.is_array() == false)
+                    return nullptr;
 
-            mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+                if (value.size() != 3)
+                    return nullptr;
+                if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
+                    return nullptr;
+
+                /*QString shortName  = arr[1].get<std::string>();
+                QString customName = arr[2].get<std::string>();*/
+
+                mappingInfo.fighterStatus.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            }
         }
     }
 

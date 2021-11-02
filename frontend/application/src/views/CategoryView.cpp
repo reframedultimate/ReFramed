@@ -23,6 +23,7 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     , recordingSourcesItem_(new QTreeWidgetItem({"Recording Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_SOURCES)))
     , videoSourcesItem_(new QTreeWidgetItem({"Video Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
     , activeRecordingItem_(new QTreeWidgetItem({"Active Recording"}, static_cast<int>(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)))
+    , trainingModeItem_(new QTreeWidgetItem({"Training Mode"}, static_cast<int>(CategoryType::TOP_LEVEL_TRAINING_MODE)))
 {
     setHeaderHidden(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -33,6 +34,7 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     addTopLevelItem(recordingSourcesItem_);
     addTopLevelItem(videoSourcesItem_);
     addTopLevelItem(activeRecordingItem_);
+    addTopLevelItem(trainingModeItem_);
 
     setAcceptDrops(true);
 
@@ -254,10 +256,12 @@ void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetIte
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_RECORDING_GROUPS)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_VIDEO_SOURCES)
     EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)
+    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_TRAINING_MODE)
     EMIT_IF_CHANGED(CategoryType::RECORDING_GROUP_ITEM)
     EMIT_IF_CHANGED(CategoryType::DATA_SETS_ITEM)
     EMIT_IF_CHANGED(CategoryType::RECORDING_SOURCE_ITEM)
     EMIT_IF_CHANGED(CategoryType::VIDEO_SOURCE_ITEM)
+    EMIT_IF_CHANGED(CategoryType::TRAINING_MODE_ITEM)
 #undef EMIT_IF_CHANGED
 
     if (current->parent() == recordingGroupsItem_)
@@ -313,6 +317,8 @@ CategoryType CategoryView::categoryOf(const QTreeWidgetItem* item) const
         return CategoryType::TOP_LEVEL_ANALYSIS;
     if (item == recordingSourcesItem_)
         return CategoryType::TOP_LEVEL_RECORDING_SOURCES;
+    if (item == trainingModeItem_)
+        return CategoryType::TOP_LEVEL_TRAINING_MODE;
     if (item->parent() == recordingSourcesItem_)
         return CategoryType::RECORDING_SOURCE_ITEM;
     if (item == videoSourcesItem_)
@@ -321,6 +327,8 @@ CategoryType CategoryView::categoryOf(const QTreeWidgetItem* item) const
         return CategoryType::VIDEO_SOURCE_ITEM;
     if (item == activeRecordingItem_)
         return CategoryType::TOP_LEVEL_ACTIVE_RECORDING;
+    if (item->parent() == trainingModeItem_)
+        return CategoryType::TRAINING_MODE_ITEM;
     assert(false);
 }
 

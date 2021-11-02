@@ -7,21 +7,30 @@ namespace uh {
     class Plugin;
 }
 
-struct PluginFactory
+extern "C" {
+
+struct UHPluginInfo
 {
-    uh::Plugin* (*create)(void);
-    void (*destroy)(uh::Plugin* plugin);
-    uh::PluginType type;
     const char* name;
     const char* author;
     const char* contact;
     const char* description;
 };
 
-struct PluginInterface
+struct UHPluginFactory
+{
+    uh::Plugin* (*create)(void);
+    void (*destroy)(uh::Plugin* plugin);
+    UHPluginType type;
+    UHPluginInfo info;
+};
+
+struct UHPluginInterface
 {
     uint32_t version;
-    PluginFactory* factories;
+    UHPluginFactory* factories;
     int (*start)(uint32_t version);
     void (*stop)(void);
 };
+
+}

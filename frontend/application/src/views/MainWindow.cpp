@@ -1,7 +1,8 @@
 #include "application/models/Config.hpp"
 #include "application/models/ActiveRecordingManager.hpp"
-#include "application/models/RecordingManager.hpp"
 #include "application/models/PluginManager.hpp"
+#include "application/models/RecordingManager.hpp"
+#include "application/models/TrainingMode.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/ActiveRecordingView.hpp"
 #include "application/views/AnalysisView.hpp"
@@ -11,6 +12,7 @@
 #include "application/views/MainWindow.hpp"
 #include "application/views/RecordingGroupView.hpp"
 #include "application/views/RecordingView.hpp"
+#include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
 
 #include "uh/VisualizerPlugin.hpp"
@@ -30,6 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
     , config_(new Config)
     , recordingManager_(new RecordingManager(config_.get()))
     , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
+    , trainingMode_(new TrainingMode)
     , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
     , recordingGroupView_(new RecordingGroupView(recordingManager_.get()))
@@ -49,6 +52,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeRecordingView_);
+    mainView_->addWidget(new TrainingModeView(trainingMode_.get(), pluginManager_.get()));
     setCentralWidget(mainView_);
     mainView_->setCurrentIndex(2);
 
@@ -152,9 +156,9 @@ void MainWindow::onConnectActionTriggered()
 {
     ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
-    connect(c, SIGNAL(connectRequest(const QString&,uint16_t)), activeRecordingManager_.get(), SLOT(tryConnectToServer(const QString&, uint16_t)));
-    connect(activeRecordingManager_.get(), SIGNAL(connectedToServer()), c, SLOT(close()));
-    connect(activeRecordingManager_.get(), SIGNAL(failedToConnectToServer()), c, SLOT(setConnectFailed()));
+    connect(c, &ConnectView::connectRequest, activeRecordingManager_.get(), &ActiveRecordingManager::tryConnectToServer);
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::connectedToServer, c, &ConnectView::close);
+    connect(activeRecordingManager_.get(), &ActiveRecordingManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
 
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
@@ -201,6 +205,11 @@ void MainWindow::onCategoryChanged(CategoryType category)
 
         case CategoryType::TOP_LEVEL_ACTIVE_RECORDING:
             mainView_->setCurrentIndex(5);
+            break;
+
+        case CategoryType::TOP_LEVEL_TRAINING_MODE:
+        case CategoryType::TRAINING_MODE_ITEM:
+            mainView_->setCurrentIndex(6);
             break;
     }
 }

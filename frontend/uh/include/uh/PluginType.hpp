@@ -1,12 +1,13 @@
 #pragma once
 
-namespace uh {
+extern "C" {
 
-enum class PluginType : unsigned char
+enum class UHPluginType : unsigned char
 {
-    VISUALIZER,
-    ANALYZER,
-    TRAINING_MODE
+    VISUALIZER    = 0x01,
+    ANALYZER      = 0x02,
+    TRAINING_MODE = 0x04,
+    STANDALONE    = 0x08
 };
 
 }

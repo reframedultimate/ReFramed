@@ -6,8 +6,9 @@
 #include <QHash>
 
 struct uh_dynlib;
-struct PluginFactory;
-struct PluginInterface;
+struct UHPluginFactory;
+struct UHPluginInterface;
+struct UHPluginInfo;
 
 namespace uh {
     class Plugin;
@@ -25,7 +26,8 @@ public:
     bool unloadPlugin(const QString& fileName);
     void unloadAllPlugins();
 
-    QVector<QString> availableNames(uh::PluginType type) const;
+    QVector<QString> availableNames(UHPluginType type) const;
+    UHPluginInfo* getInfo(const QString& name) const;
 
     uh::TrainingModePlugin* createTrainingMode(const QString& name);
     uh::AnalyzerPlugin* createAnalyzer(const QString& name);
@@ -33,8 +35,8 @@ public:
     void destroy(uh::Plugin* plugin);
 
 private:
-    QHash<QString, PluginFactory*> factories_;
-    QHash<uh::Plugin*, PluginFactory*> activePlugins_;
+    QHash<QString, UHPluginFactory*> factories_;
+    QHash<uh::Plugin*, UHPluginFactory*> activePlugins_;
     QVector<uh_dynlib*> libraries_;
 };
 
