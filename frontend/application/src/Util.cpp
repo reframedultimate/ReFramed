@@ -47,7 +47,7 @@ void clearStackedWidget(QStackedWidget* sw)
 }
 
 // ----------------------------------------------------------------------------
-QString composeFileName(const uh::Recording* recording)
+QString composeFileName(const uh::GameSession* recording)
 {
     QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString("yyyy-MM-dd");
     QStringList playerList;

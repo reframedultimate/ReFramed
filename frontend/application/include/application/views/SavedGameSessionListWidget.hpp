@@ -8,13 +8,13 @@ class QFileInfo;
 
 namespace uhapp {
 
-class RecordingListWidget : public QListWidget
+class SavedGameSessionListWidget : public QListWidget
 {
     Q_OBJECT
 
 public:
-    explicit RecordingListWidget(QWidget* parent=nullptr);
-    ~RecordingListWidget();
+    explicit SavedGameSessionListWidget(QWidget* parent=nullptr);
+    ~SavedGameSessionListWidget();
 
     void addRecordingFileName(const QFileInfo& absPathToFile);
     void removeRecordingFileName(const QFileInfo& absPathToFile);

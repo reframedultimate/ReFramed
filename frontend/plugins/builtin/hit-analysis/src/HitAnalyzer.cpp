@@ -2,7 +2,6 @@
 #include "hit-analysis/HitAnalyzer.hpp"
 #include "uh/DataSet.hpp"
 #include "uh/DataPoint.hpp"
-#include "uh/Recording.hpp"
 
 // ----------------------------------------------------------------------------
 HitAnalyzer::HitAnalyzer(QWidget *parent)

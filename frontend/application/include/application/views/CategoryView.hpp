@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/listeners/RecordingManagerListener.hpp"
+#include "application/listeners/SavedGameSessionManagerListener.hpp"
 #include "application/models/CategoryType.hpp"
 #include "application/Util.hpp"
 #include <QHash>
@@ -11,14 +11,14 @@ namespace uhapp {
 class RecordingManager;
 
 class CategoryView : public QTreeWidget
-                   , public RecordingManagerListener
+                   , public SavedGameSessionManagerListener
 {
     Q_OBJECT
 public:
     explicit CategoryView(RecordingManager* recordingManager, QWidget* parent=nullptr);
     ~CategoryView();
 
-    void setActiveRecordingViewDisabled(bool enable);
+    void setRunningGameSessionViewDisabled(bool enable);
 
 signals:
     /*!

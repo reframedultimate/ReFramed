@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uh/RecordingListener.hpp"
+#include "uh/RunningGameSessionListener.hpp"
 #include "uh/Reference.hpp"
 #include <QWidget>
 #include <QVector>
@@ -9,26 +9,26 @@ class QTreeWidgetItem;
 class QTableWidget;
 
 namespace Ui {
-    class RecordingDataView;
+    class SavedGameSessionDataView;
 }
 
 namespace uh {
-    class Recording;
+    class SavedGameSession;
 }
 
 namespace uhapp {
 
-class RecordingDataView : public QWidget
-                        , public uh::RecordingListener
+class SessionDataView : public QWidget
+                      , public uh::RunningGameSessionListener
 {
     Q_OBJECT
 
 public:
-    explicit RecordingDataView(QWidget* parent=nullptr);
-    ~RecordingDataView();
+    explicit SavedGameSessionDataView(QWidget* parent=nullptr);
+    ~SavedGameSessionDataView();
 
 public slots:
-    void setRecording(uh::Recording* recording);
+    void setSavedGameSession(uh::SavedGameSession* recording);
     void clear();
 
 private slots:
@@ -47,16 +47,16 @@ private:
     void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
-    void onActiveRecordingSetNumberChanged(uh::SetNumber number) override;
-    void onActiveRecordingGameNumberChanged(uh::GameNumber number) override;
-    void onActiveRecordingFormatChanged(const uh::SetFormat& format) override;
-    void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
-    void onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
+    void onRunningGameSessionSetNumberChanged(uh::SetNumber number) override;
+    void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override;
+    void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
+    void onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state) override;
     void onRecordingWinnerChanged(int winner) override;
 
 private:
-    Ui::RecordingDataView* ui_;
+    Ui::SavedGameSessionDataView* ui_;
     QTreeWidgetItem* gameInfoItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;
@@ -65,7 +65,7 @@ private:
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
     uh::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     uh::SmallVector<QTableWidget*, 8> playerDataTables_;
-    uh::Reference<uh::Recording> recording_;
+    uh::Reference<uh::SavedGameSession> session_;
 
     // When a new recording is set, we want to remember which player was selected so the
     // user doesn't have to keep clicking on the player when browsing recordings

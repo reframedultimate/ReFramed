@@ -15,7 +15,7 @@
 
 namespace uh {
     class DataSet;
-    class Recording;
+    class GameSession;
 }
 
 namespace uhapp {
@@ -34,7 +34,7 @@ public:
     };
 
     struct InData {
-        uh::Reference<uh::Recording> recording;
+        uh::Reference<uh::GameSession> recording;
         RecordingGroup* group;
         uint32_t taskID;
     };

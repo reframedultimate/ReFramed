@@ -1,40 +1,36 @@
-#include "uh/Recording.hpp"
 #include "uh/PlayerState.hpp"
-#include "uh/RecordingListener.hpp"
-#include "uh/time.h"
+#include "uh/RunningGameSession.hpp"
+#include "uh/RunningGameSessionListener.hpp"
 #include "uh/StreamBuffer.hpp"
+#include "uh/time.h"
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
 #include "zlib.h"
 #include <cassert>
 #include <unordered_set>
 
-namespace uh {
-
 using nlohmann::json;
 
+namespace uh {
+
 // ----------------------------------------------------------------------------
-Recording::Recording(MappingInfo&& mapping,
-                     SmallVector<FighterID, 8>&& playerFighterIDs,
-                     SmallVector<SmallString<15>, 8>&& playerTags,
-                     StageID stageID)
-    : timeStarted_(time_milli_seconds_since_epoch())
-    , timeEnded_(timeStarted_)
-    , mappingInfo_(std::move(mapping))
-    , playerTags_(playerTags)
-    , playerNames_(playerTags)
-    , playerFighterIDs_(std::move(playerFighterIDs))
-    , playerStates_(playerTags.count())
-    , format_(SetFormat::FRIENDLIES)
-    , stageID_(stageID)
+RunningGameSession::RunningGameSession(
+        MappingInfo&& mapping,
+        SmallVector<FighterID, 8>&& playerFighterIDs,
+        SmallVector<SmallString<15>, 8>&& playerTags,
+        SmallVector<SmallString<15>, 8>&& playerNames,
+        StageID stageID)
+    : GameSession(
+          std::move(mapping),
+          std::move(playerFighterIDs),
+          std::move(playerTags),
+          std::move(playerNames),
+          stageID)
 {
-    assert(playerTags_.count() == playerNames_.count());
-    assert(playerTags_.count() == playerFighterIDs_.count());
-    assert(playerTags_.count() == playerStates_.count());
 }
 
 // ----------------------------------------------------------------------------
-bool Recording::saveAs(const String& fileName)
+bool RunningGameSession::save(const String& fileName)
 {
     // Create sets of the IDs that were used in game so we don't end up saving
     // every ID
@@ -53,11 +49,11 @@ bool Recording::saveAs(const String& fileName)
     json gameInfo = {
         {"stageid", stageID_},
         {"timestampstart", timeStampStartedMs()},
-        {"timestampend", timeStampEndedMs()},
+        {"timestampend", playerStates_[0][playerStates_[0].count() - 1].timeStampMs()},
         {"format", format_.description().cStr()},
         {"number", gameNumber_},
         {"set", setNumber_},
-        {"winner", winner_}
+        {"winner", currentWinner_}
     };
 
     json videoInfo = {
@@ -223,38 +219,79 @@ bool Recording::saveAs(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-uint64_t Recording::gameLengthMs() const
+void RunningGameSession::setPlayerName(int index, const SmallString<15>& name)
 {
-    return timeStampEndedMs() - timeStampStartedMs();
+    assert(name.length() > 0);
+    playerNames_[index] = name;
+    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionPlayerNameChanged, index, name);
 }
 
 // ----------------------------------------------------------------------------
-const PlayerState* Recording::playerStatesEnd(int player) const
+void RunningGameSession::setGameNumber(GameNumber number)
 {
-    return playerStates_[player].data() + playerStateCount(player);
+    gameNumber_ = number;
+    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-int Recording::findWinner() const
+void RunningGameSession::setSetNumber(SetNumber number)
 {
-    // The winner is the player with most stocks and least damage
-    int winneridx = 0;
-    for (int i = 0; i != playerCount(); ++i)
+    setNumber_ = number;
+    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionSetNumberChanged, number);
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSession::setFormat(const SetFormat& format)
+{
+    format_ = format;
+    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionFormatChanged, format);
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSession::addPlayerState(int index, PlayerState&& state)
+{
+    // If this is the first state we receive just store it. Need at least 1
+    // past state to determine if the game started yet
+    if (playerStates_[index].count() == 0)
     {
-        if (playerStateCount(i) == 0 || playerStateCount(winneridx) == 0)
-            continue;
-
-        const auto& current = playerStateAt(i, playerStateCount(i) - 1);
-        const auto& winner = playerStateAt(winneridx, playerStateCount(winneridx) - 1);
-
-        if (current.stocks() > winner.stocks())
-            winneridx = i;
-        else if (current.stocks() == winner.stocks())
-            if (current.damage() < winner.damage())
-                winneridx = i;
+        playerStates_[index].push(std::move(state));
+        return;
     }
 
-    return winneridx;
+    // Check to see if the game has started yet
+    if (playerStates_[index].count() == 1)
+    {
+        if (playerStates_[index][0].frame() == state.frame())
+        {
+            playerStates_[index][0] = std::move(state);
+            return;  // has not started yet
+        }
+
+        playerStates_[index].push(std::move(state));
+        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, playerStates_[index][1]);
+        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, playerStates_[index][1]);
+        return;
+    }
+
+    // Only add a new state if the previous one was different
+    if (playerStates_[index].back() != state)
+    {
+        playerStates_[index].push(state);
+        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, state);
+
+        // Winner might have changed
+        int winner = findWinner();
+        if (currentWinner_ != winner)
+        {
+            currentWinner_ = winner;
+            dispatcher.dispatch(&RunningGameSessionListener::onRecordingWinnerChanged, currentWinner_);
+        }
+    }
+
+    // The UI still cares about every frame
+    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, state);
 }
 
 }

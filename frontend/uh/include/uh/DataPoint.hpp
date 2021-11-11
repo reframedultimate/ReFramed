@@ -7,10 +7,10 @@
 
 namespace uh {
 
-class Recording;
+class SavedGameSession;
 class Video;
 
-extern template class UH_TEMPLATE_API Reference<Recording>;
+extern template class UH_TEMPLATE_API Reference<SavedGameSession>;
 
 class UH_PUBLIC_API DataPoint
 {
@@ -22,10 +22,10 @@ public:
      * \param player The player's index within that recording from which the
      * state originated.
      */
-    DataPoint(const PlayerState& state, Recording* recording, int player);
+    DataPoint(const PlayerState& state, SavedGameSession* recording, int player);
 
     const PlayerState& state() const { return state_; }
-    Recording* recording() const { return recording_; }
+    SavedGameSession* session() const { return session_; }
     int player() const { return playerIdx_;  }
 
     const SmallString<15>& playerName() const;
@@ -38,7 +38,7 @@ private:
     friend class Vector<DataPoint>;
     DataPoint() { assert(false); }
 
-    Reference<Recording> recording_;
+    Reference<SavedGameSession> session_;
     PlayerState state_;
     int playerIdx_;
 };

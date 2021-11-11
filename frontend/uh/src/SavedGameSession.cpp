@@ -1,4 +1,4 @@
-#include "uh/SavedRecording.hpp"
+#include "uh/SavedGameSession.hpp"
 #include "uh/MappingInfo.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/StreamBuffer.hpp"
@@ -164,19 +164,22 @@ static std::string readUncompressedFile(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording::SavedRecording(MappingInfo&& mapping,
-                               SmallVector<FighterID, 8>&& playerFighterIDs,
-                               SmallVector<SmallString<15>, 8>&& playerTags,
-                               uint16_t stageID)
-    : Recording(std::move(mapping),
-                std::move(playerFighterIDs),
-                std::move(playerTags),
-                stageID)
+SavedGameSession::SavedGameSession(
+        MappingInfo&& mapping,
+        SmallVector<FighterID, 8>&& playerFighterIDs,
+        SmallVector<SmallString<15>, 8>&& playerTags,
+        SmallVector<SmallString<15>, 8>&& playerNames,
+        uint16_t stageID)
+    : GameSession(std::move(mapping)
+    , std::move(playerFighterIDs)
+    , std::move(playerTags)
+    , std::move(playerNames)
+    , stageID)
 {
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::load(const String& fileName)
+SavedGameSession* SavedGameSession::load(const String& fileName)
 {
     json j;
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
@@ -195,7 +198,7 @@ SavedRecording* SavedRecording::load(const String& fileName)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    SavedRecording* recording;
+    SavedGameSession* recording;
     std::string version = j["version"];
     if (version == "1.4")
     {
@@ -227,7 +230,7 @@ SavedRecording* SavedRecording::load(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
+SavedGameSession* SavedGameSession::loadVersion_1_0(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -281,6 +284,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
 
     SmallVector<FighterID, 8> playerFighterIDs;
     SmallVector<SmallString<15>, 8> playerTags;
+    SmallVector<SmallString<15>, 8> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -290,6 +294,7 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
 
         playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
+        playerNames.emplace(info["tag"].get<std::string>().c_str());  // "name" property didn't exist in 1.0
     }
 
     if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_string() == false)
@@ -301,20 +306,21 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
+        std::move(playerNames),
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
     uint64_t firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
-    recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
-    recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
+    session->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
+    session->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < recording->playerCount(); ++i)
+    for (int i = 0; i < session->playerCount(); ++i)
     {
         int error = 0;
         Frame stateCount = stream.readBU32(&error);
@@ -342,20 +348,19 @@ SavedRecording* SavedRecording::loadVersion_1_0(const void* jptr)
                 framesPassed += prevFrame - frame;
             prevFrame = frame;
 
-            recording->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
+            session->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
 
         }
     }
 
-    recording->winner_ = recording->findWinner();
-    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
-    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
+    // Cache winner
+    session->winner_ = session->findWinner();
 
-    return recording.release();
+    return session.release();
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
+SavedGameSession* SavedGameSession::loadVersion_1_1(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -454,6 +459,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
 
     SmallVector<FighterID, 8> playerFighterIDs;
     SmallVector<SmallString<15>, 8> playerTags;
+    SmallVector<SmallString<15>, 8> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -463,6 +469,7 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
 
         playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
+        playerNames.emplace(info["tag"].get<std::string>().c_str());  // "name" property didn't exist in 1.1
     }
 
     if (jsonGameInfo.contains("date") == false || jsonGameInfo["date"].is_string() == false)
@@ -474,10 +481,11 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
+        std::move(playerNames),
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
@@ -519,15 +527,14 @@ SavedRecording* SavedRecording::loadVersion_1_1(const void* jptr)
         }
     }
 
+    // Cache winner
     recording->winner_ = recording->findWinner();
-    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
-    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
+SavedGameSession* SavedGameSession::loadVersion_1_2(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -658,10 +665,11 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     if (jsonGameInfo.contains("set") == false || jsonGameInfo["set"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
+        std::move(playerNames),
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
@@ -669,7 +677,6 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
-    recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
@@ -715,15 +722,14 @@ SavedRecording* SavedRecording::loadVersion_1_2(const void* jptr)
         }
     }
 
+    // Cache winner
     recording->winner_ = recording->findWinner();
-    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
-    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
+SavedGameSession* SavedGameSession::loadVersion_1_3(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -870,10 +876,11 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
+        std::move(playerNames),
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
@@ -881,7 +888,6 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
-    recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
@@ -931,15 +937,14 @@ SavedRecording* SavedRecording::loadVersion_1_3(const void* jptr)
         }
     }
 
+    // Cache winner
     recording->winner_ = recording->findWinner();
-    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
-    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
 }
 
 // ----------------------------------------------------------------------------
-SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
+SavedGameSession* SavedGameSession::loadVersion_1_4(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -1092,17 +1097,17 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
     if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedRecording> recording(new SavedRecording(
+    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
         std::move(mappingInfo),
         std::move(playerFighterIDs),
         std::move(playerTags),
+        std::move(playerNames),
         jsonGameInfo["stageid"].get<StageID>()
     ));
 
     recording->format_ = SetFormat(jsonGameInfo["format"].get<std::string>().c_str());
     recording->gameNumber_ = jsonGameInfo["number"].get<GameNumber>();
     recording->setNumber_ = jsonGameInfo["set"].get<SetNumber>();
-    recording->playerNames_ = std::move(playerNames);
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
@@ -1142,11 +1147,16 @@ SavedRecording* SavedRecording::loadVersion_1_4(const void* jptr)
         }
     }
 
+    // Cache winner
     recording->winner_ = recording->findWinner();
-    recording->timeStarted_ = recording->playerStates_[0][0].timeStampMs();
-    recording->timeEnded_ = recording->playerStates_.back().back().timeStampMs();
 
     return recording.release();
+}
+
+// ----------------------------------------------------------------------------
+const PlayerState* SavedGameSession::playerStatesEnd(int player) const
+{
+    return playerStates_[player].data() + playerStateCount(player);
 }
 
 }

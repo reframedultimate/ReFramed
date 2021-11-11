@@ -11,7 +11,7 @@ class QLayout;
 class QStackedWidget;
 
 namespace uh {
-    class Recording;
+    class GameSession;
 }
 
 using qhash_result_t = size_t;
@@ -42,6 +42,6 @@ void clearLayout(QLayout* layout);
  */
 void clearStackedWidget(QStackedWidget* sw);
 
-QString composeFileName(const uh::Recording* recording);
+QString composeFileName(const uh::GameSession* recording);
 
 }

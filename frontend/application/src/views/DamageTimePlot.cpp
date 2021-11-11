@@ -93,7 +93,7 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setRecording(uh::Recording* recording)
+void DamageTimePlot::setRecording(uh::GameSession* recording)
 {
     clear();
     recording_ = recording;
@@ -150,14 +150,14 @@ void DamageTimePlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void DamageTimePlot::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
     curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
+void DamageTimePlot::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
 

@@ -1,7 +1,7 @@
 #include "uh/DataSetFilter_Stage.hpp"
 #include "uh/DataSet.hpp"
-#include "uh/Recording.hpp"
 #include "uh/PlayerState.hpp"
+#include "uh/SavedGameSession.hpp"
 
 namespace uh {
 

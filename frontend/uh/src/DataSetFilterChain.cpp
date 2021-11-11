@@ -1,7 +1,7 @@
 #include "uh/DataSetFilterChain.hpp"
 #include "uh/DataSetFilter.hpp"
 #include "uh/DataSet.hpp"
-#include "uh/Recording.hpp"
+#include "uh/SavedGameSession.hpp"
 #include <algorithm>
 
 namespace uh {

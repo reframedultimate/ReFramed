@@ -25,7 +25,7 @@ public:
     }
 
 signals:
-    void recordingLoaded(uh::Recording* recording);
+    void recordingLoaded(uh::GameSession* recording);
 
 private:
     void run() override
@@ -38,7 +38,7 @@ private:
 
             auto item = in_->dequeue();
             mutex_->unlock();
-                uh::Recording* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
+                uh::GameSession* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
             mutex_->lock();
 
             if (recording)

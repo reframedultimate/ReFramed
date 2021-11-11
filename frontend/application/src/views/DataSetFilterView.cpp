@@ -201,9 +201,9 @@ void DataSetFilterView::reprocessInputDataSet()
 
     outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
 
-    std::unordered_set<uh::Recording*> uniqueRecordings;
+    std::unordered_set<uh::GameSession*> uniqueRecordings;
     for (const uh::DataPoint* p = outputDataSet_->dataPointsBegin(); p != outputDataSet_->dataPointsEnd(); ++p)
-        uniqueRecordings.emplace(p->recording());
+        uniqueRecordings.emplace(p->session());
 
     ui_->listWidget_outputGroup->clear();
     for (const auto& recording : uniqueRecordings)

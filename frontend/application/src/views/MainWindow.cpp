@@ -1,10 +1,10 @@
 #include "application/models/Config.hpp"
-#include "application/models/ActiveRecordingManager.hpp"
+#include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/RecordingManager.hpp"
 #include "application/models/TrainingMode.hpp"
 #include "application/ui_MainWindow.h"
-#include "application/views/ActiveRecordingView.hpp"
+#include "application/views/RunningGameSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
@@ -31,12 +31,12 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , config_(new Config)
     , recordingManager_(new RecordingManager(config_.get()))
-    , activeRecordingManager_(new ActiveRecordingManager(recordingManager_.get()))
+    , activeRecordingManager_(new RunningGameSessionManager(recordingManager_.get()))
     , trainingMode_(new TrainingMode)
     , pluginManager_(new PluginManager)
     , categoryView_(new CategoryView(recordingManager_.get()))
     , recordingGroupView_(new RecordingGroupView(recordingManager_.get()))
-    , activeRecordingView_(new ActiveRecordingView(activeRecordingManager_.get()))
+    , activeRecordingView_(new RunningGameSessionView(activeRecordingManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -62,10 +62,10 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
-    connect(activeRecordingManager_.get(), &ActiveRecordingManager::connectedToServer,
-            this, &MainWindow::onActiveRecordingManagerConnectedToServer);
-    connect(activeRecordingManager_.get(), &ActiveRecordingManager::disconnectedFromServer,
-            this, &MainWindow::onActiveRecordingManagerDisconnectedFromServer);
+    connect(activeRecordingManager_.get(), &RunningGameSessionManager::connectedToServer,
+            this, &MainWindow::onRunningGameSessionManagerConnectedToServer);
+    connect(activeRecordingManager_.get(), &RunningGameSessionManager::disconnectedFromServer,
+            this, &MainWindow::onRunningGameSessionManagerDisconnectedFromServer);
 
     connect(categoryView_, &CategoryView::categoryChanged,
             this, &MainWindow::onCategoryChanged);
@@ -85,10 +85,10 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    // This is to fix an issue with listeners. The ActiveRecordingView (child of central widget)
-    // will try to unregister as a listener of ActiveRecordingManager. The central widget
+    // This is to fix an issue with listeners. The RunningGameSessionView (child of central widget)
+    // will try to unregister as a listener of RunningGameSessionManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the
-    // ActiveRecordingManager which gets deleted in this destructor.
+    // RunningGameSessionManager which gets deleted in this destructor.
     delete takeCentralWidget();
     delete categoryView_;
 
@@ -110,7 +110,7 @@ void MainWindow::setStateConnected()
     ui_->action_disconnect->setVisible(true);
 
     // Enable active recording view in the category view
-    categoryView_->setActiveRecordingViewDisabled(false);
+    categoryView_->setRunningGameSessionViewDisabled(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -122,17 +122,17 @@ void MainWindow::setStateDisconnected()
 
     // Disable active recording entry in the category view so it can't be
     // selected anymore
-    categoryView_->setActiveRecordingViewDisabled(true);
+    categoryView_->setRunningGameSessionViewDisabled(true);
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveRecordingManagerConnectedToServer()
+void MainWindow::onRunningGameSessionManagerConnectedToServer()
 {
     setStateConnected();
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveRecordingManagerDisconnectedFromServer()
+void MainWindow::onRunningGameSessionManagerDisconnectedFromServer()
 {
     setStateDisconnected();
 }
@@ -156,9 +156,9 @@ void MainWindow::onConnectActionTriggered()
 {
     ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
-    connect(c, &ConnectView::connectRequest, activeRecordingManager_.get(), &ActiveRecordingManager::tryConnectToServer);
-    connect(activeRecordingManager_.get(), &ActiveRecordingManager::connectedToServer, c, &ConnectView::close);
-    connect(activeRecordingManager_.get(), &ActiveRecordingManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
+    connect(c, &ConnectView::connectRequest, activeRecordingManager_.get(), &RunningGameSessionManager::tryConnectToServer);
+    connect(activeRecordingManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
+    connect(activeRecordingManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
 
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
@@ -168,7 +168,7 @@ void MainWindow::onConnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onDisconnectActionTriggered()
 {
-    // Should also trigger onActiveRecordingManagerDisconnectedFromServer()
+    // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
     activeRecordingManager_->disconnectFromServer();
 }
 

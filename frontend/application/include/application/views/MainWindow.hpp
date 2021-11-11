@@ -1,7 +1,7 @@
 #pragma once
 
 #include "application/models/CategoryType.hpp"
-#include "application/listeners/ActiveRecordingManagerListener.hpp"
+#include "application/listeners/RunningGameSessionManagerListener.hpp"
 #include <QMainWindow>
 #include <QDir>
 #include <memory>
@@ -15,8 +15,8 @@ namespace Ui {
 
 namespace uhapp {
 
-class ActiveRecordingManager;
-class ActiveRecordingView;
+class RunningGameSessionManager;
+class RunningGameSessionView;
 class CategoryView;
 class ConnectView;
 class PluginManager;
@@ -27,7 +27,7 @@ class TrainingMode;
 class Config;
 
 class MainWindow : public QMainWindow
-                 , public ActiveRecordingManagerListener
+                 , public RunningGameSessionManagerListener
 {
     Q_OBJECT
 
@@ -46,32 +46,32 @@ private:
     void setStateDisconnected();
 
 private slots:
-    void onActiveRecordingManagerConnectedToServer();
-    void onActiveRecordingManagerDisconnectedFromServer();
+    void onRunningGameSessionManagerConnectedToServer();
+    void onRunningGameSessionManagerDisconnectedFromServer();
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
 
 private:
     // All unused
-    void onActiveRecordingManagerRecordingStarted(uh::ActiveRecording* recording) override { (void)recording; }
-    void onActiveRecordingManagerRecordingEnded(uh::ActiveRecording* recording) override { (void)recording; }
-    void onActiveRecordingManagerP1NameChanged(const QString& name) override { (void)name; }
-    void onActiveRecordingManagerP2NameChanged(const QString& name) override { (void)name; }
-    void onActiveRecordingManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
-    void onActiveRecordingManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
-    void onActiveRecordingManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
-    void onActiveRecordingManagerPlayerStateAdded(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
-    void onActiveRecordingManagerWinnerChanged(int winner) { (void)winner; }
+    void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) override { (void)recording; }
+    void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) override { (void)recording; }
+    void onRunningGameSessionManagerP1NameChanged(const QString& name) override { (void)name; }
+    void onRunningGameSessionManagerP2NameChanged(const QString& name) override { (void)name; }
+    void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
+    void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
+    void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
+    void onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionManagerWinnerChanged(int winner) { (void)winner; }
 
 private:
     std::unique_ptr<Config> config_;
     std::unique_ptr<RecordingManager> recordingManager_;
-    std::unique_ptr<ActiveRecordingManager> activeRecordingManager_;
+    std::unique_ptr<RunningGameSessionManager> activeRecordingManager_;
     std::unique_ptr<TrainingMode> trainingMode_;
     std::unique_ptr<PluginManager> pluginManager_;
     CategoryView* categoryView_;
     RecordingGroupView* recordingGroupView_;
-    ActiveRecordingView* activeRecordingView_;
+    RunningGameSessionView* activeRecordingView_;
     QStackedWidget* mainView_;
     Ui::MainWindow* ui_;
 };

@@ -1,6 +1,6 @@
 #include "uh/DataSetFilter_Date.hpp"
 #include "uh/DataSet.hpp"
-#include "uh/Recording.hpp"
+#include "uh/SavedGameSession.hpp"
 
 namespace uh {
 

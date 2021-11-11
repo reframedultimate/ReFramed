@@ -1,63 +1,63 @@
 #include "application/Util.hpp"
-#include "application/listeners/RecordingGroupListener.hpp"
-#include "application/models/RecordingGroup.hpp"
+#include "application/listeners/SavedGameSessionGroupListener.hpp"
+#include "application/models/SavedGameSessionGroup.hpp"
 
 #include <QDebug>
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RecordingGroup::RecordingGroup(const QString& name)
+SavedGameSessionGroup::SavedGameSessionGroup(const QString& name)
     : name_(name)
 {
 }
 
 // ----------------------------------------------------------------------------
-const QSet<QFileInfo>& RecordingGroup::absFilePathList() const
+const QSet<QFileInfo>& SavedGameSessionGroup::absFilePathList() const
 {
     return fileList_;
 }
 
 // ----------------------------------------------------------------------------
-const QString& RecordingGroup::name() const
+const QString& SavedGameSessionGroup::name() const
 {
     return name_;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroup::setName(const QString& name)
+void SavedGameSessionGroup::setName(const QString& name)
 {
     name_ = name;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroup::addFile(const QFileInfo& absPathToFile)
+void SavedGameSessionGroup::addFile(const QFileInfo& absPathToFile)
 {
     if (fileList_.contains(absPathToFile))
         return;
 
     fileList_.insert(absPathToFile);
-    dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileAdded, this, absPathToFile);
+    dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileAdded, this, absPathToFile);
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingGroup::removeFile(const QFileInfo& absPathToFile)
+bool SavedGameSessionGroup::removeFile(const QFileInfo& absPathToFile)
 {
     for (auto it = fileList_.begin(); it != fileList_.end(); ++it)
         if (*it == absPathToFile)
         {
             fileList_.erase(it);
-            dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileRemoved, this, absPathToFile);
+            dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileRemoved, this, absPathToFile);
             return true;
         }
     return false;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroup::removeAllFiles()
+void SavedGameSessionGroup::removeAllFiles()
 {
     for (const auto& fileInfo : fileList_)
-        dispatcher.dispatch(&RecordingGroupListener::onRecordingGroupFileRemoved, this, fileInfo);
+        dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileRemoved, this, fileInfo);
     fileList_.clear();
 }
 

@@ -7,13 +7,13 @@
 
 namespace uhapp {
 
-class RecordingGroupListener;
-class RecordingManager;
+class SavedGameSessionGroupListener;
+class SavedGameSessionManager;
 
-class RecordingGroup
+class SavedGameSessionGroup
 {
 public:
-    RecordingGroup(const QString& name);
+    SavedGameSessionGroup(const QString& name);
 
     /*!
      * \brief The name of this group. It is unique among all groups.
@@ -26,7 +26,7 @@ public:
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
 
-    uh::ListenerDispatcher<RecordingGroupListener> dispatcher;
+    uh::ListenerDispatcher<SavedGameSessionGroupListener> dispatcher;
 
 private:
     // Only the recording manager is allowed to change names of recording groups
@@ -41,4 +41,3 @@ private:
 };
 
 }
-

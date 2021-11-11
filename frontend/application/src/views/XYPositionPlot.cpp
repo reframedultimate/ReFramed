@@ -82,7 +82,7 @@ void XYPositionPlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::setRecording(uh::Recording* recording)
+void XYPositionPlot::setRecording(uh::GameSession* recording)
 {
     clear();
     recording_ = recording;
@@ -131,13 +131,13 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void XYPositionPlot::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
     curves_[player]->setTitle(name.cStr());
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
+void XYPositionPlot::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     data->append(QPointF(state.posx(), state.posy()));

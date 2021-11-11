@@ -1,5 +1,5 @@
 #include "uh/DataSet.hpp"
-#include "uh/Recording.hpp"
+#include "uh/SavedGameSession.hpp"
 #include <algorithm>
 
 namespace uh {
@@ -32,11 +32,11 @@ void DataSet::addDataPointToEnd(const DataPoint& dataPoint)
 }
 
 // ----------------------------------------------------------------------------
-void DataSet::addRecordingNoSort(Recording* recording)
+void DataSet::addSessionNoSort(SavedGameSession* gameSession)
 {
-    for (int p = 0; p != recording->playerCount(); ++p)
-        for (int i = 0; i != recording->playerStateCount(p); ++i)
-            points_.emplace(recording->playerStateAt(p, i), recording, p);
+    for (int p = 0; p != gameSession->playerCount(); ++p)
+        for (int i = 0; i != gameSession->playerStateCount(p); ++i)
+            points_.emplace(gameSession->playerStateAt(p, i), gameSession, p);
 }
 
 // ----------------------------------------------------------------------------

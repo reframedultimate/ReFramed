@@ -1,6 +1,6 @@
 #include "application/models/Protocol.hpp"
 #include "uh/PlayerState.hpp"
-#include "uh/ActiveRecording.hpp"
+#include "uh/RunningGameSession.hpp"
 #include "uh/time.h"
 
 #include <QDebug>
@@ -213,7 +213,7 @@ void Protocol::run()
 
             qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
 
-            emit _receiveMatchStarted(new uh::ActiveRecording(
+            emit _receiveMatchStarted(new uh::RunningGameSession(
                 uh::MappingInfo(mappingInfo),
                 std::move(fighterIDs),
                 std::move(tags),
@@ -334,7 +334,7 @@ void Protocol::onReceiveTrainingEnded()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceiveMatchStarted(uh::ActiveRecording* recording)
+void Protocol::onReceiveMatchStarted(uh::RunningGameSession* recording)
 {
     // Handle case where match end is not sent (should never happen but you never know)
     if (recording_.notNull())
