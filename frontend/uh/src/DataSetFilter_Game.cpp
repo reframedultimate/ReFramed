@@ -1,6 +1,6 @@
 #include "uh/DataSetFilter_Game.hpp"
 #include "uh/DataSet.hpp"
-#include "uh/Recording.hpp"
+#include "uh/SavedGameSession.hpp"
 #include "uh/PlayerState.hpp"
 
 namespace uh {
@@ -18,12 +18,12 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
     out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
-        const Recording* rec = p->recording();
-        uint64_t length = rec->gameLengthMs();
+        const SavedGameSession* s = p->session();
+        uint64_t length = s->gameLengthMs();
 
         bool lengthInRange = (length >= minLength_ && length <= maxLength_);
-        bool formatType = (anySetFormat_ ? true : rec->format().type() == format_.type());
-        bool formatName = (rec->format().type() == SetFormat::OTHER ? rec->format().description() == format_.description() : true);
+        bool formatType = (anySetFormat_ ? true : s->format().type() == format_.type());
+        bool formatName = (s->format().type() == SetFormat::OTHER ? s->format().description() == format_.description() : true);
 
         if (lengthInRange && formatType && formatName)
             out->addDataPointToEnd(*p);
@@ -39,12 +39,12 @@ DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
     out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
-        const Recording* rec = p->recording();
-        uint64_t length = rec->gameLengthMs();
+        const SavedGameSession* s = p->session();
+        uint64_t length = s->gameLengthMs();
 
         bool lengthInRange = (length >= minLength_ && length <= maxLength_);
-        bool formatType = (anySetFormat_ ? true : rec->format().type() == format_.type());
-        bool formatName = (rec->format().type() == SetFormat::OTHER ? rec->format().description() == format_.description() : true);
+        bool formatType = (anySetFormat_ ? true : s->format().type() == format_.type());
+        bool formatName = (s->format().type() == SetFormat::OTHER ? s->format().description() == format_.description() : true);
 
         if (!(lengthInRange && formatType && formatName))
             out->addDataPointToEnd(*p);

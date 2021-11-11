@@ -160,7 +160,7 @@ void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWid
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (recordingListWidget_->itemMatchesRecordingFileName(current, fileName))
         {
-            uh::SavedRecording* recording = uh::SavedRecording::load(fileName.absoluteFilePath().toStdString().c_str());
+            uh::SavedGameSession* recording = uh::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
             if (recording)
                 recordingView_->setRecording(recording);
             else

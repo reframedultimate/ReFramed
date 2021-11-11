@@ -4,13 +4,10 @@
 #include "uh/RefCounted.hpp"
 #include "uh/DataPoint.hpp"
 #include "uh/Vector.hpp"
-#include <string>
-#include <vector>
-#include <unordered_map>
 
 namespace uh {
 
-class Recording;
+class SavedGameSession;
 
 extern template class UH_TEMPLATE_API Vector<DataPoint>;
 
@@ -24,7 +21,7 @@ public:
     void reserve(int count);
     //void addDataPoint(const DataPoint& dataPoint);
     void addDataPointToEnd(const DataPoint& dataPoint);
-    void addRecordingNoSort(Recording* recording);
+    void addSessionNoSort(SavedGameSession* recording);
     void mergeDataFrom(const DataSet* other);
     void replaceDataWith(const DataSet* other);
     void sort();

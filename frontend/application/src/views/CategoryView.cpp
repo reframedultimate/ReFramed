@@ -41,7 +41,7 @@ CategoryView::CategoryView(RecordingManager* recordingManager, QWidget* parent)
     recordingGroupsItem_->setFlags(recordingGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
     // We're not connected by default
-    setActiveRecordingViewDisabled(true);
+    setRunningGameSessionViewDisabled(true);
 
     // Populate various children based on the data available in the recording manager
     for (const auto& group : recordingManager->recordingGroups())
@@ -74,7 +74,7 @@ CategoryView::~CategoryView()
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::setActiveRecordingViewDisabled(bool disable)
+void CategoryView::setRunningGameSessionViewDisabled(bool disable)
 {
     activeRecordingItem_->setDisabled(disable);
 }

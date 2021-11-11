@@ -5,15 +5,15 @@ namespace uh {
 // ----------------------------------------------------------------------------
 PlayerState::PlayerState(
         uint64_t timeStampMs,
-        uint32_t frame,
+        Frame frame,
         float posx, float posy,
         float damage,
         float hitstun,
         float shield,
-        uint16_t status,
-        uint64_t motion,
-        uint8_t hit_status,
-        uint8_t stocks,
+        FighterStatus status,
+        FighterMotion motion,
+        FighterHitStatus hit_status,
+        FighterStocks stocks,
         bool attackConnected,
         bool facingDirection)
     : timeStampMs_(timeStampMs)

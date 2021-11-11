@@ -10,7 +10,7 @@ class QwtPlotDirectPainter;
 class QwtPlotCurve;
 
 namespace uh {
-    class Recording;
+    class GameSession;
 }
 
 namespace uhapp {
@@ -18,7 +18,7 @@ namespace uhapp {
 class XYPositionPlotContextMenuActions;
 
 class XYPositionPlot : public uhplot::RealtimePlot
-                     , public uh::RecordingListener
+                     , public uh::SessionListener
 {
     Q_OBJECT
 public:
@@ -27,19 +27,19 @@ public:
 
 public slots:
     void clear();
-    void setRecording(uh::Recording* recording);
+    void setRecording(uh::GameSession* recording);
 
 protected:
     void prependContextMenuActions(QMenu* menu) override;
 
 private:
-    void onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
-    void onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
+    void onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
 
-    void onActiveRecordingSetNumberChanged(uh::SetNumber number) override { (void)number; }
-    void onActiveRecordingGameNumberChanged(uh::GameNumber number) override { (void)number; }
-    void onActiveRecordingFormatChanged(const uh::SetFormat& format) { (void)format; }
-    void onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionSetNumberChanged(uh::SetNumber number) override { (void)number; }
+    void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override { (void)number; }
+    void onRunningGameSessionFormatChanged(const uh::SetFormat& format) { (void)format; }
+    void onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
     void onRecordingWinnerChanged(int winner) override { (void)winner; }
 
 private slots:
@@ -49,7 +49,7 @@ private slots:
 
 private:
     QVector<QwtPlotCurve*> curves_;
-    uh::Reference<uh::Recording> recording_;
+    uh::Reference<uh::GameSession> recording_;
     QActionGroup* curveTypeActionGroup_;
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uh/tcp_socket.h"
-#include "uh/ActiveRecording.hpp"
+#include "uh/RunningGameSession.hpp"
 #include "uh/TrainingModeContext.hpp"
 #include "uh/Reference.hpp"
 #include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
@@ -13,7 +13,7 @@
 
 namespace uh {
     class MappingInfo;
-    class Recording;
+    class GameSession;
 }
 
 namespace uhapp {
@@ -52,7 +52,7 @@ signals:
     // emitted from the listener thread
     void _receiveTrainingStarted(uh::TrainingModeContext* training);
     void _receiveTrainingEnded();
-    void _receiveMatchStarted(uh::ActiveRecording* newRecording);
+    void _receiveMatchStarted(uh::RunningGameSession* newRecording);
     void _receiveMatchEnded();
     void _receivePlayerState(
             quint64 frameTimeStamp,
@@ -74,7 +74,7 @@ private slots:
     // catch signals from listener thread so we have them in the main thread
     void onReceiveTrainingStarted(uh::TrainingModeContext* training);
     void onReceiveTrainingEnded();
-    void onReceiveMatchStarted(uh::ActiveRecording* newRecording);
+    void onReceiveMatchStarted(uh::RunningGameSession* newRecording);
     void onReceiveMatchEnded();
     void onReceivePlayerState(
             quint64 frameTimeStamp,
@@ -95,8 +95,8 @@ private slots:
 signals:
     void trainingStarted(uh::TrainingModeContext* training);
     void trainingEnded(uh::TrainingModeContext* training);
-    void recordingStarted(uh::ActiveRecording* recording);
-    void recordingEnded(uh::ActiveRecording* recording);
+    void recordingStarted(uh::RunningGameSession* recording);
+    void recordingEnded(uh::RunningGameSession* recording);
     void serverClosedConnection();
 
 private:
@@ -105,7 +105,7 @@ private:
 private:
     tcp_socket socket_;
     QMutex mutex_;
-    uh::Reference<uh::ActiveRecording> recording_;
+    uh::Reference<uh::RunningGameSession> recording_;
     uh::Reference<uh::TrainingModeContext> training_;
     bool requestShutdown_ = false;
 };

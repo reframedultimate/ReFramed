@@ -54,7 +54,7 @@ void RecordingView::showDamagePlot()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::setRecording(uh::Recording* recording)
+void RecordingView::setRecording(uh::GameSession* recording)
 {
     recordingDataView_->setRecording(recording);
     damageTimePlot_->setRecording(recording);

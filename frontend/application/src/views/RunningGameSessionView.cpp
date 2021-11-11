@@ -1,9 +1,9 @@
 #include "application/Util.hpp"
-#include "application/ui_ActiveRecordingView.h"
-#include "application/views/ActiveRecordingView.hpp"
+#include "application/ui_RunningGameSessionView.h"
+#include "application/views/RunningGameSessionView.hpp"
 #include "application/views/RecordingView.hpp"
-#include "application/models/ActiveRecordingManager.hpp"
-#include "uh/ActiveRecording.hpp"
+#include "application/models/RunningGameSessionManager.hpp"
+#include "uh/RunningGameSession.hpp"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -11,9 +11,9 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* manager, QWidget* parent)
+RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manager, QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::ActiveRecordingView)
+    , ui_(new Ui::RunningGameSessionView)
     , activeRecordingManager_(manager)
     , recordingView_(new RecordingView)
 {
@@ -30,27 +30,27 @@ ActiveRecordingView::ActiveRecordingView(ActiveRecordingManager* manager, QWidge
     connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
     connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
 
-    connect(activeRecordingManager_, SIGNAL(connectedToServer()), this, SLOT(onActiveRecordingManagerConnectedToServer()));
-    connect(activeRecordingManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onActiveRecordingManagerDisconnectedFromServer()));
+    connect(activeRecordingManager_, SIGNAL(connectedToServer()), this, SLOT(onRunningGameSessionManagerConnectedToServer()));
+    connect(activeRecordingManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onRunningGameSessionManagerDisconnectedFromServer()));
 
     activeRecordingManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-ActiveRecordingView::~ActiveRecordingView()
+RunningGameSessionView::~RunningGameSessionView()
 {
     activeRecordingManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::showDamagePlot()
+void RunningGameSessionView::showDamagePlot()
 {
     recordingView_->showDamagePlot();
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
+void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
 {
     if (static_cast<uh::SetFormat::Type>(index) == uh::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setVisible(true);
@@ -63,44 +63,44 @@ void ActiveRecordingView::onComboBoxFormatIndexChanged(int index)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditFormatChanged(const QString& formatDesc)
+void RunningGameSessionView::onLineEditFormatChanged(const QString& formatDesc)
 {
     activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onSpinBoxGameNumberChanged(int value)
+void RunningGameSessionView::onSpinBoxGameNumberChanged(int value)
 {
     activeRecordingManager_->setGameNumber(value);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditP1TextChanged(const QString& name)
+void RunningGameSessionView::onLineEditP1TextChanged(const QString& name)
 {
     activeRecordingManager_->setP1Name(name);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onLineEditP2TextChanged(const QString& name)
+void RunningGameSessionView::onLineEditP2TextChanged(const QString& name)
 {
     activeRecordingManager_->setP2Name(name);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerConnectedToServer()
+void RunningGameSessionView::onRunningGameSessionManagerConnectedToServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_waiting);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerDisconnectedFromServer()
+void RunningGameSessionView::onRunningGameSessionManagerDisconnectedFromServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRecording* recording)
+void RunningGameSessionView::onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording)
 {
     clearLayout(ui_->layout_playerInfo);
 
@@ -155,13 +155,13 @@ void ActiveRecordingView::onActiveRecordingManagerRecordingStarted(uh::ActiveRec
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerRecordingEnded(uh::ActiveRecording* recording)
+void RunningGameSessionView::onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording)
 {
     (void)recording;
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& name)
+void RunningGameSessionView::onRunningGameSessionManagerP1NameChanged(const QString& name)
 {
     if (0 >= names_.size())
         return;
@@ -173,7 +173,7 @@ void ActiveRecordingView::onActiveRecordingManagerP1NameChanged(const QString& n
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerP2NameChanged(const QString& name)
+void RunningGameSessionView::onRunningGameSessionManagerP2NameChanged(const QString& name)
 {
     if (1 >= names_.size())
         return;
@@ -185,7 +185,7 @@ void ActiveRecordingView::onActiveRecordingManagerP2NameChanged(const QString& n
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const uh::SetFormat& format)
+void RunningGameSessionView::onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format)
 {
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
@@ -197,20 +197,20 @@ void ActiveRecordingView::onActiveRecordingManagerFormatChanged(const uh::SetFor
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerSetNumberChanged(uh::SetNumber number)
+void RunningGameSessionView::onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number)
 {
     (void)number;
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerGameNumberChanged(uh::GameNumber number)
+void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number)
 {
     const QSignalBlocker blocker(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, const uh::PlayerState& state)
+void RunningGameSessionView::onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state)
 {
     if (player >= fighterStatus_.size())
         return;
@@ -223,7 +223,7 @@ void ActiveRecordingView::onActiveRecordingManagerPlayerStateAdded(int player, c
 }
 
 // ----------------------------------------------------------------------------
-void ActiveRecordingView::onActiveRecordingManagerWinnerChanged(int winner)
+void RunningGameSessionView::onRunningGameSessionManagerWinnerChanged(int winner)
 {
     for (int i = 0; i != names_.size(); ++i)
     {

@@ -1,4 +1,4 @@
-#include "application/views/RecordingListWidget.hpp"
+#include "application/views/SavedGameSessionListWidget.hpp"
 
 #include <QFileInfo>
 #include <QMimeData>
@@ -8,7 +8,7 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RecordingListWidget::RecordingListWidget(QWidget* parent)
+SavedGameSessionListWidget::SavedGameSessionListWidget(QWidget* parent)
     : QListWidget(parent)
 {
     setDragDropMode(DragOnly);
@@ -16,13 +16,13 @@ RecordingListWidget::RecordingListWidget(QWidget* parent)
 }
 
 // ----------------------------------------------------------------------------
-RecordingListWidget::~RecordingListWidget()
+SavedGameSessionListWidget::~SavedGameSessionListWidget()
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingListWidget::addRecordingFileName(const QFileInfo& absPathToFile)
+void SavedGameSessionListWidget::addRecordingFileName(const QFileInfo& absPathToFile)
 {
     QListWidgetItem* item = new QListWidgetItem(absPathToFile.completeBaseName());
     item->setData(Qt::UserRole, QVariant(absPathToFile.absoluteFilePath()));
@@ -30,20 +30,20 @@ void RecordingListWidget::addRecordingFileName(const QFileInfo& absPathToFile)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingListWidget::removeRecordingFileName(const QFileInfo& absPathToFile)
+void SavedGameSessionListWidget::removeRecordingFileName(const QFileInfo& absPathToFile)
 {
     for (const auto& item : findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
         delete item;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingListWidget::itemMatchesRecordingFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
+bool SavedGameSessionListWidget::itemMatchesRecordingFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
 {
     return item->data(Qt::UserRole).toString() == absPathToFile.absoluteFilePath();
 }
 
 // ----------------------------------------------------------------------------
-QVector<QFileInfo> RecordingListWidget::selectedRecordingFilePaths() const
+QVector<QFileInfo> SavedGameSessionListWidget::selectedRecordingFilePaths() const
 {
     QVector<QFileInfo> recordings;
     for (const auto& item : selectedItems())
@@ -52,7 +52,7 @@ QVector<QFileInfo> RecordingListWidget::selectedRecordingFilePaths() const
 }
 
 // ----------------------------------------------------------------------------
-QStringList RecordingListWidget::mimeTypes() const
+QStringList SavedGameSessionListWidget::mimeTypes() const
 {
     QStringList types;
     types << "application/x-ultimate-hindsight-uhr";
@@ -60,7 +60,7 @@ QStringList RecordingListWidget::mimeTypes() const
 }
 
 // ----------------------------------------------------------------------------
-QMimeData* RecordingListWidget::mimeData(const QList<QListWidgetItem*> items) const
+QMimeData* SavedGameSessionListWidget::mimeData(const QList<QListWidgetItem*> items) const
 {
     QMimeData* mimeData = new QMimeData;
     QByteArray encodedData;

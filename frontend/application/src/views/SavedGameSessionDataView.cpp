@@ -73,7 +73,7 @@ RecordingDataView::~RecordingDataView()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::setRecording(uh::Recording* recording)
+void RecordingDataView::setRecording(uh::GameSession* recording)
 {
     clear();
     recording_ = recording;
@@ -405,7 +405,7 @@ void RecordingDataView::setPlayerDataTableRow(int player, int row, const uh::Pla
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void RecordingDataView::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
     if (player >= playerDataItems_.count())
         return;
@@ -416,25 +416,25 @@ void RecordingDataView::onActiveRecordingPlayerNameChanged(int player, const uh:
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingSetNumberChanged(uh::SetNumber number)
+void RecordingDataView::onRunningGameSessionSetNumberChanged(uh::SetNumber number)
 {
     ui_->tableWidget_gameInfo->item(2, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingGameNumberChanged(uh::GameNumber number)
+void RecordingDataView::onRunningGameSessionGameNumberChanged(uh::GameNumber number)
 {
     ui_->tableWidget_gameInfo->item(3, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingFormatChanged(const uh::SetFormat& format)
+void RecordingDataView::onRunningGameSessionFormatChanged(const uh::SetFormat& format)
 {
     ui_->tableWidget_gameInfo->item(1, 1)->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingNewUniquePlayerState(int player, const uh::PlayerState& state)
+void RecordingDataView::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     if (player >= playerDataTables_.count())
         return;
@@ -473,7 +473,7 @@ void RecordingDataView::onActiveRecordingNewUniquePlayerState(int player, const 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onActiveRecordingNewPlayerState(int player, const uh::PlayerState& state)
+void RecordingDataView::onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state)
 {
     (void)player;
     (void)state;

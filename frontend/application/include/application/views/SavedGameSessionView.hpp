@@ -3,7 +3,7 @@
 #include <QWidget>
 
 namespace uh {
-    class Recording;
+    class GameSession;
 }
 
 namespace Ui {
@@ -26,7 +26,7 @@ public:
     void showDamagePlot();
 
 public slots:
-    void setRecording(uh::Recording* recording);
+    void setRecording(uh::GameSession* recording);
     void clear();
 
 private slots:

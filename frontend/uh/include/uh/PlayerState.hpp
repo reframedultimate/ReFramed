@@ -1,6 +1,7 @@
 #pragma once
 
 #include "uh/config.hpp"
+#include "uh/Types.hpp"
 #include <cstdint>
 #include <vector>
 #include <cassert>
@@ -16,29 +17,29 @@ class UH_PUBLIC_API PlayerState
 public:
     PlayerState(
             uint64_t timeStampMs,
-            uint32_t frame,
+            Frame frame,
             float posx, float posy,
             float damage,
             float hitstun,
             float shield,
-            uint16_t status,
-            uint64_t motion,
-            uint8_t hit_status,
-            uint8_t stocks,
+            FighterStatus status,
+            FighterMotion motion,
+            FighterHitStatus hit_status,
+            FighterStocks stocks,
             bool attack_connected,
             bool facing_direction);
 
     uint64_t timeStampMs() const { return timeStampMs_; }
-    uint32_t frame() const { return frame_; }
+    Frame frame() const { return frame_; }
     float posx() const { return posx_; }
     float posy() const { return posy_; }
     float damage() const { return damage_; }
     float hitstun() const { return hitstun_; }
     float shield() const { return shield_; }
-    uint16_t status() const { return status_; }
-    uint64_t motion() const { return static_cast<uint64_t>(motionL_) | (static_cast<uint64_t>(motionH_) << 32); }
-    uint8_t hitStatus() const { return hitStatus_; }
-    uint8_t stocks() const { return stocks_; }
+    FighterStatus status() const { return status_; }
+    FighterMotion motion() const { return static_cast<FighterMotion>(motionL_) | (static_cast<FighterMotion>(motionH_) << 32); }
+    FighterHitStatus hitStatus() const { return hitStatus_; }
+    FighterStocks stocks() const { return stocks_; }
     bool attackConnected() const { return !!(flags_ & 0x01); }
     bool facingDirection() const { return !!(flags_ & 0x02); }
 
@@ -49,7 +50,7 @@ private:
     PlayerState() { assert(false); }
 
     uint64_t timeStampMs_;
-    uint32_t frame_;
+    Frame frame_;
     float posx_;
     float posy_;
     float damage_;
@@ -57,10 +58,10 @@ private:
     float shield_;
     uint32_t motionL_;
     uint8_t motionH_;
-    uint8_t hitStatus_;
-    uint8_t stocks_;
+    FighterHitStatus hitStatus_;
+    FighterStocks stocks_;
     uint8_t flags_;
-    uint16_t status_;
+    FighterStatus status_;
 };
 
 inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)

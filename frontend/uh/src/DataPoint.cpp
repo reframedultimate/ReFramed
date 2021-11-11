@@ -1,11 +1,11 @@
 #include "uh/DataPoint.hpp"
-#include "uh/Recording.hpp"
+#include "uh/SavedGameSession.hpp"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-DataPoint::DataPoint(const PlayerState& state, Recording* recording, int player)
-    : recording_(recording)
+DataPoint::DataPoint(const PlayerState& state, SavedGameSession* session, int player)
+    : session_(session)
     , state_(state)
     , playerIdx_(player)
 {
@@ -14,7 +14,7 @@ DataPoint::DataPoint(const PlayerState& state, Recording* recording, int player)
 // ----------------------------------------------------------------------------
 const SmallString<15>& DataPoint::playerName() const
 {
-    return recording_->playerName(playerIdx_);
+    return session_->playerName(playerIdx_);
 }
 
 // ----------------------------------------------------------------------------
