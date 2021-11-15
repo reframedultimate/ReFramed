@@ -1,8 +1,6 @@
 #pragma once
 
 #include "uh/tcp_socket.h"
-#include "uh/RunningGameSession.hpp"
-#include "uh/TrainingModeContext.hpp"
 #include "uh/Reference.hpp"
 #include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
 
@@ -13,7 +11,9 @@
 
 namespace uh {
     class MappingInfo;
-    class GameSession;
+    class RunningSession;
+    class RunningGameSession;
+    class RunningTrainingSession;
 }
 
 namespace uhapp {
@@ -50,9 +50,10 @@ public:
 
 signals:
     // emitted from the listener thread
-    void _receiveTrainingStarted(uh::TrainingModeContext* training);
+    void _receiveTrainingStarted(uh::RunningTrainingSession* training);
     void _receiveTrainingEnded();
-    void _receiveMatchStarted(uh::RunningGameSession* newRecording);
+    void _receiveTrainingReset();
+    void _receiveMatchStarted(uh::RunningGameSession* match);
     void _receiveMatchEnded();
     void _receivePlayerState(
             quint64 frameTimeStamp,
@@ -72,9 +73,10 @@ signals:
 
 private slots:
     // catch signals from listener thread so we have them in the main thread
-    void onReceiveTrainingStarted(uh::TrainingModeContext* training);
+    void onReceiveTrainingStarted(uh::RunningTrainingSession* training);
     void onReceiveTrainingEnded();
-    void onReceiveMatchStarted(uh::RunningGameSession* newRecording);
+    void onReceiveTrainingReset();
+    void onReceiveMatchStarted(uh::RunningGameSession* match);
     void onReceiveMatchEnded();
     void onReceivePlayerState(
             quint64 frameTimeStamp,
@@ -93,10 +95,11 @@ private slots:
             bool facing_direction);
 
 signals:
-    void trainingStarted(uh::TrainingModeContext* training);
-    void trainingEnded(uh::TrainingModeContext* training);
-    void recordingStarted(uh::RunningGameSession* recording);
-    void recordingEnded(uh::RunningGameSession* recording);
+    void trainingStarted(uh::RunningTrainingSession* training);
+    void trainingEnded(uh::RunningTrainingSession* training);
+    void trainingReset(uh::RunningTrainingSession* training);
+    void matchStarted(uh::RunningGameSession* match);
+    void matchEnded(uh::RunningGameSession* match);
     void serverClosedConnection();
 
 private:
@@ -105,8 +108,7 @@ private:
 private:
     tcp_socket socket_;
     QMutex mutex_;
-    uh::Reference<uh::RunningGameSession> recording_;
-    uh::Reference<uh::TrainingModeContext> training_;
+    uh::Reference<uh::RunningSession> session_;
     bool requestShutdown_ = false;
 };
 

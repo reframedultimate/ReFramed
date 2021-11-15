@@ -128,6 +128,12 @@ public:
         resize(resizeCount);
     }
 
+    SmallVector(std::initializer_list<T>&& l)
+        : SmallVector()
+    {
+        insertMove(0, l.begin(), l.end());
+    }
+
     ~SmallVector()
     {
         Iterator end = this->end();

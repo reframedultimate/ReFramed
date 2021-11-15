@@ -5,7 +5,7 @@
 #include "uh/Reference.hpp"
 #include "uh/SetFormat.hpp"
 #include "uh/ListenerDispatcher.hpp"
-#include "uh/RunningGameSessionListener.hpp"
+#include "uh/SessionListener.hpp"
 #include "uh/RunningGameSession.hpp"  // MOC requires this because of smart pointers
 #include "uh/PlayerState.hpp"  // MOC requires this because of smart pointers
 #include <QObject>
@@ -25,7 +25,7 @@ class SavedGameSessionManager;
  */
 class RunningGameSessionManager : public QObject
                                 , public SavedGameSessionManagerListener
-                                , public uh::RunningGameSessionListener
+                                , public uh::SessionListener
 {
     Q_OBJECT
 
@@ -78,14 +78,15 @@ private:
     void onRunningGameSessionSetNumberChanged(uh::SetNumber number) override;
     void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
-    void onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
-    void onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state) override;
-    void onRecordingWinnerChanged(int winner) override;
+    void onRunningGameSessionWinnerChanged(int winner) override;
+
+    void onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningSessionNewPlayerState(int player, const uh::PlayerState& state) override;
 
 private:
     std::unique_ptr<Protocol> protocol_;
-    std::vector<uh::Reference<uh::RunningGameSession>> pastRecordings_;
-    uh::Reference<uh::RunningGameSession> activeRecording_;
+    std::vector<uh::Reference<uh::RunningGameSession>> pastSessions_;
+    uh::Reference<uh::RunningGameSession> activeSession_;
     SavedGameSessionManager* recordingManager_;
     QString p1Name_;
     QString p2Name_;

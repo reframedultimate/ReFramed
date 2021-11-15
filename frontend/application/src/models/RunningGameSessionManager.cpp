@@ -21,16 +21,16 @@ RunningGameSessionManager::~RunningGameSessionManager()
 {
     recordingManager_->dispatcher.removeListener(this);
 
-    if (activeRecording_)
-        activeRecording_->dispatcher.removeListener(this);
+    if (activeSession_)
+        activeSession_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setFormat(const uh::SetFormat& format)
 {
-    if (activeRecording_)
+    if (activeSession_)
     {
-        activeRecording_->setFormat(format);
+        activeSession_->setFormat(format);
     }
     else
     {
@@ -43,15 +43,15 @@ void RunningGameSessionManager::setFormat(const uh::SetFormat& format)
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setP1Name(const QString& name)
 {
-    if (activeRecording_ && activeRecording_->playerCount() == 2)
+    if (activeSession_ && activeSession_->playerCount() == 2)
     {
         if (name == "")
-            activeRecording_->setPlayerName(0, activeRecording_->playerTag(0));
+            activeSession_->setPlayerName(0, activeSession_->playerTag(0));
         else
-            activeRecording_->setPlayerName(0, name.toStdString().c_str());
+            activeSession_->setPlayerName(0, name.toStdString().c_str());
 
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged,
-                            QString(activeRecording_->playerName(0).cStr()));
+                            QString(activeSession_->playerName(0).cStr()));
     }
     else
     {
@@ -63,15 +63,15 @@ void RunningGameSessionManager::setP1Name(const QString& name)
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setP2Name(const QString& name)
 {
-    if (activeRecording_ && activeRecording_->playerCount() == 2)
+    if (activeSession_ && activeSession_->playerCount() == 2)
     {
         if (name == "")
-            activeRecording_->setPlayerName(1, activeRecording_->playerTag(1));
+            activeSession_->setPlayerName(1, activeSession_->playerTag(1));
         else
-            activeRecording_->setPlayerName(1, name.toStdString().c_str());
+            activeSession_->setPlayerName(1, name.toStdString().c_str());
 
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged,
-                            QString(activeRecording_->playerName(1).cStr()));
+                            QString(activeSession_->playerName(1).cStr()));
     }
     else
     {
@@ -83,13 +83,13 @@ void RunningGameSessionManager::setP2Name(const QString& name)
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setGameNumber(uh::GameNumber number)
 {
-    if (activeRecording_)
+    if (activeSession_)
     {
-        activeRecording_->setGameNumber(number);
-        findUniqueGameAndSetNumbers(activeRecording_);
+        activeSession_->setGameNumber(number);
+        findUniqueGameAndSetNumbers(activeSession_);
 
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, activeRecording_->setNumber());
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, activeRecording_->gameNumber());
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, activeSession_->setNumber());
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, activeSession_->gameNumber());
     }
     else
     {
@@ -110,9 +110,9 @@ void RunningGameSessionManager::tryConnectToServer(const QString& ipAddress, uin
     }
 
     protocol_.reset(new Protocol(sock));
-    connect(protocol_.get(), &Protocol::recordingStarted,
+    connect(protocol_.get(), &Protocol::matchStarted,
             this, &RunningGameSessionManager::onProtocolRecordingStarted);
-    connect(protocol_.get(), &Protocol::recordingEnded,
+    connect(protocol_.get(), &Protocol::matchEnded,
             this, &RunningGameSessionManager::onProtocolRecordingEnded);
     connect(protocol_.get(), &Protocol::serverClosedConnection,
             this, &RunningGameSessionManager::onProtocolConnectionLost);
@@ -153,7 +153,7 @@ void RunningGameSessionManager::onProtocolRecordingStarted(uh::RunningGameSessio
     {
         recording->setGameNumber(1);
         recording->setSetNumber(1);
-        pastRecordings_.clear();
+        pastSessions_.clear();
     }
     else
     {
@@ -165,7 +165,7 @@ void RunningGameSessionManager::onProtocolRecordingStarted(uh::RunningGameSessio
     findUniqueGameAndSetNumbers(recording);
 
     recording->dispatcher.addListener(this);
-    activeRecording_ = recording;
+    activeSession_ = recording;
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingStarted, recording);
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, recording->setNumber());
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, recording->gameNumber());
@@ -213,8 +213,8 @@ void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession*
     }
 
     recording->dispatcher.removeListener(this);
-    pastRecordings_.push_back(recording);
-    activeRecording_.reset();
+    pastSessions_.push_back(recording);
+    activeSession_.reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -225,9 +225,9 @@ bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* 
         return true;
 
     // No past recordings? -> new set
-    if (pastRecordings_.size() == 0)
+    if (pastSessions_.size() == 0)
         return true;
-    const auto& prev = pastRecordings_.back();
+    const auto& prev = pastSessions_.back();
 
     // Player tags might have changed
     if (prev->playerTag(0) != recording->playerTag(0) ||
@@ -249,7 +249,7 @@ bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* 
 
     // tally up wins for each player
     int win[2] = {0, 0};
-    for (const auto& rec : pastRecordings_)
+    for (const auto& rec : pastSessions_)
         win[rec->winner()]++;
 
     switch (recording->format().type())
@@ -313,19 +313,19 @@ void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSessi
 void RunningGameSessionManager::onRecordingManagerDefaultRecordingLocationChanged(const QDir& path)
 {
     (void)path;
-    if (activeRecording_)
+    if (activeSession_)
     {
-        findUniqueGameAndSetNumbers(activeRecording_);
+        findUniqueGameAndSetNumbers(activeSession_);
 
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, activeRecording_->setNumber());
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, activeRecording_->gameNumber());
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, activeSession_->setNumber());
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, activeSession_->gameNumber());
     }
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
-    if (activeRecording_->playerCount() == 2)
+    if (activeSession_->playerCount() == 2)
     {
         if (player == 0)
             dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged, QString(name.cStr()));

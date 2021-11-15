@@ -22,7 +22,7 @@ public:
      * \param player The player's index within that recording from which the
      * state originated.
      */
-    DataPoint(const PlayerState& state, SavedGameSession* recording, int player);
+    DataPoint(const PlayerState& state, SavedGameSession* session, int player);
 
     const PlayerState& state() const { return state_; }
     SavedGameSession* session() const { return session_; }

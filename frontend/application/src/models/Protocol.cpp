@@ -1,6 +1,7 @@
 #include "application/models/Protocol.hpp"
 #include "uh/PlayerState.hpp"
 #include "uh/RunningGameSession.hpp"
+#include "uh/RunningTrainingSession.hpp"
 #include "uh/time.h"
 
 #include <QDebug>
@@ -9,8 +10,10 @@ namespace uhapp {
 
 enum MessageType
 {
+    Version,
     TrainingStart,
     TrainingEnd,
+    TrainingReset,
     MatchStart,
     MatchEnd,
     FighterState,
@@ -47,8 +50,18 @@ Protocol::~Protocol()
 
     tcp_socket_close(&socket_);
 
-    if (recording_)
-        emit recordingEnded(recording_);
+    if (session_)
+    {
+        if (uh::RunningGameSession* session = dynamic_cast<uh::RunningGameSession*>(session_.get()))
+        {
+            emit matchEnded(session);
+        }
+        else if (uh::RunningTrainingSession* session = dynamic_cast<uh::RunningTrainingSession*>(session_.get()))
+        {
+            emit trainingEnded(session);
+        }
+
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -71,32 +84,109 @@ void Protocol::run()
         if (tcp_socket_read(&socket_, &msg, 1) != 1)
             break;
 
+        if (msg == Version)
+        {
+            uint8_t version;
+            if (tcp_socket_read(&socket_, &version, 1) != 1) break;
+
+            continue;
+        }
         if (msg == TrainingStart)
         {
-            uint8_t stageID_l, stageID_h, playerFighterKind, cpuFighterKind;
-            if (tcp_socket_read(&socket_, &stageID_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &playerFighterKind, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &cpuFighterKind, 1) != 1) break;
+            uint8_t buf[5];
+            char tag[256];
+            #define stageH          buf[0]
+            #define stageL          buf[1]
+            #define playerFighterID buf[2]
+            #define cpuFighterID    buf[3]
+            #define playerTagLen    buf[4]
+
+            if (tcp_socket_read(&socket_, buf, 5) != 5) break;
+            if (tcp_socket_read(&socket_, tag, playerTagLen) != playerTagLen) break;
+            tag[static_cast<int>(playerTagLen)] = '\0';
 
             static_assert(sizeof(uh::StageID) == 2);
-            uh::StageID stageID = (stageID_h << 8)
-                                | (stageID_l << 0);
+            uh::StageID stageID = (stageH << 8)
+                                | (stageL << 0);
 
-            qDebug() << "Training start: Stage: " << stageID << ", player fighter kind: " << playerFighterKind << ", cpu fighter kind: " << cpuFighterKind;
+            uh::SmallVector<uh::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
+            uh::SmallVector<uh::SmallString<15>, 8> tags({tag, ""});
 
-            emit _receiveTrainingStarted(new uh::TrainingModeContext(
+            emit _receiveTrainingStarted(new uh::RunningTrainingSession(
                 uh::MappingInfo(mappingInfo),
-                playerFighterKind,
-                cpuFighterKind,
-                stageID
+                stageID,
+                std::move(fighterIDs),
+                std::move(tags),
             ));
             continue;
         }
         else if (msg == TrainingEnd)
         {
-            qDebug() << "Traininig end";
+            qDebug() << "Traininig ended";
             emit _receiveTrainingEnded();
+            continue;
+        }
+        else if (msg == TrainingReset)
+        {
+            qDebug() << "Traininig reset";
+            emit _receiveTrainingReset();
+            continue;
+        }
+        else if (msg == MatchStart)
+        {
+            uint8_t stageID_l, stageID_h, playerCount;
+            if (tcp_socket_read(&socket_, &stageID_h, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
+            if (tcp_socket_read(&socket_, &playerCount, 1) != 1) break;
+
+            static_assert(sizeof(uh::StageID) == 2);
+            uh::StageID stageID = (stageID_h << 8)
+                                | (stageID_l << 0);
+
+            uh::SmallVector<uh::FighterID, 8> fighterIDs(playerCount);
+            uh::SmallVector<uh::SmallString<15>, 8> tags(playerCount);
+            entryIDs.resize(playerCount);
+            for (int i = 0; i < playerCount; ++i)
+            {
+                uint8_t entryID;
+                if (tcp_socket_read(&socket_, &entryID, 1) != 1) goto fail;
+                entryIDs[i] = entryID;
+            }
+            for (int i = 0; i < playerCount; ++i)
+            {
+                uh::FighterID fighterID;
+                static_assert(sizeof(uh::FighterID) == 1);
+                if (tcp_socket_read(&socket_, &fighterID, 1) != 1) goto fail;
+                fighterIDs[i] = fighterID;
+            }
+            for (int i = 0; i < playerCount; ++i)
+            {
+                // TODO Tags on switch are stored as UTF-16. Have to update
+                // protocol at some point
+                uint8_t len;
+                char tag[256];
+                if (tcp_socket_read(&socket_, &len, 1) != 1) goto fail;
+                if (tcp_socket_read(&socket_, tag, len) != len) goto fail;
+                tag[(int)len] = 0;
+                tags[i] = tag;
+            }
+
+            qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
+
+            emit _receiveMatchStarted(new uh::RunningGameSession(
+                uh::MappingInfo(mappingInfo),
+                stageID,
+                std::move(fighterIDs),
+                std::move(tags)
+            ));
+            continue;
+
+            fail: break;
+        }
+        else if (msg == MatchEnd)
+        {
+            qDebug() << "Match end";
+            emit _receiveMatchEnded();
         }
         else if (msg == FighterKinds)
         {
@@ -171,62 +261,6 @@ void Protocol::run()
             mappingInfo.hitStatus.add(status, name);
             qDebug() << "hit status: " << status <<": " << name;
 
-        }
-        else if (msg == MatchStart)
-        {
-            uint8_t stageID_l, stageID_h, playerCount;
-            if (tcp_socket_read(&socket_, &stageID_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &playerCount, 1) != 1) break;
-
-            static_assert(sizeof(uh::StageID) == 2);
-            uh::StageID stageID = (stageID_h << 8)
-                                | (stageID_l << 0);
-
-            uh::SmallVector<uh::FighterID, 8> fighterIDs(playerCount);
-            uh::SmallVector<uh::SmallString<15>, 8> tags(playerCount);
-            entryIDs.resize(playerCount);
-            for (int i = 0; i < playerCount; ++i)
-            {
-                uint8_t entryID;
-                if (tcp_socket_read(&socket_, &entryID, 1) != 1) goto fail;
-                entryIDs[i] = entryID;
-            }
-            for (int i = 0; i < playerCount; ++i)
-            {
-                uh::FighterID fighterID;
-                static_assert(sizeof(uh::FighterID) == 1);
-                if (tcp_socket_read(&socket_, &fighterID, 1) != 1) goto fail;
-                fighterIDs[i] = fighterID;
-            }
-            for (int i = 0; i < playerCount; ++i)
-            {
-                // TODO Tags on switch are stored as UTF-16. Have to update
-                // protocol at some point
-                uint8_t len;
-                char tag[256];
-                if (tcp_socket_read(&socket_, &len, 1) != 1) goto fail;
-                if (tcp_socket_read(&socket_, tag, len) != len) goto fail;
-                tag[(int)len] = 0;
-                tags[i] = tag;
-            }
-
-            qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
-
-            emit _receiveMatchStarted(new uh::RunningGameSession(
-                uh::MappingInfo(mappingInfo),
-                std::move(fighterIDs),
-                std::move(tags),
-                stageID
-            ));
-            continue;
-
-            fail: break;
-        }
-        else if (msg == MatchEnd)
-        {
-            qDebug() << "Match end";
-            emit _receiveMatchEnded();
         }
         else if (msg == FighterState)
         {
@@ -313,10 +347,10 @@ void Protocol::run()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceiveTrainingStarted(uh::TrainingModeContext* training)
+void Protocol::onReceiveTrainingStarted(uh::RunningTrainingSession* training)
 {
     // Handle case where match end is not sent (should never happen but you never know)
-    if (training_.notNull())
+    if (session_.notNull())
         emit trainingEnded(training_);
 
     training_ = training;
@@ -337,11 +371,11 @@ void Protocol::onReceiveTrainingEnded()
 void Protocol::onReceiveMatchStarted(uh::RunningGameSession* recording)
 {
     // Handle case where match end is not sent (should never happen but you never know)
-    if (recording_.notNull())
-        emit recordingEnded(recording_);
+    if (session_.notNull())
+        emit matchEnded(session_);
 
-    recording_ = recording;
-    emit recordingStarted(recording_);
+    session_ = recording;
+    emit matchStarted(session_);
 }
 
 // ----------------------------------------------------------------------------
@@ -361,8 +395,8 @@ void Protocol::onReceivePlayerState(
         bool attack_connected,
         bool facing_direction)
 {
-    if (recording_.notNull())
-        recording_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+    if (session_.notNull())
+        session_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 
     if (training_.notNull())
         training_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
@@ -371,11 +405,11 @@ void Protocol::onReceivePlayerState(
 // ----------------------------------------------------------------------------
 void Protocol::onReceiveMatchEnded()
 {
-    if (recording_.isNull())
+    if (session_.isNull())
         return;
 
-    emit recordingEnded(recording_);
-    recording_.reset();
+    emit matchEnded(session_);
+    session_.reset();
 }
 
 }
