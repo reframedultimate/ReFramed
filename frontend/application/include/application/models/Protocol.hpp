@@ -24,7 +24,7 @@ namespace uhapp {
  * When initially connecting, the switch will send tables containing information
  * on which enum values map to what names. The switch only sends this information
  * once, but it is stored by the Protocol class and emitted every time a new
- * match starts, or when training mode is intered.
+ * match starts, or when training mode is entered.
  *
  * Under normal operation, the sequence of events will be:
  *   1) Single matchStarted() call
@@ -33,7 +33,7 @@ namespace uhapp {
  *
  * For training mode, the sequence of events will be:
  *   1) Single trainingStarted() call
- *   2) Multiple newPlayerState() calls
+ *   2) Multiple newPlayerState() calls and trainingReset() calls
  *   3) Single trainingEnded() call
  *
  * If the client prematurely disconnects, matchEnded() will still be emitted
@@ -104,6 +104,7 @@ signals:
 
 private:
     void run() override;
+    void endSessionIfNecessary();
 
 private:
     tcp_socket socket_;

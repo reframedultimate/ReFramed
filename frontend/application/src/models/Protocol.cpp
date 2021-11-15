@@ -50,18 +50,7 @@ Protocol::~Protocol()
 
     tcp_socket_close(&socket_);
 
-    if (session_)
-    {
-        if (uh::RunningGameSession* session = dynamic_cast<uh::RunningGameSession*>(session_.get()))
-        {
-            emit matchEnded(session);
-        }
-        else if (uh::RunningTrainingSession* session = dynamic_cast<uh::RunningTrainingSession*>(session_.get()))
-        {
-            emit trainingEnded(session);
-        }
-
-    }
+    endSessionIfNecessary();
 }
 
 // ----------------------------------------------------------------------------
@@ -88,10 +77,8 @@ void Protocol::run()
         {
             uint8_t version;
             if (tcp_socket_read(&socket_, &version, 1) != 1) break;
-
-            continue;
         }
-        if (msg == TrainingStart)
+        else if (msg == TrainingStart)
         {
             uint8_t buf[5];
             char tag[256];
@@ -118,19 +105,16 @@ void Protocol::run()
                 std::move(fighterIDs),
                 std::move(tags),
             ));
-            continue;
         }
         else if (msg == TrainingEnd)
         {
             qDebug() << "Traininig ended";
             emit _receiveTrainingEnded();
-            continue;
         }
         else if (msg == TrainingReset)
         {
             qDebug() << "Traininig reset";
             emit _receiveTrainingReset();
-            continue;
         }
         else if (msg == MatchStart)
         {
@@ -145,6 +129,7 @@ void Protocol::run()
 
             uh::SmallVector<uh::FighterID, 8> fighterIDs(playerCount);
             uh::SmallVector<uh::SmallString<15>, 8> tags(playerCount);
+            uh::SmallVector<uh::SmallString<15>, 8> names(playerCount);
             entryIDs.resize(playerCount);
             for (int i = 0; i < playerCount; ++i)
             {
@@ -167,8 +152,9 @@ void Protocol::run()
                 char tag[256];
                 if (tcp_socket_read(&socket_, &len, 1) != 1) goto fail;
                 if (tcp_socket_read(&socket_, tag, len) != len) goto fail;
-                tag[(int)len] = 0;
+                tag[static_cast<int>(len)] = '\0';
                 tags[i] = tag;
+                names[i] = tag;
             }
 
             qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
@@ -197,7 +183,7 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[(int)len] = '\0';
+            name[static_cast<int>(len)] = '\0';
 
             mappingInfo.fighterID.add(fighterID, name);
             qDebug() << "fighter kind: " << fighterID <<": " << name;
@@ -213,7 +199,7 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, &statusID_l, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[(int)len] = '\0';
+            name[static_cast<int>(len)] = '\0';
 
             static_assert(sizeof(uh::FighterStatus) == 2);
             uh::FighterStatus statusID = (statusID_h << 8)
@@ -238,7 +224,7 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[(int)len] = '\0';
+            name[static_cast<int>(len)] = '\0';
 
             static_assert(sizeof(uh::StageID) == 2);
             uh::StageID stageID = (stageID_h << 8)
@@ -256,7 +242,7 @@ void Protocol::run()
             if (tcp_socket_read(&socket_, &status, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[(int)len] = '\0';
+            name[static_cast<int>(len)] = '\0';
 
             mappingInfo.hitStatus.add(status, name);
             qDebug() << "hit status: " << status <<": " << name;
@@ -350,32 +336,26 @@ void Protocol::run()
 void Protocol::onReceiveTrainingStarted(uh::RunningTrainingSession* training)
 {
     // Handle case where match end is not sent (should never happen but you never know)
-    if (session_.notNull())
-        emit trainingEnded(training_);
+    endSessionIfNecessary();
 
-    training_ = training;
-    emit trainingStarted(training_);
+    session_ = training;
+    emit trainingStarted(training);
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onReceiveTrainingEnded()
 {
-    if (training_.isNull())
-        return;
-
-    emit trainingEnded(training_);
-    training_.reset();
+    endSessionIfNecessary();
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onReceiveMatchStarted(uh::RunningGameSession* recording)
+void Protocol::onReceiveMatchStarted(uh::RunningGameSession* match)
 {
     // Handle case where match end is not sent (should never happen but you never know)
-    if (session_.notNull())
-        emit matchEnded(session_);
+    endSessionIfNecessary();
 
-    session_ = recording;
-    emit matchStarted(session_);
+    session_ = match;
+    emit matchStarted(match);
 }
 
 // ----------------------------------------------------------------------------
@@ -397,18 +377,29 @@ void Protocol::onReceivePlayerState(
 {
     if (session_.notNull())
         session_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
-
-    if (training_.notNull())
-        training_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onReceiveMatchEnded()
 {
+    endSessionIfNecessary();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::endSessionIfNecessary()
+{
     if (session_.isNull())
         return;
 
-    emit matchEnded(session_);
+    if (uh::RunningGameSession* match = dynamic_cast<uh::RunningGameSession*>(session_.get()))
+    {
+        emit matchEnded(match);
+    }
+    else if (uh::RunningTrainingSession* training = dynamic_cast<uh::RunningTrainingSession*>(session_.get()))
+    {
+        emit trainingEnded(training);
+    }
+
     session_.reset();
 }
 
