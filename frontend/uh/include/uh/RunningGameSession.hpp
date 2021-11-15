@@ -23,7 +23,7 @@ public:
     void setGameNumber(GameNumber number);
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
-    void addPlayerState(int index, PlayerState&& state);
+    void addPlayerState(int playerIdx, PlayerState&& state) override;
 
 private:
     int currentWinner_ = 0;

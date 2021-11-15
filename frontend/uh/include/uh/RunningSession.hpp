@@ -11,7 +11,7 @@ protected:
     RunningSession();
 
 public:
-    virtual void addPlayerState(PlayerState&& state) = 0;
+    virtual void addPlayerState(int PlayerIdx, PlayerState&& state) = 0;
 };
 
 }
