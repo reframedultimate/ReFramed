@@ -6,12 +6,12 @@ namespace uh {
 
 namespace uhapp {
 
-class RecordingGroup;
+class SavedGameSessionGroup;
 
 class DataSetBackgroundLoaderListener
 {
 public:
-    virtual void onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet) = 0;
+    virtual void onDataSetBackgroundLoaderDataSetLoaded(SavedGameSessionGroup* group, uh::DataSet* dataSet) = 0;
 };
 
 }

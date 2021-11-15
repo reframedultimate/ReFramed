@@ -16,10 +16,10 @@ public:
     explicit SavedGameSessionListWidget(QWidget* parent=nullptr);
     ~SavedGameSessionListWidget();
 
-    void addRecordingFileName(const QFileInfo& absPathToFile);
-    void removeRecordingFileName(const QFileInfo& absPathToFile);
-    bool itemMatchesRecordingFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
-    QVector<QFileInfo> selectedRecordingFilePaths() const;
+    void addSavedGameSessionFileName(const QFileInfo& absPathToFile);
+    void removeSavedGameSessionFileName(const QFileInfo& absPathToFile);
+    bool itemMatchesSavedGameSessionFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
+    QVector<QFileInfo> selectedSavedGameSessionFilePaths() const;
 
 protected:
     QStringList mimeTypes() const override;

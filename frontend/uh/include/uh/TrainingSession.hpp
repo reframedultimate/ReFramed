@@ -15,6 +15,9 @@ public:
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;
 
+    TimeStampMS timeStampStartedMs() const override
+        { return timeStarted_; }
+
 private:
     const TimeStampMS timeStarted_;
 };

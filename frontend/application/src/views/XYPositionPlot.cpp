@@ -1,6 +1,6 @@
 #include "uhplot/ColorPalette.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "uh/Recording.hpp"
+#include "uh/Session.hpp"
 #include "uh/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
@@ -71,9 +71,9 @@ XYPositionPlot::~XYPositionPlot()
 // ----------------------------------------------------------------------------
 void XYPositionPlot::clear()
 {
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
-    recording_ = nullptr;
+    if (session_)
+        session_->dispatcher.removeListener(this);
+    session_ = nullptr;
 
     for (auto& curve : curves_)
         delete curve;
@@ -82,26 +82,26 @@ void XYPositionPlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::setRecording(uh::GameSession* recording)
+void XYPositionPlot::setSession(uh::Session* session)
 {
     clear();
-    recording_ = recording;
-    recording_->dispatcher.addListener(this);
+    session_ = session;
+    session_->dispatcher.addListener(this);
 
-    for (int player = 0; player != recording_->playerCount(); ++player)
+    for (int player = 0; player != session_->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(uhplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(recording_->playerName(player).cStr());
+        curve->setTitle(session_->playerName(player).cStr());
         curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
 
-        for (int i = 0; i < recording_->playerStateCount(player); ++i)
+        for (int i = 0; i < session_->playerStateCount(player); ++i)
         {
-            const auto& state = recording_->playerStateAt(player, i);
+            const auto& state = session_->playerStateAt(player, i);
             data->append(QPointF(state.posx(), state.posy()));
         }
     }
@@ -116,11 +116,11 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
         menu->addAction(action);
     menu->addSeparator();
 
-    if (recording_ == nullptr)
+    if (session_ == nullptr)
         return;
-    for (int i = 0; i != recording_->playerCount(); ++i)
+    for (int i = 0; i != session_->playerCount(); ++i)
     {
-        QAction* a = menu->addAction(recording_->playerName(i).cStr());
+        QAction* a = menu->addAction(session_->playerName(i).cStr());
         a->setCheckable(true);
         a->setChecked(curves_[i]->isVisible());
         connect(a, &QAction::triggered, [=](bool checked) {
@@ -137,7 +137,7 @@ void XYPositionPlot::onRunningGameSessionPlayerNameChanged(int player, const uh:
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void XYPositionPlot::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     data->append(QPointF(state.posx(), state.posy()));

@@ -5,13 +5,13 @@
 
 namespace uhapp {
 
-class RecordingGroup;
+class SavedGameSessionGroup;
 
-class RecordingGroupListener
+class SavedGameSessionGroupListener
 {
 public:
-    virtual void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile) = 0;
-    virtual void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile) = 0;
+    virtual void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) = 0;
+    virtual void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) = 0;
 };
 
 }

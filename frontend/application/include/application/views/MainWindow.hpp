@@ -15,16 +15,16 @@ namespace Ui {
 
 namespace uhapp {
 
-class RunningGameSessionManager;
-class RunningGameSessionView;
 class CategoryView;
+class Config;
 class ConnectView;
 class PluginManager;
 class Protocol;
-class RecordingGroupView;
-class RecordingManager;
+class RunningGameSessionManager;
+class RunningGameSessionView;
+class SavedGameSessionGroupView;
+class SavedGameSessionManager;
 class TrainingMode;
-class Config;
 
 class MainWindow : public QMainWindow
                  , public RunningGameSessionManagerListener
@@ -65,13 +65,13 @@ private:
 
 private:
     std::unique_ptr<Config> config_;
-    std::unique_ptr<RecordingManager> recordingManager_;
-    std::unique_ptr<RunningGameSessionManager> activeRecordingManager_;
+    std::unique_ptr<SavedGameSessionManager> savedGameSessionManager_;
+    std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;
     std::unique_ptr<TrainingMode> trainingMode_;
     std::unique_ptr<PluginManager> pluginManager_;
     CategoryView* categoryView_;
-    RecordingGroupView* recordingGroupView_;
-    RunningGameSessionView* activeRecordingView_;
+    SavedGameSessionGroupView* savedGameSessionGroupView_;
+    RunningGameSessionView* runningGameSessionView_;
     QStackedWidget* mainView_;
     Ui::MainWindow* ui_;
 };

@@ -18,11 +18,10 @@ SavedGameSessionListWidget::SavedGameSessionListWidget(QWidget* parent)
 // ----------------------------------------------------------------------------
 SavedGameSessionListWidget::~SavedGameSessionListWidget()
 {
-
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionListWidget::addRecordingFileName(const QFileInfo& absPathToFile)
+void SavedGameSessionListWidget::addSavedGameSessionFileName(const QFileInfo& absPathToFile)
 {
     QListWidgetItem* item = new QListWidgetItem(absPathToFile.completeBaseName());
     item->setData(Qt::UserRole, QVariant(absPathToFile.absoluteFilePath()));
@@ -30,20 +29,20 @@ void SavedGameSessionListWidget::addRecordingFileName(const QFileInfo& absPathTo
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionListWidget::removeRecordingFileName(const QFileInfo& absPathToFile)
+void SavedGameSessionListWidget::removeSavedGameSessionFileName(const QFileInfo& absPathToFile)
 {
     for (const auto& item : findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
         delete item;
 }
 
 // ----------------------------------------------------------------------------
-bool SavedGameSessionListWidget::itemMatchesRecordingFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
+bool SavedGameSessionListWidget::itemMatchesSavedGameSessionFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
 {
     return item->data(Qt::UserRole).toString() == absPathToFile.absoluteFilePath();
 }
 
 // ----------------------------------------------------------------------------
-QVector<QFileInfo> SavedGameSessionListWidget::selectedRecordingFilePaths() const
+QVector<QFileInfo> SavedGameSessionListWidget::selectedSavedGameSessionFilePaths() const
 {
     QVector<QFileInfo> recordings;
     for (const auto& item : selectedItems())

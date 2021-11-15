@@ -1,25 +1,25 @@
 #include "application/Util.hpp"
 #include "application/listeners/RunningGameSessionManagerListener.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
-#include "application/models/RecordingManager.hpp"
+#include "application/models/SavedGameSessionManager.hpp"
 #include "uh/tcp_socket.h"
 #include <QDateTime>
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionManager::RunningGameSessionManager(RecordingManager* recordingManager, QObject *parent)
+RunningGameSessionManager::RunningGameSessionManager(SavedGameSessionManager* manager, QObject *parent)
     : QObject(parent)
-    , recordingManager_(recordingManager)
+    , savedSessionManager_(manager)
     , format_(uh::SetFormat::FRIENDLIES)
 {
-    recordingManager_->dispatcher.addListener(this);
+    savedSessionManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 RunningGameSessionManager::~RunningGameSessionManager()
 {
-    recordingManager_->dispatcher.removeListener(this);
+    savedSessionManager_->dispatcher.removeListener(this);
 
     if (activeSession_)
         activeSession_->dispatcher.removeListener(this);
@@ -180,19 +180,19 @@ void RunningGameSessionManager::onProtocolRecordingStarted(uh::RunningGameSessio
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession* recording)
+void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession* session)
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingEnded, recording);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingEnded, session);
 
     // Save recording
     QFileInfo fileInfo(
-        recordingManager_->defaultRecordingSourceDirectory(),
-        composeFileName(recording)
+        savedSessionManager_->defaultRecordingSourceDirectory(),
+        composeFileName(session)
     );
-    if (recording->saveAs(fileInfo.absoluteFilePath().toStdString().c_str()))
+    if (session->save(fileInfo.absoluteFilePath().toStdString().c_str()))
     {
         // Add the new recording to the "All" recording group
-        recordingManager_->allRecordingGroup()->addFile(fileInfo.absoluteFilePath());
+        savedSessionManager_->allSavedGameSessionGroup()->addFile(fileInfo.absoluteFilePath());
     }
     else
     {
@@ -203,17 +203,17 @@ void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession*
     // recording, but it's still possible to edit the names/format/game number/etc
     // so copy the data out of the recording here so it can be edited, and when
     // a new recording starts again we copy the data into the recording.
-    format_ = recording->format();
-    gameNumber_ = recording->gameNumber();
-    setNumber_ = recording->setNumber();
-    if (recording->playerCount() == 2)
+    format_ = session->format();
+    gameNumber_ = session->gameNumber();
+    setNumber_ = session->setNumber();
+    if (session->playerCount() == 2)
     {
-        p1Name_ = recording->playerName(0).cStr();
-        p2Name_ = recording->playerName(1).cStr();
+        p1Name_ = session->playerName(0).cStr();
+        p2Name_ = session->playerName(1).cStr();
     }
 
-    recording->dispatcher.removeListener(this);
-    pastSessions_.push_back(recording);
+    session->dispatcher.removeListener(this);
+    pastSessions_.push_back(session);
     activeSession_.reset();
 }
 
@@ -291,7 +291,7 @@ bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSession* recording)
 {
-    const QDir& dir = recordingManager_->defaultRecordingSourceDirectory();
+    const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
     while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
     {
         switch (format_.type())
@@ -310,7 +310,7 @@ void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSessi
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRecordingManagerDefaultRecordingLocationChanged(const QDir& path)
+void RunningGameSessionManager::onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path)
 {
     (void)path;
     if (activeSession_)
@@ -353,20 +353,20 @@ void RunningGameSessionManager::onRunningGameSessionFormatChanged(const uh::SetF
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     (void)player;
     (void)state;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const uh::PlayerState& state)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerStateAdded, player, state);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRecordingWinnerChanged(int winner)
+void RunningGameSessionManager::onRunningGameSessionWinnerChanged(int winner)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerWinnerChanged, winner);
 }

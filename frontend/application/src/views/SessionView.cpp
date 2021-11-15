@@ -1,9 +1,9 @@
-#include "application/ui_RecordingView.h"
-#include "application/views/RecordingView.hpp"
-#include "application/views/RecordingDataView.hpp"
+#include "application/ui_SessionView.h"
+#include "application/views/SessionView.hpp"
+#include "application/views/SessionDataView.hpp"
 #include "application/views/DamageTimePlot.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "uh/Recording.hpp"
+#include "uh/Session.hpp"
 #include "uh/PlayerState.hpp"
 
 #include <QTreeWidgetItem>
@@ -11,17 +11,17 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RecordingView::RecordingView(QWidget *parent)
+SessionView::SessionView(QWidget *parent)
     : QWidget(parent)
-    , ui_(new Ui::RecordingView)
+    , ui_(new Ui::SessionView)
     , damageTimePlot_(new DamageTimePlot)
     , xyPositionPlot_(new XYPositionPlot)
-    , recordingDataView_(new RecordingDataView)
+    , sessionDataView_(new SessionDataView)
 {
     ui_->setupUi(this);
 
     QVBoxLayout* dataLayout = new QVBoxLayout;
-    dataLayout->addWidget(recordingDataView_);
+    dataLayout->addWidget(sessionDataView_);
     ui_->tab_data->setLayout(dataLayout);
 
     // This is still broken, see
@@ -30,7 +30,7 @@ RecordingView::RecordingView(QWidget *parent)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::addPlotsToUI()
+void SessionView::addPlotsToUI()
 {
     QVBoxLayout* layout = new QVBoxLayout;
     layout->addWidget(damageTimePlot_);
@@ -42,29 +42,29 @@ void RecordingView::addPlotsToUI()
 }
 
 // ----------------------------------------------------------------------------
-RecordingView::~RecordingView()
+SessionView::~SessionView()
 {
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::showDamagePlot()
+void SessionView::showDamagePlot()
 {
     ui_->tabWidget->setCurrentWidget(ui_->tab_damage_vs_time);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::setRecording(uh::GameSession* recording)
+void SessionView::setSession(uh::Session* session)
 {
-    recordingDataView_->setRecording(recording);
-    damageTimePlot_->setRecording(recording);
-    xyPositionPlot_->setRecording(recording);
+    sessionDataView_->setSession(session);
+    damageTimePlot_->setSession(session);
+    xyPositionPlot_->setSession(session);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingView::clear()
+void SessionView::clear()
 {
-    recordingDataView_->clear();
+    sessionDataView_->clear();
     damageTimePlot_->clear();
     xyPositionPlot_->clear();
 }

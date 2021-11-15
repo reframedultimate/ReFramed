@@ -1,6 +1,6 @@
 #include "application/Util.hpp"
-#include "application/models/RecordingManager.hpp"
-#include "application/listeners/RecordingManagerListener.hpp"
+#include "application/models/SavedGameSessionManager.hpp"
+#include "application/listeners/SavedGameSessionManagerListener.hpp"
 
 #include <QStandardPaths>
 #include <QJsonObject>
@@ -8,96 +8,96 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RecordingManager::RecordingManager(Config* config)
+SavedGameSessionManager::SavedGameSessionManager(Config* config)
     : ConfigAccessor(config)
 {
     QJsonObject& cfg = getConfig();
-    if (cfg["recordingmanager"].isNull())
-        cfg["recordingmanager"] = QJsonObject();
-    auto cfgRecMgr = cfg["recordingmanager"].toObject();
+    if (cfg["SavedGameSessionManager"].isNull())
+        cfg["SavedGameSessionManager"] = QJsonObject();
+    auto cfgRecMgr = cfg["SavedGameSessionManager"].toObject();
     if (cfgRecMgr["defaultrecordingdir"].isNull())
         cfgRecMgr["defaultrecordingdir"] = QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation)).canonicalPath();
-    cfg["recordingmanager"] = cfgRecMgr;
+    cfg["SavedGameSessionManager"] = cfgRecMgr;
 
     // Default location is always at index 0
-    recordingSources_.insert("Default", defaultRecordingSourceDirectory());
+    savedGameSessionDirectories_.insert("Default", defaultRecordingSourceDirectory());
 
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
-    recordingGroups_.emplace("All", std::make_unique<RecordingGroup>("All"));
+    groups_.emplace("All", std::make_unique<SavedGameSessionGroup>("All"));
 
     scanForRecordings();
 }
 
 // ----------------------------------------------------------------------------
-QDir RecordingManager::defaultRecordingSourceDirectory() const
+QDir SavedGameSessionManager::defaultRecordingSourceDirectory() const
 {
-    return getConfig()["recordingmanager"].toObject()["defaultrecordingdir"].toString();
+    return getConfig()["SavedGameSessionManager"].toObject()["defaultrecordingdir"].toString();
 }
 
 // ----------------------------------------------------------------------------
-const QHash<QString, QDir>& RecordingManager::recordingSources() const
+const QHash<QString, QDir>& SavedGameSessionManager::savedGameSessionSources() const
 {
-    return recordingSources_;
+    return savedGameSessionDirectories_;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::addRecordingSource(const QString& name, const QDir& path)
+bool SavedGameSessionManager::addSavedGameSessionSource(const QString& name, const QDir& path)
 {
-    if (recordingSources_.contains(name))
+    if (savedGameSessionDirectories_.contains(name))
         return false;
 
-    recordingSources_.insert(name, path);
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceAdded, name, path);
+    savedGameSessionDirectories_.insert(name, path);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGameSessionSourceAdded, name, path);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::changeRecordingSourceName(const QString& oldName, const QString& newName)
+bool SavedGameSessionManager::changeSavedGameSessionSourceName(const QString& oldName, const QString& newName)
 {
-    auto it = recordingSources_.find(oldName);
-    if (it == recordingSources_.end())
+    auto it = savedGameSessionDirectories_.find(oldName);
+    if (it == savedGameSessionDirectories_.end())
         return false;
-    if (recordingSources_.contains(newName))
+    if (savedGameSessionDirectories_.contains(newName))
         return false;
 
     QDir dir = it.value();
-    recordingSources_.insert(newName, dir);
-    recordingSources_.erase(it);
+    savedGameSessionDirectories_.insert(newName, dir);
+    savedGameSessionDirectories_.erase(it);
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceNameChanged, oldName, newName);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGameSessionSourceNameChanged, oldName, newName);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::removeRecordingSource(const QString& name)
+bool SavedGameSessionManager::removeSavedGameSessionSource(const QString& name)
 {
-    if (recordingSources_.remove(name) == 0)
+    if (savedGameSessionDirectories_.remove(name) == 0)
         return false;
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerRecordingSourceRemoved, name);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGameSessionSourceRemoved, name);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-const QHash<QString, QDir>& RecordingManager::videoSources()
+const QHash<QString, QDir>& SavedGameSessionManager::videoSources()
 {
     return videoDirectories_;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::addVideoSource(const QString& name, const QDir& path)
+bool SavedGameSessionManager::addVideoSource(const QString& name, const QDir& path)
 {
     if (videoDirectories_.contains(name))
         return false;
 
     videoDirectories_.insert(name, path);
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceAdded, name, path);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerVideoSourceAdded, name, path);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::changeVideoSourceName(const QString& oldName, const QString& newName)
+bool SavedGameSessionManager::changeVideoSourceName(const QString& oldName, const QString& newName)
 {
     auto it = videoDirectories_.find(oldName);
     if (it == videoDirectories_.end())
@@ -109,121 +109,121 @@ bool RecordingManager::changeVideoSourceName(const QString& oldName, const QStri
     videoDirectories_.insert(newName, dir);
     videoDirectories_.erase(it);
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceNameChanged, oldName, newName);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerVideoSourceNameChanged, oldName, newName);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::removeVideoSource(const QString& name)
+bool SavedGameSessionManager::removeVideoSource(const QString& name)
 {
     if (videoDirectories_.remove(name) == 0)
         return false;
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerVideoSourceRemoved, name);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerVideoSourceRemoved, name);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroup* RecordingManager::recordingGroup(const QString& name) const
+SavedGameSessionGroup* SavedGameSessionManager::savedGameSessionGroup(const QString& name) const
 {
-    auto it = recordingGroups_.find(name.toStdString());
-    if (it == recordingGroups_.end())
+    auto it = groups_.find(name.toStdString());
+    if (it == groups_.end())
         return nullptr;
     return it->second.get();
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroup* RecordingManager::allRecordingGroup() const
+SavedGameSessionGroup* SavedGameSessionManager::allSavedGameSessionGroup() const
 {
-    return recordingGroups_.find("All")->second.get();
+    return groups_.find("All")->second.get();
 }
 
 // ----------------------------------------------------------------------------
-const std::unordered_map<std::string, std::unique_ptr<RecordingGroup>>& RecordingManager::recordingGroups() const
+const std::unordered_map<std::string, std::unique_ptr<SavedGameSessionGroup>>& SavedGameSessionManager::savedGameSessionGroups() const
 {
-    return recordingGroups_;
+    return groups_;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::addRecordingGroup(const QString& name)
+bool SavedGameSessionManager::addSavedGameSessionGroup(const QString& name)
 {
     if (name.length() == 0)
         return false;
 
-    auto it = recordingGroups_.emplace(name.toStdString(), std::make_unique<RecordingGroup>(name));
+    auto it = groups_.emplace(name.toStdString(), std::make_unique<SavedGameSessionGroup>(name));
     if (it.second == false)
         return false;
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupAdded, it.first->second.get());
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGroupAdded, it.first->second.get());
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::renameRecordingGroup(const QString& oldName, const QString& newName)
+bool SavedGameSessionManager::renameSavedGameSessionGroup(const QString& oldName, const QString& newName)
 {
     if (newName.length() == 0)
         return false;
 
-    auto result = recordingGroups_.emplace(newName.toStdString(), std::make_unique<RecordingGroup>(nullptr));
+    auto result = groups_.emplace(newName.toStdString(), std::make_unique<SavedGameSessionGroup>(nullptr));
     if (result.second == false)
         return false;
 
     auto newIt = result.first;
-    auto oldIt = recordingGroups_.find(oldName.toStdString());
-    assert(oldIt != recordingGroups_.end());
+    auto oldIt = groups_.find(oldName.toStdString());
+    assert(oldIt != groups_.end());
 
     oldIt->second->setName(newName);
     newIt->second = std::move(oldIt->second);
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupNameChanged, newIt->second.get(), oldName, newName);
-    recordingGroups_.erase(oldIt);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGroupNameChanged, newIt->second.get(), oldName, newName);
+    groups_.erase(oldIt);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordingManager::removeRecordingGroup(const QString& name)
+bool SavedGameSessionManager::removeSavedGameSessionGroup(const QString& name)
 {
-    auto it = recordingGroups_.find(name.toStdString());
-    if (it == recordingGroups_.end())
+    auto it = groups_.find(name.toStdString());
+    if (it == groups_.end())
         return false;
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerGroupRemoved, it->second.get());
-    recordingGroups_.erase(it);
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerGroupRemoved, it->second.get());
+    groups_.erase(it);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::scanForRecordings()
+void SavedGameSessionManager::scanForRecordings()
 {
-    RecordingGroup* allGroup = allRecordingGroup();
+    SavedGameSessionGroup* allGroup = allSavedGameSessionGroup();
     allGroup->removeAllFiles();
-    for (const auto& recdir : recordingSources_)
+    for (const auto& recdir : savedGameSessionDirectories_)
         for (const auto& file : recdir.entryList({"*.uhr", "*.UHR"}, QDir::Files))
             allGroup->addFile(QFileInfo(recdir, file));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::setDefaultRecordingSourceDirectory(const QDir& path)
+void SavedGameSessionManager::setDefaultRecordingSourceDirectory(const QDir& path)
 {
     QString canonicalPath = path.canonicalPath();
 
     QJsonObject& cfg = getConfig();
-    QJsonObject cfgRecMgr = cfg["recordingmanager"].toObject();
+    QJsonObject cfgRecMgr = cfg["SavedGameSessionManager"].toObject();
     cfgRecMgr["defaultrecordingdir"] = canonicalPath;
     cfg = cfgRecMgr;
     saveConfig();
 
-    dispatcher.dispatch(&RecordingManagerListener::onRecordingManagerDefaultRecordingLocationChanged, QDir(canonicalPath));
+    dispatcher.dispatch(&SavedGameSessionManagerListener::onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged, QDir(canonicalPath));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& name)
+void SavedGameSessionManager::onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& name)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingManager::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& name)
+void SavedGameSessionManager::onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& name)
 {
 
 }

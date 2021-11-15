@@ -1,7 +1,7 @@
 #pragma once
 
-#include "application/listeners/RecordingGroupListener.hpp"
-#include "application/models/RecordingGroup.hpp"
+#include "application/listeners/SavedGameSessionGroupListener.hpp"
+#include "application/models/SavedGameSessionGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
 #include "application/Util.hpp"
 #include "uh/ListenerDispatcher.hpp"
@@ -12,14 +12,13 @@
 
 namespace uhapp {
 
-class RecordingManagerListener;
-class Settings;
+class SavedGameSessionManagerListener;
 
-class RecordingManager : public ConfigAccessor
-                       , public RecordingGroupListener
+class SavedGameSessionManager : public ConfigAccessor
+                              , public SavedGameSessionGroupListener
 {
 public:
-    RecordingManager(Config* config);
+    SavedGameSessionManager(Config* config);
 
     /*!
      * \brief This is the location where recordings are saved automatically.
@@ -37,11 +36,11 @@ public:
      * manager can find and load recordings.
      * \note The default recording location is also part of this list.
      */
-    const QHash<QString, QDir>& recordingSources() const;
+    const QHash<QString, QDir>& savedGameSessionSources() const;
 
-    bool addRecordingSource(const QString& name, const QDir& path);
-    bool changeRecordingSourceName(const QString& oldName, const QString& newName);
-    bool removeRecordingSource(const QString& name);
+    bool addSavedGameSessionSource(const QString& name, const QDir& path);
+    bool changeSavedGameSessionSourceName(const QString& oldName, const QString& newName);
+    bool removeSavedGameSessionSource(const QString& name);
 
     /*!
      * \brief Returns a list of paths to directories in which the recording
@@ -61,34 +60,33 @@ public:
      * \return A pointer to the group if it was found, or nullptr if it was not
      * found.
      */
-    RecordingGroup* recordingGroup(const QString& name) const;
+    SavedGameSessionGroup* savedGameSessionGroup(const QString& name) const;
 
     /*!
      * \brief Individual recordings can be organized into named groups by the
-     * user. Gets all groups.
-     * \return A list of groups.
+     * user. Gets the "all" group.
+     * \return The "all" group.
      */
-    RecordingGroup* allRecordingGroup() const;
+    SavedGameSessionGroup* allSavedGameSessionGroup() const;
 
-    const std::unordered_map <std::string , std::unique_ptr<RecordingGroup>> &recordingGroups() const;
+    const std::unordered_map<std::string, std::unique_ptr<SavedGameSessionGroup>>& savedGameSessionGroups() const;
 
-    bool addRecordingGroup(const QString& name);
-    bool renameRecordingGroup(const QString& oldName, const QString& newName);
-    bool removeRecordingGroup(const QString& name);
+    bool addSavedGameSessionGroup(const QString& name);
+    bool renameSavedGameSessionGroup(const QString& oldName, const QString& newName);
+    bool removeSavedGameSessionGroup(const QString& name);
 
-    uh::ListenerDispatcher<RecordingManagerListener> dispatcher;
+    uh::ListenerDispatcher<SavedGameSessionManagerListener> dispatcher;
 
 private:
     void scanForRecordings();
 
-    void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& name) override;
-    void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& name) override;
+    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& name) override;
+    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& name) override;
 
 private:
-    Settings* settings_;
-    QHash<QString, QDir> recordingSources_;
+    QHash<QString, QDir> savedGameSessionDirectories_;
     QHash<QString, QDir> videoDirectories_;
-    std::unordered_map<std::string, std::unique_ptr<RecordingGroup>> recordingGroups_;
+    std::unordered_map<std::string, std::unique_ptr<SavedGameSessionGroup>> groups_;
 };
 
 }

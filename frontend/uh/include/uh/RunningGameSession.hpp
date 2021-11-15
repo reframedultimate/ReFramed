@@ -23,7 +23,10 @@ public:
     void setGameNumber(GameNumber number);
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
+
+    TimeStampMS timeStampStartedMs() const override;
     void addPlayerState(int playerIdx, PlayerState&& state) override;
+    int winner() const override;
 
 private:
     int currentWinner_ = 0;

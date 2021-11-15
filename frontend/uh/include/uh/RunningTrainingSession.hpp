@@ -15,6 +15,12 @@ public:
             SmallVector<FighterID, 8>&& playerFighterIDs,
             SmallVector<SmallString<15>, 8>&& playerTags
     );
+
+    const SmallString<15>& playerName(int playerIdx) const
+        { return playerTag(playerIdx); }
+
+    int winner() const override
+        { return -1; }
 };
 
 }

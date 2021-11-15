@@ -128,10 +128,10 @@ public:
         resize(resizeCount);
     }
 
-    SmallVector(std::initializer_list<T>&& l)
+    SmallVector(std::initializer_list<T> l)
         : SmallVector()
     {
-        insertMove(0, l.begin(), l.end());
+        insertCopy(0, l.begin(), l.end());
     }
 
     ~SmallVector()
