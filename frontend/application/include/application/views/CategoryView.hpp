@@ -8,14 +8,14 @@
 
 namespace uhapp {
 
-class RecordingManager;
+class SavedGameSessionManager;
 
 class CategoryView : public QTreeWidget
                    , public SavedGameSessionManagerListener
 {
     Q_OBJECT
 public:
-    explicit CategoryView(RecordingManager* recordingManager, QWidget* parent=nullptr);
+    explicit CategoryView(SavedGameSessionManager* recordingManager, QWidget* parent=nullptr);
     ~CategoryView();
 
     void setRunningGameSessionViewDisabled(bool enable);
@@ -29,9 +29,9 @@ signals:
     void categoryChanged(CategoryType category);
 
     /*!
-     * \brief When the user clicks on a recording group entry
+     * \brief When the user clicks on a game group entry
      */
-    void recordingGroupSelected(RecordingGroup* group);
+    void savedGameSessionGroupSelected(SavedGameSessionGroup* group);
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -47,30 +47,30 @@ private:
     CategoryType categoryOf(const QTreeWidgetItem* item) const;
 
     // These get triggered by the context menu and drag/drop events
-    RecordingGroup* newGroup();
-    RecordingGroup* duplicateGroup(RecordingGroup* otherGroup);
-    void deleteGroup(RecordingGroup* group);
+    SavedGameSessionGroup* newGroup();
+    SavedGameSessionGroup* duplicateGroup(SavedGameSessionGroup* otherGroup);
+    void deleteGroup(SavedGameSessionGroup* group);
 
 private:
-    void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override;
+    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override;
 
-    void onRecordingManagerGroupAdded(RecordingGroup* group) override;
-    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
-    void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
+    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override;
+    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override;
+    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override;
 
-    void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override;
-    void onRecordingManagerRecordingSourceNameChanged(const QString& oldName, const QString& newName) override;
-    void onRecordingManagerRecordingSourceRemoved(const QString& name) override;
+    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override;
+    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override;
+    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override;
 
-    void onRecordingManagerVideoSourceAdded(const QString& name, const QDir& path) override;
-    void onRecordingManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override;
-    void onRecordingManagerVideoSourceRemoved(const QString& name) override;
+    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override;
+    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override;
+    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override;
 
 private:
-    RecordingManager* recordingManager_;
+    SavedGameSessionManager* savedGameSessionManager_;
     QTreeWidgetItem* dataSetsItem_;
     QTreeWidgetItem* analysisCategoryItem_;
-    QTreeWidgetItem* recordingGroupsItem_;
+    QTreeWidgetItem* savedGameSessionGroupsItem_;
     QTreeWidgetItem* recordingSourcesItem_;
     QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* activeRecordingItem_;

@@ -3,30 +3,30 @@
 #include <QWidget>
 
 namespace uh {
-    class GameSession;
+    class Session;
 }
 
 namespace Ui {
-    class RecordingView;
+    class SessionView;
 }
 
 namespace uhapp {
 
 class DamageTimePlot;
-class RecordingDataView;
+class SessionDataView;
 class XYPositionPlot;
 
-class RecordingView : public QWidget
+class SessionView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RecordingView(QWidget* parent=nullptr);
-    ~RecordingView();
+    explicit SessionView(QWidget* parent=nullptr);
+    ~SessionView();
 
     void showDamagePlot();
 
 public slots:
-    void setRecording(uh::GameSession* recording);
+    void setSession(uh::Session* session);
     void clear();
 
 private slots:
@@ -35,10 +35,10 @@ private slots:
     void addPlotsToUI();
 
 private:
-    Ui::RecordingView* ui_;
+    Ui::SessionView* ui_;
     DamageTimePlot* damageTimePlot_;
     XYPositionPlot* xyPositionPlot_;
-    RecordingDataView* recordingDataView_;
+    SessionDataView* sessionDataView_;
 };
 
 }

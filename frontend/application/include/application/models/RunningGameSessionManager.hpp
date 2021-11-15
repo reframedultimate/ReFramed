@@ -30,7 +30,7 @@ class RunningGameSessionManager : public QObject
     Q_OBJECT
 
 public:
-    RunningGameSessionManager(SavedGameSessionManager* recordingManager, QObject* parent=nullptr);
+    RunningGameSessionManager(SavedGameSessionManager* manager, QObject* parent=nullptr);
     ~RunningGameSessionManager();
 
     void setFormat(const uh::SetFormat& format);
@@ -61,9 +61,9 @@ private:
 private:
     void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override;
 
-    void onSavedGameSessionManagerGroupAdded(RecordingGroup* group) override { (void)group; }
-    void onSavedGameSessionManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override { (void)group; (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerGroupRemoved(RecordingGroup* group) override { (void)group; }
+    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override { (void)group; }
+    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override { (void)group; (void)oldName; (void)newName; }
+    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override { (void)group; }
 
     void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
     void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
@@ -87,7 +87,7 @@ private:
     std::unique_ptr<Protocol> protocol_;
     std::vector<uh::Reference<uh::RunningGameSession>> pastSessions_;
     uh::Reference<uh::RunningGameSession> activeSession_;
-    SavedGameSessionManager* recordingManager_;
+    SavedGameSessionManager* savedSessionManager_;
     QString p1Name_;
     QString p2Name_;
     uh::SetFormat format_;

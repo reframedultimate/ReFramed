@@ -29,10 +29,10 @@ public:
     uh::ListenerDispatcher<SavedGameSessionGroupListener> dispatcher;
 
 private:
-    // Only the recording manager is allowed to change names of recording groups
-    // because the hash table keys must remain in sync with the name stored in
-    // the recording group object
-    friend class RecordingManager;
+    // Only the saved game session manager is allowed to change names of
+    // groups because the hash table keys must remain in sync with the name
+    // stored in the group object
+    friend class SavedGameSessionManager;
     void setName(const QString& name);
 
 private:

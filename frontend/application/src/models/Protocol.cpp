@@ -103,7 +103,7 @@ void Protocol::run()
                 uh::MappingInfo(mappingInfo),
                 stageID,
                 std::move(fighterIDs),
-                std::move(tags),
+                std::move(tags)
             ));
         }
         else if (msg == TrainingEnd)
@@ -163,7 +163,8 @@ void Protocol::run()
                 uh::MappingInfo(mappingInfo),
                 stageID,
                 std::move(fighterIDs),
-                std::move(tags)
+                std::move(tags),
+                std::move(names)
             ));
             continue;
 
@@ -346,6 +347,11 @@ void Protocol::onReceiveTrainingStarted(uh::RunningTrainingSession* training)
 void Protocol::onReceiveTrainingEnded()
 {
     endSessionIfNecessary();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onReceiveTrainingReset()
+{
 }
 
 // ----------------------------------------------------------------------------

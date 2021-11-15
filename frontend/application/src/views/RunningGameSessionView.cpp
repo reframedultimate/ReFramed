@@ -1,7 +1,7 @@
 #include "application/Util.hpp"
 #include "application/ui_RunningGameSessionView.h"
 #include "application/views/RunningGameSessionView.hpp"
-#include "application/views/RecordingView.hpp"
+#include "application/views/SessionView.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
 #include "uh/RunningGameSession.hpp"
 
@@ -14,11 +14,11 @@ namespace uhapp {
 RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manager, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::RunningGameSessionView)
-    , activeRecordingManager_(manager)
-    , recordingView_(new RecordingView)
+    , runningGameSessionManager_(manager)
+    , sessionView_(new SessionView)
 {
     ui_->setupUi(this);
-    ui_->layout_recordingView->addWidget(recordingView_);
+    ui_->layout_recordingView->addWidget(sessionView_);
     ui_->lineEdit_formatOther->setVisible(false);
 
     // Initial page should show "disconnected"
@@ -30,23 +30,23 @@ RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manage
     connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
     connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
 
-    connect(activeRecordingManager_, SIGNAL(connectedToServer()), this, SLOT(onRunningGameSessionManagerConnectedToServer()));
-    connect(activeRecordingManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onRunningGameSessionManagerDisconnectedFromServer()));
+    connect(runningGameSessionManager_, SIGNAL(connectedToServer()), this, SLOT(onRunningGameSessionManagerConnectedToServer()));
+    connect(runningGameSessionManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onRunningGameSessionManagerDisconnectedFromServer()));
 
-    activeRecordingManager_->dispatcher.addListener(this);
+    runningGameSessionManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 RunningGameSessionView::~RunningGameSessionView()
 {
-    activeRecordingManager_->dispatcher.removeListener(this);
+    runningGameSessionManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::showDamagePlot()
 {
-    recordingView_->showDamagePlot();
+    sessionView_->showDamagePlot();
 }
 
 // ----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
         ui_->lineEdit_formatOther->setVisible(true);
     else
         ui_->lineEdit_formatOther->setVisible(false);
-    activeRecordingManager_->setFormat(uh::SetFormat(
+    runningGameSessionManager_->setFormat(uh::SetFormat(
         static_cast<uh::SetFormat::Type>(index),
         ui_->lineEdit_formatOther->text().toStdString().c_str()
     ));
@@ -65,26 +65,26 @@ void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    activeRecordingManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
+    runningGameSessionManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onSpinBoxGameNumberChanged(int value)
 {
-    activeRecordingManager_->setGameNumber(value);
+    runningGameSessionManager_->setGameNumber(value);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onLineEditP1TextChanged(const QString& name)
 {
-    activeRecordingManager_->setP1Name(name);
+    runningGameSessionManager_->setP1Name(name);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onLineEditP2TextChanged(const QString& name)
 {
-    activeRecordingManager_->setP2Name(name);
+    runningGameSessionManager_->setP2Name(name);
 }
 
 // ----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ void RunningGameSessionView::onRunningGameSessionManagerRecordingStarted(uh::Run
     ui_->label_timeRemaining->setText("");
 
     // Prepare recording view for new game
-    recordingView_->setRecording(recording);
+    sessionView_->setSession(recording);
 
     // Show active page, if not already
     ui_->stackedWidget->setCurrentWidget(ui_->page_active);

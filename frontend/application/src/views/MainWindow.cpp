@@ -1,7 +1,7 @@
 #include "application/models/Config.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/PluginManager.hpp"
-#include "application/models/RecordingManager.hpp"
+#include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/TrainingMode.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/RunningGameSessionView.hpp"
@@ -10,8 +10,8 @@
 #include "application/views/ConnectView.hpp"
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
-#include "application/views/RecordingGroupView.hpp"
-#include "application/views/RecordingView.hpp"
+#include "application/views/SavedGameSessionGroupView.hpp"
+#include "application/views/SessionView.hpp"
 #include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
 
@@ -30,13 +30,13 @@ namespace uhapp {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , config_(new Config)
-    , recordingManager_(new RecordingManager(config_.get()))
-    , activeRecordingManager_(new RunningGameSessionManager(recordingManager_.get()))
+    , savedGameSessionManager_(new SavedGameSessionManager(config_.get()))
+    , runningGameSessionManager_(new RunningGameSessionManager(savedGameSessionManager_.get()))
     , trainingMode_(new TrainingMode)
     , pluginManager_(new PluginManager)
-    , categoryView_(new CategoryView(recordingManager_.get()))
-    , recordingGroupView_(new RecordingGroupView(recordingManager_.get()))
-    , activeRecordingView_(new RunningGameSessionView(activeRecordingManager_.get()))
+    , categoryView_(new CategoryView(savedGameSessionManager_.get()))
+    , savedGameSessionGroupView_(new SavedGameSessionGroupView(savedGameSessionManager_.get()))
+    , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -46,12 +46,12 @@ MainWindow::MainWindow(QWidget* parent)
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so", QDir::Files))
         pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 
-    mainView_->addWidget(recordingGroupView_);
-    mainView_->addWidget(new DataSetFilterView(recordingManager_.get()));
+    mainView_->addWidget(savedGameSessionGroupView_);
+    mainView_->addWidget(new DataSetFilterView(savedGameSessionManager_.get()));
     mainView_->addWidget(new VisualizerView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
-    mainView_->addWidget(activeRecordingView_);
+    mainView_->addWidget(runningGameSessionView_);
     mainView_->addWidget(new TrainingModeView(trainingMode_.get(), pluginManager_.get()));
     setCentralWidget(mainView_);
     mainView_->setCurrentIndex(2);
@@ -62,15 +62,15 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
-    connect(activeRecordingManager_.get(), &RunningGameSessionManager::connectedToServer,
+    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer,
             this, &MainWindow::onRunningGameSessionManagerConnectedToServer);
-    connect(activeRecordingManager_.get(), &RunningGameSessionManager::disconnectedFromServer,
+    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::disconnectedFromServer,
             this, &MainWindow::onRunningGameSessionManagerDisconnectedFromServer);
 
     connect(categoryView_, &CategoryView::categoryChanged,
             this, &MainWindow::onCategoryChanged);
-    connect(categoryView_, &CategoryView::recordingGroupSelected,
-            recordingGroupView_, &RecordingGroupView::setRecordingGroup);
+    connect(categoryView_, &CategoryView::savedGameSessionGroupSelected,
+            savedGameSessionGroupView_, &SavedGameSessionGroupView::setSavedGameSessionGroup);
 
     connect(ui_->action_connect, &QAction::triggered,
             this, &MainWindow::onConnectActionTriggered);
@@ -103,7 +103,7 @@ void MainWindow::setStateConnected()
 {
     // Be (hopefully) helpful and switch to the active recording view
     mainView_->setCurrentIndex(5);
-    activeRecordingView_->showDamagePlot();  // This seems to be the most useful page so set it as a default
+    runningGameSessionView_->showDamagePlot();  // This seems to be the most useful page so set it as a default
 
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
@@ -156,9 +156,9 @@ void MainWindow::onConnectActionTriggered()
 {
     ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
-    connect(c, &ConnectView::connectRequest, activeRecordingManager_.get(), &RunningGameSessionManager::tryConnectToServer);
-    connect(activeRecordingManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
-    connect(activeRecordingManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
+    connect(c, &ConnectView::connectRequest, runningGameSessionManager_.get(), &RunningGameSessionManager::tryConnectToServer);
+    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
+    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
 
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
@@ -169,7 +169,7 @@ void MainWindow::onConnectActionTriggered()
 void MainWindow::onDisconnectActionTriggered()
 {
     // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
-    activeRecordingManager_->disconnectFromServer();
+    runningGameSessionManager_->disconnectFromServer();
 }
 
 // ----------------------------------------------------------------------------
@@ -178,7 +178,7 @@ void MainWindow::onCategoryChanged(CategoryType category)
     switch (category)
     {
         case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
-            recordingGroupView_->clear();
+            savedGameSessionGroupView_->clear();
             [[fallthrough]];
         case CategoryType::RECORDING_GROUP_ITEM:
             mainView_->setCurrentIndex(0);
@@ -226,7 +226,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         );
     };
 
-    QFileInfo pathInfo(recordingManager_->defaultRecordingSourceDirectory().path());
+    QFileInfo pathInfo(savedGameSessionManager_->defaultRecordingSourceDirectory().path());
     if (!pathInfo.exists())
     {
         int option = QMessageBox::warning(
@@ -242,7 +242,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             pathInfo = askForDir(pathInfo.filePath());
             if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                recordingManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             else
                 close();
         }
@@ -250,7 +250,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             if (QDir().mkdir(pathInfo.filePath()))
             {
-                recordingManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             }
             else
             {
@@ -269,7 +269,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
                     if (!pathInfo.exists() || !pathInfo.isDir() || !pathInfo.isWritable())
                         close();
                     else
-                        recordingManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                        savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
                 }
                 else
                 {
@@ -293,7 +293,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             pathInfo = askForDir(pathInfo.filePath());
             if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                recordingManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             else
                 close();
         }

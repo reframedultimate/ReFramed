@@ -42,6 +42,6 @@ void clearLayout(QLayout* layout);
  */
 void clearStackedWidget(QStackedWidget* sw);
 
-QString composeFileName(const uh::GameSession* recording);
+QString composeFileName(const uh::GameSession* session);
 
 }

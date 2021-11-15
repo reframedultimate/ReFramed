@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QWidget>
-#include "application/listeners/RecordingManagerListener.hpp"
-#include "application/listeners/RecordingGroupListener.hpp"
+#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/SavedGameSessionGroupListener.hpp"
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
 #include "uh/DataSetFilterListener.hpp"
 #include "uh/Reference.hpp"
@@ -25,18 +25,18 @@ namespace uhapp {
 
 class DataSetFilterWidget;
 class DataSetBackgroundLoader;
-class RecordingManager;
+class SavedGameSessionManager;
 
 class DataSetFilterView : public QWidget
-                        , public RecordingManagerListener
-                        , public RecordingGroupListener
+                        , public SavedGameSessionManagerListener
+                        , public SavedGameSessionGroupListener
                         , public DataSetBackgroundLoaderListener
                         , public uh::DataSetFilterListener
 {
     Q_OBJECT
 
 public:
-    explicit DataSetFilterView(RecordingManager* recordingManager, QWidget* parent=nullptr);
+    explicit DataSetFilterView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
     ~DataSetFilterView();
 
 protected:
@@ -55,41 +55,41 @@ private slots:
 private:
     void addNewFilterWidget(DataSetFilterWidget* widget);
     void recursivelyInstallEventFilter(QObject* obj);
-    void addGroupToInputRecordingsList(RecordingGroup* group);
-    void removeGroupFromInputRecordingsList(RecordingGroup* group);
-    void removeGroupFromInputDataSet(RecordingGroup* group);
+    void addGroupToInputRecordingsList(SavedGameSessionGroup* group);
+    void removeGroupFromInputRecordingsList(SavedGameSessionGroup* group);
+    void removeGroupFromInputDataSet(SavedGameSessionGroup* group);
     void moveFilterWidgetInLayout(DataSetFilterWidget* widget, int layoutIndex);
     void dirtyDataSetFilters();
 
 private:
-    void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile) override;
-    void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile) override;
+    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
+    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
 
-    void onRecordingManagerGroupAdded(RecordingGroup* group) override;
-    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
-    void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
+    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override;
+    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override;
+    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override;
 
-    void onDataSetBackgroundLoaderDataSetLoaded(RecordingGroup* group, uh::DataSet* dataSet) override;
+    void onDataSetBackgroundLoaderDataSetLoaded(SavedGameSessionGroup* group, uh::DataSet* dataSet) override;
 
     void onDataSetFilterDirtied(uh::DataSetFilter* filter);
 
-    void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override { (void)path; }
-    void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onRecordingManagerRecordingSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onRecordingManagerRecordingSourceRemoved(const QString& name) override { (void)name; }
-    void onRecordingManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onRecordingManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onRecordingManagerVideoSourceRemoved(const QString& name) override { (void)name; }
+    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override { (void)path; }
+    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override { (void)name; }
+    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
     Ui::DataSetFilterView* ui_;
     QVBoxLayout* filterWidgetsLayout_;
-    RecordingManager* recordingManager_;
+    SavedGameSessionManager* savedGameSessionManager_;
     DataSetBackgroundLoader* dataSetBackgroundLoader_;
     std::unique_ptr<uh::DataSetFilterChain> dataSetFilterChain_;
     std::unique_ptr<uh::DataSet> inputDataSetMerged_;
     uh::Reference<uh::DataSet> outputDataSet_;
-    std::unordered_map<const RecordingGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
+    std::unordered_map<const SavedGameSessionGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
     bool dataSetFiltersDirty_ = true;
 };
 

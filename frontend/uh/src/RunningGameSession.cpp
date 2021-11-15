@@ -245,38 +245,44 @@ void RunningGameSession::setFormat(const SetFormat& format)
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSession::addPlayerState(int index, PlayerState&& state)
+TimeStampMS RunningGameSession::timeStampStartedMs() const
+{
+    return playerStates_[0][0].timeStampMs();
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
 {
     // If this is the first state we receive just store it. Need at least 1
     // past state to determine if the game started yet
-    if (playerStates_[index].count() == 0)
+    if (playerStates_[playerIdx].count() == 0)
     {
-        playerStates_[index].push(std::move(state));
+        playerStates_[playerIdx].push(std::move(state));
         return;
     }
 
     // Check to see if the game has started yet
-    if (playerStates_[index].count() == 1)
+    if (playerStates_[playerIdx].count() == 1)
     {
-        if (playerStates_[index][0].frame() == state.frame())
+        if (playerStates_[playerIdx][0].frame() == state.frame())
         {
-            playerStates_[index][0] = std::move(state);
+            playerStates_[playerIdx][0] = std::move(state);
             return;  // has not started yet
         }
 
-        playerStates_[index].push(std::move(state));
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, playerStates_[index][0]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, playerStates_[index][0]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, playerStates_[index][1]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, playerStates_[index][1]);
+        playerStates_[playerIdx].push(std::move(state));
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, playerStates_[playerIdx][0]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, playerStates_[playerIdx][0]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, playerStates_[playerIdx][1]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, playerStates_[playerIdx][1]);
         return;
     }
 
     // Only add a new state if the previous one was different
-    if (playerStates_[index].back() != state)
+    if (playerStates_[playerIdx].back() != state)
     {
-        playerStates_[index].push(state);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, state);
+        playerStates_[playerIdx].push(state);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, state);
 
         // Winner might have changed
         int winner = findWinner();
@@ -288,7 +294,7 @@ void RunningGameSession::addPlayerState(int index, PlayerState&& state)
     }
 
     // The UI still cares about every frame
-    dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, state);
+    dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, state);
 }
 
 }

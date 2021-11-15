@@ -1,33 +1,33 @@
 #pragma once
 
-#include "application/listeners/RecordingManagerListener.hpp"
-#include "application/listeners/RecordingGroupListener.hpp"
+#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/SavedGameSessionGroupListener.hpp"
 #include <QWidget>
 
 class QListWidgetItem;
 class QStringListModel;
 
 namespace Ui {
-    class RecordingGroupView;
+    class SavedGameSessionGroupView;
 }
 
 namespace uhapp {
 
-class RecordingManager;
-class RecordingGroup;
-class RecordingView;
-class RecordingNameCompleter;
-class RecordingListWidget;
+class SavedGameSessionManager;
+class SavedGameSessionGroup;
+class SavedGameSessionNameCompleter;
+class SavedGameSessionListWidget;
+class SessionView;
 
-class RecordingGroupView : public QWidget
-                         , public RecordingManagerListener
-                         , public RecordingGroupListener
+class SavedGameSessionGroupView : public QWidget
+                                , public SavedGameSessionManagerListener
+                                , public SavedGameSessionGroupListener
 {
     Q_OBJECT
 
 public:
-    explicit RecordingGroupView(RecordingManager* recordingManager, QWidget* parent=nullptr);
-    ~RecordingGroupView();
+    explicit SavedGameSessionGroupView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
+    ~SavedGameSessionGroupView();
 
 public slots:
     /*!
@@ -35,7 +35,7 @@ public slots:
      * changes (files added/removed) the view will automatically update. If
      * the group is deleted the view will clear itself.
      */
-    void setRecordingGroup(RecordingGroup* group);
+    void setSavedGameSessionGroup(SavedGameSessionGroup* group);
     void clear();
 
 private slots:
@@ -45,29 +45,29 @@ private slots:
 
 private:
     // In case a group gets deleted, we need remove ourselves as a listener
-    void onRecordingManagerGroupRemoved(RecordingGroup* group) override;
-    void onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName) override;
+    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override;
+    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override;
 
-    void onRecordingManagerGroupAdded(RecordingGroup* group) override { (void)group; }
-    void onRecordingManagerDefaultRecordingLocationChanged(const QDir& path) override { (void)path; }
-    void onRecordingManagerRecordingSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onRecordingManagerRecordingSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onRecordingManagerRecordingSourceRemoved(const QString& name) override { (void)name; }
-    void onRecordingManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onRecordingManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onRecordingManagerVideoSourceRemoved(const QString& name) override { (void)name; }
-
-private:
-    void onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile) override;
-    void onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile) override;
+    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override { (void)group; }
+    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override { (void)path; }
+    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override { (void)name; }
+    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    Ui::RecordingGroupView* ui_;
-    RecordingManager* recordingManager_;
-    RecordingGroup* currentGroup_ = nullptr;
-    RecordingListWidget* recordingListWidget_;
-    RecordingView* recordingView_;
-    RecordingNameCompleter* filterCompleter_;
+    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
+    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
+
+private:
+    Ui::SavedGameSessionGroupView* ui_;
+    SavedGameSessionManager* savedGameSessionManager_;
+    SavedGameSessionGroup* currentGroup_ = nullptr;
+    SavedGameSessionListWidget* savedGameSessionListWidget_;
+    SavedGameSessionNameCompleter* filterCompleter_;
+    SessionView* sessionView_;
 };
 
 }

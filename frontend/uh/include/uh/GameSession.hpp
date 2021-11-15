@@ -32,7 +32,7 @@ public:
      * Unlike tags, there is also no character limit to a player's name.
      * \param index Which player to get
      */
-    const SmallString<15>& playerName(int playerIdx) const;
+    const SmallString<15>& playerName(int playerIdx) const override;
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as

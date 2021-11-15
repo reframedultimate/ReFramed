@@ -66,7 +66,7 @@ private:
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
     uh::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     uh::SmallVector<QTableWidget*, 8> playerDataTables_;
-    uh::Reference<uh::SavedGameSession> session_;
+    uh::Reference<uh::Session> session_;
 
     // When a new recording is set, we want to remember which player was selected so the
     // user doesn't have to keep clicking on the player when browsing recordings

@@ -27,7 +27,7 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/views/SessionDataView.hpp"
     "include/application/views/SavedGameSessionListWidget.hpp"
     "include/application/views/SavedGameSessionGroupView.hpp"
-    "include/application/views/SavedGameSessionView.hpp"
+    "include/application/views/SessionView.hpp"
     "include/application/views/TrainingModeView.hpp"
     "include/application/views/VisualizerView.hpp"
     "include/application/views/XYPositionPlot.hpp")
@@ -44,7 +44,7 @@ qt5_wrap_ui (UH_FORMS_MOC
     "forms/RunningGameSessionView.ui"
     "forms/SessionDataView.ui"
     "forms/SavedGameSessionGroupView.ui"
-    "forms/SavedGameSessionView.ui"
+    "forms/SessionView.ui"
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (UH_RESOURCES_GEN
@@ -84,7 +84,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/SessionDataView.cpp"
     "src/views/SavedGameSessionListWidget.cpp"
     "src/views/SavedGameSessionGroupView.cpp"
-    "src/views/SavedGameSessionView.cpp"
+    "src/views/SessionView.cpp"
     "src/views/TrainingModeView.cpp"
     "src/views/VisualizerView.cpp"
     "src/views/XYPositionPlot.cpp"

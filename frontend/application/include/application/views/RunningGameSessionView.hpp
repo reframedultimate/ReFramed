@@ -17,10 +17,10 @@ namespace Ui {
 namespace uhapp {
 
 class RunningGameSessionManager;
-class RecordingView;
+class SessionView;
 
 class RunningGameSessionView : public QWidget
-                          , public RunningGameSessionManagerListener
+                             , public RunningGameSessionManagerListener
 {
     Q_OBJECT
 public:
@@ -54,8 +54,8 @@ private:
 
 private:
     Ui::RunningGameSessionView* ui_;
-    RunningGameSessionManager* activeRecordingManager_;
-    RecordingView* recordingView_;
+    RunningGameSessionManager* runningGameSessionManager_;
+    SessionView* sessionView_;
     std::vector<QGroupBox*> names_;
     std::vector<QLabel*> fighterName_;
     std::vector<QLabel*> fighterStatus_;

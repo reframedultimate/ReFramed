@@ -42,18 +42,28 @@ public:
      * above the player in-game and is created when the player sets their controls.
      * \param index Which player to get
      */
-    const SmallString<15>& playerTag(int index) const;
+    const SmallString<15>& playerTag(int playerIdx) const;
+
+    /*!
+     * \brief Gets the name of the player. By default this will be the same as
+     * the tag, but many players like to create tags that are shorter or a
+     * variation of their real name. This string is their real name.
+     * Unlike tags, there is also no character limit to a player's name.
+     * \param index Which player to get
+     */
+    virtual const SmallString<15>& playerName(int playerIdx) const = 0;
 
     /*!
      * \brief Gets the fighter ID being used by the specified player.
      * \param index The player to get
      */
-    FighterID playerFighterID(int index) const;
+    FighterID playerFighterID(int playerIdx) const;
 
     /*!
      * \brief Gets the stage ID being played on.
      */
-    StageID stageID() const { return stageID_; }
+    StageID stageID() const
+        { return stageID_; }
 
     int playerStateCount(int playerIdx) const;
 

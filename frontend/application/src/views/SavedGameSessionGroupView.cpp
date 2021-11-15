@@ -1,10 +1,10 @@
-#include "application/ui_RecordingGroupView.h"
-#include "application/views/RecordingGroupView.hpp"
-#include "application/models/RecordingManager.hpp"
-#include "application/models/RecordingGroup.hpp"
-#include "application/views/RecordingView.hpp"
-#include "application/views/RecordingListWidget.hpp"
-#include "uh/SavedRecording.hpp"
+#include "application/ui_SavedGameSessionGroupView.h"
+#include "application/views/SavedGameSessionGroupView.hpp"
+#include "application/models/SavedGameSessionManager.hpp"
+#include "application/models/SavedGameSessionGroup.hpp"
+#include "application/views/SavedGameSessionListWidget.hpp"
+#include "application/views/SessionView.hpp"
+#include "uh/SavedGameSession.hpp"
 #include "uh/PlayerState.hpp"
 
 #include <QListWidget>
@@ -18,13 +18,13 @@
 
 namespace uhapp {
 
-class RecordingNameCompleter : public QCompleter
+class SavedGameSessionNameCompleter : public QCompleter
 {
 public:
-    RecordingNameCompleter(QObject* parent=nullptr);
+    SavedGameSessionNameCompleter(QObject* parent=nullptr);
 
-    void setRecordingGroupWeakRef(RecordingGroup* group);
-    void recordingGroupExpired();
+    void setGroupWeakRef(SavedGameSessionGroup* group);
+    void groupExpired();
 
     void setCompleteCategories();
     void setCompleteTags();
@@ -32,11 +32,11 @@ public:
     QStringList splitPath(const QString &path) const override;
 
 private:
-    RecordingGroup* group_ = nullptr;
+    SavedGameSessionGroup* group_ = nullptr;
     QStringListModel* model_;
 };
 
-RecordingNameCompleter::RecordingNameCompleter(QObject* parent)
+SavedGameSessionNameCompleter::SavedGameSessionNameCompleter(QObject* parent)
     : QCompleter(parent)
     , model_(new QStringListModel)
 {
@@ -45,19 +45,19 @@ RecordingNameCompleter::RecordingNameCompleter(QObject* parent)
     setModel(model_);
 }
 
-void RecordingNameCompleter::setRecordingGroupWeakRef(RecordingGroup* group)
+void SavedGameSessionNameCompleter::setGroupWeakRef(SavedGameSessionGroup* group)
 {
     group_ = group;
     setCompleteCategories();
 }
 
-void RecordingNameCompleter::recordingGroupExpired()
+void SavedGameSessionNameCompleter::groupExpired()
 {
     group_ = nullptr;
     model_->setStringList({});
 }
 
-void RecordingNameCompleter::setCompleteCategories()
+void SavedGameSessionNameCompleter::setCompleteCategories()
 {
     QStringList list = {
         "name:",
@@ -75,57 +75,57 @@ void RecordingNameCompleter::setCompleteCategories()
     model_->setStringList(std::move(list));
 }
 
-void RecordingNameCompleter::setCompleteTags()
+void SavedGameSessionNameCompleter::setCompleteTags()
 {
     model_->setStringList({"TheComet", "Stino"});
 }
 
-QStringList RecordingNameCompleter::splitPath(const QString &path) const
+QStringList SavedGameSessionNameCompleter::splitPath(const QString &path) const
 {
     return path.split("[:,]");
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroupView::RecordingGroupView(RecordingManager* recordingManager, QWidget* parent)
+SavedGameSessionGroupView::SavedGameSessionGroupView(SavedGameSessionManager* manager, QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::RecordingGroupView)
-    , recordingManager_(recordingManager)
-    , recordingListWidget_(new RecordingListWidget)
-    , recordingView_(new RecordingView)
+    , ui_(new Ui::SavedGameSessionGroupView)
+    , savedGameSessionManager_(manager)
+    , savedGameSessionListWidget_(new SavedGameSessionListWidget)
     /*, filterCompleter_(new RecordingNameCompleter)*/
+    , sessionView_(new SessionView)
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
     ui_->splitter->setStretchFactor(1, 1);
     ui_->splitter->setSizes({600});
-    ui_->layout_recordingList->addWidget(recordingListWidget_);
-    ui_->layout_data->addWidget(recordingView_);
+    ui_->layout_recordingList->addWidget(savedGameSessionListWidget_);
+    ui_->layout_data->addWidget(sessionView_);
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
-    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), recordingListWidget_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), savedGameSessionListWidget_, nullptr, nullptr, Qt::WidgetShortcut);
 
-    recordingManager_->dispatcher.addListener(this);
+    savedGameSessionManager_->dispatcher.addListener(this);
 
-    connect(recordingListWidget_, &QListWidget::currentItemChanged,
-            this, &RecordingGroupView::onCurrentItemChanged);
+    connect(savedGameSessionListWidget_, &QListWidget::currentItemChanged,
+            this, &SavedGameSessionGroupView::onCurrentItemChanged);
     connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
-            this, &RecordingGroupView::onFiltersTextChanged);
+            this, &SavedGameSessionGroupView::onFiltersTextChanged);
     connect(shortcut, &QShortcut::activated,
-            this, &RecordingGroupView::onDeleteKeyPressed);
+            this, &SavedGameSessionGroupView::onDeleteKeyPressed);
 }
 
 // ----------------------------------------------------------------------------
-RecordingGroupView::~RecordingGroupView()
+SavedGameSessionGroupView::~SavedGameSessionGroupView()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
-    recordingManager_->dispatcher.removeListener(this);
+    savedGameSessionManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::setRecordingGroup(RecordingGroup* group)
+void SavedGameSessionGroupView::setSavedGameSessionGroup(SavedGameSessionGroup* group)
 {
     clear();
 
@@ -133,45 +133,45 @@ void RecordingGroupView::setRecordingGroup(RecordingGroup* group)
     currentGroup_->dispatcher.addListener(this);
 
     for (const auto& fileName : group->absFilePathList())
-        recordingListWidget_->addRecordingFileName(fileName);
-    recordingListWidget_->sortItems(Qt::DescendingOrder);
+        savedGameSessionListWidget_->addSavedGameSessionFileName(fileName);
+    savedGameSessionListWidget_->sortItems(Qt::DescendingOrder);
 
     /*filterCompleter_->setRecordingGroupWeakRef(group);*/
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::clear()
+void SavedGameSessionGroupView::clear()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
 
-    recordingListWidget_->clear();
-    recordingView_->clear();
+    savedGameSessionListWidget_->clear();
+    sessionView_->clear();
     /*filterCompleter_->recordingGroupExpired();*/
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+void SavedGameSessionGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
 {
     if (currentGroup_ == nullptr)
         return;
 
     for (const auto& fileName : currentGroup_->absFilePathList())
-        if (recordingListWidget_->itemMatchesRecordingFileName(current, fileName))
+        if (savedGameSessionListWidget_->itemMatchesSavedGameSessionFileName(current, fileName))
         {
-            uh::SavedGameSession* recording = uh::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
-            if (recording)
-                recordingView_->setRecording(recording);
+            uh::SavedSession* session = uh::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
+            if (session)
+                sessionView_->setSession(session);
             else
-                recordingView_->clear();
+                sessionView_->clear();
 
             break;
         }
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onFiltersTextChanged(const QString& text)
+void SavedGameSessionGroupView::onFiltersTextChanged(const QString& text)
 {
     QStringList rules = text.split(",");
     for (const auto& rule : rules)
@@ -181,41 +181,41 @@ void RecordingGroupView::onFiltersTextChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onDeleteKeyPressed()
+void SavedGameSessionGroupView::onDeleteKeyPressed()
 {
     // Can't delete stuff in all group
-    if (currentGroup_ == nullptr || currentGroup_ == recordingManager_->allRecordingGroup())
+    if (currentGroup_ == nullptr || currentGroup_ == savedGameSessionManager_->allSavedGameSessionGroup())
         return;
 
-    for (const auto& absFilePath : recordingListWidget_->selectedRecordingFilePaths())
+    for (const auto& absFilePath : savedGameSessionListWidget_->selectedSavedGameSessionFilePaths())
         currentGroup_->removeFile(absFilePath);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingManagerGroupRemoved(RecordingGroup* group)
+void SavedGameSessionGroupView::onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group)
 {
     if (currentGroup_ == group)
         clear();
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingManagerGroupNameChanged(RecordingGroup* group, const QString& oldName, const QString& newName)
+void SavedGameSessionGroupView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupFileAdded(RecordingGroup* group, const QFileInfo& absPathToFile)
+void SavedGameSessionGroupView::onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    recordingListWidget_->addRecordingFileName(absPathToFile);
-    recordingListWidget_->sortItems(Qt::DescendingOrder);
+    savedGameSessionListWidget_->addSavedGameSessionFileName(absPathToFile);
+    savedGameSessionListWidget_->sortItems(Qt::DescendingOrder);
 }
 
 // ----------------------------------------------------------------------------
-void RecordingGroupView::onRecordingGroupFileRemoved(RecordingGroup* group, const QFileInfo& absPathToFile)
+void SavedGameSessionGroupView::onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    recordingListWidget_->removeRecordingFileName(absPathToFile);
+    savedGameSessionListWidget_->removeSavedGameSessionFileName(absPathToFile);
 }
 
 }

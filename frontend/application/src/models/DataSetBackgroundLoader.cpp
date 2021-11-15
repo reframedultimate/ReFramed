@@ -1,6 +1,6 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
-#include "application/models/RecordingGroup.hpp"
-#include "uh/SavedRecording.hpp"
+#include "application/models/SavedGameSessionGroup.hpp"
+#include "uh/SavedGameSession.hpp"
 #include <QRunnable>
 #include <QThreadPool>
 
@@ -25,7 +25,7 @@ public:
     }
 
 signals:
-    void recordingLoaded(uh::GameSession* recording);
+    void recordingLoaded(uh::SavedGameSession* recording);
 
 private:
     void run() override
@@ -38,15 +38,20 @@ private:
 
             auto item = in_->dequeue();
             mutex_->unlock();
-                uh::GameSession* recording = uh::SavedRecording::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
+                uh::Reference<uh::SavedSession> session = uh::SavedSession::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
             mutex_->lock();
 
-            if (recording)
+            if (session)
             {
-                out_->enqueue({recording, item.group, item.taskID});
+                // We currently don't support loading training mode sessions, only game sessions
+                if (uh::SavedGameSession* gameSession = dynamic_cast<uh::SavedGameSession*>(session.get()))
+                {
+                    out_->enqueue({gameSession, item.group, item.taskID});
+                    session.detach();
+                }
 #ifndef NDEBUG
-                for (int i = 0; i < recording->playerCount(); ++i)
-                    assert(recording->playerStateCount(i) > 0);
+                for (int i = 0; i < session->playerCount(); ++i)
+                    assert(session->playerStateCount(i) > 0);
 #endif
             }
             else
@@ -96,7 +101,7 @@ DataSetBackgroundLoader::~DataSetBackgroundLoader()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::loadGroup(RecordingGroup* group)
+void DataSetBackgroundLoader::loadGroup(SavedGameSessionGroup* group)
 {
     printf("%d: loadGroup()\n", taskIDCounter_);
     mutex_.lock();
@@ -125,7 +130,7 @@ void DataSetBackgroundLoader::loadGroup(RecordingGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::cancelGroup(RecordingGroup* group)
+void DataSetBackgroundLoader::cancelGroup(SavedGameSessionGroup* group)
 {
     printf("cancelGroup()\n");
     mutex_.lock();
@@ -165,7 +170,7 @@ void DataSetBackgroundLoader::cancelAll()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, RecordingGroup* group)
+void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, SavedGameSessionGroup* group)
 {
     uh::Reference<uh::DataSet> ds = dataSet;
 
@@ -198,7 +203,7 @@ void DataSetBackgroundLoader::run()
     struct PendingDataSet
     {
         uh::Reference<uh::DataSet> dataSet;
-        RecordingGroup* group;
+        SavedGameSessionGroup* group;
     };
 
     uh::SmallLinearMap<uint32_t, PendingDataSet, 4> pendingDataSets;
@@ -234,7 +239,7 @@ void DataSetBackgroundLoader::run()
                 if (it == pendingDataSets.end())
                     it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new uh::DataSet, item.group});
 
-                it->value().dataSet->addRecordingNoSort(item.recording);
+                it->value().dataSet->addSessionNoSort(item.session);
             }
 
             if (completeDataSets)

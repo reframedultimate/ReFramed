@@ -1,6 +1,6 @@
 #include "uhplot/ColorPalette.hpp"
 #include "application/views/DamageTimePlot.hpp"
-#include "uh/Recording.hpp"
+#include "uh/Session.hpp"
 #include "uh/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
@@ -93,29 +93,29 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setRecording(uh::GameSession* recording)
+void DamageTimePlot::setSession(uh::Session* recording)
 {
     clear();
-    recording_ = recording;
-    recording_->dispatcher.addListener(this);
+    session_ = recording;
+    session_->dispatcher.addListener(this);
 
-    for (int player = 0; player != recording_->playerCount(); ++player)
+    for (int player = 0; player != session_->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(uhplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(recording_->playerName(player).cStr());
+        curve->setTitle(session_->playerName(player).cStr());
         curve->attach(this);
         curves_.push(curve);
 
         prevFrames_.push(0);
         prevDamageValues_.push(0.0);
-        for (int i = 0; i < recording_->playerStateCount(player); ++i)
+        for (int i = 0; i < session_->playerStateCount(player); ++i)
         {
-            const auto& state = recording_->playerStateAt(player, i);
+            const auto& state = session_->playerStateAt(player, i);
 
-            if (i == 0 || i == recording_->playerStateCount(player) - 1)
+            if (i == 0 || i == session_->playerStateCount(player) - 1)
             {
                 prevDamageValues_[player] = state.damage();
                 appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
@@ -136,9 +136,9 @@ void DamageTimePlot::setRecording(uh::GameSession* recording)
 // ----------------------------------------------------------------------------
 void DamageTimePlot::clear()
 {
-    if (recording_)
-        recording_->dispatcher.removeListener(this);
-    recording_ = nullptr;
+    if (session_)
+        session_->dispatcher.removeListener(this);
+    session_ = nullptr;
 
     for (auto& curve : curves_)
         delete curve;
@@ -157,7 +157,7 @@ void DamageTimePlot::onRunningGameSessionPlayerNameChanged(int player, const uh:
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void DamageTimePlot::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
 

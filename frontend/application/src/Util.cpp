@@ -1,5 +1,5 @@
 #include "application/Util.hpp"
-#include "uh/Recording.hpp"
+#include "uh/RunningGameSession.hpp"
 #include "uh/PlayerState.hpp"
 #include <QLayout>
 #include <QLayoutItem>
@@ -47,25 +47,25 @@ void clearStackedWidget(QStackedWidget* sw)
 }
 
 // ----------------------------------------------------------------------------
-QString composeFileName(const uh::GameSession* recording)
+QString composeFileName(const uh::GameSession* session)
 {
-    QString date = QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString("yyyy-MM-dd");
+    QString date = QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs()).toString("yyyy-MM-dd");
     QStringList playerList;
-    for (int i = 0; i < recording->playerCount(); ++i)
+    for (int i = 0; i < session->playerCount(); ++i)
     {
-        const uh::String* fighterName = recording->mappingInfo().fighterID.map(
-                    recording->playerFighterID(i));
+        const uh::String* fighterName = session->mappingInfo().fighterID.map(
+                    session->playerFighterID(i));
         if (fighterName)
-            playerList.append((recording->playerName(i) + " (" + *fighterName + ")").cStr());
+            playerList.append((session->playerName(i) + " (" + *fighterName + ")").cStr());
         else
-            playerList.append(recording->playerName(i).cStr());
+            playerList.append(session->playerName(i).cStr());
     }
     QString players = playerList.join(" vs ");
-    QString formatDesc = recording->format().description().cStr();
-    QString setNumber = QString::number(recording->setNumber());
-    QString gameNumber = QString::number(recording->gameNumber());
+    QString formatDesc = session->format().description().cStr();
+    QString setNumber = QString::number(session->setNumber());
+    QString gameNumber = QString::number(session->gameNumber());
 
-    if (recording->setNumber() == 1)
+    if (session->setNumber() == 1)
         return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".uhr";
 
     return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".uhr";
