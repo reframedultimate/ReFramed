@@ -106,6 +106,6 @@ inline SmallString<N, S> operator+(SmallString<N, S> lhs, const char* rhs)
     return lhs;
 }
 
-using String = SmallString<0>;
+using String = SmallString<15>;
 
 }

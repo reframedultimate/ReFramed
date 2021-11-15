@@ -19,7 +19,7 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
         const SavedGameSession* s = p->session();
-        uint64_t length = s->gameLengthMs();
+        DeltaTimeMS length = s->lengthMs();
 
         bool lengthInRange = (length >= minLength_ && length <= maxLength_);
         bool formatType = (anySetFormat_ ? true : s->format().type() == format_.type());
@@ -40,7 +40,7 @@ DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
         const SavedGameSession* s = p->session();
-        uint64_t length = s->gameLengthMs();
+        TimeStampMS length = s->lengthMs();
 
         bool lengthInRange = (length >= minLength_ && length <= maxLength_);
         bool formatType = (anySetFormat_ ? true : s->format().type() == format_.type());

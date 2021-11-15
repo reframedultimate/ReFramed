@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uh/RunningGameSessionListener.hpp"
+#include "uh/SessionListener.hpp"
 #include "uh/Reference.hpp"
 #include <QWidget>
 #include <QVector>
@@ -9,26 +9,26 @@ class QTreeWidgetItem;
 class QTableWidget;
 
 namespace Ui {
-    class SavedGameSessionDataView;
+    class SessionDataView;
 }
 
 namespace uh {
-    class SavedGameSession;
+    class Session;
 }
 
 namespace uhapp {
 
 class SessionDataView : public QWidget
-                      , public uh::RunningGameSessionListener
+                      , public uh::SessionListener
 {
     Q_OBJECT
 
 public:
-    explicit SavedGameSessionDataView(QWidget* parent=nullptr);
-    ~SavedGameSessionDataView();
+    explicit SessionDataView(QWidget* parent=nullptr);
+    ~SessionDataView();
 
 public slots:
-    void setSavedGameSession(uh::SavedGameSession* recording);
+    void setSession(uh::Session* session);
     void clear();
 
 private slots:
@@ -47,16 +47,17 @@ private:
     void setPlayerDataTableRow(int player, int row, const uh::PlayerState& state);
 
 private:
+    void onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningSessionNewPlayerState(int player, const uh::PlayerState& state) override;
+
     void onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onRunningGameSessionSetNumberChanged(uh::SetNumber number) override;
     void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
-    void onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
-    void onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state) override;
-    void onRecordingWinnerChanged(int winner) override;
+    void onRunningGameSessionWinnerChanged(int winner) override;
 
 private:
-    Ui::SavedGameSessionDataView* ui_;
+    Ui::SessionDataView* ui_;
     QTreeWidgetItem* gameInfoItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;

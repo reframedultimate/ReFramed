@@ -29,7 +29,7 @@ public:
             bool attack_connected,
             bool facing_direction);
 
-    uint64_t timeStampMs() const { return timeStampMs_; }
+    TimeStampMS timeStampMs() const { return timeStampMs_; }
     Frame frame() const { return frame_; }
     float posx() const { return posx_; }
     float posy() const { return posy_; }
@@ -49,7 +49,7 @@ private:
     friend class DataPoint;
     PlayerState() { assert(false); }
 
-    uint64_t timeStampMs_;
+    TimeStampMS timeStampMs_;
     Frame frame_;
     float posx_;
     float posy_;

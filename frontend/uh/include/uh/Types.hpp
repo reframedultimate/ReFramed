@@ -13,5 +13,7 @@ typedef uint16_t FighterStatus;
 typedef uint64_t FighterMotion;
 typedef uint8_t  FighterStocks;
 typedef uint8_t  FighterHitStatus;
+typedef uint64_t TimeStampMS;
+typedef uint64_t DeltaTimeMS;
 
 }

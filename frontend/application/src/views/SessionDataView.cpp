@@ -1,7 +1,7 @@
-#include "application/ui_RecordingDataView.h"
+#include "application/ui_SessionDataView.h"
 #include "application/Util.hpp"
-#include "application/views/RecordingDataView.hpp"
-#include "uh/Recording.hpp"
+#include "application/views/SessionDataView.hpp"
+#include "uh/Session.hpp"
 #include "uh/PlayerState.hpp"
 #include <QDateTime>
 
@@ -52,9 +52,9 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-RecordingDataView::RecordingDataView(QWidget* parent)
+SessionDataView::SessionDataView(QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::RecordingDataView)
+    , ui_(new Ui::SessionDataView)
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
@@ -65,7 +65,7 @@ RecordingDataView::RecordingDataView(QWidget* parent)
 }
 
 // ----------------------------------------------------------------------------
-RecordingDataView::~RecordingDataView()
+SessionDataView::~SessionDataView()
 {
     if (recording_)
         recording_->dispatcher.removeListener(this);
@@ -73,7 +73,7 @@ RecordingDataView::~RecordingDataView()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::setRecording(uh::GameSession* recording)
+void SessionDataView::setRecording(uh::GameSession* recording)
 {
     clear();
     recording_ = recording;
@@ -101,7 +101,7 @@ void RecordingDataView::setRecording(uh::GameSession* recording)
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::clear()
+void SessionDataView::clear()
 {
     if (recording_)
         recording_->dispatcher.removeListener(this);
@@ -130,7 +130,7 @@ void RecordingDataView::clear()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+void SessionDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
     (void)previous;
 
@@ -164,7 +164,7 @@ void RecordingDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateTree()
+void SessionDataView::repopulateTree()
 {
     // Game info
     gameInfoItem_ = new QTreeWidgetItem({"Game Info"});
@@ -200,7 +200,7 @@ void RecordingDataView::repopulateTree()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateGameInfoTable()
+void SessionDataView::repopulateGameInfoTable()
 {
     // Fill in data
     ui_->tableWidget_gameInfo->setRowCount(6 + recording_->playerCount());
@@ -229,7 +229,7 @@ void RecordingDataView::repopulateGameInfoTable()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateStageMappingTable()
+void SessionDataView::repopulateStageMappingTable()
 {
     // Fill in data
     int i = 0;
@@ -246,7 +246,7 @@ void RecordingDataView::repopulateStageMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateFighterMappingTable()
+void SessionDataView::repopulateFighterMappingTable()
 {
     // Fill in data
     int i = 0;
@@ -263,7 +263,7 @@ void RecordingDataView::repopulateFighterMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateStatusMappingTable()
+void SessionDataView::repopulateStatusMappingTable()
 {
     // Fill in base status mapping info
     int i = 0;
@@ -301,7 +301,7 @@ void RecordingDataView::repopulateStatusMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulateHitStatusMappingTable()
+void SessionDataView::repopulateHitStatusMappingTable()
 {
     // Fill in data
     int i = 0;
@@ -318,7 +318,7 @@ void RecordingDataView::repopulateHitStatusMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::repopulatePlayerDataTables()
+void SessionDataView::repopulatePlayerDataTables()
 {
     // Fill in data
     for (int player = 0; player != recording_->playerCount(); ++player)
@@ -343,7 +343,7 @@ void RecordingDataView::repopulatePlayerDataTables()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::updatePlayerDataTableRowsIfDirty()
+void SessionDataView::updatePlayerDataTableRowsIfDirty()
 {
     if (playerDataTableRowsDirty_ == false)
         return;
@@ -379,7 +379,7 @@ void RecordingDataView::updatePlayerDataTableRowsIfDirty()
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::setPlayerDataTableRow(int player, int row, const uh::PlayerState& state)
+void SessionDataView::setPlayerDataTableRow(int player, int row, const uh::PlayerState& state)
 {
     const auto& statusMapping = recording_->mappingInfo().fighterStatus;
     const auto& hitStatusMapping = recording_->mappingInfo().hitStatus;
@@ -405,7 +405,7 @@ void RecordingDataView::setPlayerDataTableRow(int player, int row, const uh::Pla
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void SessionDataView::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
 {
     if (player >= playerDataItems_.count())
         return;
@@ -416,25 +416,25 @@ void RecordingDataView::onRunningGameSessionPlayerNameChanged(int player, const 
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionSetNumberChanged(uh::SetNumber number)
+void SessionDataView::onRunningGameSessionSetNumberChanged(uh::SetNumber number)
 {
     ui_->tableWidget_gameInfo->item(2, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionGameNumberChanged(uh::GameNumber number)
+void SessionDataView::onRunningGameSessionGameNumberChanged(uh::GameNumber number)
 {
     ui_->tableWidget_gameInfo->item(3, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionFormatChanged(const uh::SetFormat& format)
+void SessionDataView::onRunningGameSessionFormatChanged(const uh::SetFormat& format)
 {
     ui_->tableWidget_gameInfo->item(1, 1)->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void SessionDataView::onRunningGameSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
 {
     if (player >= playerDataTables_.count())
         return;
@@ -449,7 +449,7 @@ void RecordingDataView::onRunningGameSessionNewUniquePlayerState(int player, con
     // ever increasing amount of incoming data.
     const uint64_t time = QDateTime::currentMSecsSinceEpoch();
     const uint64_t leeway = playerDataTablesUpdateTime_ * 2;
-    if (ui_->stackedWidget->currentWidget() != ui_->page_playerData 
+    if (ui_->stackedWidget->currentWidget() != ui_->page_playerData
      || ui_->stackedWidget_playerData->currentIndex() != player
      || time - lastTimePlayerDataTablesUpdated_ < playerDataTablesUpdateTime_ + leeway)
     {
@@ -464,7 +464,7 @@ void RecordingDataView::onRunningGameSessionNewUniquePlayerState(int player, con
         playerDataTablesUpdateTime_ = timeAfterUpdate - time;
         lastTimePlayerDataTablesUpdated_ = timeAfterUpdate;
     }
-    
+
     QTableWidget* table = playerDataTables_[player];
     int row = table->rowCount();
     table->setRowCount(row + 1);
@@ -473,14 +473,14 @@ void RecordingDataView::onRunningGameSessionNewUniquePlayerState(int player, con
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state)
+void SessionDataView::onRunningGameSessionNewPlayerState(int player, const uh::PlayerState& state)
 {
     (void)player;
     (void)state;
 }
 
 // ----------------------------------------------------------------------------
-void RecordingDataView::onRecordingWinnerChanged(int winner)
+void SessionDataView::onRecordingWinnerChanged(int winner)
 {
     ui_->tableWidget_gameInfo->item(5, 1)->setText(recording_->playerName(winner).cStr());
 }

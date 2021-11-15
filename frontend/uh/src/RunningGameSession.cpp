@@ -1,6 +1,6 @@
 #include "uh/PlayerState.hpp"
 #include "uh/RunningGameSession.hpp"
-#include "uh/RunningGameSessionListener.hpp"
+#include "uh/SessionListener.hpp"
 #include "uh/StreamBuffer.hpp"
 #include "uh/time.h"
 #include "nlohmann/json.hpp"
@@ -16,16 +16,13 @@ namespace uh {
 // ----------------------------------------------------------------------------
 RunningGameSession::RunningGameSession(
         MappingInfo&& mapping,
+        uint16_t stageID,
         SmallVector<FighterID, 8>&& playerFighterIDs,
         SmallVector<SmallString<15>, 8>&& playerTags,
-        SmallVector<SmallString<15>, 8>&& playerNames,
-        StageID stageID)
-    : GameSession(
-          std::move(mapping),
-          std::move(playerFighterIDs),
-          std::move(playerTags),
-          std::move(playerNames),
-          stageID)
+        SmallVector<SmallString<15>, 8>&& playerNames)
+    : Session(std::move(mapping), stageID, std::move(playerFighterIDs), std::move(playerTags))
+    , RunningSession()
+    , GameSession(std::move(playerNames))
 {
 }
 
@@ -223,28 +220,28 @@ void RunningGameSession::setPlayerName(int index, const SmallString<15>& name)
 {
     assert(name.length() > 0);
     playerNames_[index] = name;
-    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionPlayerNameChanged, index, name);
+    dispatcher.dispatch(&SessionListener::onRunningGameSessionPlayerNameChanged, index, name);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSession::setGameNumber(GameNumber number)
 {
     gameNumber_ = number;
-    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionGameNumberChanged, number);
+    dispatcher.dispatch(&SessionListener::onRunningGameSessionGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSession::setSetNumber(SetNumber number)
 {
     setNumber_ = number;
-    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionSetNumberChanged, number);
+    dispatcher.dispatch(&SessionListener::onRunningGameSessionSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSession::setFormat(const SetFormat& format)
 {
     format_ = format;
-    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionFormatChanged, format);
+    dispatcher.dispatch(&SessionListener::onRunningGameSessionFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
@@ -268,10 +265,10 @@ void RunningGameSession::addPlayerState(int index, PlayerState&& state)
         }
 
         playerStates_[index].push(std::move(state));
-        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, playerStates_[index][0]);
-        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, playerStates_[index][0]);
-        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, playerStates_[index][1]);
-        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, playerStates_[index][1]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, playerStates_[index][0]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, playerStates_[index][1]);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, playerStates_[index][1]);
         return;
     }
 
@@ -279,19 +276,19 @@ void RunningGameSession::addPlayerState(int index, PlayerState&& state)
     if (playerStates_[index].back() != state)
     {
         playerStates_[index].push(state);
-        dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewUniquePlayerState, index, state);
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, index, state);
 
         // Winner might have changed
         int winner = findWinner();
         if (currentWinner_ != winner)
         {
             currentWinner_ = winner;
-            dispatcher.dispatch(&RunningGameSessionListener::onRecordingWinnerChanged, currentWinner_);
+            dispatcher.dispatch(&SessionListener::onRunningGameSessionWinnerChanged, currentWinner_);
         }
     }
 
     // The UI still cares about every frame
-    dispatcher.dispatch(&RunningGameSessionListener::onRunningGameSessionNewPlayerState, index, state);
+    dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, index, state);
 }
 
 }
