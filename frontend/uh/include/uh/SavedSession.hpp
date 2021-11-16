@@ -5,7 +5,7 @@
 
 namespace uh {
 
-class SavedSession : virtual public Session
+class UH_PUBLIC_API SavedSession : virtual public Session
 {
 protected:
     SavedSession();

@@ -13,7 +13,7 @@ struct UHPluginInfo;
 namespace uh {
     class Plugin;
     class AnalyzerPlugin;
-    class TrainingModePlugin;
+    class RealtimePlugin;
     class VisualizerPlugin;
 }
 
@@ -29,7 +29,7 @@ public:
     QVector<QString> availableNames(UHPluginType type) const;
     UHPluginInfo* getInfo(const QString& name) const;
 
-    uh::TrainingModePlugin* createTrainingMode(const QString& name);
+    uh::RealtimePlugin* createRealtime(const QString& name);
     uh::AnalyzerPlugin* createAnalyzer(const QString& name);
     uh::VisualizerPlugin* createVisualizer(const QString& name);
     void destroy(uh::Plugin* plugin);

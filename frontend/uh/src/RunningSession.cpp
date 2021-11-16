@@ -10,6 +10,16 @@ RunningSession::RunningSession()
 }
 
 // ----------------------------------------------------------------------------
+RunningSession::RunningSession(
+        MappingInfo&& mapping,
+        StageID stageID,
+        SmallVector<FighterID, 8>&& playerFighterIDs,
+        SmallVector<SmallString<15>, 8>&& playerTags)
+    : Session(std::move(mapping), stageID, std::move(playerFighterIDs), std::move(playerTags))
+{
+}
+
+// ----------------------------------------------------------------------------
 void RunningSession::addPlayerState(int playerIdx, PlayerState&& state)
 {
     // Only add a new state if the previous one was different

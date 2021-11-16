@@ -21,9 +21,6 @@ private:
     );
 
     friend class SavedSession;
-
-public:
-    TimeStampMS timeStampStartedMs() const override;
 };
 
 }

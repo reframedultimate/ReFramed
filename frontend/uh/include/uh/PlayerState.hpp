@@ -2,11 +2,15 @@
 
 #include "uh/config.hpp"
 #include "uh/Types.hpp"
+#include "uh/Vector.hpp"
 #include <cstdint>
 #include <vector>
 #include <cassert>
 
 namespace uh {
+
+class PlayerState;
+extern template class UH_TEMPLATE_API Vector<PlayerState, int32_t>;
 
 /*!
  * \brief Stores information about a single state of one player. This includes
@@ -47,6 +51,7 @@ private:
     // Fix MSVC complaining about Vector::resize() requiring a default constructor. It
     // never gets called
     friend class DataPoint;
+    friend class Vector<PlayerState>;
     PlayerState() { assert(false); }
 
     TimeStampMS timeStampMs_;

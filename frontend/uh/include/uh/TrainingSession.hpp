@@ -6,7 +6,7 @@
 
 namespace uh {
 
-class TrainingSession : virtual public Session
+class UH_PUBLIC_API TrainingSession : virtual public Session
 {
 protected:
     TrainingSession();

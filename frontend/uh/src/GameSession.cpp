@@ -1,4 +1,5 @@
 #include "uh/GameSession.hpp"
+#include "uh/PlayerState.hpp"
 
 namespace uh {
 
@@ -37,6 +38,12 @@ SetNumber GameSession::setNumber() const
 SetFormat GameSession::format() const
 {
     return format_;
+}
+
+// ----------------------------------------------------------------------------
+TimeStampMS GameSession::timeStampStartedMs() const
+{
+    return playerStates_[0][0].timeStampMs();
 }
 
 }

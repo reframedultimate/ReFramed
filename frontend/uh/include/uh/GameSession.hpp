@@ -51,6 +51,8 @@ public:
      */
     SetFormat format() const;
 
+    TimeStampMS timeStampStartedMs() const override;
+
 protected:
     SmallVector<SmallString<15>, 8> playerNames_;
     GameNumber gameNumber_;

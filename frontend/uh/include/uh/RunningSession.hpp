@@ -5,10 +5,16 @@
 
 namespace uh {
 
-class RunningSession : virtual public Session
+class UH_PUBLIC_API RunningSession : virtual public Session
 {
 protected:
     RunningSession();
+    RunningSession(
+            MappingInfo&& mapping,
+            StageID stageID,
+            SmallVector<FighterID, 8>&& playerFighterIDs,
+            SmallVector<SmallString<15>, 8>&& playerTags
+    );
 
 public:
     virtual void addPlayerState(int PlayerIdx, PlayerState&& state);

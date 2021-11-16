@@ -6,7 +6,7 @@
 
 namespace uh {
 
-class RunningTrainingSession : public RunningSession, public TrainingSession
+class UH_PUBLIC_API RunningTrainingSession : public RunningSession, public TrainingSession
 {
 public:
     RunningTrainingSession(

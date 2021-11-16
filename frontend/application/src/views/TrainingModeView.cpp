@@ -2,7 +2,7 @@
 #include "application/models/PluginManager.hpp"
 #include "application/ui_TrainingModeView.h"
 #include "uh/PluginInterface.hpp"
-#include "uh/TrainingModePlugin.hpp"
+#include "uh/RealtimePlugin.hpp"
 
 namespace uhapp {
 
@@ -17,7 +17,7 @@ TrainingModeView::TrainingModeView(TrainingMode* training, PluginManager* plugin
 
     ui_->pushButton_launch->setEnabled(false);
 
-    for (const auto& name : pluginManager_->availableNames(UHPluginType::TRAINING_MODE))
+    for (const auto& name : pluginManager_->availableNames(UHPluginType::REALTIME))
         ui_->listWidget_plugins->addItem(name);
 
     connect(ui_->listWidget_plugins, &QListWidget::currentTextChanged, this, &TrainingModeView::currentTextChanged);
@@ -51,12 +51,12 @@ void TrainingModeView::currentTextChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void TrainingModeView::launchPressed()
 {
-    uh::TrainingModePlugin* plugin;
+    uh::RealtimePlugin* plugin;
     QListWidgetItem* item = ui_->listWidget_plugins->currentItem();
     if (item == nullptr)
         goto fail;
 
-    plugin = pluginManager_->createTrainingMode(item->text());
+    plugin = pluginManager_->createRealtime(item->text());
     if (plugin == nullptr)
         goto fail;
 
