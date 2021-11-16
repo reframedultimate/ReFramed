@@ -1,7 +1,7 @@
 #include "application/models/PluginManager.hpp"
 #include "uh/PluginInterface.hpp"
 #include "uh/AnalyzerPlugin.hpp"
-#include "uh/TrainingModePlugin.hpp"
+#include "uh/RealtimePlugin.hpp"
 #include "uh/VisualizerPlugin.hpp"
 #include "uh/dynlib.h"
 #include <cassert>
@@ -101,17 +101,17 @@ UHPluginInfo* PluginManager::getInfo(const QString &name) const
 }
 
 // ----------------------------------------------------------------------------
-uh::TrainingModePlugin* PluginManager::createTrainingMode(const QString& name)
+uh::RealtimePlugin* PluginManager::createRealtime(const QString& name)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
     UHPluginFactory* factory = it.value();
-    if (factory->type != UHPluginType::TRAINING_MODE)
+    if (factory->type != UHPluginType::REALTIME)
         return nullptr;
 
-    uh::TrainingModePlugin* plugin = static_cast<uh::TrainingModePlugin*>(factory->create());
+    uh::RealtimePlugin* plugin = static_cast<uh::RealtimePlugin*>(factory->create());
     if (plugin == nullptr)
         return nullptr;
 

@@ -1149,4 +1149,5 @@ TimeStampMS SavedSession::timeStampEndedMs() const
 {
     return lastPlayerState(playerCount() - 1).timeStampMs();
 }
+
 }

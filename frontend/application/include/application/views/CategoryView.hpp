@@ -15,7 +15,7 @@ class CategoryView : public QTreeWidget
 {
     Q_OBJECT
 public:
-    explicit CategoryView(SavedGameSessionManager* recordingManager, QWidget* parent=nullptr);
+    explicit CategoryView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
     ~CategoryView();
 
     void setRunningGameSessionViewDisabled(bool enable);

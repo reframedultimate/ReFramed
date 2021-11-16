@@ -245,12 +245,6 @@ void RunningGameSession::setFormat(const SetFormat& format)
 }
 
 // ----------------------------------------------------------------------------
-TimeStampMS RunningGameSession::timeStampStartedMs() const
-{
-    return playerStates_[0][0].timeStampMs();
-}
-
-// ----------------------------------------------------------------------------
 void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
 {
     // If this is the first state we receive just store it. Need at least 1

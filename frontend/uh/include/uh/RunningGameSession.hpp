@@ -24,9 +24,9 @@ public:
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
 
-    TimeStampMS timeStampStartedMs() const override;
     void addPlayerState(int playerIdx, PlayerState&& state) override;
-    int winner() const override;
+    int winner() const override
+        { return currentWinner_; }
 
 private:
     int currentWinner_ = 0;
