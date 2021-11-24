@@ -2,7 +2,7 @@
 #include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
-#include "application/models/TrainingMode.hpp"
+#include "application/models/TrainingModeModel.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/RunningGameSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
@@ -32,9 +32,9 @@ MainWindow::MainWindow(QWidget* parent)
     , config_(new Config)
     , savedGameSessionManager_(new SavedGameSessionManager(config_.get()))
     , runningGameSessionManager_(new RunningGameSessionManager(savedGameSessionManager_.get()))
-    , trainingMode_(new TrainingMode)
     , pluginManager_(new PluginManager)
-    , categoryView_(new CategoryView(savedGameSessionManager_.get()))
+    , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
+    , categoryView_(new CategoryView(savedGameSessionManager_.get(), trainingModeModel_.get()))
     , savedGameSessionGroupView_(new SavedGameSessionGroupView(savedGameSessionManager_.get()))
     , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get()))
     , mainView_(new QStackedWidget)
@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(runningGameSessionView_);
-    mainView_->addWidget(new TrainingModeView(trainingMode_.get(), pluginManager_.get()));
+    mainView_->addWidget(new TrainingModeView(trainingModeModel_.get()));
     setCentralWidget(mainView_);
     mainView_->setCurrentIndex(2);
 
@@ -91,9 +91,6 @@ MainWindow::~MainWindow()
     // RunningGameSessionManager which gets deleted in this destructor.
     delete takeCentralWidget();
     delete categoryView_;
-
-    // Removes all widgets created by plugins and unloads the shared libraries
-    pluginManager_->unloadAllPlugins();
 
     delete ui_;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/TrainingModeListener.hpp"
 #include "application/models/CategoryType.hpp"
 #include "application/Util.hpp"
 #include <QHash>
@@ -9,13 +10,15 @@
 namespace uhapp {
 
 class SavedGameSessionManager;
+class TrainingModeModel;
 
 class CategoryView : public QTreeWidget
                    , public SavedGameSessionManagerListener
+                   , public TrainingModeListener
 {
     Q_OBJECT
 public:
-    explicit CategoryView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
+    explicit CategoryView(SavedGameSessionManager* manager, TrainingModeModel* trainingMode, QWidget* parent=nullptr);
     ~CategoryView();
 
     void setRunningGameSessionViewDisabled(bool enable);
@@ -67,7 +70,12 @@ private:
     void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override;
 
 private:
+    void onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin) override;
+
+private:
     SavedGameSessionManager* savedGameSessionManager_;
+    TrainingModeModel* trainingMode_;
     QTreeWidgetItem* dataSetsItem_;
     QTreeWidgetItem* analysisCategoryItem_;
     QTreeWidgetItem* savedGameSessionGroupsItem_;

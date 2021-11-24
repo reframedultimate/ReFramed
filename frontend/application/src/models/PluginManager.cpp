@@ -10,6 +10,28 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
+PluginManager::~PluginManager()
+{
+    for (auto it = activePlugins_.begin(); it != activePlugins_.end(); ++it)
+    {
+        uh::Plugin* plugin = it.key();
+        UHPluginFactory* factory = it.value();
+        factory->destroy(plugin);
+    }
+
+    for (const auto& dl : libraries_)
+    {
+        UHPluginInterface* i = static_cast<UHPluginInterface*>(uh_dynlib_lookup_symbol_address(dl, "plugin_interface"));
+        assert(i != nullptr);
+        i->stop();
+        uh_dynlib_close(dl);
+    }
+
+    activePlugins_.clear();
+    libraries_.clear();
+}
+
+// ----------------------------------------------------------------------------
 bool PluginManager::loadPlugin(const QString& fileName)
 {
     UHPluginInterface* i;
@@ -50,34 +72,6 @@ bool PluginManager::loadPlugin(const QString& fileName)
 }
 
 // ----------------------------------------------------------------------------
-bool PluginManager::unloadPlugin(const QString& fileName)
-{
-    return false;
-}
-
-// ----------------------------------------------------------------------------
-void PluginManager::unloadAllPlugins()
-{
-    for (auto it = activePlugins_.begin(); it != activePlugins_.end(); ++it)
-    {
-        uh::Plugin* plugin = it.key();
-        UHPluginFactory* factory = it.value();
-        factory->destroy(plugin);
-    }
-
-    for (const auto& dl : libraries_)
-    {
-        UHPluginInterface* i = static_cast<UHPluginInterface*>(uh_dynlib_lookup_symbol_address(dl, "plugin_interface"));
-        assert(i != nullptr);
-        i->stop();
-        uh_dynlib_close(dl);
-    }
-
-    activePlugins_.clear();
-    libraries_.clear();
-}
-
-// ----------------------------------------------------------------------------
 QVector<QString> PluginManager::availableNames(UHPluginType type) const
 {
     QVector<QString> list;
@@ -90,7 +84,7 @@ QVector<QString> PluginManager::availableNames(UHPluginType type) const
 }
 
 // ----------------------------------------------------------------------------
-UHPluginInfo* PluginManager::getInfo(const QString &name) const
+const UHPluginInfo* PluginManager::getInfo(const QString &name) const
 {
     auto it = factories_.find(name);
     if (it == factories_.end())

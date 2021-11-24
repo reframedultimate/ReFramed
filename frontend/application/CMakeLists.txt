@@ -67,7 +67,7 @@ add_executable (ultimate-hindsight WIN32
     "src/models/RunningGameSessionManager.cpp"
     "src/models/SavedGameSessionGroup.cpp"
     "src/models/SavedGameSessionManager.cpp"
-    "src/models/TrainingMode.cpp"
+    "src/models/TrainingModeModel.cpp"
     "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"

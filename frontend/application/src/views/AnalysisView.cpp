@@ -42,11 +42,11 @@ AnalysisView::~AnalysisView()
 {
     for (const auto& it : loadedPlugins_)
     {
-        it.widget->setParent(nullptr);
-        it.plugin->giveWidget(it.widget);
-
         int tabIndex = tabWidget_->indexOf(it.widget);
         tabWidget_->removeTab(tabIndex);
+
+        it.widget->setParent(nullptr);
+        it.plugin->destroyView(it.widget);
 
         pluginManager_->destroy(it.plugin);
     }
@@ -67,7 +67,7 @@ void AnalysisView::onTabBarClicked(int index)
     int insertIdx = tabWidget_->count() - 1;
 
     uh::AnalyzerPlugin* plugin = pluginManager_->createAnalyzer(action->text().toStdString().c_str());
-    QWidget* pluginWidget = plugin->takeWidget();
+    QWidget* pluginWidget = plugin->createView();
     tabWidget_->insertTab(
         insertIdx,
         pluginWidget,
@@ -99,7 +99,7 @@ void AnalysisView::closeTab(QWidget* widget)
         if (it->widget == widget)
         {
             it->widget->setParent(nullptr);
-            it->plugin->giveWidget(it->widget);
+            it->plugin->destroyView(it->widget);
 
             int tabIndex = tabWidget_->indexOf(it->widget);
             tabWidget_->removeTab(tabIndex);

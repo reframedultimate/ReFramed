@@ -1,6 +1,8 @@
 #pragma once
 
+#include "application/listeners/TrainingModeListener.hpp"
 #include <QWidget>
+#include <QHash>
 
 namespace Ui {
     class TrainingModeView;
@@ -8,14 +10,15 @@ namespace Ui {
 
 namespace uhapp {
 
-class PluginManager;
-class TrainingMode;
+class TrainingModeModel;
 
-class TrainingModeView : public QWidget
+class TrainingModeView : public QWidget,
+                         public TrainingModeListener
 {
     Q_OBJECT
+
 public:
-    TrainingModeView(TrainingMode* training, PluginManager* pluginManager, QWidget* parent=nullptr);
+    TrainingModeView(TrainingModeModel* model, QWidget* parent=nullptr);
     ~TrainingModeView();
 
 private slots:
@@ -23,9 +26,13 @@ private slots:
     void launchPressed();
 
 private:
+    void onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin) override;
+
+private:
     Ui::TrainingModeView* ui_;
-    TrainingMode* training_;
-    PluginManager* pluginManager_;
+    TrainingModeModel* model_;
+    QHash<uh::RealtimePlugin*, QWidget*> pluginViews_;
 };
 
 }

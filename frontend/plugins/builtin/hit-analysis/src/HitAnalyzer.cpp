@@ -43,13 +43,13 @@ void HitAnalyzer::processDataSet(const uh::DataSet* dataSet)
 }
 
 // ----------------------------------------------------------------------------
-QWidget* HitAnalyzer::takeWidget()
+QWidget* HitAnalyzer::createView()
 {
     return this;
 }
 
 // ----------------------------------------------------------------------------
-void HitAnalyzer::giveWidget(QWidget* widget)
+void HitAnalyzer::destroyView(QWidget* widget)
 {
 
 }

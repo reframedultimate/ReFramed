@@ -10,8 +10,8 @@ class UH_PUBLIC_API Plugin
 {
 public:
     virtual ~Plugin() {}
-    virtual QWidget* takeWidget() = 0;
-    virtual void giveWidget(QWidget* widget) = 0;
+    virtual QWidget* createView() = 0;
+    virtual void destroyView(QWidget* widget) = 0;
 };
 
 }

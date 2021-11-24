@@ -1,6 +1,7 @@
 #include "application/views/CategoryView.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/SavedGameSessionGroup.hpp"
+#include "application/models/TrainingModeModel.hpp"
 
 #include <QMenu>
 #include <QDragMoveEvent>
@@ -14,9 +15,10 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-CategoryView::CategoryView(SavedGameSessionManager* manager, QWidget* parent)
+CategoryView::CategoryView(SavedGameSessionManager* manager, TrainingModeModel* trainingMode, QWidget* parent)
     : QTreeWidget(parent)
     , savedGameSessionManager_(manager)
+    , trainingMode_(trainingMode)
     , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
     , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
     , savedGameSessionGroupsItem_(new QTreeWidgetItem({"Recording Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_GROUPS)))
@@ -58,6 +60,7 @@ CategoryView::CategoryView(SavedGameSessionManager* manager, QWidget* parent)
     videoSourcesItem_->setExpanded(true);
 
     savedGameSessionManager_->dispatcher.addListener(this);
+    trainingMode_->dispatcher.addListener(this);
 
     connect(this, &QTreeWidget::customContextMenuRequested,
             this, &CategoryView::onCustomContextMenuRequested);
@@ -70,6 +73,7 @@ CategoryView::CategoryView(SavedGameSessionManager* manager, QWidget* parent)
 // ----------------------------------------------------------------------------
 CategoryView::~CategoryView()
 {
+    trainingMode_->dispatcher.removeListener(this);
     savedGameSessionManager_->dispatcher.removeListener(this);
 }
 
@@ -513,6 +517,28 @@ void CategoryView::onSavedGameSessionManagerVideoSourceRemoved(const QString& na
         if (item->text(0) == name)
         {
             videoSourcesItem_->removeChild(item);
+            // TODO remove tooltip
+            break;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin)
+{
+    // TODO tooltip containing plugin description
+    trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::TRAINING_MODE_ITEM)));
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin)
+{
+    for (int i = 0; i != trainingModeItem_->childCount(); ++i)
+    {
+        QTreeWidgetItem* item = trainingModeItem_->child(i);
+        if (item->text(0) == name)
+        {
+            trainingModeItem_->removeChild(item);
             // TODO remove tooltip
             break;
         }
