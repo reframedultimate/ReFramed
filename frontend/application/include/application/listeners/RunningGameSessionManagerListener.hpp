@@ -19,8 +19,8 @@ public:
     virtual void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) = 0;
     virtual void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) = 0;
 
-    // We re-propagate all RecordingListener events because RunningGameSessionManager
-    // allows you to change these properties even when there is no active recording
+    // We re-propagate all SessionListener events because RunningGameSessionManager
+    // allows you to change these properties even when there is no running session
     virtual void onRunningGameSessionManagerP1NameChanged(const QString& name) = 0;
     virtual void onRunningGameSessionManagerP2NameChanged(const QString& name) = 0;
     virtual void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) = 0;

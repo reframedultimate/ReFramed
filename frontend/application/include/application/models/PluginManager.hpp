@@ -22,12 +22,12 @@ namespace uhapp {
 class PluginManager
 {
 public:
+    ~PluginManager();
+
     bool loadPlugin(const QString& fileName);
-    bool unloadPlugin(const QString& fileName);
-    void unloadAllPlugins();
 
     QVector<QString> availableNames(UHPluginType type) const;
-    UHPluginInfo* getInfo(const QString& name) const;
+    const UHPluginInfo* getInfo(const QString& name) const;
 
     uh::RealtimePlugin* createRealtime(const QString& name);
     uh::AnalyzerPlugin* createAnalyzer(const QString& name);

@@ -24,8 +24,8 @@ public:
 
     bool openFile(const QString& fileName);
 
-    QWidget* takeWidget() override { return this; }
-    void giveWidget(QWidget* widget) override {}
+    QWidget* createView() override { return this; }
+    void destroyView(QWidget* widget) override {}
 
 private:
     void info(const QString& msg);

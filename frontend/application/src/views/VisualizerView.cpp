@@ -17,7 +17,7 @@ public:
         plugin_ = manager_->createVisualizer(name);
         if (plugin_)
         {
-            widget_ = plugin_->takeWidget();
+            widget_ = plugin_->createView();
             layout()->addWidget(widget_);
         }
     }
@@ -27,7 +27,7 @@ public:
         if (plugin_)
         {
             widget_->setParent(nullptr);
-            plugin_->giveWidget(widget_);
+            plugin_->destroyView(widget_);
             manager_->destroy(plugin_);
         }
     }

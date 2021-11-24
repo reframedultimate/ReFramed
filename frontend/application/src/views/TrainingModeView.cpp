@@ -1,24 +1,25 @@
-#include "application/views/TrainingModeView.hpp"
-#include "application/models/PluginManager.hpp"
 #include "application/ui_TrainingModeView.h"
+#include "application/views/TrainingModeView.hpp"
+#include "application/models/TrainingModeModel.hpp"
 #include "uh/PluginInterface.hpp"
 #include "uh/RealtimePlugin.hpp"
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-TrainingModeView::TrainingModeView(TrainingMode* training, PluginManager* pluginManager, QWidget* parent)
+TrainingModeView::TrainingModeView(TrainingModeModel* model, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::TrainingModeView)
-    , training_(training)
-    , pluginManager_(pluginManager)
+    , model_(model)
 {
     ui_->setupUi(this);
 
     ui_->pushButton_launch->setEnabled(false);
 
-    for (const auto& name : pluginManager_->availableNames(UHPluginType::REALTIME))
+    for (const auto& name : model_->availablePluginNames())
         ui_->listWidget_plugins->addItem(name);
+
+    model_->dispatcher.addListener(this);
 
     connect(ui_->listWidget_plugins, &QListWidget::currentTextChanged, this, &TrainingModeView::currentTextChanged);
     connect(ui_->pushButton_launch, &QPushButton::released, this, &TrainingModeView::launchPressed);
@@ -27,13 +28,25 @@ TrainingModeView::TrainingModeView(TrainingMode* training, PluginManager* plugin
 // ----------------------------------------------------------------------------
 TrainingModeView::~TrainingModeView()
 {
+    // If there are still views created by plugins, have to destroy those now
+    for (auto it = pluginViews_.begin(); it != pluginViews_.end(); ++it)
+    {
+        uh::RealtimePlugin* plugin = it.key();
+        QWidget* widget = it.value();
+
+        ui_->stackedWidget_runningPlugins->removeWidget(widget);
+        widget->setParent(nullptr);
+        plugin->destroyView(widget);
+    }
+
+    model_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
 void TrainingModeView::currentTextChanged(const QString& text)
 {
-    UHPluginInfo* info = pluginManager_->getInfo(text);
+    const UHPluginInfo* info = model_->getPluginInfo(text);
     if (info == nullptr)
     {
         ui_->pushButton_launch->setEnabled(false);
@@ -51,20 +64,42 @@ void TrainingModeView::currentTextChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void TrainingModeView::launchPressed()
 {
-    uh::RealtimePlugin* plugin;
     QListWidgetItem* item = ui_->listWidget_plugins->currentItem();
     if (item == nullptr)
         goto fail;
-
-    plugin = pluginManager_->createRealtime(item->text());
-    if (plugin == nullptr)
+    if (model_->launchPlugin(item->text()) == false)
         goto fail;
-
-    pluginManager_->destroy(plugin);
 
     return;
 
     fail : ui_->pushButton_launch->setEnabled(false);
+}
+
+// ----------------------------------------------------------------------------
+void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin)
+{
+    QWidget* widget = plugin->createView();
+    if (widget == nullptr)
+        return;
+
+    pluginViews_.insert(plugin, widget);
+    ui_->stackedWidget_runningPlugins->addWidget(widget);
+
+    ui_->stackedWidget_top->setCurrentWidget(ui_->page_runningPlugins);
+    ui_->stackedWidget_runningPlugins->setCurrentWidget(widget);
+}
+
+// ----------------------------------------------------------------------------
+void TrainingModeView::onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin)
+{
+    auto it = pluginViews_.find(plugin);
+    if (it == pluginViews_.end())
+        return;
+
+    QWidget* widget = it.value();
+    ui_->stackedWidget_runningPlugins->removeWidget(widget);
+    widget->setParent(nullptr);
+    plugin->destroyView(widget);
 }
 
 }

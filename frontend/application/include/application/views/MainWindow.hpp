@@ -24,7 +24,7 @@ class RunningGameSessionManager;
 class RunningGameSessionView;
 class SavedGameSessionGroupView;
 class SavedGameSessionManager;
-class TrainingMode;
+class TrainingModeModel;
 
 class MainWindow : public QMainWindow
                  , public RunningGameSessionManagerListener
@@ -67,8 +67,8 @@ private:
     std::unique_ptr<Config> config_;
     std::unique_ptr<SavedGameSessionManager> savedGameSessionManager_;
     std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;
-    std::unique_ptr<TrainingMode> trainingMode_;
     std::unique_ptr<PluginManager> pluginManager_;
+    std::unique_ptr<TrainingModeModel> trainingModeModel_;
     CategoryView* categoryView_;
     SavedGameSessionGroupView* savedGameSessionGroupView_;
     RunningGameSessionView* runningGameSessionView_;
