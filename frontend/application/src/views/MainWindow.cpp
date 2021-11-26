@@ -32,12 +32,12 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , config_(new Config)
     , pluginManager_(new PluginManager)
-    , savedGameSessionManager_(new ReplayManager(config_.get()))
-    , runningGameSessionManager_(new RunningGameSessionManager(savedGameSessionManager_.get()))
+    , replayManager_(new ReplayManager(config_.get()))
+    , runningGameSessionManager_(new RunningGameSessionManager(replayManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
-    , categoryView_(new CategoryView(categoryModel_.get(), savedGameSessionManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
-    , savedGameSessionGroupView_(new SavedGameSessionGroupView(savedGameSessionManager_.get()))
+    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
+    , replayGroupView_(new ReplayGroupView(replayManager_.get()))
     , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
@@ -48,8 +48,8 @@ MainWindow::MainWindow(QWidget* parent)
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so", QDir::Files))
         pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 
-    mainView_->addWidget(savedGameSessionGroupView_);
-    mainView_->addWidget(new DataSetFilterView(savedGameSessionManager_.get()));
+    mainView_->addWidget(replayGroupView_);
+    mainView_->addWidget(new DataSetFilterView(replayManager_.get()));
     mainView_->addWidget(new VisualizerView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
@@ -171,7 +171,7 @@ void MainWindow::onCategorySelected(CategoryType category)
     switch (category)
     {
         case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
-            savedGameSessionGroupView_->clear();  // Kinda ugly, should make this a listener of CategoryModel
+            replayGroupView_->clear();  // Kinda ugly, should make this a listener of CategoryModel
             mainView_->setCurrentIndex(0);
             break;
 
@@ -215,7 +215,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         );
     };
 
-    QFileInfo pathInfo(savedGameSessionManager_->defaultRecordingSourceDirectory().path());
+    QFileInfo pathInfo(replayManager_->defaultRecordingSourceDirectory().path());
     if (!pathInfo.exists())
     {
         int option = QMessageBox::warning(
@@ -231,7 +231,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             pathInfo = askForDir(pathInfo.filePath());
             if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             else
                 close();
         }
@@ -239,7 +239,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             if (QDir().mkdir(pathInfo.filePath()))
             {
-                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             }
             else
             {
@@ -258,7 +258,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
                     if (!pathInfo.exists() || !pathInfo.isDir() || !pathInfo.isWritable())
                         close();
                     else
-                        savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                        replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
                 }
                 else
                 {
@@ -282,7 +282,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
         {
             pathInfo = askForDir(pathInfo.filePath());
             if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                savedGameSessionManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
             else
                 close();
         }

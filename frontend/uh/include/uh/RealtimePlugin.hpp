@@ -7,7 +7,7 @@ namespace uh {
 class RunningGameSession;
 class RunningTrainingSession;
 
-class RealtimePlugin : public Plugin
+class UH_PUBLIC_API RealtimePlugin : public Plugin
 {
 public:
     virtual void onGameSessionStarted(RunningGameSession* session) = 0;
