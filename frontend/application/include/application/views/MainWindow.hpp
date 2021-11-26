@@ -22,7 +22,7 @@ class Config;
 class PluginManager;
 class RunningGameSessionManager;
 class RunningGameSessionView;
-class SavedGameSessionGroupView;
+class ReplayGroupView;
 class ReplayManager;
 class TrainingModeModel;
 
@@ -72,12 +72,12 @@ private:
 private:
     std::unique_ptr<Config> config_;
     std::unique_ptr<PluginManager> pluginManager_;
-    std::unique_ptr<ReplayManager> savedGameSessionManager_;
+    std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;
     std::unique_ptr<TrainingModeModel> trainingModeModel_;
     std::unique_ptr<CategoryModel> categoryModel_;
     CategoryView* categoryView_;
-    SavedGameSessionGroupView* savedGameSessionGroupView_;
+    ReplayGroupView* replayGroupView_;
     RunningGameSessionView* runningGameSessionView_;
     QStackedWidget* mainView_;
     Ui::MainWindow* ui_;

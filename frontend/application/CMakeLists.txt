@@ -91,7 +91,7 @@ add_executable (ultimate-hindsight WIN32
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight
-    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_compile_options (ultimate-hindsight
     PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -pedantic>
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-W -Wall -Wextra -pedantic>)

@@ -1,4 +1,4 @@
-#include "ui_HitAnalyzer.h"
+#include "hit-analysis/ui_HitAnalyzer.h"
 #include "hit-analysis/HitAnalyzer.hpp"
 #include "uh/DataSet.hpp"
 #include "uh/DataPoint.hpp"
