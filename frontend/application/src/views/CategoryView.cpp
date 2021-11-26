@@ -330,12 +330,72 @@ void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 // ----------------------------------------------------------------------------
 void CategoryView::onCategorySelected(CategoryType category)
 {
+#define SELECT_ITEM(itemname) { \
+        QSignalBlocker block(this); \
+        clearSelection(); \
+        itemname->setSelected(true); \
+        setCurrentItem(itemname); \
+    }
+
+    switch (category)
+    {
+        case CategoryType::TOP_LEVEL_ANALYSIS       : SELECT_ITEM(analysisCategoryItem_) break;
+        case CategoryType::TOP_LEVEL_DATA_SETS      : SELECT_ITEM(dataSetsItem_)         break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_ITEM(replayGroupsItem_)     break;
+        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_ITEM(replaySourcesItem_)    break;
+        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_ITEM(videoSourcesItem_)     break;
+        case CategoryType::TOP_LEVEL_SESSION        : SELECT_ITEM(sessionItem_)          break;
+        case CategoryType::TOP_LEVEL_TRAINING_MODE  : SELECT_ITEM(trainingModeItem_)     break;
+
+        case CategoryType::ITEM_ANALYSIS:
+        case CategoryType::ITEM_DATA_SET:
+        case CategoryType::ITEM_REPLAY_GROUP:
+        case CategoryType::ITEM_REPLAY_SOURCE:
+        case CategoryType::ITEM_VIDEO_SOURCE:
+        case CategoryType::ITEM_TRAINING_MODE:
+            break;
+    }
+
+#undef SELECT_ITEM
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onCategoryItemSelected(CategoryType category, const QString& name)
 {
+#define SELECT_CHILD_OF(itemname) \
+    for (int i = 0; i != itemname->childCount(); ++i) \
+    { \
+        QTreeWidgetItem* child = itemname->child(i); \
+        if (itemname->child(i)->text(0) == name) \
+        { \
+            QSignalBlocker block(this); \
+            clearSelection(); \
+            child->setSelected(true); \
+            setCurrentItem(child); \
+            break; \
+        } \
+    }
 
+    switch (category)
+    {
+        case CategoryType::TOP_LEVEL_ANALYSIS       : SELECT_CHILD_OF(analysisCategoryItem_) break;
+        case CategoryType::TOP_LEVEL_DATA_SETS      : SELECT_CHILD_OF(dataSetsItem_);        break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_CHILD_OF(replayGroupsItem_);    break;
+        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_CHILD_OF(replaySourcesItem_);   break;
+        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_CHILD_OF(videoSourcesItem_)     break;
+        case CategoryType::TOP_LEVEL_SESSION        : SELECT_CHILD_OF(sessionItem_)          break;
+        case CategoryType::TOP_LEVEL_TRAINING_MODE  : SELECT_CHILD_OF(trainingModeItem_)     break;
+
+        case CategoryType::ITEM_ANALYSIS:
+        case CategoryType::ITEM_DATA_SET:
+        case CategoryType::ITEM_REPLAY_GROUP:
+        case CategoryType::ITEM_REPLAY_SOURCE:
+        case CategoryType::ITEM_VIDEO_SOURCE:
+        case CategoryType::ITEM_TRAINING_MODE:
+            break;
+    }
+
+#undef SELECT_CHILD_OF
 }
 
 // ----------------------------------------------------------------------------
