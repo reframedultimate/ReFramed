@@ -17,3 +17,7 @@
 #   define PLUGIN_API ${PLUGIN_API_IMPORT}
 #endif
 
+#define DEFINE_PLUGIN(factories, start, stop) \
+    extern "C" { \
+        PLUGIN_API UHPluginInterface plugin_interface = {PLUGIN_VERSION, factories, start, stop}; \
+    }

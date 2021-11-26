@@ -52,7 +52,7 @@ qt5_add_resources (UH_RESOURCES_GEN
 qt5_add_translation (UH_QM_FILES
     "")
 
-add_executable (ultimate-hindsight WIN32
+add_executable (ultimate-hindsight # WIN32
     ${UH_SOURCES_MOC}
     ${UH_FORMS_MOC}
     ${UH_RESOURCES_GEN}
@@ -102,7 +102,9 @@ target_link_libraries (ultimate-hindsight
     PRIVATE uhplot)
 set_target_properties (ultimate-hindsight
     PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
+        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_BINDIR})
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
@@ -110,14 +112,14 @@ set_target_properties (ultimate-hindsight
 
 if (WIN32 OR CYGWIN)
     add_custom_command (TARGET ultimate-hindsight POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${UH_BUILD_BINDIR}/$<CONFIG>/platforms
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${UH_BUILD_BINDIR}/$<CONFIG>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${UH_BUILD_BINDIR}/$<CONFIG>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${UH_BUILD_BINDIR}/$<CONFIG>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${UH_BUILD_BINDIR}/$<CONFIG>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${UH_BUILD_BINDIR}/$<CONFIG>/platforms
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${UH_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${UH_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${UH_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${UH_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${UH_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${UH_BUILD_BINDIR}/platforms
 
-        COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${UH_BUILD_BINDIR}/$<CONFIG>'"
+        COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${UH_BUILD_BINDIR}'"
         VERBATIM)
 endif ()
 

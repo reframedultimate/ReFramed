@@ -20,6 +20,7 @@ template class HashMap<FighterStatus, String>;
 template class HashMap<FighterID, HashMap<FighterStatus, String>>;
 template class ListenerDispatcher<DataSetFilterListener>;
 template class ListenerDispatcher<DataSetProcessorListener>;
+template class ListenerDispatcher<SessionListener>;
 template class Reference<DataSetFilter>;
 template class Reference<GameSession>;
 template class Reference<SavedGameSession>;

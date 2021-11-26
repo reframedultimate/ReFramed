@@ -9,7 +9,8 @@ namespace uh {
 class UH_PUBLIC_API Plugin
 {
 public:
-    virtual ~Plugin() {}
+    Plugin();
+    virtual ~Plugin();
     virtual QWidget* createView() = 0;
     virtual void destroyView(QWidget* widget) = 0;
 };

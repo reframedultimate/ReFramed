@@ -76,8 +76,8 @@ private:
     void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:
-    void onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin) override;
-    void onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin) override;
+    void onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin) override;
 
 private:
     void onCategorySelected(CategoryType category) override;

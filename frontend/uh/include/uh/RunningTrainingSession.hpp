@@ -21,6 +21,10 @@ public:
 
     int winner() const override
         { return -1; }
+
+    // Make MSVC shut up about dominance
+    TimeStampMS timeStampStartedMs() const override
+        { return TrainingSession::timeStampStartedMs(); }
 };
 
 }
