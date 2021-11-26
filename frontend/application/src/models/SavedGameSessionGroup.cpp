@@ -7,57 +7,57 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-SavedGameSessionGroup::SavedGameSessionGroup(const QString& name)
+ReplayGroup::ReplayGroup(const QString& name)
     : name_(name)
 {
 }
 
 // ----------------------------------------------------------------------------
-const QSet<QFileInfo>& SavedGameSessionGroup::absFilePathList() const
+const QSet<QFileInfo>& ReplayGroup::absFilePathList() const
 {
     return fileList_;
 }
 
 // ----------------------------------------------------------------------------
-const QString& SavedGameSessionGroup::name() const
+const QString& ReplayGroup::name() const
 {
     return name_;
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroup::setName(const QString& name)
+void ReplayGroup::setName(const QString& name)
 {
     name_ = name;
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroup::addFile(const QFileInfo& absPathToFile)
+void ReplayGroup::addFile(const QFileInfo& absPathToFile)
 {
     if (fileList_.contains(absPathToFile))
         return;
 
     fileList_.insert(absPathToFile);
-    dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileAdded, this, absPathToFile);
+    dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileAdded, this, absPathToFile);
 }
 
 // ----------------------------------------------------------------------------
-bool SavedGameSessionGroup::removeFile(const QFileInfo& absPathToFile)
+bool ReplayGroup::removeFile(const QFileInfo& absPathToFile)
 {
     for (auto it = fileList_.begin(); it != fileList_.end(); ++it)
         if (*it == absPathToFile)
         {
             fileList_.erase(it);
-            dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileRemoved, this, absPathToFile);
+            dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileRemoved, this, absPathToFile);
             return true;
         }
     return false;
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroup::removeAllFiles()
+void ReplayGroup::removeAllFiles()
 {
     for (const auto& fileInfo : fileList_)
-        dispatcher.dispatch(&SavedGameSessionGroupListener::onSavedGameSessionGroupFileRemoved, this, fileInfo);
+        dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileRemoved, this, fileInfo);
     fileList_.clear();
 }
 

@@ -101,7 +101,7 @@ DataSetBackgroundLoader::~DataSetBackgroundLoader()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::loadGroup(SavedGameSessionGroup* group)
+void DataSetBackgroundLoader::loadGroup(ReplayGroup* group)
 {
     printf("%d: loadGroup()\n", taskIDCounter_);
     mutex_.lock();
@@ -130,7 +130,7 @@ void DataSetBackgroundLoader::loadGroup(SavedGameSessionGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::cancelGroup(SavedGameSessionGroup* group)
+void DataSetBackgroundLoader::cancelGroup(ReplayGroup* group)
 {
     printf("cancelGroup()\n");
     mutex_.lock();
@@ -170,7 +170,7 @@ void DataSetBackgroundLoader::cancelAll()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, SavedGameSessionGroup* group)
+void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group)
 {
     uh::Reference<uh::DataSet> ds = dataSet;
 
@@ -203,7 +203,7 @@ void DataSetBackgroundLoader::run()
     struct PendingDataSet
     {
         uh::Reference<uh::DataSet> dataSet;
-        SavedGameSessionGroup* group;
+        ReplayGroup* group;
     };
 
     uh::SmallLinearMap<uint32_t, PendingDataSet, 4> pendingDataSets;

@@ -23,7 +23,7 @@ class SavedGameSessionNameCompleter : public QCompleter
 public:
     SavedGameSessionNameCompleter(QObject* parent=nullptr);
 
-    void setGroupWeakRef(SavedGameSessionGroup* group);
+    void setGroupWeakRef(ReplayGroup* group);
     void groupExpired();
 
     void setCompleteCategories();
@@ -32,7 +32,7 @@ public:
     QStringList splitPath(const QString &path) const override;
 
 private:
-    SavedGameSessionGroup* group_ = nullptr;
+    ReplayGroup* group_ = nullptr;
     QStringListModel* model_;
 };
 
@@ -45,7 +45,7 @@ SavedGameSessionNameCompleter::SavedGameSessionNameCompleter(QObject* parent)
     setModel(model_);
 }
 
-void SavedGameSessionNameCompleter::setGroupWeakRef(SavedGameSessionGroup* group)
+void SavedGameSessionNameCompleter::setGroupWeakRef(ReplayGroup* group)
 {
     group_ = group;
     setCompleteCategories();
@@ -86,7 +86,7 @@ QStringList SavedGameSessionNameCompleter::splitPath(const QString &path) const
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSessionGroupView::SavedGameSessionGroupView(SavedGameSessionManager* manager, QWidget* parent)
+ReplayGroupView::ReplayGroupView(ReplayManager* manager, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::SavedGameSessionGroupView)
     , savedGameSessionManager_(manager)
@@ -108,15 +108,15 @@ SavedGameSessionGroupView::SavedGameSessionGroupView(SavedGameSessionManager* ma
     savedGameSessionManager_->dispatcher.addListener(this);
 
     connect(savedGameSessionListWidget_, &QListWidget::currentItemChanged,
-            this, &SavedGameSessionGroupView::onCurrentItemChanged);
+            this, &ReplayGroupView::onCurrentItemChanged);
     connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
-            this, &SavedGameSessionGroupView::onFiltersTextChanged);
+            this, &ReplayGroupView::onFiltersTextChanged);
     connect(shortcut, &QShortcut::activated,
-            this, &SavedGameSessionGroupView::onDeleteKeyPressed);
+            this, &ReplayGroupView::onDeleteKeyPressed);
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSessionGroupView::~SavedGameSessionGroupView()
+ReplayGroupView::~ReplayGroupView()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
@@ -125,7 +125,7 @@ SavedGameSessionGroupView::~SavedGameSessionGroupView()
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::setSavedGameSessionGroup(SavedGameSessionGroup* group)
+void ReplayGroupView::setSavedGameSessionGroup(ReplayGroup* group)
 {
     clear();
 
@@ -140,7 +140,7 @@ void SavedGameSessionGroupView::setSavedGameSessionGroup(SavedGameSessionGroup* 
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::clear()
+void ReplayGroupView::clear()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
@@ -152,7 +152,7 @@ void SavedGameSessionGroupView::clear()
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+void ReplayGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
 {
     if (currentGroup_ == nullptr)
         return;
@@ -171,7 +171,7 @@ void SavedGameSessionGroupView::onCurrentItemChanged(QListWidgetItem* current, Q
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onFiltersTextChanged(const QString& text)
+void ReplayGroupView::onFiltersTextChanged(const QString& text)
 {
     QStringList rules = text.split(",");
     for (const auto& rule : rules)
@@ -181,10 +181,10 @@ void SavedGameSessionGroupView::onFiltersTextChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onDeleteKeyPressed()
+void ReplayGroupView::onDeleteKeyPressed()
 {
     // Can't delete stuff in all group
-    if (currentGroup_ == nullptr || currentGroup_ == savedGameSessionManager_->allSavedGameSessionGroup())
+    if (currentGroup_ == nullptr || currentGroup_ == savedGameSessionManager_->allReplayGroup())
         return;
 
     for (const auto& absFilePath : savedGameSessionListWidget_->selectedSavedGameSessionFilePaths())
@@ -192,19 +192,19 @@ void SavedGameSessionGroupView::onDeleteKeyPressed()
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group)
+void ReplayGroupView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
     if (currentGroup_ == group)
         clear();
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName)
+void ReplayGroupView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
+void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
     savedGameSessionListWidget_->addSavedGameSessionFileName(absPathToFile);
@@ -212,7 +212,7 @@ void SavedGameSessionGroupView::onSavedGameSessionGroupFileAdded(SavedGameSessio
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionGroupView::onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
+void ReplayGroupView::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
     savedGameSessionListWidget_->removeSavedGameSessionFileName(absPathToFile);

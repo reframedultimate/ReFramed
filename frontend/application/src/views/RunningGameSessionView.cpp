@@ -88,6 +88,11 @@ void RunningGameSessionView::onLineEditP2TextChanged(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
+void RunningGameSessionView::onRunningGameSessionManagerFailedToConnectToServer()
+{
+}
+
+// ----------------------------------------------------------------------------
 void RunningGameSessionView::onRunningGameSessionManagerConnectedToServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_waiting);

@@ -1,6 +1,7 @@
 #include "application/models/Config.hpp"
-#include "application/models/RunningGameSessionManager.hpp"
+#include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
+#include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 #include "application/ui_MainWindow.h"
@@ -30,11 +31,12 @@ namespace uhapp {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , config_(new Config)
-    , savedGameSessionManager_(new SavedGameSessionManager(config_.get()))
-    , runningGameSessionManager_(new RunningGameSessionManager(savedGameSessionManager_.get()))
     , pluginManager_(new PluginManager)
+    , savedGameSessionManager_(new ReplayManager(config_.get()))
+    , runningGameSessionManager_(new RunningGameSessionManager(savedGameSessionManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
-    , categoryView_(new CategoryView(savedGameSessionManager_.get(), trainingModeModel_.get()))
+    , categoryModel_(new CategoryModel)
+    , categoryView_(new CategoryView(categoryModel_.get(), savedGameSessionManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
     , savedGameSessionGroupView_(new SavedGameSessionGroupView(savedGameSessionManager_.get()))
     , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get()))
     , mainView_(new QStackedWidget)
@@ -62,15 +64,8 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
-    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer,
-            this, &MainWindow::onRunningGameSessionManagerConnectedToServer);
-    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::disconnectedFromServer,
-            this, &MainWindow::onRunningGameSessionManagerDisconnectedFromServer);
-
-    connect(categoryView_, &CategoryView::categoryChanged,
-            this, &MainWindow::onCategoryChanged);
-    connect(categoryView_, &CategoryView::savedGameSessionGroupSelected,
-            savedGameSessionGroupView_, &SavedGameSessionGroupView::setSavedGameSessionGroup);
+    categoryModel_->dispatcher.addListener(this);
+    runningGameSessionManager_->dispatcher.addListener(this);
 
     connect(ui_->action_connect, &QAction::triggered,
             this, &MainWindow::onConnectActionTriggered);
@@ -85,6 +80,9 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    runningGameSessionManager_->dispatcher.removeListener(this);
+    categoryModel_->dispatcher.removeListener(this);
+
     // This is to fix an issue with listeners. The RunningGameSessionView (child of central widget)
     // will try to unregister as a listener of RunningGameSessionManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the
@@ -105,9 +103,6 @@ void MainWindow::setStateConnected()
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
     ui_->action_disconnect->setVisible(true);
-
-    // Enable active recording view in the category view
-    categoryView_->setRunningGameSessionViewDisabled(false);
 }
 
 // ----------------------------------------------------------------------------
@@ -116,10 +111,11 @@ void MainWindow::setStateDisconnected()
     // Replace the "disconnect" action in the dropdown menu with "connect"
     ui_->action_connect->setVisible(true);
     ui_->action_disconnect->setVisible(false);
+}
 
-    // Disable active recording entry in the category view so it can't be
-    // selected anymore
-    categoryView_->setRunningGameSessionViewDisabled(true);
+// ----------------------------------------------------------------------------
+void MainWindow::onRunningGameSessionManagerFailedToConnectToServer()
+{
 }
 
 // ----------------------------------------------------------------------------
@@ -154,8 +150,8 @@ void MainWindow::onConnectActionTriggered()
     ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
     connect(c, &ConnectView::connectRequest, runningGameSessionManager_.get(), &RunningGameSessionManager::tryConnectToServer);
-    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
-    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);
+    /*connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
+    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);*/
 
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
@@ -170,19 +166,16 @@ void MainWindow::onDisconnectActionTriggered()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onCategoryChanged(CategoryType category)
+void MainWindow::onCategorySelected(CategoryType category)
 {
     switch (category)
     {
-        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
-            savedGameSessionGroupView_->clear();
-            [[fallthrough]];
-        case CategoryType::RECORDING_GROUP_ITEM:
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
+            savedGameSessionGroupView_->clear();  // Kinda ugly, should make this a listener of CategoryModel
             mainView_->setCurrentIndex(0);
             break;
 
         case CategoryType::TOP_LEVEL_DATA_SETS:
-        case CategoryType::DATA_SETS_ITEM:
             mainView_->setCurrentIndex(1);
             break;
 
@@ -190,24 +183,23 @@ void MainWindow::onCategoryChanged(CategoryType category)
             mainView_->setCurrentIndex(2);
             break;
 
-        case CategoryType::TOP_LEVEL_RECORDING_SOURCES:
-        case CategoryType::RECORDING_SOURCE_ITEM:
+        case CategoryType::TOP_LEVEL_REPLAY_SOURCES:
             mainView_->setCurrentIndex(3);
             break;
 
         case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
-        case CategoryType::VIDEO_SOURCE_ITEM:
             mainView_->setCurrentIndex(4);
             break;
 
-        case CategoryType::TOP_LEVEL_ACTIVE_RECORDING:
+        case CategoryType::TOP_LEVEL_SESSION:
             mainView_->setCurrentIndex(5);
             break;
 
         case CategoryType::TOP_LEVEL_TRAINING_MODE:
-        case CategoryType::TRAINING_MODE_ITEM:
             mainView_->setCurrentIndex(6);
             break;
+
+        default: break;
     }
 }
 

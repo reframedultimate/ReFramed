@@ -59,6 +59,7 @@ add_executable (ultimate-hindsight WIN32
     ${UH_QM_FILES}
     "src/main.cpp"
     "src/Util.cpp"
+    "src/models/CategoryModel.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
     "src/models/DataSetBackgroundLoader.cpp"

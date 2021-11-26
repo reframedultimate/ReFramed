@@ -33,7 +33,7 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-DataSetFilterView::DataSetFilterView(SavedGameSessionManager* manager, QWidget* parent)
+DataSetFilterView::DataSetFilterView(ReplayManager* manager, QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::DataSetFilterView)
     , filterWidgetsLayout_(new QVBoxLayout)
@@ -65,8 +65,8 @@ DataSetFilterView::DataSetFilterView(SavedGameSessionManager* manager, QWidget* 
     ui_->label_outputInfo->setText("");
 
     // Fill in input groups list
-    for (const auto& it : savedGameSessionManager_->savedGameSessionGroups())
-        onSavedGameSessionManagerGroupAdded(it.second.get());
+    for (int i = 0; i != savedGameSessionManager_->replayGroupsCount(); ++i)
+        onReplayManagerGroupAdded(savedGameSessionManager_->replayGroup(i));
 
     connect(ui_->toolButton_addFilter, &QToolButton::triggered,
             this, &DataSetFilterView::onToolButtonAddFilterTriggered);
@@ -81,8 +81,8 @@ DataSetFilterView::DataSetFilterView(SavedGameSessionManager* manager, QWidget* 
 DataSetFilterView::~DataSetFilterView()
 {
     // Have to do this so we unregister as listeners to every recording group
-    for (const auto& it : savedGameSessionManager_->savedGameSessionGroups())
-        onSavedGameSessionManagerGroupRemoved(it.second.get());
+    for (int i = 0; i != savedGameSessionManager_->replayGroupsCount(); ++i)
+        onReplayManagerGroupRemoved(savedGameSessionManager_->replayGroup(i));
 
     dataSetBackgroundLoader_->dispatcher.removeListener(this);
     savedGameSessionManager_->dispatcher.removeListener(this);
@@ -116,7 +116,7 @@ void DataSetFilterView::onToolButtonAddFilterTriggered(QAction* action)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onInputGroupItemChanged(QListWidgetItem* item)
 {
-    SavedGameSessionGroup* group = savedGameSessionManager_->savedGameSessionGroup(item->text());
+    ReplayGroup* group = savedGameSessionManager_->replayGroup(item->text());
     if (group == nullptr)
         return;
 
@@ -252,21 +252,21 @@ void DataSetFilterView::recursivelyInstallEventFilter(QObject* obj)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::addGroupToInputRecordingsList(SavedGameSessionGroup* group)
+void DataSetFilterView::addGroupToInputRecordingsList(ReplayGroup* group)
 {
     for (const auto& fileInfo : group->absFilePathList())
-        onSavedGameSessionGroupFileAdded(group, fileInfo);
+        onReplayGroupFileAdded(group, fileInfo);
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::removeGroupFromInputRecordingsList(SavedGameSessionGroup* group)
+void DataSetFilterView::removeGroupFromInputRecordingsList(ReplayGroup* group)
 {
     for (const auto& fileInfo : group->absFilePathList())
-        onSavedGameSessionGroupFileRemoved(group, fileInfo);
+        onReplayGroupFileRemoved(group, fileInfo);
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::removeGroupFromInputDataSet(SavedGameSessionGroup* group)
+void DataSetFilterView::removeGroupFromInputDataSet(ReplayGroup* group)
 {
     inputDataSets_.erase(group);
 
@@ -278,7 +278,7 @@ void DataSetFilterView::removeGroupFromInputDataSet(SavedGameSessionGroup* group
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
+void DataSetFilterView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
     ui_->listWidget_inputRecordings->addItem(absPathToFile.completeBaseName());
@@ -286,7 +286,7 @@ void DataSetFilterView::onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* 
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile)
+void DataSetFilterView::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
     for (const auto& item : ui_->listWidget_inputRecordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
@@ -294,7 +294,7 @@ void DataSetFilterView::onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group)
+void DataSetFilterView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
     QListWidgetItem* item = new QListWidgetItem(group->name());
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
@@ -305,7 +305,7 @@ void DataSetFilterView::onSavedGameSessionManagerGroupAdded(SavedGameSessionGrou
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName)
+void DataSetFilterView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
     (void)group;
     for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)
@@ -320,7 +320,7 @@ void DataSetFilterView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessi
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group)
+void DataSetFilterView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
     group->dispatcher.removeListener(this);
     for (const auto& item : ui_->listWidget_inputGroups->findItems(group->name(), Qt::MatchExactly))
@@ -328,7 +328,7 @@ void DataSetFilterView::onSavedGameSessionManagerGroupRemoved(SavedGameSessionGr
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(SavedGameSessionGroup* group, uh::DataSet* dataSet)
+void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, uh::DataSet* dataSet)
 {
     inputDataSets_.emplace(group, dataSet);
     inputDataSetMerged_->mergeDataFrom(dataSet);

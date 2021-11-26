@@ -8,7 +8,7 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionManager::RunningGameSessionManager(SavedGameSessionManager* manager, QObject *parent)
+RunningGameSessionManager::RunningGameSessionManager(ReplayManager* manager, QObject *parent)
     : QObject(parent)
     , savedSessionManager_(manager)
     , format_(uh::SetFormat::FRIENDLIES)
@@ -23,6 +23,25 @@ RunningGameSessionManager::~RunningGameSessionManager()
 
     if (activeSession_)
         activeSession_->dispatcher.removeListener(this);
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::disconnectFromServer()
+{
+    protocol_.reset();
+}
+
+// ----------------------------------------------------------------------------
+bool RunningGameSessionManager::isSessionRunning() const
+{
+    return protocol_ != nullptr;
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolConnectionLost()
+{
+    protocol_.reset();
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerDisconnectedFromServer);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,7 +124,7 @@ void RunningGameSessionManager::tryConnectToServer(const QString& ipAddress, uin
     QByteArray ba = ipAddress.toLocal8Bit();
     if (tcp_socket_connect_to_host(&sock, ba.data(), port) != 0)
     {
-        emit failedToConnectToServer();
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFailedToConnectToServer);
         return;
     }
 
@@ -117,20 +136,8 @@ void RunningGameSessionManager::tryConnectToServer(const QString& ipAddress, uin
     connect(protocol_.get(), &Protocol::serverClosedConnection,
             this, &RunningGameSessionManager::onProtocolConnectionLost);
     protocol_->start();
-    emit connectedToServer();
-}
 
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::disconnectFromServer()
-{
-    protocol_.reset();
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolConnectionLost()
-{
-    protocol_.reset();
-    emit disconnectedFromServer();
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerConnectedToServer);
 }
 
 // ----------------------------------------------------------------------------
@@ -192,7 +199,7 @@ void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession*
     if (session->save(fileInfo.absoluteFilePath().toStdString().c_str()))
     {
         // Add the new recording to the "All" recording group
-        savedSessionManager_->allSavedGameSessionGroup()->addFile(fileInfo.absoluteFilePath());
+        savedSessionManager_->allReplayGroup()->addFile(fileInfo.absoluteFilePath());
     }
     else
     {
@@ -310,7 +317,7 @@ void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSessi
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path)
+void RunningGameSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
 {
     (void)path;
     if (activeSession_)

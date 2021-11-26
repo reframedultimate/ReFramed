@@ -12,13 +12,13 @@
 
 namespace uhapp {
 
-class SavedGameSessionManagerListener;
+class ReplayManagerListener;
 
-class SavedGameSessionManager : public ConfigAccessor
-                              , public SavedGameSessionGroupListener
+class ReplayManager : public ConfigAccessor
+                    , public ReplayGroupListener
 {
 public:
-    SavedGameSessionManager(Config* config);
+    ReplayManager(Config* config);
 
     /*!
      * \brief This is the location where recordings are saved automatically.
@@ -31,27 +31,20 @@ public:
 
     void setDefaultRecordingSourceDirectory(const QDir& path);
 
-    /*!
-     * \brief Returns a list of paths to directories in which the recording
-     * manager can find and load recordings.
-     * \note The default recording location is also part of this list.
-     */
-    const QHash<QString, QDir>& savedGameSessionSources() const;
+    bool addReplaySource(const QString& name, const QDir& path);
+    bool changeReplaySourceName(const QString& oldName, const QString& newName);
+    bool changeReplaySourcePath(const QString& name, const QDir& newPath);
+    bool removeReplaySource(const QString& name);
 
-    bool addSavedGameSessionSource(const QString& name, const QDir& path);
-    bool changeSavedGameSessionSourceName(const QString& oldName, const QString& newName);
-    bool removeSavedGameSessionSource(const QString& name);
+    int replaySourcesCount() const;
+    QString replaySourceName(int idx) const;
+    QDir replaySourcePath(int idx) const;
 
-    /*!
-     * \brief Returns a list of paths to directories in which the recording
-     * manager can find and load videos that are associated with a recording.
-     * \return
-     */
-    const QHash<QString, QDir>& videoSources();
-
-    bool addVideoSource(const QString& name, const QDir& path);
-    bool changeVideoSourceName(const QString& oldName, const QString& newName);
-    bool removeVideoSource(const QString& name);
+    QString findFreeGroupName(const QString& name);
+    ReplayGroup* addReplayGroup(const QString& name);
+    ReplayGroup* duplicateReplayGroup(ReplayGroup* group, const QString& newName);
+    bool renameReplayGroup(ReplayGroup* group, const QString& newName);
+    bool removeReplayGroup(ReplayGroup* group);
 
     /*!
      * \brief Individual recordings can be organized into named groups by the
@@ -60,33 +53,38 @@ public:
      * \return A pointer to the group if it was found, or nullptr if it was not
      * found.
      */
-    SavedGameSessionGroup* savedGameSessionGroup(const QString& name) const;
+    ReplayGroup* replayGroup(const QString& name) const;
+    ReplayGroup* replayGroup(int idx) const;
+    int replayGroupsCount() const;
 
     /*!
      * \brief Individual recordings can be organized into named groups by the
      * user. Gets the "all" group.
      * \return The "all" group.
      */
-    SavedGameSessionGroup* allSavedGameSessionGroup() const;
+    ReplayGroup* allReplayGroup() const;
 
-    const std::unordered_map<std::string, std::unique_ptr<SavedGameSessionGroup>>& savedGameSessionGroups() const;
+    bool addVideoSource(const QString& name, const QDir& path);
+    bool changeVideoSourceName(const QString& oldName, const QString& newName);
+    bool changeVideoSourcePath(const QString& name, const QDir& newPath);
+    bool removeVideoSource(const QString& name);
 
-    bool addSavedGameSessionGroup(const QString& name);
-    bool renameSavedGameSessionGroup(const QString& oldName, const QString& newName);
-    bool removeSavedGameSessionGroup(const QString& name);
+    int videoSourcesCount() const;
+    QString videoSourceName(int idx) const;
+    QDir videoSourcePath(int idx) const;
 
-    uh::ListenerDispatcher<SavedGameSessionManagerListener> dispatcher;
+    uh::ListenerDispatcher<ReplayManagerListener> dispatcher;
 
 private:
     void scanForRecordings();
 
-    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& name) override;
-    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& name) override;
+    void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& name) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& name) override;
 
 private:
-    QHash<QString, QDir> savedGameSessionDirectories_;
+    QHash<QString, QDir> replayDirectories_;
     QHash<QString, QDir> videoDirectories_;
-    std::unordered_map<std::string, std::unique_ptr<SavedGameSessionGroup>> groups_;
+    std::unordered_map<std::string, std::unique_ptr<ReplayGroup>> groups_;
 };
 
 }

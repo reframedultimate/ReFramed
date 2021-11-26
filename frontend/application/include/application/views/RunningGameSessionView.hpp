@@ -36,11 +36,11 @@ private slots:
     void onLineEditP1TextChanged(const QString& name);
     void onLineEditP2TextChanged(const QString& name);
 
-private slots:
-    void onRunningGameSessionManagerConnectedToServer();
-    void onRunningGameSessionManagerDisconnectedFromServer();
-
 private:
+    void onRunningGameSessionManagerFailedToConnectToServer() override;
+    void onRunningGameSessionManagerConnectedToServer() override;
+    void onRunningGameSessionManagerDisconnectedFromServer() override;
+
     void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) override;
     void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) override;
 

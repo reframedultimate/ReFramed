@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/models/CategoryType.hpp"
+#include "application/listeners/CategoryListener.hpp"
 #include "application/listeners/RunningGameSessionManagerListener.hpp"
 #include <QMainWindow>
 #include <QDir>
@@ -16,17 +17,17 @@ namespace Ui {
 namespace uhapp {
 
 class CategoryView;
+class CategoryModel;
 class Config;
-class ConnectView;
 class PluginManager;
-class Protocol;
 class RunningGameSessionManager;
 class RunningGameSessionView;
 class SavedGameSessionGroupView;
-class SavedGameSessionManager;
+class ReplayManager;
 class TrainingModeModel;
 
 class MainWindow : public QMainWindow
+                 , public CategoryListener
                  , public RunningGameSessionManagerListener
 {
     Q_OBJECT
@@ -36,7 +37,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void onCategoryChanged(CategoryType category);
     void negotiateDefaultRecordingLocation();
     void populateCategories();
 
@@ -46,12 +46,18 @@ private:
     void setStateDisconnected();
 
 private slots:
-    void onRunningGameSessionManagerConnectedToServer();
-    void onRunningGameSessionManagerDisconnectedFromServer();
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
 
 private:
+    void onCategorySelected(CategoryType category) override;
+    void onCategoryItemSelected(CategoryType category, const QString& name) override { (void)category; (void)name; }
+
+private:
+    void onRunningGameSessionManagerFailedToConnectToServer() override;
+    void onRunningGameSessionManagerConnectedToServer() override;
+    void onRunningGameSessionManagerDisconnectedFromServer() override;
+
     // All unused
     void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) override { (void)recording; }
     void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) override { (void)recording; }
@@ -65,10 +71,11 @@ private:
 
 private:
     std::unique_ptr<Config> config_;
-    std::unique_ptr<SavedGameSessionManager> savedGameSessionManager_;
-    std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;
     std::unique_ptr<PluginManager> pluginManager_;
+    std::unique_ptr<ReplayManager> savedGameSessionManager_;
+    std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;
     std::unique_ptr<TrainingModeModel> trainingModeModel_;
+    std::unique_ptr<CategoryModel> categoryModel_;
     CategoryView* categoryView_;
     SavedGameSessionGroupView* savedGameSessionGroupView_;
     RunningGameSessionView* runningGameSessionView_;

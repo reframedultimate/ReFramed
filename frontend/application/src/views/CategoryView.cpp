@@ -1,6 +1,8 @@
 #include "application/views/CategoryView.hpp"
+#include "application/models/CategoryModel.hpp"
+#include "application/models/CategoryModel.hpp"
+#include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
 #include "application/models/TrainingModeModel.hpp"
 
 #include <QMenu>
@@ -15,16 +17,23 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-CategoryView::CategoryView(SavedGameSessionManager* manager, TrainingModeModel* trainingMode, QWidget* parent)
+CategoryView::CategoryView(
+        CategoryModel* categoryModel,
+        ReplayManager* savedGameSessionManager,
+        RunningGameSessionManager* runningGameSessionManager,
+        TrainingModeModel* trainingModeModel,
+        QWidget* parent)
     : QTreeWidget(parent)
-    , savedGameSessionManager_(manager)
-    , trainingMode_(trainingMode)
+    , categoryModel_(categoryModel)
+    , savedGameSessionManager_(savedGameSessionManager)
+    , runningGameSessionManager_(runningGameSessionManager)
+    , trainingModeModel_(trainingModeModel)
     , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
     , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
-    , savedGameSessionGroupsItem_(new QTreeWidgetItem({"Recording Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_GROUPS)))
-    , recordingSourcesItem_(new QTreeWidgetItem({"Recording Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_RECORDING_SOURCES)))
-    , videoSourcesItem_(new QTreeWidgetItem({"Video Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
-    , activeRecordingItem_(new QTreeWidgetItem({"Active Recording"}, static_cast<int>(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)))
+    , replayGroupsItem_(new QTreeWidgetItem({"Replay Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_GROUPS)))
+    , replaySourcesItem_(new QTreeWidgetItem({"Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_SOURCES)))
+    , videoSourcesItem_(new QTreeWidgetItem({"Video Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
+    , sessionItem_(new QTreeWidgetItem({"Session"}, static_cast<int>(CategoryType::TOP_LEVEL_SESSION)))
     , trainingModeItem_(new QTreeWidgetItem({"Training Mode"}, static_cast<int>(CategoryType::TOP_LEVEL_TRAINING_MODE)))
 {
     setHeaderHidden(true);
@@ -32,35 +41,35 @@ CategoryView::CategoryView(SavedGameSessionManager* manager, TrainingModeModel* 
 
     addTopLevelItem(dataSetsItem_);
     addTopLevelItem(analysisCategoryItem_);
-    addTopLevelItem(savedGameSessionGroupsItem_);
-    addTopLevelItem(recordingSourcesItem_);
+    addTopLevelItem(replayGroupsItem_);
+    addTopLevelItem(replaySourcesItem_);
     addTopLevelItem(videoSourcesItem_);
-    addTopLevelItem(activeRecordingItem_);
+    addTopLevelItem(sessionItem_);
     addTopLevelItem(trainingModeItem_);
 
+    // Configure which items accept drag/drop
     setAcceptDrops(true);
+    replayGroupsItem_->setFlags(replayGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
-    savedGameSessionGroupsItem_->setFlags(savedGameSessionGroupsItem_->flags() | Qt::ItemIsDropEnabled);
+    // If the session is not active, disable that top level item
+    sessionItem_->setDisabled(!runningGameSessionManager_->isSessionRunning());
 
-    // We're not connected by default
-    setRunningGameSessionViewDisabled(true);
+    // Populate various children based on the data available in the model
+    for (int i = 0; i != savedGameSessionManager_->replayGroupsCount(); ++i)
+        onReplayManagerGroupAdded(savedGameSessionManager_->replayGroup(i));
+    for (int i = 0; i != savedGameSessionManager_->replaySourcesCount(); ++i)
+        onReplayManagerReplaySourceAdded(savedGameSessionManager_->replaySourceName(i), savedGameSessionManager_->replaySourcePath(i));
+    for (int i = 0; i != savedGameSessionManager_->videoSourcesCount(); ++i)
+        onReplayManagerVideoSourceAdded(savedGameSessionManager_->videoSourceName(i), savedGameSessionManager_->videoSourcePath(i));
 
-    // Populate various children based on the data available in the recording manager
-    for (const auto& group : manager->savedGameSessionGroups())
-        onSavedGameSessionManagerGroupAdded(group.second.get());
-    const auto& recordingSources = manager->savedGameSessionSources();
-    for (auto it = recordingSources.begin(); it != recordingSources.end(); ++it)
-        onSavedGameSessionManagerGameSessionSourceAdded(it.key(), it.value());
-    const auto& videoSources = manager->videoSources();
-    for (auto it = videoSources.begin(); it != videoSources.end(); ++it)
-        onSavedGameSessionManagerVideoSourceAdded(it.key(), it.value());
-
-    savedGameSessionGroupsItem_->setExpanded(true);
-    recordingSourcesItem_->setExpanded(true);
+    replayGroupsItem_->setExpanded(true);
+    replaySourcesItem_->setExpanded(true);
     videoSourcesItem_->setExpanded(true);
 
+    categoryModel_->dispatcher.addListener(this);
     savedGameSessionManager_->dispatcher.addListener(this);
-    trainingMode_->dispatcher.addListener(this);
+    runningGameSessionManager_->dispatcher.addListener(this);
+    trainingModeModel_->dispatcher.addListener(this);
 
     connect(this, &QTreeWidget::customContextMenuRequested,
             this, &CategoryView::onCustomContextMenuRequested);
@@ -73,14 +82,10 @@ CategoryView::CategoryView(SavedGameSessionManager* manager, TrainingModeModel* 
 // ----------------------------------------------------------------------------
 CategoryView::~CategoryView()
 {
-    trainingMode_->dispatcher.removeListener(this);
+    trainingModeModel_->dispatcher.removeListener(this);
+    runningGameSessionManager_->dispatcher.removeListener(this);
     savedGameSessionManager_->dispatcher.removeListener(this);
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::setRunningGameSessionViewDisabled(bool disable)
-{
-    activeRecordingItem_->setDisabled(disable);
+    categoryModel_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,17 +110,17 @@ void CategoryView::dragMoveEvent(QDragMoveEvent* event)
         return;
     }
 
-    switch (categoryOf(targetItem))
+    switch (static_cast<CategoryType>(targetItem->type()))
     {
-        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
             event->accept();
             break;
 
-        case CategoryType::RECORDING_GROUP_ITEM: {
+        case CategoryType::ITEM_REPLAY_GROUP: {
             // Don't allow dropping on the all group
-            SavedGameSessionGroup* group = savedGameSessionManager_->savedGameSessionGroup(targetItem->text(0));
+            ReplayGroup* group = savedGameSessionManager_->replayGroup(targetItem->text(0));
             assert(group);
-            if (group == savedGameSessionManager_->allSavedGameSessionGroup())
+            if (group == savedGameSessionManager_->allReplayGroup())
             {
                 event->ignore();
                 return;
@@ -140,19 +145,19 @@ void CategoryView::dropEvent(QDropEvent* event)
         return;
     }
 
-    SavedGameSessionGroup* group = nullptr;
-    switch (categoryOf(targetItem))
+    ReplayGroup* group = nullptr;
+    switch (static_cast<CategoryType>(targetItem->type()))
     {
-        case CategoryType::TOP_LEVEL_RECORDING_GROUPS:
-            group = newGroup();
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
+            group = savedGameSessionManager_->addReplayGroup(savedGameSessionManager_->findFreeGroupName("Group"));
             [[fallthrough]];
-        case CategoryType::RECORDING_GROUP_ITEM:
-            group = group ? group : savedGameSessionManager_->savedGameSessionGroup(targetItem->text(0));
+        case CategoryType::ITEM_REPLAY_GROUP:
+            group = group ? group : savedGameSessionManager_->replayGroup(targetItem->text(0));
         {
             assert(group);
 
             // Don't allow dropping on the all group
-            if (group == savedGameSessionManager_->allSavedGameSessionGroup())
+            if (group == savedGameSessionManager_->allReplayGroup())
             {
                 event->ignore();
                 return;
@@ -182,9 +187,9 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
     if (item == nullptr)
         return;
 
-    switch (categoryOf(item))
+    switch (static_cast<CategoryType>(item->type()))
     {
-        case CategoryType::TOP_LEVEL_RECORDING_GROUPS: {
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS: {
             QMenu menu(this);
             QAction* newGroupAction = menu.addAction("New group");
             menu.addSeparator();
@@ -192,16 +197,16 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
             QAction* result = menu.exec(mapToGlobal(pos));
 
             if (result == newGroupAction)
-                newGroup();
+                savedGameSessionManager_->addReplayGroup(savedGameSessionManager_->findFreeGroupName("Group"));
             else if (result == newDataSetAction) {}
         } break;
 
-        case CategoryType::RECORDING_GROUP_ITEM: {
-            SavedGameSessionGroup* group = savedGameSessionManager_->savedGameSessionGroup(item->text(0));
+        case CategoryType::ITEM_REPLAY_GROUP: {
+            ReplayGroup* group = savedGameSessionManager_->replayGroup(item->text(0));
             if (group == nullptr)
                 return;
 
-            if (group != savedGameSessionManager_->allSavedGameSessionGroup())
+            if (group != savedGameSessionManager_->allReplayGroup())
             {
                 QMenu menu(this);
                 QAction* newGroupAction = menu.addAction("New group");
@@ -215,15 +220,27 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
 
                 QAction* result = menu.exec(mapToGlobal(pos));
                 if (result == newGroupAction)
-                    newGroup();
+                {
+                    savedGameSessionManager_->addReplayGroup(
+                            savedGameSessionManager_->findFreeGroupName("Group"));
+                }
                 else if (result == renameGroupAction)
+                {
                     editItem(item, 0);
+                }
                 else if (result == duplicateGroupAction)
-                    duplicateGroup(group);
+                {
+                    savedGameSessionManager_->duplicateReplayGroup(group,
+                            savedGameSessionManager_->findFreeGroupName(group->name()));
+                }
                 else if (result == deleteGroupAction)
-                    deleteGroup(group);
+                {
+                    savedGameSessionManager_->removeReplayGroup(group);
+                }
                 else if (result == clearRecordingsAction)
+                {
                     group->removeAllFiles();
+                }
                 else if (result == newDataSetAction) {}
             }
             else
@@ -236,9 +253,15 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
 
                 QAction* result = menu.exec(mapToGlobal(pos));
                 if (result == newGroupAction)
-                    newGroup();
+                {
+                    savedGameSessionManager_->addReplayGroup(
+                            savedGameSessionManager_->findFreeGroupName("Group"));
+                }
                 else if (result == duplicateGroupAction)
-                    duplicateGroup(group);
+                {
+                    savedGameSessionManager_->duplicateReplayGroup(group,
+                            savedGameSessionManager_->findFreeGroupName(group->name()));
+                }
                 else if (result == newDataSetAction) {}
             }
         }
@@ -251,47 +274,45 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
 // ----------------------------------------------------------------------------
 void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-#define EMIT_IF_CHANGED(category) \
-    if (categoryOf(current) == category && (previous == nullptr || categoryOf(previous) != category)) \
-        emit categoryChanged(category);
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_RECORDING_GROUPS)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_DATA_SETS)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ANALYSIS)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_RECORDING_GROUPS)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_VIDEO_SOURCES)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_ACTIVE_RECORDING)
-    EMIT_IF_CHANGED(CategoryType::TOP_LEVEL_TRAINING_MODE)
-    EMIT_IF_CHANGED(CategoryType::RECORDING_GROUP_ITEM)
-    EMIT_IF_CHANGED(CategoryType::DATA_SETS_ITEM)
-    EMIT_IF_CHANGED(CategoryType::RECORDING_SOURCE_ITEM)
-    EMIT_IF_CHANGED(CategoryType::VIDEO_SOURCE_ITEM)
-    EMIT_IF_CHANGED(CategoryType::TRAINING_MODE_ITEM)
-#undef EMIT_IF_CHANGED
+    if (current == nullptr)
+        return;
 
-    if (current->parent() == savedGameSessionGroupsItem_)
+    switch (static_cast<CategoryType>(current->type()))
     {
-        SavedGameSessionGroup* group = savedGameSessionManager_->savedGameSessionGroup(current->text(0));
-        if (group)
-            emit savedGameSessionGroupSelected(group);
+        case CategoryType::TOP_LEVEL_DATA_SETS      : categoryModel_->selectDataSetsCategory(); break;
+        case CategoryType::TOP_LEVEL_ANALYSIS       : categoryModel_->selectAnalysisCategory(); break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : categoryModel_->selectReplayGroupsCategory(); break;
+        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : categoryModel_->selectReplaySourcesCategory(); break;
+        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : categoryModel_->selectVideoSourcesCategory(); break;
+        case CategoryType::TOP_LEVEL_SESSION        : categoryModel_->selectSessionCategory(); break;
+        case CategoryType::TOP_LEVEL_TRAINING_MODE  : categoryModel_->selectTrainingModeCategory(); break;
+
+        case CategoryType::ITEM_DATA_SET            : /* TODO */ break;
+        case CategoryType::ITEM_ANALYSIS            : /* TODO */ break;
+        case CategoryType::ITEM_REPLAY_GROUP        : categoryModel_->selectReplayGroup(current->text(0)); break;
+        case CategoryType::ITEM_REPLAY_SOURCE       : categoryModel_->selectReplaySource(current->text(0)); break;
+        case CategoryType::ITEM_VIDEO_SOURCE        : categoryModel_->selectVideoSource(current->text(0)); break;
+        case CategoryType::ITEM_TRAINING_MODE       : categoryModel_->selectTrainingModePlugin(current->text(0)); break;
     }
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 {
-    switch (categoryOf(item))
+    switch (static_cast<CategoryType>(item->type()))
     {
         // Have to make sure that the name the user typed in for the item doesn't
         // conflict with any other existing group names. If it does, we add an
         // index at the end and update the item's text to reflect this
-        case CategoryType::RECORDING_GROUP_ITEM: {
+        case CategoryType::ITEM_REPLAY_GROUP: {
             int idx = 1;
             auto it = oldGroupNames_.find(item);
             const QString& oldName = it.value();
+            ReplayGroup* group = savedGameSessionManager_->replayGroup(oldName);
             QString newName = item->text(column);
             while (true)
             {
-                if (savedGameSessionManager_->renameSavedGameSessionGroup(oldName, newName))
+                if (savedGameSessionManager_->renameReplayGroup(group, newName))
                     break;
                 newName = item->text(column) + QString(" %1").arg(idx);
                 idx++;
@@ -307,96 +328,28 @@ void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 }
 
 // ----------------------------------------------------------------------------
-CategoryType CategoryView::categoryOf(const QTreeWidgetItem* item) const
+void CategoryView::onCategorySelected(CategoryType category)
 {
-    if (item == savedGameSessionGroupsItem_)
-        return CategoryType::TOP_LEVEL_RECORDING_GROUPS;
-    if (item->parent() == savedGameSessionGroupsItem_)
-        return CategoryType::RECORDING_GROUP_ITEM;
-    if (item == dataSetsItem_)
-        return CategoryType::TOP_LEVEL_DATA_SETS;
-    if (item->parent() == dataSetsItem_)
-        return CategoryType::DATA_SETS_ITEM;
-    if (item == analysisCategoryItem_)
-        return CategoryType::TOP_LEVEL_ANALYSIS;
-    if (item == recordingSourcesItem_)
-        return CategoryType::TOP_LEVEL_RECORDING_SOURCES;
-    if (item == trainingModeItem_)
-        return CategoryType::TOP_LEVEL_TRAINING_MODE;
-    if (item->parent() == recordingSourcesItem_)
-        return CategoryType::RECORDING_SOURCE_ITEM;
-    if (item == videoSourcesItem_)
-        return CategoryType::TOP_LEVEL_VIDEO_SOURCES;
-    if (item->parent() == videoSourcesItem_)
-        return CategoryType::VIDEO_SOURCE_ITEM;
-    if (item == activeRecordingItem_)
-        return CategoryType::TOP_LEVEL_ACTIVE_RECORDING;
-    if (item->parent() == trainingModeItem_)
-        return CategoryType::TRAINING_MODE_ITEM;
-    assert(false);
+
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSessionGroup* CategoryView::newGroup()
+void CategoryView::onCategoryItemSelected(CategoryType category, const QString& name)
 {
-    int idx = 1;
-    SavedGameSessionGroup* group;
-    while (true)
-    {
-        QString name = QString("Group %1").arg(idx);
-        if (savedGameSessionManager_->addSavedGameSessionGroup(name))
-        {
-            group = savedGameSessionManager_->savedGameSessionGroup(name);
-            break;
-        }
-        idx++;
-    }
 
-    emit savedGameSessionGroupSelected(group);
-    return group;
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSessionGroup* CategoryView::duplicateGroup(SavedGameSessionGroup* otherGroup)
-{
-    int idx = 1;
-    SavedGameSessionGroup* group;
-    while (true)
-    {
-        QString name = QString("Group %1").arg(idx);
-        if (savedGameSessionManager_->addSavedGameSessionGroup(name))
-        {
-            group = savedGameSessionManager_->savedGameSessionGroup(name);
-            break;
-        }
-        idx++;
-    }
-
-    for (const auto& fileInfo : otherGroup->absFilePathList())
-        group->addFile(fileInfo);
-
-    emit savedGameSessionGroupSelected(group);
-    return group;
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::deleteGroup(SavedGameSessionGroup* group)
-{
-    savedGameSessionManager_->removeSavedGameSessionGroup(group->name());
-    emit categoryChanged(CategoryType::TOP_LEVEL_RECORDING_GROUPS);
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path)
+void CategoryView::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
 {
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group)
+void CategoryView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
-    QTreeWidgetItem* item = new QTreeWidgetItem({group->name()}, static_cast<int>(CategoryType::RECORDING_GROUP_ITEM));
-    const SavedGameSessionGroup* allGroup = savedGameSessionManager_->allSavedGameSessionGroup();
+    QTreeWidgetItem* item = new QTreeWidgetItem({group->name()}, static_cast<int>(CategoryType::ITEM_REPLAY_GROUP));
+    const ReplayGroup* allGroup = savedGameSessionManager_->allReplayGroup();
 
     // All groups that are not in the "All" group are editable
     if (group != allGroup)
@@ -408,7 +361,7 @@ void CategoryView::onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* gr
 
     // Insert child and enter edit mode so the user can type in a different name
     // if they want to
-    savedGameSessionGroupsItem_->addChild(item);
+    replayGroupsItem_->addChild(item);
     if (group != allGroup)
     {
         setCurrentItem(item, 0);
@@ -417,14 +370,14 @@ void CategoryView::onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* gr
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName)
+void CategoryView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
     // This will only ever really do anything if the group name is changed outside
     // of this class, in which case we should generate the onItemChange() event
     // as if the item were edited by the user
-    for (int i = 0; i != savedGameSessionGroupsItem_->childCount(); i++)
+    for (int i = 0; i != replayGroupsItem_->childCount(); i++)
     {
-        QTreeWidgetItem* item = savedGameSessionGroupsItem_->child(i);
+        QTreeWidgetItem* item = replayGroupsItem_->child(i);
         if (item->text(0) == oldName)
         {
             // calls onItemChanged()
@@ -435,33 +388,33 @@ void CategoryView::onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGro
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group)
+void CategoryView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
-    for (int i = 0; i != savedGameSessionGroupsItem_->childCount(); i++)
+    for (int i = 0; i != replayGroupsItem_->childCount(); i++)
     {
-        QTreeWidgetItem* item = savedGameSessionGroupsItem_->child(i);
+        QTreeWidgetItem* item = replayGroupsItem_->child(i);
         if (item->text(0) == group->name())
         {
             oldGroupNames_.remove(item);
-            savedGameSessionGroupsItem_->removeChild(item);
+            replayGroupsItem_->removeChild(item);
             break;
         }
     }
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path)
+void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const QDir& path)
 {
-    recordingSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::RECORDING_SOURCE_ITEM)));
+    replaySourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_REPLAY_SOURCE)));
     // TODO tooltip for path
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName)
+void CategoryView::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName)
 {
-    for (int i = 0; i != recordingSourcesItem_->childCount(); ++i)
+    for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
     {
-        QTreeWidgetItem* item = recordingSourcesItem_->child(i);
+        QTreeWidgetItem* item = replaySourcesItem_->child(i);
         if (item->text(0) == oldName)
         {
             item->setText(0, newName);
@@ -472,14 +425,20 @@ void CategoryView::onSavedGameSessionManagerGameSessionSourceNameChanged(const Q
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name)
+void CategoryView::onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
 {
-    for (int i = 0; i != recordingSourcesItem_->childCount(); ++i)
+    // TODO update tooltip
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onReplayManagerReplaySourceRemoved(const QString& name)
+{
+    for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
     {
-        QTreeWidgetItem* item = recordingSourcesItem_->child(i);
+        QTreeWidgetItem* item = replaySourcesItem_->child(i);
         if (item->text(0) == name)
         {
-            recordingSourcesItem_->removeChild(item);
+            replaySourcesItem_->removeChild(item);
             // TODO remove tooltip
             break;
         }
@@ -487,14 +446,14 @@ void CategoryView::onSavedGameSessionManagerGameSessionSourceRemoved(const QStri
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path)
+void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QDir& path)
 {
-    videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::VIDEO_SOURCE_ITEM)));
+    videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_VIDEO_SOURCE)));
     // TODO tooltip for path
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName)
+void CategoryView::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName)
 {
     for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
     {
@@ -509,7 +468,13 @@ void CategoryView::onSavedGameSessionManagerVideoSourceNameChanged(const QString
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onSavedGameSessionManagerVideoSourceRemoved(const QString& name)
+void CategoryView::onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
+{
+    // TODO update tooltip
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 {
     for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
     {
@@ -523,11 +488,37 @@ void CategoryView::onSavedGameSessionManagerVideoSourceRemoved(const QString& na
     }
 }
 
+
+// ----------------------------------------------------------------------------
+void CategoryView::onRunningGameSessionManagerConnectedToServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onRunningGameSessionManagerDisconnectedFromServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* session)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void CategoryView::onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* session)
+{
+
+}
+
 // ----------------------------------------------------------------------------
 void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin)
 {
     // TODO tooltip containing plugin description
-    trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::TRAINING_MODE_ITEM)));
+    trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_TRAINING_MODE)));
+    trainingModeItem_->setExpanded(true);
 }
 
 // ----------------------------------------------------------------------------
