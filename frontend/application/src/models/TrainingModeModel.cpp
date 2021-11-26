@@ -17,7 +17,7 @@ TrainingModeModel::~TrainingModeModel()
 {
     for (auto it = runningPlugins_.begin(); it != runningPlugins_.end(); ++it)
     {
-        uh::RealtimePlugin* plugin = it.value();
+        uh::Plugin* plugin = it.value();
         dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, it.key(), plugin);
         pluginManager_->destroy(plugin);
     }
@@ -26,7 +26,7 @@ TrainingModeModel::~TrainingModeModel()
 // ----------------------------------------------------------------------------
 QVector<QString> TrainingModeModel::availablePluginNames() const
 {
-    return pluginManager_->availableNames(UHPluginType::REALTIME);
+    return pluginManager_->availableNames(UHPluginType::REALTIME | UHPluginType::STANDALONE);
 }
 
 // ----------------------------------------------------------------------------
@@ -38,7 +38,7 @@ const UHPluginInfo* TrainingModeModel::getPluginInfo(const QString& pluginName) 
 // ----------------------------------------------------------------------------
 bool TrainingModeModel::launchPlugin(const QString& pluginName)
 {
-    uh::RealtimePlugin* plugin = pluginManager_->createRealtime(pluginName);
+    uh::Plugin* plugin = pluginManager_->create(pluginName, UHPluginType::REALTIME | UHPluginType::STANDALONE);
     if (plugin == nullptr)
         return false;
 
@@ -55,7 +55,7 @@ bool TrainingModeModel::stopPlugin(const QString& pluginName)
     if (it == runningPlugins_.end())
         return false;
 
-    uh::RealtimePlugin* plugin = it.value();
+    uh::Plugin* plugin = it.value();
     dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, pluginName, plugin);
 
     pluginManager_->destroy(plugin);

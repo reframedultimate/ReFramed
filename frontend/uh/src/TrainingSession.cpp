@@ -1,4 +1,5 @@
 #include "uh/TrainingSession.hpp"
+#include "uh/PlayerState.hpp"
 #include "uh/time.h"
 
 namespace uh {

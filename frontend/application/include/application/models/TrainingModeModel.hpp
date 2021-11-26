@@ -8,7 +8,7 @@ struct UHPluginInfo;
 class QWidget;
 
 namespace uh {
-    class RealtimePlugin;
+    class Plugin;
 }
 
 namespace uhapp {
@@ -33,7 +33,7 @@ public:
 
 private:
     PluginManager* pluginManager_;
-    QHash<QString, uh::RealtimePlugin*> runningPlugins_;
+    QHash<QString, uh::Plugin*> runningPlugins_;
 };
 
 }

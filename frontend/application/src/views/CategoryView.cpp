@@ -330,7 +330,6 @@ void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 // ----------------------------------------------------------------------------
 void CategoryView::onCategorySelected(CategoryType category)
 {
-
 }
 
 // ----------------------------------------------------------------------------
@@ -514,7 +513,7 @@ void CategoryView::onRunningGameSessionManagerRecordingEnded(uh::RunningGameSess
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin)
+void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin)
 {
     // TODO tooltip containing plugin description
     trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_TRAINING_MODE)));
@@ -522,7 +521,7 @@ void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::Realtim
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin)
+void CategoryView::onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin)
 {
     for (int i = 0; i != trainingModeItem_->childCount(); ++i)
     {

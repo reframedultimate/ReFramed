@@ -3,7 +3,7 @@
 #include <QString>
 
 namespace uh {
-    class RealtimePlugin;
+    class Plugin;
 }
 
 namespace uhapp {
@@ -11,8 +11,8 @@ namespace uhapp {
 class TrainingModeListener
 {
 public:
-    virtual void onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin) = 0;
-    virtual void onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin) = 0;
+    virtual void onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin) = 0;
+    virtual void onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin) = 0;
 };
 
 }

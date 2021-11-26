@@ -17,6 +17,8 @@ extern template class UH_TEMPLATE_API SmallVector<FighterID, 8>;
 extern template class UH_TEMPLATE_API SmallVector<SmallString<15>, 8>;
 extern template class UH_TEMPLATE_API Vector<PlayerState>;
 extern template class UH_TEMPLATE_API SmallVector<Vector<PlayerState>, 8>;
+extern template class UH_TEMPLATE_API SmallVector<SessionListener*, 4>;
+extern template class UH_TEMPLATE_API ListenerDispatcher<SessionListener>;
 
 class UH_PUBLIC_API Session : public RefCounted
 {

@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->setupUi(this);
 
     QDir pluginDir("share/uh/plugins");
-    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so", QDir::Files))
+    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
         pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 
     mainView_->addWidget(replayGroupView_);
@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(runningGameSessionView_);
-    mainView_->addWidget(new TrainingModeView(trainingModeModel_.get()));
+    mainView_->addWidget(new TrainingModeView(trainingModeModel_.get(), categoryModel_.get()));
     setCentralWidget(mainView_);
     mainView_->setCurrentIndex(2);
 

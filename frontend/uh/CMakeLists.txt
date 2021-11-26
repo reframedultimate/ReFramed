@@ -86,6 +86,8 @@ add_library (uh SHARED
     "src/HitStatusMapping.cpp"
     "src/init.c"
     "src/PlayerState.cpp"
+    "src/Plugin.cpp"
+    "src/RealtimePlugin.cpp"
     "src/RefCounted.cpp"
     "src/RunningSession.cpp"
     "src/RunningGameSession.cpp"
@@ -95,6 +97,7 @@ add_library (uh SHARED
     "src/SetFormat.cpp"
     "src/Session.cpp"
     "src/StageIDMapping.cpp"
+    "src/StandalonePlugin.cpp"
     "src/StreamBuffer.cpp"
     "src/TemplateInstantiations.cpp"
     "src/TrainingSession.cpp"
@@ -122,7 +125,11 @@ target_link_libraries (uh
 set_target_properties (uh
     PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}
-        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR})
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_LIBDIR}
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_LIBDIR}
+        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_BINDIR})
 
 if (UNIX)
     find_package (DL REQUIRED)

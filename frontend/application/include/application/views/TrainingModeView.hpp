@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/listeners/TrainingModeListener.hpp"
+#include "application/listeners/CategoryListener.hpp"
 #include <QWidget>
 #include <QHash>
 
@@ -10,15 +11,17 @@ namespace Ui {
 
 namespace uhapp {
 
+class CategoryModel;
 class TrainingModeModel;
 
-class TrainingModeView : public QWidget,
-                         public TrainingModeListener
+class TrainingModeView : public QWidget
+                       , public TrainingModeListener
+                       , public CategoryListener
 {
     Q_OBJECT
 
 public:
-    TrainingModeView(TrainingModeModel* model, QWidget* parent=nullptr);
+    TrainingModeView(TrainingModeModel* trainingModel, CategoryModel* categoryModel, QWidget* parent=nullptr);
     ~TrainingModeView();
 
 private slots:
@@ -26,13 +29,24 @@ private slots:
     void launchPressed();
 
 private:
-    void onTrainingModePluginLaunched(const QString& name, uh::RealtimePlugin* plugin) override;
-    void onTrainingModePluginStopped(const QString& name, uh::RealtimePlugin* plugin) override;
+    void onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin) override;
 
 private:
+    void onCategorySelected(CategoryType category) override;
+    void onCategoryItemSelected(CategoryType category, const QString& name) override;
+
+private:
+    struct PluginView
+    {
+        uh::Plugin* plugin;
+        QWidget* view;
+    };
+
     Ui::TrainingModeView* ui_;
-    TrainingModeModel* model_;
-    QHash<uh::RealtimePlugin*, QWidget*> pluginViews_;
+    TrainingModeModel* trainingModel_;
+    CategoryModel* categoryModel_;
+    QHash<QString, PluginView> pluginViews_;
 };
 
 }

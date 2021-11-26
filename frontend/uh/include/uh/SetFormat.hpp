@@ -15,7 +15,7 @@
 
 namespace uh {
 
-extern template class UH_TEMPLATE_API SmallString<0>;
+extern template class UH_TEMPLATE_API SmallString<15>;
 
 class UH_PUBLIC_API SetFormat
 {

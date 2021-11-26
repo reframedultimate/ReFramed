@@ -30,9 +30,4 @@ static void stop()
 {
 }
 
-PLUGIN_API UHPluginInterface plugin_interface = {
-    PLUGIN_VERSION,
-    factories,
-    start,
-    stop
-};
+DEFINE_PLUGIN(factories, start, stop)

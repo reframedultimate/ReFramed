@@ -28,6 +28,12 @@ public:
     int winner() const override
         { return currentWinner_; }
 
+    // Make MSVC shut up about dominance
+    const SmallString<15>& playerName(int playerIdx) const override
+        { return GameSession::playerName(playerIdx); }
+    TimeStampMS timeStampStartedMs() const override
+        { return GameSession::timeStampStartedMs(); }
+
 private:
     int currentWinner_ = 0;
 };

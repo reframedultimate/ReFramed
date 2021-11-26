@@ -10,6 +10,9 @@ class RunningTrainingSession;
 class UH_PUBLIC_API RealtimePlugin : public Plugin
 {
 public:
+    RealtimePlugin();
+    virtual ~RealtimePlugin();
+
     virtual void onGameSessionStarted(RunningGameSession* session) = 0;
     virtual void onGameSessionEnded(RunningGameSession* session) = 0;
     virtual void onTrainingSessionStarted(RunningTrainingSession* session) = 0;

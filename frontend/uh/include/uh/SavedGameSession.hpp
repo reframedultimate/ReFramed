@@ -21,6 +21,15 @@ private:
     );
 
     friend class SavedSession;
+
+public:
+    // Make MSVC shut up about dominance
+    const SmallString<15>& playerName(int playerIdx) const override
+        { return GameSession::playerName(playerIdx); }
+    TimeStampMS timeStampStartedMs() const override
+        { return GameSession::timeStampStartedMs(); }
+    int winner() const override
+        { return SavedSession::winner(); }
 };
 
 }
