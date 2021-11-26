@@ -25,18 +25,18 @@ namespace uhapp {
 
 class DataSetFilterWidget;
 class DataSetBackgroundLoader;
-class SavedGameSessionManager;
+class ReplayManager;
 
 class DataSetFilterView : public QWidget
-                        , public SavedGameSessionManagerListener
-                        , public SavedGameSessionGroupListener
+                        , public ReplayManagerListener
+                        , public ReplayGroupListener
                         , public DataSetBackgroundLoaderListener
                         , public uh::DataSetFilterListener
 {
     Q_OBJECT
 
 public:
-    explicit DataSetFilterView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
+    explicit DataSetFilterView(ReplayManager* manager, QWidget* parent=nullptr);
     ~DataSetFilterView();
 
 protected:
@@ -55,41 +55,43 @@ private slots:
 private:
     void addNewFilterWidget(DataSetFilterWidget* widget);
     void recursivelyInstallEventFilter(QObject* obj);
-    void addGroupToInputRecordingsList(SavedGameSessionGroup* group);
-    void removeGroupFromInputRecordingsList(SavedGameSessionGroup* group);
-    void removeGroupFromInputDataSet(SavedGameSessionGroup* group);
+    void addGroupToInputRecordingsList(ReplayGroup* group);
+    void removeGroupFromInputRecordingsList(ReplayGroup* group);
+    void removeGroupFromInputDataSet(ReplayGroup* group);
     void moveFilterWidgetInLayout(DataSetFilterWidget* widget, int layoutIndex);
     void dirtyDataSetFilters();
 
 private:
-    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
-    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
+    void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile) override;
 
-    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override;
-    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override;
-    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override;
+    void onReplayManagerGroupAdded(ReplayGroup* group) override;
+    void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
+    void onReplayManagerGroupRemoved(ReplayGroup* group) override;
 
-    void onDataSetBackgroundLoaderDataSetLoaded(SavedGameSessionGroup* group, uh::DataSet* dataSet) override;
+    void onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, uh::DataSet* dataSet) override;
 
     void onDataSetFilterDirtied(uh::DataSetFilter* filter);
 
-    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override { (void)path; }
-    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override { (void)name; }
-    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override { (void)path; }
+    void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerReplaySourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
     Ui::DataSetFilterView* ui_;
     QVBoxLayout* filterWidgetsLayout_;
-    SavedGameSessionManager* savedGameSessionManager_;
+    ReplayManager* savedGameSessionManager_;
     DataSetBackgroundLoader* dataSetBackgroundLoader_;
     std::unique_ptr<uh::DataSetFilterChain> dataSetFilterChain_;
     std::unique_ptr<uh::DataSet> inputDataSetMerged_;
     uh::Reference<uh::DataSet> outputDataSet_;
-    std::unordered_map<const SavedGameSessionGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
+    std::unordered_map<const ReplayGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
     bool dataSetFiltersDirty_ = true;
 };
 

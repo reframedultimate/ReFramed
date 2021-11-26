@@ -20,7 +20,7 @@ namespace uh {
 
 namespace uhapp {
 
-class SavedGameSessionGroup;
+class ReplayGroup;
 
 class DataSetBackgroundLoader : public QThread
 {
@@ -29,31 +29,31 @@ class DataSetBackgroundLoader : public QThread
 public:
     struct OutData {
         QFileInfo recordingFile;
-        SavedGameSessionGroup* group;
+        ReplayGroup* group;
         uint32_t taskID;
     };
 
     struct InData {
         uh::Reference<uh::SavedGameSession> session;
-        SavedGameSessionGroup* group;
+        ReplayGroup* group;
         uint32_t taskID;
     };
 
     explicit DataSetBackgroundLoader(QObject* parent=nullptr);
     ~DataSetBackgroundLoader();
 
-    void loadGroup(SavedGameSessionGroup* group);
-    void cancelGroup(SavedGameSessionGroup* group);
+    void loadGroup(ReplayGroup* group);
+    void cancelGroup(ReplayGroup* group);
     void cancelAll();
 
     uh::ListenerDispatcher<DataSetBackgroundLoaderListener> dispatcher;
 
 signals:
     // NOTE: For internal use only
-    void _dataSetLoaded(quint32 taskID, uh::DataSet* dataSet, SavedGameSessionGroup* group);
+    void _dataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group);
 
 private slots:
-    void onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, SavedGameSessionGroup* group);
+    void onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group);
 
 private:
     void run() override;
@@ -63,7 +63,7 @@ private:
     QQueue<OutData> out_;
     QQueue<InData> in_;
     QWaitCondition cond_;
-    std::unordered_map<uint32_t, SavedGameSessionGroup*> pendingTasks_;
+    std::unordered_map<uint32_t, ReplayGroup*> pendingTasks_;
     int activeWorkers_ = 0;
     static uint32_t taskIDCounter_;
     bool requestShutdown_ = false;

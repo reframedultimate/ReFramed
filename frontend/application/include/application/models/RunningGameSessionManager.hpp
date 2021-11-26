@@ -17,21 +17,25 @@ namespace uhapp {
 class Protocol;
 class Settings;
 class RunningGameSessionManagerListener;
-class SavedGameSessionManager;
+class ReplayManager;
 
 /*!
  * \brief Central class that controls the connection + protocol with the Switch
  * and manages set information and saving recordings to files as they come in.
  */
 class RunningGameSessionManager : public QObject
-                                , public SavedGameSessionManagerListener
+                                , public ReplayManagerListener
                                 , public uh::SessionListener
 {
     Q_OBJECT
 
 public:
-    RunningGameSessionManager(SavedGameSessionManager* manager, QObject* parent=nullptr);
+    RunningGameSessionManager(ReplayManager* manager, QObject* parent=nullptr);
     ~RunningGameSessionManager();
+
+    void tryConnectToServer(const QString& ipAddress, uint16_t port);
+    void disconnectFromServer();
+    bool isSessionRunning() const;
 
     void setFormat(const uh::SetFormat& format);
     void setP1Name(const QString& name);
@@ -39,15 +43,6 @@ public:
     void setGameNumber(uh::GameNumber number);
 
     uh::ListenerDispatcher<RunningGameSessionManagerListener> dispatcher;
-
-signals:
-    void failedToConnectToServer();
-    void connectedToServer();
-    void disconnectedFromServer();
-
-public slots:
-    void tryConnectToServer(const QString& ipAddress, uint16_t port);
-    void disconnectFromServer();
 
 private slots:
     void onProtocolConnectionLost();
@@ -59,19 +54,21 @@ private:
     bool shouldStartNewSet(const uh::RunningGameSession* recording);
 
 private:
-    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override;
+    void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;
 
-    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override { (void)group; }
-    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override { (void)group; (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override { (void)group; }
+    void onReplayManagerGroupAdded(ReplayGroup* group) override { (void)group; }
+    void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override { (void)group; (void)oldName; (void)newName; }
+    void onReplayManagerGroupRemoved(ReplayGroup* group) override { (void)group; }
 
-    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerReplaySourceRemoved(const QString& name) override { (void)name; }
 
-    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
     void onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
@@ -87,7 +84,7 @@ private:
     std::unique_ptr<Protocol> protocol_;
     std::vector<uh::Reference<uh::RunningGameSession>> pastSessions_;
     uh::Reference<uh::RunningGameSession> activeSession_;
-    SavedGameSessionManager* savedSessionManager_;
+    ReplayManager* savedSessionManager_;
     QString p1Name_;
     QString p2Name_;
     uh::SetFormat format_;

@@ -7,13 +7,13 @@
 
 namespace uhapp {
 
-class SavedGameSessionGroupListener;
-class SavedGameSessionManager;
+class ReplayGroupListener;
+class ReplayManager;
 
-class SavedGameSessionGroup
+class ReplayGroup
 {
 public:
-    SavedGameSessionGroup(const QString& name);
+    ReplayGroup(const QString& name);
 
     /*!
      * \brief The name of this group. It is unique among all groups.
@@ -26,13 +26,13 @@ public:
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
 
-    uh::ListenerDispatcher<SavedGameSessionGroupListener> dispatcher;
+    uh::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
 private:
     // Only the saved game session manager is allowed to change names of
     // groups because the hash table keys must remain in sync with the name
     // stored in the group object
-    friend class SavedGameSessionManager;
+    friend class ReplayManager;
     void setName(const QString& name);
 
 private:

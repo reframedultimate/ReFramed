@@ -13,21 +13,21 @@ namespace Ui {
 
 namespace uhapp {
 
-class SavedGameSessionManager;
-class SavedGameSessionGroup;
+class ReplayManager;
+class ReplayGroup;
 class SavedGameSessionNameCompleter;
 class SavedGameSessionListWidget;
 class SessionView;
 
-class SavedGameSessionGroupView : public QWidget
-                                , public SavedGameSessionManagerListener
-                                , public SavedGameSessionGroupListener
+class ReplayGroupView : public QWidget
+                      , public ReplayManagerListener
+                      , public ReplayGroupListener
 {
     Q_OBJECT
 
 public:
-    explicit SavedGameSessionGroupView(SavedGameSessionManager* manager, QWidget* parent=nullptr);
-    ~SavedGameSessionGroupView();
+    explicit ReplayGroupView(ReplayManager* manager, QWidget* parent=nullptr);
+    ~ReplayGroupView();
 
 public slots:
     /*!
@@ -35,7 +35,7 @@ public slots:
      * changes (files added/removed) the view will automatically update. If
      * the group is deleted the view will clear itself.
      */
-    void setSavedGameSessionGroup(SavedGameSessionGroup* group);
+    void setSavedGameSessionGroup(ReplayGroup* group);
     void clear();
 
 private slots:
@@ -45,26 +45,28 @@ private slots:
 
 private:
     // In case a group gets deleted, we need remove ourselves as a listener
-    void onSavedGameSessionManagerGroupRemoved(SavedGameSessionGroup* group) override;
-    void onSavedGameSessionManagerGroupNameChanged(SavedGameSessionGroup* group, const QString& oldName, const QString& newName) override;
+    void onReplayManagerGroupRemoved(ReplayGroup* group) override;
+    void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
 
-    void onSavedGameSessionManagerGroupAdded(SavedGameSessionGroup* group) override { (void)group; }
-    void onSavedGameSessionManagerDefaultGameSessionSaveLocationChanged(const QDir& path) override { (void)path; }
-    void onSavedGameSessionManagerGameSessionSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerGameSessionSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerGameSessionSourceRemoved(const QString& name) override { (void)name; }
-    void onSavedGameSessionManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onSavedGameSessionManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onSavedGameSessionManagerVideoSourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerGroupAdded(ReplayGroup* group) override { (void)group; }
+    void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override { (void)path; }
+    void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerReplaySourceRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
+    void onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
+    void onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
+    void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    void onSavedGameSessionGroupFileAdded(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
-    void onSavedGameSessionGroupFileRemoved(SavedGameSessionGroup* group, const QFileInfo& absPathToFile) override;
+    void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile) override;
 
 private:
     Ui::SavedGameSessionGroupView* ui_;
-    SavedGameSessionManager* savedGameSessionManager_;
-    SavedGameSessionGroup* currentGroup_ = nullptr;
+    ReplayManager* savedGameSessionManager_;
+    ReplayGroup* currentGroup_ = nullptr;
     SavedGameSessionListWidget* savedGameSessionListWidget_;
     SavedGameSessionNameCompleter* filterCompleter_;
     SessionView* sessionView_;

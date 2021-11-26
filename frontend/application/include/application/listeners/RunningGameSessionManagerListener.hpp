@@ -16,6 +16,10 @@ namespace uhapp {
 class RunningGameSessionManagerListener
 {
 public:
+    virtual void onRunningGameSessionManagerFailedToConnectToServer() = 0;
+    virtual void onRunningGameSessionManagerConnectedToServer() = 0;
+    virtual void onRunningGameSessionManagerDisconnectedFromServer() = 0;
+
     virtual void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) = 0;
     virtual void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) = 0;
 
