@@ -26,7 +26,7 @@ class ReplayManager;
  */
 class RunningGameSessionManager : public QObject
                                 , public ReplayManagerListener
-                                , public ProtocolListener
+                                , public uh::ProtocolListener
                                 , public uh::SessionListener
 {
     Q_OBJECT
@@ -35,25 +35,29 @@ public:
     RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent=nullptr);
     ~RunningGameSessionManager();
 
-    void tryConnectToServer(const QString& ipAddress, uint16_t port);
-    void disconnectFromServer();
-    bool isSessionRunning() const;
-
     void setFormat(const uh::SetFormat& format);
     void setP1Name(const QString& name);
     void setP2Name(const QString& name);
     void setGameNumber(uh::GameNumber number);
 
-    uh::ListenerDispatcher<RunningGameSessionManagerListener> dispatcher;
+    bool isSessionRunning() const;
 
-private slots:
-    void onProtocolConnectionLost();
-    void onProtocolRecordingStarted(uh::RunningGameSession* recording);
-    void onProtocolRecordingEnded(uh::RunningGameSession* recording);
+    uh::ListenerDispatcher<RunningGameSessionManagerListener> dispatcher;
 
 private:
     void findUniqueGameAndSetNumbers(uh::RunningGameSession* recording);
     bool shouldStartNewSet(const uh::RunningGameSession* recording);
+
+private:
+    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onProtocolFailedToConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
+    void onProtocolDisconnectedFromServer() override;
+
+    void onProtocolTrainingStarted(uh::RunningTrainingSession* session) override;
+    void onProtocolTrainingEnded(uh::RunningTrainingSession* session) override;
+    void onProtocolMatchStarted(uh::RunningGameSession* session) override;
+    void onProtocolMatchEnded(uh::RunningGameSession* session) override;
 
 private:
     void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;
@@ -78,6 +82,8 @@ private:
     void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
+
+    void onRunningTrainingSessionTrainingReset() override {}
 
     void onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
     void onRunningSessionNewPlayerState(int player, const uh::PlayerState& state) override;

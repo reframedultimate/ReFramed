@@ -55,19 +55,19 @@ private:
     void onCategoryItemSelected(CategoryType category, const QString& name) override { (void)category; (void)name; }
 
 private:
-    void onRunningGameSessionManagerFailedToConnectToServer() override;
-    void onRunningGameSessionManagerConnectedToServer() override;
+    void onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onRunningGameSessionManagerDisconnectedFromServer() override;
 
     // All unused
-    void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) override { (void)recording; }
-    void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) override { (void)recording; }
-    void onRunningGameSessionManagerP1NameChanged(const QString& name) override { (void)name; }
-    void onRunningGameSessionManagerP2NameChanged(const QString& name) override { (void)name; }
+    void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording) override { (void)recording; }
+    void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording) override { (void)recording; }
+    void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) override { (void)player; (void)name; }
     void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
     void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
     void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
     void onRunningGameSessionManagerWinnerChanged(int winner) { (void)winner; }
 
 private:

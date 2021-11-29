@@ -60,19 +60,19 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override;
 
 private:
-    void onRunningGameSessionManagerFailedToConnectToServer() override {};
-    void onRunningGameSessionManagerConnectedToServer() override;
+    void onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; }
+    void onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; };
+    void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onRunningGameSessionManagerDisconnectedFromServer() override;
 
-    void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* session) override;
-    void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* session) override;
+    void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* session) override;
+    void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* session) override;
 
-    void onRunningGameSessionManagerP1NameChanged(const QString& name) override { (void)name; }
-    void onRunningGameSessionManagerP2NameChanged(const QString& name) override { (void)name; }
+    void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) override { (void)name; }
     void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
     void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
     void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
     void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:

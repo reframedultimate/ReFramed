@@ -37,6 +37,8 @@ private:
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) { (void)format; }
     void onRunningGameSessionWinnerChanged(int winner) override { (void)winner; }
 
+    void onRunningTrainingSessionTrainingReset() override {}
+
 private:
     uh::SmallVector<QwtPlotCurve*, 8> curves_;
     uh::SmallVector<uint32_t, 8> prevFrames_;

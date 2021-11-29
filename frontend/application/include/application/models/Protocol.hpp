@@ -5,10 +5,7 @@
 #include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
 #include "uh/ListenerDispatcher.hpp"
 
-#include <QVector>
-#include <QThread>
-#include <QMutex>
-#include <QExplicitlySharedDataPointer>
+#include <QObject>
 
 namespace uh {
     class MappingInfo;
@@ -19,6 +16,9 @@ namespace uh {
 }
 
 namespace uhapp {
+
+class ProtocolConnectTask;
+class ProtocolCommunicateTask;
 
 /*!
  * \brief Decodes the incoming stream from the nintendo switch into structures.
@@ -43,50 +43,34 @@ namespace uhapp {
  * progress, then only connectionClosed() is emitted. Similarly, trainingEnded()
  * will still be emitted if training was in progress.
  */
-class Protocol : public QThread
+class Protocol : public QObject
 {
     Q_OBJECT
+
 public:
     explicit Protocol(QObject* parent=nullptr);
     ~Protocol();
 
-    void tryConnectToServer(const QString& ipAddress, uint16_t port);
+    void connectToServer(const QString& ipAddress, uint16_t port);
     void disconnectFromServer();
+
+    bool isTryingToConnect() const;
     bool isConnected() const;
 
     uh::ListenerDispatcher<uh::ProtocolListener> dispatcher;
 
-signals:
-    // emitted from the listener thread
-    void _receiveTrainingStarted(uh::RunningTrainingSession* training);
-    void _receiveTrainingEnded();
-    void _receiveTrainingReset();
-    void _receiveMatchStarted(uh::RunningGameSession* match);
-    void _receiveMatchEnded();
-    void _receivePlayerState(
-            quint64 frameTimeStamp,
-            quint32 frame,
-            quint8 playerID,
-            float posx,
-            float posy,
-            float damage,
-            float hitstun,
-            float shield,
-            quint16 status,
-            quint64 motion,
-            quint8 hit_status,
-            quint8 stocks,
-            bool attack_connected,
-            bool facing_direction);
-
 private slots:
+    void onConnectionSuccess(tcp_socket socket, const QString& ipAddress, uint16_t port);
+    void onConnectionFailure(const QString& ipAddress, uint16_t port);
+    void onProtocolDisconnected();
+
     // catch signals from listener thread so we have them in the main thread
-    void onReceiveTrainingStarted(uh::RunningTrainingSession* training);
-    void onReceiveTrainingEnded();
-    void onReceiveTrainingReset();
-    void onReceiveMatchStarted(uh::RunningGameSession* match);
-    void onReceiveMatchEnded();
-    void onReceivePlayerState(
+    void onTrainingStarted(uh::RunningTrainingSession* training);
+    void onTrainingEnded();
+    void onTrainingReset();
+    void onMatchStarted(uh::RunningGameSession* match);
+    void onMatchEnded();
+    void onPlayerState(
             quint64 frameTimeStamp,
             quint32 frame,
             quint8 playerID,
@@ -101,24 +85,14 @@ private slots:
             quint8 stocks,
             bool attack_connected,
             bool facing_direction);
-
-signals:
-    void trainingStarted(uh::RunningTrainingSession* training);
-    void trainingEnded(uh::RunningTrainingSession* training);
-    void trainingReset(uh::RunningTrainingSession* training);
-    void matchStarted(uh::RunningGameSession* match);
-    void matchEnded(uh::RunningGameSession* match);
-    void serverClosedConnection();
 
 private:
-    void run() override;
     void endSessionIfNecessary();
 
 private:
-    tcp_socket socket_;
-    QMutex mutex_;
+    std::unique_ptr<ProtocolConnectTask> connectTask_;
+    std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
     uh::Reference<uh::RunningSession> session_;
-    bool requestShutdown_ = false;
 };
 
 }

@@ -42,6 +42,8 @@ private:
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) { (void)format; }
     void onRunningGameSessionWinnerChanged(int winner) override { (void)winner; }
 
+    void onRunningTrainingSessionTrainingReset() override {}
+
 private slots:
     void onDottedAction(bool enable);
     void onLinesAction(bool enable);

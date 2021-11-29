@@ -487,4 +487,9 @@ void SessionDataView::onRunningGameSessionWinnerChanged(int winner)
     ui_->tableWidget_gameInfo->item(5, 1)->setText(session_->playerName(winner).cStr());
 }
 
+// ----------------------------------------------------------------------------
+void SessionDataView::onRunningTrainingSessionTrainingReset()
+{
+}
+
 }
