@@ -9,6 +9,8 @@ find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
+    "include/application/models/ProtocolConnectTask.hpp"
+    "include/application/models/ProtocolCommunicateTask.hpp"
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
@@ -65,6 +67,8 @@ add_executable (ultimate-hindsight # WIN32
     "src/models/DataSetBackgroundLoader.cpp"
     "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
+    "src/models/ProtocolConnectTask.cpp"
+    "src/models/ProtocolCommunicateTask.cpp"
     "src/models/RunningGameSessionManager.cpp"
     "src/models/SavedGameSessionGroup.cpp"
     "src/models/SavedGameSessionManager.cpp"

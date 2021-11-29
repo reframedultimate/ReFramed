@@ -549,7 +549,7 @@ void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerConnectedToServer()
+void CategoryView::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
 
 }
@@ -561,13 +561,13 @@ void CategoryView::onRunningGameSessionManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* session)
+void CategoryView::onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* session)
+void CategoryView::onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* session)
 {
 
 }

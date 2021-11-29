@@ -53,13 +53,13 @@ void RunningGameSessionManager::setP1Name(const QString& name)
         else
             activeSession_->setPlayerName(0, name.toStdString().c_str());
 
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged,
-                            QString(activeSession_->playerName(0).cStr()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
+                            0, activeSession_->playerName(0));
     }
     else
     {
         p1Name_ = name;
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged, name);
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 0, uh::SmallString<15>(name.toStdString().c_str()));
     }
 }
 
@@ -73,13 +73,13 @@ void RunningGameSessionManager::setP2Name(const QString& name)
         else
             activeSession_->setPlayerName(1, name.toStdString().c_str());
 
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged,
-                            QString(activeSession_->playerName(1).cStr()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
+                            1, activeSession_->playerName(1));
     }
     else
     {
         p2Name_ = name;
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged, name);
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 1, uh::SmallString<15>(name.toStdString().c_str()));
     }
 }
 
@@ -98,6 +98,33 @@ void RunningGameSessionManager::setGameNumber(uh::GameNumber number)
     {
         gameNumber_ = number;
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, number);
+    }
+}
+
+// ----------------------------------------------------------------------------
+bool RunningGameSessionManager::isSessionRunning() const
+{
+    return protocol_->isConnected();
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSession* recording)
+{
+    const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
+    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
+    {
+        switch (format_.type())
+        {
+            case uh::SetFormat::FRIENDLIES:
+            case uh::SetFormat::PRACTICE:
+            case uh::SetFormat::OTHER:
+                recording->setGameNumber(recording->gameNumber() + 1);
+                break;
+
+            default:
+                recording->setSetNumber(recording->setNumber() + 1);
+                break;
+        }
     }
 }
 
@@ -173,40 +200,19 @@ bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* 
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSession* recording)
-{
-    const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
-    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
-    {
-        switch (format_.type())
-        {
-            case uh::SetFormat::FRIENDLIES:
-            case uh::SetFormat::PRACTICE:
-            case uh::SetFormat::OTHER:
-                recording->setGameNumber(recording->gameNumber() + 1);
-                break;
-
-            default:
-                recording->setSetNumber(recording->setNumber() + 1);
-                break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolAttemptConnectToServer()
+void RunningGameSessionManager::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolFailedToConnectToServer()
+void RunningGameSessionManager::onProtocolFailedToConnectToServer(const char* ipAddress, uint16_t port)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolConnectedToServer()
+void RunningGameSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
 
 }
@@ -262,23 +268,23 @@ void RunningGameSessionManager::onProtocolMatchStarted(uh::RunningGameSession* s
 
     session->dispatcher.addListener(this);
     activeSession_ = session;
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingStarted, session);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchStarted, session);
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, session->setNumber());
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, session->gameNumber());
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, session->format());
     if (session->playerCount() == 2)
     {
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged,
-                            QString(session->playerName(0).cStr()));
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged,
-                            QString(session->playerName(1).cStr()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
+                            0, session->playerName(0));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
+                            1, session->playerName(1));
     }
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolMatchEnded(uh::RunningGameSession* session)
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingEnded, session);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchEnded, session);
 
     // Save recording
     QFileInfo fileInfo(
@@ -332,9 +338,9 @@ void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player
     if (activeSession_->playerCount() == 2)
     {
         if (player == 0)
-            dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged, QString(name.cStr()));
+            dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 0, name);
         else
-            dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged, QString(name.cStr()));
+            dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 1, name);
     }
 }
 
@@ -366,7 +372,7 @@ void RunningGameSessionManager::onRunningSessionNewUniquePlayerState(int player,
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const uh::PlayerState& state)
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerStateAdded, player, state);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewPlayerState, player, state);
 }
 
 // ----------------------------------------------------------------------------

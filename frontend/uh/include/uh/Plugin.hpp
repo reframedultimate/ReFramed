@@ -3,7 +3,7 @@
 #include "uh/config.hpp"
 
 class QWidget;
-class UHPluginFactory;
+struct UHPluginFactory;
 
 namespace uh {
 

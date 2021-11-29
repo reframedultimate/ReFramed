@@ -88,12 +88,17 @@ void RunningGameSessionView::onLineEditP2TextChanged(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerFailedToConnectToServer()
+void RunningGameSessionView::onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerConnectedToServer()
+void RunningGameSessionView::onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
+{
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionView::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_waiting);
 }
@@ -105,7 +110,7 @@ void RunningGameSessionView::onRunningGameSessionManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording)
 {
     clearLayout(ui_->layout_playerInfo);
 
@@ -160,33 +165,29 @@ void RunningGameSessionView::onRunningGameSessionManagerRecordingStarted(uh::Run
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording)
 {
     (void)recording;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerP1NameChanged(const QString& name)
+void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int playerIdx, const uh::SmallString<15>& name)
 {
-    if (0 >= names_.size())
+    if (names_.size() <= playerIdx)
         return;
 
-    const QSignalBlocker blocker(ui_->lineEdit_player1);
+    names_[playerIdx]->setTitle(name.cStr());
 
-    names_[0]->setTitle(name);
-    ui_->lineEdit_player1->setText(name);
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerP2NameChanged(const QString& name)
-{
-    if (1 >= names_.size())
-        return;
-
-    const QSignalBlocker blocker(ui_->lineEdit_player2);
-
-    names_[1]->setTitle(name);
-    ui_->lineEdit_player2->setText(name);
+    if (playerIdx == 0)
+    {
+        const QSignalBlocker blocker(ui_->lineEdit_player1);
+        ui_->lineEdit_player1->setText(name.cStr());
+    }
+    else if (playerIdx == 1)
+    {
+        const QSignalBlocker blocker(ui_->lineEdit_player2);
+        ui_->lineEdit_player2->setText(name.cStr());
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -215,7 +216,7 @@ void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(uh::Ga
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state)
+void RunningGameSessionView::onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state)
 {
     if (player >= fighterStatus_.size())
         return;

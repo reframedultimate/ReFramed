@@ -56,6 +56,8 @@ private:
     void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
 
+    void onRunningTrainingSessionTrainingReset() override;
+
 private:
     Ui::SessionDataView* ui_;
     QTreeWidgetItem* gameInfoItem_ = nullptr;

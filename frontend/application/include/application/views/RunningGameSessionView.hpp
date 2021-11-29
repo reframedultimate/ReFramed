@@ -37,19 +37,19 @@ private slots:
     void onLineEditP2TextChanged(const QString& name);
 
 private:
-    void onRunningGameSessionManagerFailedToConnectToServer() override;
-    void onRunningGameSessionManagerConnectedToServer() override;
+    void onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onRunningGameSessionManagerDisconnectedFromServer() override;
 
-    void onRunningGameSessionManagerRecordingStarted(uh::RunningGameSession* recording) override;
-    void onRunningGameSessionManagerRecordingEnded(uh::RunningGameSession* recording) override;
+    void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording) override;
+    void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording) override;
 
-    void onRunningGameSessionManagerP1NameChanged(const QString& name) override;
-    void onRunningGameSessionManagerP2NameChanged(const QString& name) override;
+    void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
     void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override;
     void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override;
     void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override;
-    void onRunningGameSessionManagerPlayerStateAdded(int player, const uh::PlayerState& state) override;
+    void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) override;
     void onRunningGameSessionManagerWinnerChanged(int winner) override;
 
 private:

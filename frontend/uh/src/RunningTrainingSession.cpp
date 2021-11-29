@@ -1,5 +1,6 @@
 #include "uh/RunningTrainingSession.hpp"
 #include "uh/PlayerState.hpp"
+#include "uh/SessionListener.hpp"
 
 namespace uh {
 
@@ -13,6 +14,12 @@ RunningTrainingSession::RunningTrainingSession(
     , RunningSession()
     , TrainingSession()
 {
+}
+
+// ----------------------------------------------------------------------------
+void RunningTrainingSession::resetTraining()
+{
+    dispatcher.dispatch(&SessionListener::onRunningTrainingSessionTrainingReset);
 }
 
 }

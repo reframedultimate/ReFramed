@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
     , protocol_(new Protocol)
     , pluginManager_(new PluginManager(protocol_.get()))
     , replayManager_(new ReplayManager(config_.get()))
-    , runningGameSessionManager_(new RunningGameSessionManager(replayManager_.get()))
+    , runningGameSessionManager_(new RunningGameSessionManager(protocol_.get(), replayManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
     , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
@@ -116,12 +116,17 @@ void MainWindow::setStateDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerFailedToConnectToServer()
+void MainWindow::onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerConnectedToServer()
+void MainWindow::onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
     setStateConnected();
 }
@@ -151,7 +156,7 @@ void MainWindow::onConnectActionTriggered()
 {
     ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
 
-    connect(c, &ConnectView::connectRequest, runningGameSessionManager_.get(), &RunningGameSessionManager::tryConnectToServer);
+    //connect(c, &ConnectView::connectRequest, runningGameSessionManager_.get(), &RunningGameSessionManager::tryConnectToServer);
     /*connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
     connect(runningGameSessionManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);*/
 
@@ -164,7 +169,7 @@ void MainWindow::onConnectActionTriggered()
 void MainWindow::onDisconnectActionTriggered()
 {
     // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
-    runningGameSessionManager_->disconnectFromServer();
+    protocol_->disconnectFromServer();
 }
 
 // ----------------------------------------------------------------------------
