@@ -15,8 +15,8 @@ public:
     ~ProtocolConnectTask();
 
 signals:
-    void connectionSuccess(tcp_socket socket, const QString& ipAddress, uint16_t port);
-    void connectionFailure(const QString& ipAddress, uint16_t port);
+    void connectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port);
+    void connectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
 
 private:
     void run() override;

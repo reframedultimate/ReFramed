@@ -60,8 +60,8 @@ public:
     uh::ListenerDispatcher<uh::ProtocolListener> dispatcher;
 
 private slots:
-    void onConnectionSuccess(tcp_socket socket, const QString& ipAddress, uint16_t port);
-    void onConnectionFailure(const QString& ipAddress, uint16_t port);
+    void onConnectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port);
+    void onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
     void onProtocolDisconnected();
 
     // catch signals from listener thread so we have them in the main thread

@@ -206,7 +206,7 @@ void RunningGameSessionManager::onProtocolAttemptConnectToServer(const char* ipA
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolFailedToConnectToServer(const char* ipAddress, uint16_t port)
+void RunningGameSessionManager::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port)
 {
 
 }

@@ -50,7 +50,7 @@ private:
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolFailedToConnectToServer(const char* ipAddress, uint16_t port) override;
+    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolDisconnectedFromServer() override;
 

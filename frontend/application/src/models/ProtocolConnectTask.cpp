@@ -22,9 +22,14 @@ void ProtocolConnectTask::run()
     QByteArray ba = ipAddress_.toLocal8Bit();
     if (tcp_socket_connect_to_host(&socket, ba.data(), port_) != 0)
     {
-        emit connectionFailure(ipAddress_, port_);
+        emit connectionFailure(
+                    tcp_socket_get_last_error(&socket),
+                    ipAddress_, port_);
         return;
     }
+
+    // TODO: Get protocol version from switch and verify that this is even
+    // a switch.
 
     emit connectionSuccess(socket, ipAddress_, port_);
 }

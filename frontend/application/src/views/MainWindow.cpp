@@ -154,12 +154,7 @@ static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup)
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
-    ConnectView* c = new ConnectView(config_.get(), Qt::Popup | Qt::Dialog);
-
-    //connect(c, &ConnectView::connectRequest, runningGameSessionManager_.get(), &RunningGameSessionManager::tryConnectToServer);
-    /*connect(runningGameSessionManager_.get(), &RunningGameSessionManager::connectedToServer, c, &ConnectView::close);
-    connect(runningGameSessionManager_.get(), &RunningGameSessionManager::failedToConnectToServer, c, &ConnectView::setConnectFailed);*/
-
+    ConnectView* c = new ConnectView(config_.get(), protocol_.get(), Qt::Popup | Qt::Dialog);
     c->setAttribute(Qt::WA_DeleteOnClose);
     c->show();
     c->setGeometry(calculatePopupGeometry(this, c));
