@@ -11,7 +11,7 @@ class ProtocolListener
 {
 public:
     virtual void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) = 0;
-    virtual void onProtocolFailedToConnectToServer(const char* ipAddress, uint16_t port) = 0;
+    virtual void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) = 0;
     virtual void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) = 0;
     virtual void onProtocolDisconnectedFromServer() = 0;
 

@@ -37,7 +37,7 @@ void tcp_socket_global_deinit(void)
 }
 
 /* ------------------------------------------------------------------------- */
-int tcp_socket_connect_to_host(struct tcp_socket* sock, const char* ip, uint16_t port)
+int tcp_socket_connect_to_host(union tcp_socket* sock, const char* ip, uint16_t port)
 {
 #if defined(WIN32)
     SOCKET sockfd;
@@ -56,6 +56,7 @@ int tcp_socket_connect_to_host(struct tcp_socket* sock, const char* ip, uint16_t
     if ((result = getaddrinfo(ip, port_str, &hints, &servinfo)) != 0)
     {
         fprintf(stderr, "Error resolving host address: %s\n", gai_strerror(result));
+        sock->error_msg = gai_strerror(result);
         goto getaddrinfo_failed;
     }
 
@@ -76,6 +77,7 @@ int tcp_socket_connect_to_host(struct tcp_socket* sock, const char* ip, uint16_t
     if (p == NULL)
     {
         fprintf(stderr, "Failed to connect: %s\n", strerror(errno));
+        sock->error_msg = strerror(errno);
         goto connect_failed;
     }
 
@@ -101,6 +103,7 @@ getaddrinfo_failed: return -1;
     if ((result = getaddrinfo(ip, port_str, &hints, &servinfo)) != 0)
     {
         fprintf(stderr, "Error resolving host address: %s\n", gai_strerror(result));
+        sock->error_msg = gai_strerror(result);
         goto getaddrinfo_failed;
     }
 
@@ -121,6 +124,7 @@ getaddrinfo_failed: return -1;
     if (p == NULL)
     {
         fprintf(stderr, "Failed to connect: %s\n", strerror(errno));
+        sock->error_msg = strerror(errno);
         goto connect_failed;
     }
 
@@ -134,7 +138,13 @@ getaddrinfo_failed: return -1;
 }
 
 /* ------------------------------------------------------------------------- */
-void tcp_socket_shutdown(struct tcp_socket* sock)
+const char* tcp_socket_get_last_error(union tcp_socket* sock)
+{
+    return sock->error_msg;
+}
+
+/* ------------------------------------------------------------------------- */
+void tcp_socket_shutdown(union tcp_socket* sock)
 {
 #if defined(WIN32)
     SOCKET sockfd = (SOCKET)(uintptr_t)sock->handle;
@@ -146,7 +156,7 @@ void tcp_socket_shutdown(struct tcp_socket* sock)
 }
 
 /* ------------------------------------------------------------------------- */
-void tcp_socket_close(struct tcp_socket* sock)
+void tcp_socket_close(union tcp_socket* sock)
 {
 #if defined(WIN32)
     SOCKET sockfd = (SOCKET)(uintptr_t)sock->handle;
@@ -158,7 +168,7 @@ void tcp_socket_close(struct tcp_socket* sock)
 }
 
 /* ------------------------------------------------------------------------- */
-int tcp_socket_read(struct tcp_socket* sock, void* buf, int len)
+int tcp_socket_read(union tcp_socket* sock, void* buf, int len)
 {
 #if defined(WIN32)
     SOCKET sockfd = (SOCKET)(uintptr_t)sock->handle;
@@ -170,7 +180,7 @@ int tcp_socket_read(struct tcp_socket* sock, void* buf, int len)
 }
 
 /* ------------------------------------------------------------------------- */
-int tcp_socket_write(struct tcp_socket* sock, const void* buf, int len)
+int tcp_socket_write(union tcp_socket* sock, const void* buf, int len)
 {
 #if defined(WIN32)
     SOCKET sockfd = (SOCKET)(uintptr_t)sock->handle;

@@ -56,7 +56,7 @@ bool Protocol::isConnected() const
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onConnectionSuccess(tcp_socket socket, const QString& ipAddress, uint16_t port)
+void Protocol::onConnectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port)
 {
     connectTask_.reset();
     QByteArray ba = ipAddress.toLocal8Bit();
@@ -84,12 +84,14 @@ void Protocol::onConnectionSuccess(tcp_socket socket, const QString& ipAddress, 
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onConnectionFailure(const QString& ipAddress, uint16_t port)
+void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port)
 {
     connectTask_.reset();
-    QByteArray ba = ipAddress.toLocal8Bit();
-    const char* ipCstr = ba.data();
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolFailedToConnectToServer, ipCstr, port);
+    QByteArray ipba = ipAddress.toLocal8Bit();
+    const char* ipCstr = ipba.data();
+    QByteArray errorba = errormsg.toLocal8Bit();
+    const char* errorCstr = errorba.data();
+    dispatcher.dispatch(&uh::ProtocolListener::onProtocolFailedToConnectToServer, errorCstr, ipCstr, port);
 }
 
 // ----------------------------------------------------------------------------

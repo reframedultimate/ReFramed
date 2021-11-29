@@ -1,13 +1,15 @@
 #include "application/views/ConnectView.hpp"
 #include "application/ui_ConnectView.h"
+#include "application/models/Protocol.hpp"
 #include <QJsonObject>
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-ConnectView::ConnectView(Config* config, Qt::WindowFlags flags)
+ConnectView::ConnectView(Config* config, Protocol* protocol, Qt::WindowFlags flags)
     : QDialog(nullptr, flags)
     , ConfigAccessor(config)
+    , protocol_(protocol)
     , ui_(new Ui::ConnectView)
 {
     ui_->setupUi(this);
@@ -26,12 +28,18 @@ ConnectView::ConnectView(Config* config, Qt::WindowFlags flags)
     ui_->lineEdit_port->setText(cfgConnect["lastport"].toString());
     ui_->label_info->setText("<font color=\"#000000\">Not connected.</font>");
 
-    connect(ui_->pushButton_connect, SIGNAL(released()), this, SLOT(onConnectButtonReleased()));
+    protocol_->dispatcher.addListener(this);
+
+    connect(ui_->pushButton_connect, &QPushButton::released,
+            this, &ConnectView::onConnectButtonReleased);
+    connect(ui_->pushButton_cancel, &QPushButton::released,
+            this, &ConnectView::onCancelButtonReleased);
 }
 
 // ----------------------------------------------------------------------------
 ConnectView::~ConnectView()
 {
+    protocol_->dispatcher.removeListener(this);
     delete ui_;
 }
 
@@ -43,9 +51,9 @@ void ConnectView::setConnecting()
 }
 
 // ----------------------------------------------------------------------------
-void ConnectView::setConnectFailed()
+void ConnectView::setConnectFailed(const QString& error)
 {
-    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect. Make sure the uhrecorder.nro mod is installed and active</font>");
+    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + "\nMake sure the uhrecorder.nro mod is installed and active</font>");
 }
 
 // ----------------------------------------------------------------------------
@@ -65,8 +73,31 @@ void ConnectView::onConnectButtonReleased()
     cfgConnect["lastport"] = QString::number(port);
     cfg["connectview"] = cfgConnect;
 
+    protocol_->connectToServer(ui_->lineEdit_address->text(), port);
+}
+
+// ----------------------------------------------------------------------------
+void ConnectView::onCancelButtonReleased()
+{
+    protocol_->disconnectFromServer();
+}
+
+// ----------------------------------------------------------------------------
+void ConnectView::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
+{
     setConnecting();
-    emit connectRequest(ui_->lineEdit_address->text(), port);
+}
+
+// ----------------------------------------------------------------------------
+void ConnectView::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port)
+{
+    setConnectFailed(errormsg);
+}
+
+// ----------------------------------------------------------------------------
+void ConnectView::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
+{
+    close();
 }
 
 }
