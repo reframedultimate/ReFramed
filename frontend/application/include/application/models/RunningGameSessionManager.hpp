@@ -5,9 +5,10 @@
 #include "uh/Reference.hpp"
 #include "uh/SetFormat.hpp"
 #include "uh/ListenerDispatcher.hpp"
-#include "uh/SessionListener.hpp"
-#include "uh/RunningGameSession.hpp"  // MOC requires this because of smart pointers
 #include "uh/PlayerState.hpp"  // MOC requires this because of smart pointers
+#include "uh/ProtocolListener.hpp"
+#include "uh/RunningGameSession.hpp"  // MOC requires this because of smart pointers
+#include "uh/SessionListener.hpp"
 #include <QObject>
 #include <QDir>
 #include <vector>
@@ -25,12 +26,13 @@ class ReplayManager;
  */
 class RunningGameSessionManager : public QObject
                                 , public ReplayManagerListener
+                                , public ProtocolListener
                                 , public uh::SessionListener
 {
     Q_OBJECT
 
 public:
-    RunningGameSessionManager(ReplayManager* manager, QObject* parent=nullptr);
+    RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent=nullptr);
     ~RunningGameSessionManager();
 
     void tryConnectToServer(const QString& ipAddress, uint16_t port);
@@ -81,7 +83,7 @@ private:
     void onRunningSessionNewPlayerState(int player, const uh::PlayerState& state) override;
 
 private:
-    std::unique_ptr<Protocol> protocol_;
+    Protocol* protocol_;
     std::vector<uh::Reference<uh::RunningGameSession>> pastSessions_;
     uh::Reference<uh::RunningGameSession> activeSession_;
     ReplayManager* savedSessionManager_;

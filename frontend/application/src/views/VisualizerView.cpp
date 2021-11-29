@@ -12,30 +12,34 @@ class PluginWidget : public QWidget
 public:
     PluginWidget(PluginManager* manager, const char* name)
         : manager_(manager)
+        , name_(name)
     {
         setLayout(new QVBoxLayout);
-        plugin_ = manager_->createVisualizer(name);
-        if (plugin_)
+        model_ = manager_->createVisualizerModel(name_);
+        if (model_)
         {
-            widget_ = plugin_->createView();
-            layout()->addWidget(widget_);
+            view_ = model_->createView();
+            if (view_)
+                layout()->addWidget(view_);
         }
     }
 
     ~PluginWidget()
     {
-        if (plugin_)
+        if (model_)
         {
-            widget_->setParent(nullptr);
-            plugin_->destroyView(widget_);
-            manager_->destroy(plugin_);
+            if (view_)
+                model_->destroyView(view_);
+
+            manager_->destroyModel(name_, model_);
         }
     }
 
 private:
     PluginManager* manager_;
-    uh::VisualizerPlugin* plugin_ = nullptr;
-    QWidget* widget_ = nullptr;
+    QString name_;
+    uh::VisualizerPlugin* model_ = nullptr;
+    QWidget* view_ = nullptr;
 };
 
 // ----------------------------------------------------------------------------

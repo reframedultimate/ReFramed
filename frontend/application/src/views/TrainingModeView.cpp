@@ -32,14 +32,9 @@ TrainingModeView::TrainingModeView(TrainingModeModel* trainingModel, CategoryMod
 TrainingModeView::~TrainingModeView()
 {
     // If there are still views created by plugins, have to destroy those now
-    for (auto it = pluginViews_.begin(); it != pluginViews_.end(); ++it)
+    for (const auto& pluginName : trainingModel_->runningPluginNames())
     {
-        uh::Plugin* plugin = it.value().plugin;
-        QWidget* view = it.value().view;
-
-        ui_->stackedWidget_runningPlugins->removeWidget(view);
-        view->setParent(nullptr);
-        plugin->destroyView(view);
+        trainingModel_->stopPlugin(pluginName);
     }
 
     categoryModel_->dispatcher.removeListener(this);
@@ -50,7 +45,7 @@ TrainingModeView::~TrainingModeView()
 // ----------------------------------------------------------------------------
 void TrainingModeView::currentTextChanged(const QString& text)
 {
-    const UHPluginInfo* info = trainingModel_->getPluginInfo(text);
+    const UHPluginFactoryInfo* info = trainingModel_->getPluginInfo(text);
     if (info == nullptr)
     {
         ui_->pushButton_launch->setEnabled(false);
@@ -80,14 +75,14 @@ void TrainingModeView::launchPressed()
 }
 
 // ----------------------------------------------------------------------------
-void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin)
+void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::Plugin* model)
 {
-    QWidget* view = plugin->createView();
+    QWidget* view = model->createView();
     if (view == nullptr)
         return;
 
-    pluginViews_.insert(name, {plugin, view});
     ui_->stackedWidget_runningPlugins->addWidget(view);
+    views_.insert(model, view);
 
     categoryModel_->selectTrainingModePlugin(name);
     ui_->stackedWidget_top->setCurrentWidget(ui_->page_runningPlugins);
@@ -95,17 +90,16 @@ void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::Plu
 }
 
 // ----------------------------------------------------------------------------
-void TrainingModeView::onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin)
+void TrainingModeView::onTrainingModePluginStopped(const QString& name, uh::Plugin* model)
 {
-    auto it = pluginViews_.find(name);
-    if (it == pluginViews_.end())
-        return;
+    auto it = views_.find(model);
+    assert(it != views_.end());
+    QWidget* view = it.value();
 
-    QWidget* view = it.value().view;
-    assert(plugin == it.value().plugin);
     ui_->stackedWidget_runningPlugins->removeWidget(view);
     view->setParent(nullptr);
-    plugin->destroyView(view);
+    model->destroyView(view);
+    views_.erase(it);
 }
 
 // ----------------------------------------------------------------------------
@@ -123,12 +117,13 @@ void TrainingModeView::onCategoryItemSelected(CategoryType category, const QStri
     if (category != CategoryType::TOP_LEVEL_TRAINING_MODE)
         return;
 
-    auto it = pluginViews_.find(name);
-    if (it == pluginViews_.end())
-        return;
+    uh::Plugin* model = trainingModel_->runningPlugin(name);
+    auto it = views_.find(model);
+    assert(it != views_.end());
+    QWidget* view = it.value();
 
     ui_->stackedWidget_top->setCurrentWidget(ui_->page_runningPlugins);
-    ui_->stackedWidget_runningPlugins->setCurrentWidget(it.value().view);
+    ui_->stackedWidget_runningPlugins->setCurrentWidget(view);
 }
 
 }

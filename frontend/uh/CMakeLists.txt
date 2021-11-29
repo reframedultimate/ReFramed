@@ -102,6 +102,7 @@ add_library (uh SHARED
     "src/TemplateInstantiations.cpp"
     "src/TrainingSession.cpp"
     "src/Vector.cpp"
+    "src/VisualizerPlugin.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
     "src/platform/time.cpp")

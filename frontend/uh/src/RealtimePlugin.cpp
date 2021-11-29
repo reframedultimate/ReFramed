@@ -3,7 +3,8 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-RealtimePlugin::RealtimePlugin()
+RealtimePlugin::RealtimePlugin(UHPluginFactory* factory)
+    : Plugin(factory)
 {
 }
 

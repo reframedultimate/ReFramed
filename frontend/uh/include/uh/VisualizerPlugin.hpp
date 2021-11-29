@@ -4,9 +4,11 @@
 
 namespace uh {
 
-class VisualizerPlugin : public Plugin
+class UH_PUBLIC_API VisualizerPlugin : public Plugin
 {
 public:
+    VisualizerPlugin(UHPluginFactory* factory);
+    ~VisualizerPlugin();
 };
 
 }

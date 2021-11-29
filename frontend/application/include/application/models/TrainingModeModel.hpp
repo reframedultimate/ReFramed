@@ -4,7 +4,7 @@
 #include <QString>
 #include <QHash>
 
-struct UHPluginInfo;
+struct UHPluginFactoryInfo;
 class QWidget;
 
 namespace uh {
@@ -23,8 +23,10 @@ public:
     ~TrainingModeModel();
 
     QVector<QString> availablePluginNames() const;
-    const UHPluginInfo* getPluginInfo(const QString& pluginName) const;
+    QList<QString> runningPluginNames() const;
+    const UHPluginFactoryInfo* getPluginInfo(const QString& pluginName) const;
 
+    uh::Plugin* runningPlugin(const QString& name) const;
     bool launchPlugin(const QString& pluginName);
     bool stopPlugin(const QString& pluginName);
     bool isPluginRunning(const QString& pluginName) const;

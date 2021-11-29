@@ -7,9 +7,11 @@ namespace uh {
     class Plugin;
 }
 
+class QWidget;
+
 extern "C" {
 
-struct UHPluginInfo
+struct UHPluginFactoryInfo
 {
     const char* name;
     const char* author;
@@ -19,10 +21,14 @@ struct UHPluginInfo
 
 struct UHPluginFactory
 {
-    uh::Plugin* (*create)(void);
-    void (*destroy)(uh::Plugin* plugin);
+    uh::Plugin* (*createModel)(UHPluginFactory*);
+    void (*destroyModel)(uh::Plugin* plugin);
+
+    QWidget* (*createView)(uh::Plugin* model);
+    void (*destroyView)(uh::Plugin* model, QWidget* view);
+
     UHPluginType type;
-    UHPluginInfo info;
+    UHPluginFactoryInfo info;
 };
 
 struct UHPluginInterface

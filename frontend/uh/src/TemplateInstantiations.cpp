@@ -26,7 +26,7 @@ template class Reference<GameSession>;
 template class Reference<SavedGameSession>;
 template class SmallLinearMap<FighterHitStatus, String, 6>;
 template class SmallLinearMap<StageID, String, 10>;
-template class SmallString<0>;
+template class SmallString<15>;
 template class SmallVector<DataSetFilterListener*, 4>;
 template class SmallVector<DataSetProcessorListener*, 4>;
 template class SmallVector<FighterID, 8>;

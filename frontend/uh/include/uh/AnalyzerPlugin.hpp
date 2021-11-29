@@ -14,7 +14,7 @@ class UH_PUBLIC_API AnalyzerPlugin : public Plugin
 {
 public:
     // MSVC requires classes to have constructors/destructors defined in exported classes
-    AnalyzerPlugin();
+    AnalyzerPlugin(UHPluginFactory* factory);
     ~AnalyzerPlugin();
 
     virtual void setPointOfView(const String& playerName) = 0;

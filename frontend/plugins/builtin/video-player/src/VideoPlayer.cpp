@@ -8,8 +8,9 @@ extern "C" {
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayer::VideoPlayer(QWidget *parent)
+VideoPlayer::VideoPlayer(UHPluginFactory* factory, QWidget *parent)
     : QWidget(parent)
+    , VisualizerPlugin(factory)
     , logWidget_(new QPlainTextEdit)
 {
     setLayout(new QVBoxLayout);

@@ -8,11 +8,13 @@
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionManager::RunningGameSessionManager(ReplayManager* manager, QObject *parent)
+RunningGameSessionManager::RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject *parent)
     : QObject(parent)
+    , protocol_(protocol)
     , savedSessionManager_(manager)
     , format_(uh::SetFormat::FRIENDLIES)
 {
+    protocol_->dispatcher.addListener(this);
     savedSessionManager_->dispatcher.addListener(this);
 }
 
@@ -20,28 +22,10 @@ RunningGameSessionManager::RunningGameSessionManager(ReplayManager* manager, QOb
 RunningGameSessionManager::~RunningGameSessionManager()
 {
     savedSessionManager_->dispatcher.removeListener(this);
+    protocol_->dispatcher.removeListener(this);
 
     if (activeSession_)
         activeSession_->dispatcher.removeListener(this);
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::disconnectFromServer()
-{
-    protocol_.reset();
-}
-
-// ----------------------------------------------------------------------------
-bool RunningGameSessionManager::isSessionRunning() const
-{
-    return protocol_ != nullptr;
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolConnectionLost()
-{
-    protocol_.reset();
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerDisconnectedFromServer);
 }
 
 // ----------------------------------------------------------------------------
@@ -115,113 +99,6 @@ void RunningGameSessionManager::setGameNumber(uh::GameNumber number)
         gameNumber_ = number;
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, number);
     }
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::tryConnectToServer(const QString& ipAddress, uint16_t port)
-{
-    tcp_socket sock;
-    QByteArray ba = ipAddress.toLocal8Bit();
-    if (tcp_socket_connect_to_host(&sock, ba.data(), port) != 0)
-    {
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFailedToConnectToServer);
-        return;
-    }
-
-    protocol_.reset(new Protocol(sock));
-    connect(protocol_.get(), &Protocol::matchStarted,
-            this, &RunningGameSessionManager::onProtocolRecordingStarted);
-    connect(protocol_.get(), &Protocol::matchEnded,
-            this, &RunningGameSessionManager::onProtocolRecordingEnded);
-    connect(protocol_.get(), &Protocol::serverClosedConnection,
-            this, &RunningGameSessionManager::onProtocolConnectionLost);
-    protocol_->start();
-
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerConnectedToServer);
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolRecordingStarted(uh::RunningGameSession* recording)
-{
-    // first off, copy the data we've stored from the UI into the new recording
-    // so comparing previous recordings is consistent
-    recording->setFormat(format_);
-    recording->setGameNumber(gameNumber_);
-    recording->setSetNumber(setNumber_);
-    if (recording->playerCount() == 2)
-    {
-        if (p1Name_.length() > 0)
-            recording->setPlayerName(0, p1Name_.toStdString().c_str());
-        if (p2Name_.length() > 0)
-            recording->setPlayerName(1, p2Name_.toStdString().c_str());
-    }
-
-    if (shouldStartNewSet(recording))
-    {
-        recording->setGameNumber(1);
-        recording->setSetNumber(1);
-        pastSessions_.clear();
-    }
-    else
-    {
-        // Go to the next game in the set
-        recording->setGameNumber(recording->gameNumber() + 1);
-    }
-
-    // Modify game/set numbers until we have a unique filename
-    findUniqueGameAndSetNumbers(recording);
-
-    recording->dispatcher.addListener(this);
-    activeSession_ = recording;
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingStarted, recording);
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, recording->setNumber());
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, recording->gameNumber());
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, recording->format());
-    if (recording->playerCount() == 2)
-    {
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged,
-                            QString(recording->playerName(0).cStr()));
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged,
-                            QString(recording->playerName(1).cStr()));
-    }
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolRecordingEnded(uh::RunningGameSession* session)
-{
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingEnded, session);
-
-    // Save recording
-    QFileInfo fileInfo(
-        savedSessionManager_->defaultRecordingSourceDirectory(),
-        composeFileName(session)
-    );
-    if (session->save(fileInfo.absoluteFilePath().toStdString().c_str()))
-    {
-        // Add the new recording to the "All" recording group
-        savedSessionManager_->allReplayGroup()->addFile(fileInfo.absoluteFilePath());
-    }
-    else
-    {
-        // TODO: Need to handle this somehow
-    }
-
-    // In between recordings (when players are in the menu) there is no active
-    // recording, but it's still possible to edit the names/format/game number/etc
-    // so copy the data out of the recording here so it can be edited, and when
-    // a new recording starts again we copy the data into the recording.
-    format_ = session->format();
-    gameNumber_ = session->gameNumber();
-    setNumber_ = session->setNumber();
-    if (session->playerCount() == 2)
-    {
-        p1Name_ = session->playerName(0).cStr();
-        p2Name_ = session->playerName(1).cStr();
-    }
-
-    session->dispatcher.removeListener(this);
-    pastSessions_.push_back(session);
-    activeSession_.reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -314,6 +191,126 @@ void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSessi
                 break;
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolAttemptConnectToServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolFailedToConnectToServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolConnectedToServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolDisconnectedFromServer()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolTrainingStarted(uh::RunningTrainingSession* session)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolTrainingEnded(uh::RunningTrainingSession* session)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolMatchStarted(uh::RunningGameSession* session)
+{
+    // first off, copy the data we've stored from the UI into the new recording
+    // so comparing previous recordings is consistent
+    session->setFormat(format_);
+    session->setGameNumber(gameNumber_);
+    session->setSetNumber(setNumber_);
+    if (session->playerCount() == 2)
+    {
+        if (p1Name_.length() > 0)
+            session->setPlayerName(0, p1Name_.toStdString().c_str());
+        if (p2Name_.length() > 0)
+            session->setPlayerName(1, p2Name_.toStdString().c_str());
+    }
+
+    if (shouldStartNewSet(session))
+    {
+        session->setGameNumber(1);
+        session->setSetNumber(1);
+        pastSessions_.clear();
+    }
+    else
+    {
+        // Go to the next game in the set
+        session->setGameNumber(session->gameNumber() + 1);
+    }
+
+    // Modify game/set numbers until we have a unique filename
+    findUniqueGameAndSetNumbers(session);
+
+    session->dispatcher.addListener(this);
+    activeSession_ = session;
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingStarted, session);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, session->setNumber());
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, session->gameNumber());
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, session->format());
+    if (session->playerCount() == 2)
+    {
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP1NameChanged,
+                            QString(session->playerName(0).cStr()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerP2NameChanged,
+                            QString(session->playerName(1).cStr()));
+    }
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolMatchEnded(uh::RunningGameSession* session)
+{
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerRecordingEnded, session);
+
+    // Save recording
+    QFileInfo fileInfo(
+        savedSessionManager_->defaultRecordingSourceDirectory(),
+        composeFileName(session)
+    );
+    if (session->save(fileInfo.absoluteFilePath().toStdString().c_str()))
+    {
+        // Add the new recording to the "All" recording group
+        savedSessionManager_->allReplayGroup()->addFile(fileInfo.absoluteFilePath());
+    }
+    else
+    {
+        // TODO: Need to handle this somehow
+    }
+
+    // In between recordings (when players are in the menu) there is no active
+    // recording, but it's still possible to edit the names/format/game number/etc
+    // so copy the data out of the recording here so it can be edited, and when
+    // a new recording starts again we copy the data into the recording.
+    format_ = session->format();
+    gameNumber_ = session->gameNumber();
+    setNumber_ = session->setNumber();
+    if (session->playerCount() == 2)
+    {
+        p1Name_ = session->playerName(0).cStr();
+        p2Name_ = session->playerName(1).cStr();
+    }
+
+    session->dispatcher.removeListener(this);
+    pastSessions_.push_back(session);
+    activeSession_.reset();
 }
 
 // ----------------------------------------------------------------------------

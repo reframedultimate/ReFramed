@@ -5,8 +5,9 @@
 #include "uh/SavedGameSession.hpp"
 
 // ----------------------------------------------------------------------------
-HitAnalyzer::HitAnalyzer(QWidget *parent)
-    : QWidget(parent)
+HitAnalyzer::HitAnalyzer(UHPluginFactory* factory, QWidget *parent)
+    : AnalyzerPlugin(factory)
+    , QWidget(parent)
     , ui_(new Ui::HitAnalyzer)
 {
     ui_->setupUi(this);
@@ -16,6 +17,18 @@ HitAnalyzer::HitAnalyzer(QWidget *parent)
 HitAnalyzer::~HitAnalyzer()
 {
     delete ui_;
+}
+
+// ----------------------------------------------------------------------------
+QWidget* HitAnalyzer::createView()
+{
+    return this;
+}
+
+// ----------------------------------------------------------------------------
+void HitAnalyzer::destroyView(QWidget* view)
+{
+    (void)view;
 }
 
 // ----------------------------------------------------------------------------
@@ -41,16 +54,3 @@ void HitAnalyzer::processDataSet(const uh::DataSet* dataSet)
 {
 
 }
-
-// ----------------------------------------------------------------------------
-QWidget* HitAnalyzer::createView()
-{
-    return this;
-}
-
-// ----------------------------------------------------------------------------
-void HitAnalyzer::destroyView(QWidget* widget)
-{
-
-}
-
