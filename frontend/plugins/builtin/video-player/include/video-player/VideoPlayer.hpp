@@ -19,13 +19,13 @@ class VideoPlayer : public QWidget
     Q_OBJECT
 
 public:
-    explicit VideoPlayer(QWidget* parent=nullptr);
+    explicit VideoPlayer(UHPluginFactory* factory, QWidget* parent=nullptr);
     ~VideoPlayer();
 
     bool openFile(const QString& fileName);
 
     QWidget* createView() override { return this; }
-    void destroyView(QWidget* widget) override {}
+    void destroyView(QWidget* view) { (void)view; }
 
 private:
     void info(const QString& msg);

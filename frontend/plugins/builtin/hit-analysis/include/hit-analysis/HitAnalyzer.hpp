@@ -13,16 +13,16 @@ class HitAnalyzer : public QWidget
     Q_OBJECT
 
 public:
-    explicit HitAnalyzer(QWidget* parent=nullptr);
+    explicit HitAnalyzer(UHPluginFactory* factory, QWidget* parent=nullptr);
     ~HitAnalyzer();
+
+    QWidget* createView() override;
+    void destroyView(QWidget* view) override;
 
     void setPointOfView(const uh::String& playerName) override;
     void dataSetPreparing(float progress, const uh::String& info) override;
     void dataSetCancelled() override;
     void processDataSet(const uh::DataSet* dataSet) override;
-
-    QWidget* createView() override;
-    void destroyView(QWidget* widget) override;
 
 private:
     Ui::HitAnalyzer* ui_;

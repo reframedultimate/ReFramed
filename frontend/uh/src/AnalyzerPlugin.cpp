@@ -2,7 +2,11 @@
 
 namespace uh {
 
-AnalyzerPlugin::AnalyzerPlugin() {}
-AnalyzerPlugin::~AnalyzerPlugin() {}
+AnalyzerPlugin::AnalyzerPlugin(UHPluginFactory* factory)
+    : Plugin(factory)
+{}
+
+AnalyzerPlugin::~AnalyzerPlugin()
+{}
 
 }

@@ -8,7 +8,9 @@
 struct uh_dynlib;
 struct UHPluginFactory;
 struct UHPluginInterface;
-struct UHPluginInfo;
+struct UHPluginFactoryInfo;
+
+class QWidget;
 
 namespace uh {
     class Plugin;
@@ -20,27 +22,51 @@ namespace uh {
 
 namespace uhapp {
 
+class Protocol;
+
+/*!
+ * \brief Responsible for loading .so/.dll files and registering factories
+ * therein. Models and Views exposed through those factories can be instantiated
+ * through this class as well.
+ */
 class PluginManager
 {
 public:
+    PluginManager(Protocol* protocol);
     ~PluginManager();
 
+    /*!
+     * \brief Attempts to load a shared library and registers all factories
+     * in it if successful.
+     * \param fileName The full path to the file to load.
+     * \return True if it was successful, false if otherwise.
+     */
     bool loadPlugin(const QString& fileName);
 
-    QVector<QString> availableNames(UHPluginType type) const;
-    const UHPluginInfo* getInfo(const QString& name) const;
+    /*!
+     * \brief Returns a list of all factory names available, filtered by type.
+     * These can be used to instantiate models/views using one of the create*()
+     * methods.
+     */
+    QVector<QString> availableFactoryNames(UHPluginType type) const;
 
-    uh::AnalyzerPlugin* createAnalyzer(const QString& name);
-    uh::VisualizerPlugin* createVisualizer(const QString& name);
-    uh::RealtimePlugin* createRealtime(const QString& name);
-    uh::StandalonePlugin* createStandalone(const QString& name);
+    /*!
+     * \brief Returns a pointer to the info structure in the loaded shared
+     * library, giving the name, author, description, etc. of the plugin.
+     */
+    const UHPluginFactoryInfo* getFactoryInfo(const QString& name) const;
 
-    uh::Plugin* create(const QString& name, UHPluginType type);
-    void destroy(uh::Plugin* plugin);
+    uh::AnalyzerPlugin* createAnalyzerModel(const QString& name);
+    uh::VisualizerPlugin* createVisualizerModel(const QString& name);
+    uh::RealtimePlugin* createRealtimeModel(const QString& name);
+    uh::StandalonePlugin* createStandaloneModel(const QString& name);
+
+    uh::Plugin* createModel(const QString& name, UHPluginType type);
+    void destroyModel(const QString& name, uh::Plugin* plugin);
 
 private:
+    Protocol* protocol_;
     QHash<QString, UHPluginFactory*> factories_;
-    QHash<uh::Plugin*, UHPluginFactory*> activePlugins_;
     QVector<uh_dynlib*> libraries_;
 };
 

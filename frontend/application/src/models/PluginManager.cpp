@@ -1,5 +1,9 @@
 #include "application/models/PluginManager.hpp"
+#include "application/models/Protocol.hpp"
+#include "uh/RunningGameSession.hpp"
+#include "uh/RunningGameSession.hpp"
 #include "uh/PluginInterface.hpp"
+#include "application/models/Protocol.hpp"
 #include "uh/AnalyzerPlugin.hpp"
 #include "uh/VisualizerPlugin.hpp"
 #include "uh/RealtimePlugin.hpp"
@@ -7,19 +11,19 @@
 #include "uh/dynlib.h"
 #include <cassert>
 #include <QDebug>
+#include <QWidget>
 
 namespace uhapp {
 
 // ----------------------------------------------------------------------------
+PluginManager::PluginManager(Protocol* protocol)
+    : protocol_(protocol)
+{
+}
+
+// ----------------------------------------------------------------------------
 PluginManager::~PluginManager()
 {
-    for (auto it = activePlugins_.begin(); it != activePlugins_.end(); ++it)
-    {
-        uh::Plugin* plugin = it.key();
-        UHPluginFactory* factory = it.value();
-        factory->destroy(plugin);
-    }
-
     for (const auto& dl : libraries_)
     {
         UHPluginInterface* i = static_cast<UHPluginInterface*>(uh_dynlib_lookup_symbol_address(dl, "plugin_interface"));
@@ -27,9 +31,6 @@ PluginManager::~PluginManager()
         i->stop();
         uh_dynlib_close(dl);
     }
-
-    activePlugins_.clear();
-    libraries_.clear();
 }
 
 // ----------------------------------------------------------------------------
@@ -82,7 +83,7 @@ bool PluginManager::loadPlugin(const QString& fileName)
 }
 
 // ----------------------------------------------------------------------------
-QVector<QString> PluginManager::availableNames(UHPluginType type) const
+QVector<QString> PluginManager::availableFactoryNames(UHPluginType type) const
 {
     QVector<QString> list;
     for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
@@ -94,7 +95,7 @@ QVector<QString> PluginManager::availableNames(UHPluginType type) const
 }
 
 // ----------------------------------------------------------------------------
-const UHPluginInfo* PluginManager::getInfo(const QString &name) const
+const UHPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) const
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
@@ -105,31 +106,34 @@ const UHPluginInfo* PluginManager::getInfo(const QString &name) const
 }
 
 // ----------------------------------------------------------------------------
-uh::AnalyzerPlugin* PluginManager::createAnalyzer(const QString& name)
+uh::AnalyzerPlugin* PluginManager::createAnalyzerModel(const QString& name)
 {
-    return static_cast<uh::AnalyzerPlugin*>(create(name, UHPluginType::ANALYZER));
+    // XXX is dynamic_cast required here due to some of these having multiple inheritance?
+    return static_cast<uh::AnalyzerPlugin*>(createModel(name, UHPluginType::ANALYZER));
 }
 
 // ----------------------------------------------------------------------------
-uh::VisualizerPlugin* PluginManager::createVisualizer(const QString& name)
+uh::VisualizerPlugin* PluginManager::createVisualizerModel(const QString& name)
 {
-    return static_cast<uh::VisualizerPlugin*>(create(name, UHPluginType::VISUALIZER));
+    return static_cast<uh::VisualizerPlugin*>(createModel(name, UHPluginType::VISUALIZER));
 }
 
 // ----------------------------------------------------------------------------
-uh::RealtimePlugin* PluginManager::createRealtime(const QString& name)
+uh::RealtimePlugin* PluginManager::createRealtimeModel(const QString& name)
 {
-    return static_cast<uh::RealtimePlugin*>(create(name, UHPluginType::REALTIME));
+    uh::RealtimePlugin* plugin = static_cast<uh::RealtimePlugin*>(createModel(name, UHPluginType::REALTIME));
+    protocol_->dispatcher.addListener(plugin);
+    return plugin;
 }
 
 // ----------------------------------------------------------------------------
-uh::StandalonePlugin* PluginManager::createStandalone(const QString& name)
+uh::StandalonePlugin* PluginManager::createStandaloneModel(const QString& name)
 {
-    return static_cast<uh::StandalonePlugin*>(create(name, UHPluginType::STANDALONE));
+    return static_cast<uh::StandalonePlugin*>(createModel(name, UHPluginType::STANDALONE));
 }
 
 // ----------------------------------------------------------------------------
-uh::Plugin* PluginManager::create(const QString& name, UHPluginType type)
+uh::Plugin* PluginManager::createModel(const QString& name, UHPluginType type)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
@@ -139,23 +143,29 @@ uh::Plugin* PluginManager::create(const QString& name, UHPluginType type)
     if (!(factory->type & type))
         return nullptr;
 
-    uh::Plugin* plugin = factory->create();
-    if (plugin == nullptr)
-        return nullptr;
+    uh::Plugin* model = factory->createModel(factory);
 
-    activePlugins_.insert(plugin, factory);
-    return plugin;
+    uh::RealtimePlugin* realtime = dynamic_cast<uh::RealtimePlugin*>(model);
+    if (realtime)
+        protocol_->dispatcher.addListener(realtime);
+
+    return model;
 }
 
 // ----------------------------------------------------------------------------
-void PluginManager::destroy(uh::Plugin* plugin)
+void PluginManager::destroyModel(const QString& name, uh::Plugin* model)
 {
-    auto it = activePlugins_.find(plugin);
-    assert(it != activePlugins_.end());
+    auto it = factories_.find(name);
+    if (it == factories_.end())
+        return;
+
     UHPluginFactory* factory = it.value();
 
-    factory->destroy(plugin);
-    activePlugins_.erase(it);
+    uh::RealtimePlugin* realtime = dynamic_cast<uh::RealtimePlugin*>(model);
+    if (realtime)
+        protocol_->dispatcher.removeListener(realtime);
+
+    factory->destroyModel(model);
 }
 
 }

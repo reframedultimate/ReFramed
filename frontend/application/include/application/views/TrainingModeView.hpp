@@ -37,16 +37,10 @@ private:
     void onCategoryItemSelected(CategoryType category, const QString& name) override;
 
 private:
-    struct PluginView
-    {
-        uh::Plugin* plugin;
-        QWidget* view;
-    };
-
     Ui::TrainingModeView* ui_;
     TrainingModeModel* trainingModel_;
     CategoryModel* categoryModel_;
-    QHash<QString, PluginView> pluginViews_;
+    QHash<uh::Plugin*, QWidget*> views_;
 };
 
 }

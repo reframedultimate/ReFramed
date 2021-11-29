@@ -1,6 +1,7 @@
 #include "application/models/Config.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
+#include "application/models/Protocol.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
@@ -31,7 +32,8 @@ namespace uhapp {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , config_(new Config)
-    , pluginManager_(new PluginManager)
+    , protocol_(new Protocol)
+    , pluginManager_(new PluginManager(protocol_.get()))
     , replayManager_(new ReplayManager(config_.get()))
     , runningGameSessionManager_(new RunningGameSessionManager(replayManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))

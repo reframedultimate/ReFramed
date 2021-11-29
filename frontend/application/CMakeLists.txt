@@ -7,9 +7,9 @@ include (GNUInstallDirs)
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (UH_SOURCES_MOC
-    "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
+    "include/application/models/RunningGameSessionManager.hpp"
     "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
     "include/application/views/ConnectView.hpp"

@@ -22,7 +22,7 @@ AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
     setLayout(new QVBoxLayout);
     layout()->addWidget(tabWidget_);
 
-    for (const auto& name : pluginManager_->availableNames(UHPluginType::ANALYZER))
+    for (const auto& name : pluginManager_->availableFactoryNames(UHPluginType::ANALYZER))
         addMenu_->addAction(name);
 
     QWidget* inputSettingsTab = new QWidget;
@@ -40,15 +40,17 @@ AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
 // ----------------------------------------------------------------------------
 AnalysisView::~AnalysisView()
 {
-    for (const auto& it : loadedPlugins_)
+    for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
-        int tabIndex = tabWidget_->indexOf(it.widget);
+        const QString& name = it.key();
+        uh::AnalyzerPlugin* model = it.value().model;
+        QWidget* view = it.value().view;
+
+        int tabIndex = tabWidget_->indexOf(view);
         tabWidget_->removeTab(tabIndex);
 
-        it.widget->setParent(nullptr);
-        it.plugin->destroyView(it.widget);
-
-        pluginManager_->destroy(it.plugin);
+        model->destroyView(view);
+        pluginManager_->destroyModel(name, model);
     }
 
     delete inputUi_;
@@ -66,21 +68,31 @@ void AnalysisView::onTabBarClicked(int index)
 
     int insertIdx = tabWidget_->count() - 1;
 
-    uh::AnalyzerPlugin* plugin = pluginManager_->createAnalyzer(action->text().toStdString().c_str());
-    QWidget* pluginWidget = plugin->createView();
+    const QString& name = action->text();
+    uh::AnalyzerPlugin* model = pluginManager_->createAnalyzerModel(name);
+    if (model == nullptr)
+        return;
+
+    QWidget* view = model->createView();
+    if (view == nullptr)
+    {
+        pluginManager_->destroyModel(name, model);
+        return;
+    }
+
     tabWidget_->insertTab(
         insertIdx,
-        pluginWidget,
+        view,
         action->text()
     );
-    loadedPlugins_.push(PluginAndWidget{plugin, pluginWidget});
+    loadedPlugins_.insert(name, {model, view});
 
     QToolButton* closeButton = new QToolButton();
     closeButton->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
     tabWidget_->tabBar()->setTabButton(insertIdx, QTabBar::RightSide, closeButton);
 
-    connect(closeButton, &QToolButton::released, [this, pluginWidget](){
-        closeTab(pluginWidget);
+    connect(closeButton, &QToolButton::released, [this, model, view](){
+        closeTab(view);
     });
 }
 
@@ -96,18 +108,22 @@ void AnalysisView::onTabIndexChanged(int index)
 void AnalysisView::closeTab(QWidget* widget)
 {
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
-        if (it->widget == widget)
-        {
-            it->widget->setParent(nullptr);
-            it->plugin->destroyView(it->widget);
+    {
+        const QString& name = it.key();
+        uh::AnalyzerPlugin* model = it.value().model;
+        QWidget* view = it.value().view;
 
-            int tabIndex = tabWidget_->indexOf(it->widget);
+        if (view == widget)
+        {
+            int tabIndex = tabWidget_->indexOf(widget);
             tabWidget_->removeTab(tabIndex);
 
-            pluginManager_->destroy(it->plugin);
+            model->destroyView(view);
+            pluginManager_->destroyModel(name, model);
             loadedPlugins_.erase(it);
             break;
         }
+    }
 }
 
 }

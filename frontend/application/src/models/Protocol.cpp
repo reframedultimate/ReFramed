@@ -24,9 +24,9 @@ enum MessageType
 };
 
 // ----------------------------------------------------------------------------
-Protocol::Protocol(tcp_socket socket, QObject* parent)
+Protocol::Protocol(QObject* parent)
     : QThread(parent)
-    , socket_(socket)
+    , socket_({nullptr})
 {
     // These signals are used to transfer data from the listener thread to the
     // main thread
@@ -51,6 +51,19 @@ Protocol::~Protocol()
     tcp_socket_close(&socket_);
 
     endSessionIfNecessary();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::tryConnectToServer(const QString& ipAddress, uint16_t port)
+{
+    QByteArray ba = ipAddress.toLocal8Bit();
+    if (tcp_socket_connect_to_host(&socket_, ba.data(), port) != 0)
+    {
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFailedToConnectToServer);
+        return;
+    }
+
+    start();
 }
 
 // ----------------------------------------------------------------------------

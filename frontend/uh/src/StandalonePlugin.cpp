@@ -3,7 +3,8 @@
 namespace uh {
 
 // ----------------------------------------------------------------------------
-StandalonePlugin::StandalonePlugin()
+StandalonePlugin::StandalonePlugin(UHPluginFactory* factory)
+    : Plugin(factory)
 {
 }
 

@@ -20,6 +20,7 @@ class CategoryView;
 class CategoryModel;
 class Config;
 class PluginManager;
+class Protocol;
 class RunningGameSessionManager;
 class RunningGameSessionView;
 class ReplayGroupView;
@@ -71,6 +72,7 @@ private:
 
 private:
     std::unique_ptr<Config> config_;
+    std::unique_ptr<Protocol> protocol_;
     std::unique_ptr<PluginManager> pluginManager_;
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<RunningGameSessionManager> runningGameSessionManager_;

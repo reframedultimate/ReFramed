@@ -17,28 +17,44 @@ TrainingModeModel::~TrainingModeModel()
 {
     for (auto it = runningPlugins_.begin(); it != runningPlugins_.end(); ++it)
     {
+        const QString& name = it.key();
         uh::Plugin* plugin = it.value();
         dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, it.key(), plugin);
-        pluginManager_->destroy(plugin);
+        pluginManager_->destroyModel(name, plugin);
     }
 }
 
 // ----------------------------------------------------------------------------
 QVector<QString> TrainingModeModel::availablePluginNames() const
 {
-    return pluginManager_->availableNames(UHPluginType::REALTIME | UHPluginType::STANDALONE);
+    return pluginManager_->availableFactoryNames(UHPluginType::REALTIME | UHPluginType::STANDALONE);
 }
 
 // ----------------------------------------------------------------------------
-const UHPluginInfo* TrainingModeModel::getPluginInfo(const QString& pluginName) const
+QList<QString> TrainingModeModel::runningPluginNames() const
 {
-    return pluginManager_->getInfo(pluginName);
+    return runningPlugins_.keys();
+}
+
+// ----------------------------------------------------------------------------
+const UHPluginFactoryInfo* TrainingModeModel::getPluginInfo(const QString& pluginName) const
+{
+    return pluginManager_->getFactoryInfo(pluginName);
+}
+
+// ----------------------------------------------------------------------------
+uh::Plugin* TrainingModeModel::runningPlugin(const QString& name) const
+{
+    auto it = runningPlugins_.find(name);
+    if (it == runningPlugins_.end())
+        return nullptr;
+    return it.value();
 }
 
 // ----------------------------------------------------------------------------
 bool TrainingModeModel::launchPlugin(const QString& pluginName)
 {
-    uh::Plugin* plugin = pluginManager_->create(pluginName, UHPluginType::REALTIME | UHPluginType::STANDALONE);
+    uh::Plugin* plugin = pluginManager_->createModel(pluginName, UHPluginType::REALTIME | UHPluginType::STANDALONE);
     if (plugin == nullptr)
         return false;
 
@@ -55,10 +71,11 @@ bool TrainingModeModel::stopPlugin(const QString& pluginName)
     if (it == runningPlugins_.end())
         return false;
 
+    const QString& name = it.key();
     uh::Plugin* plugin = it.value();
     dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, pluginName, plugin);
 
-    pluginManager_->destroy(plugin);
+    pluginManager_->destroyModel(name, plugin);
     runningPlugins_.erase(it);
 
     return true;

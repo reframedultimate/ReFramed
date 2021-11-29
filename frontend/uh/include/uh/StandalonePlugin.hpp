@@ -7,7 +7,7 @@ namespace uh {
 class UH_PUBLIC_API StandalonePlugin : public Plugin
 {
 public:
-    StandalonePlugin();
+    StandalonePlugin(UHPluginFactory* factory);
     virtual ~StandalonePlugin();
 };
 

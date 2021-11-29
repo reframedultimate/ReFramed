@@ -5,18 +5,28 @@
 
 #include <QWidget>
 
-static uh::Plugin* createHitAnalyzer()
+static uh::Plugin* createModel(UHPluginFactory* factory)
 {
-    return new HitAnalyzer;
+    return new HitAnalyzer(factory);
 }
 
-static void destroy(uh::Plugin* plugin)
+static void destroyModel(uh::Plugin* model)
 {
-    delete plugin;
+    delete model;
+}
+
+static QWidget* createView(uh::Plugin* model)
+{
+    HitAnalyzer* analyzer = dynamic_cast<HitAnalyzer*>(model);
+    return analyzer;
+}
+
+static void destroyView(uh::Plugin* model, QWidget* view)
+{
 }
 
 static UHPluginFactory factories[] = {
-    {createHitAnalyzer, destroy, UHPluginType::ANALYZER,
+    {createModel, destroyModel, createView, destroyView, UHPluginType::ANALYZER,
      "Hit Analysis", "TheComet", "alex.murray@gmx.ch", "Finds all instances where you got hit"},
     {NULL}
 };

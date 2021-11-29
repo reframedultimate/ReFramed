@@ -39,13 +39,13 @@ private:
     QTabWidget* tabWidget_;
     QMenu* addMenu_;
 
-    struct PluginAndWidget
+    struct LoadedPlugin
     {
-        uh::AnalyzerPlugin* plugin;
-        QWidget* widget;
+        uh::AnalyzerPlugin* model;
+        QWidget* view;
     };
 
-    uh::Vector<PluginAndWidget> loadedPlugins_;
+    QHash<QString, LoadedPlugin> loadedPlugins_;
 };
 
 }

@@ -1,15 +1,15 @@
-#include "uh/Plugin.hpp"
+#include "uh/VisualizerPlugin.hpp"
 
 namespace uh {
 
 // ----------------------------------------------------------------------------
-Plugin::Plugin(UHPluginFactory* factory)
-    : factory_(factory)
+VisualizerPlugin::VisualizerPlugin(UHPluginFactory* factory)
+    : Plugin(factory)
 {
 }
 
 // ----------------------------------------------------------------------------
-Plugin::~Plugin()
+VisualizerPlugin::~VisualizerPlugin()
 {
 }
 

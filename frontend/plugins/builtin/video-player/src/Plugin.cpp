@@ -5,18 +5,25 @@
 
 #include <QWidget>
 
-static uh::Plugin* createVideoPlayer()
+static uh::Plugin* createModel(UHPluginFactory* factory)
 {
-    return new VideoPlayer;
+    return new VideoPlayer(factory);
 }
-
-static void destroy(uh::Plugin* plugin)
+static void destroyModel(uh::Plugin* model)
 {
-    delete plugin;
+    delete model;
+}
+static QWidget* createView(uh::Plugin* model)
+{
+    VideoPlayer* videoPlayer = dynamic_cast<VideoPlayer*>(model);
+    return videoPlayer;
+}
+static void destroyView(uh::Plugin* model, QWidget* view)
+{
 }
 
 static UHPluginFactory factories[] = {
-    {createVideoPlayer, destroy, UHPluginType::VISUALIZER,
+    {createModel, destroyModel, createView, destroyView, UHPluginType::VISUALIZER,
      "Video Player", "TheComet", "alex.murray@gmx.ch", "A video player"},
     {NULL}
 };

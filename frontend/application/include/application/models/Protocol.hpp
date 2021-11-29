@@ -3,6 +3,7 @@
 #include "uh/tcp_socket.h"
 #include "uh/Reference.hpp"
 #include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
+#include "uh/ListenerDispatcher.hpp"
 
 #include <QVector>
 #include <QThread>
@@ -11,6 +12,7 @@
 
 namespace uh {
     class MappingInfo;
+    class ProtocolListener;
     class RunningSession;
     class RunningGameSession;
     class RunningTrainingSession;
@@ -45,8 +47,14 @@ class Protocol : public QThread
 {
     Q_OBJECT
 public:
-    explicit Protocol(tcp_socket socket, QObject* parent=nullptr);
+    explicit Protocol(QObject* parent=nullptr);
     ~Protocol();
+
+    void tryConnectToServer(const QString& ipAddress, uint16_t port);
+    void disconnectFromServer();
+    bool isConnected() const;
+
+    uh::ListenerDispatcher<uh::ProtocolListener> dispatcher;
 
 signals:
     // emitted from the listener thread
