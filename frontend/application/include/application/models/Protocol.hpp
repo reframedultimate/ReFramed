@@ -4,7 +4,7 @@
 #include "uh/Reference.hpp"
 #include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
 #include "uh/ListenerDispatcher.hpp"
-
+#include <memory>
 #include <QObject>
 
 namespace uh {
