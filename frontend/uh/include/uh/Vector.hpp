@@ -34,8 +34,8 @@ public:
     const T* data() const { return begin_; }
     S count() const { return count_; }
     S capacity() const { return capacity_; }
-    S indexOf(const T& value) { return &value - begin_; }
-    S indexOf(const T* value) { return value - begin_; }
+    S indexOf(const T& value) { return static_cast<S>(&value - begin_); }
+    S indexOf(const T* value) { return static_cast<S>(value - begin_); }
 
     T& operator[](S i) { return begin_[i]; }
     const T& operator[](S i) const { return begin_[i]; }
@@ -306,6 +306,20 @@ public:
         this->relocateElementsTo(it, it + 1, this->end());
         this->count_--;
         return pos;
+    }
+
+    T take(Iterator it)
+    {
+        return take(this->indexOf(it));
+    }
+
+    T take(S pos)
+    {
+        Iterator it = this->begin() + pos;
+        T value(std::move(*it));
+        this->relocateElementsTo(it, it + 1, this->end());
+        this->count_--;
+        return value;
     }
 
     void reserve(S count)

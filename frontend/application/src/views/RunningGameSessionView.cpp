@@ -24,14 +24,11 @@ RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manage
     // Initial page should show "disconnected"
     ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
 
-    connect(ui_->comboBox_format, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboBoxFormatIndexChanged(int)));
-    connect(ui_->lineEdit_formatOther, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditFormatChanged(const QString&)));
-    connect(ui_->spinBox_gameNumber, SIGNAL(valueChanged(int)), this, SLOT(onSpinBoxGameNumberChanged(int)));
-    connect(ui_->lineEdit_player1, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP1TextChanged(const QString&)));
-    connect(ui_->lineEdit_player2, SIGNAL(textChanged(const QString&)), this, SLOT(onLineEditP2TextChanged(const QString&)));
-
-    connect(runningGameSessionManager_, SIGNAL(connectedToServer()), this, SLOT(onRunningGameSessionManagerConnectedToServer()));
-    connect(runningGameSessionManager_, SIGNAL(disconnectedFromServer()), this, SLOT(onRunningGameSessionManagerDisconnectedFromServer()));
+    connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &RunningGameSessionView::onComboBoxFormatIndexChanged);
+    connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditFormatChanged);
+    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &RunningGameSessionView::onSpinBoxGameNumberChanged);
+    connect(ui_->lineEdit_player1, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditP1TextChanged);
+    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditP2TextChanged);
 
     runningGameSessionManager_->dispatcher.addListener(this);
 }
