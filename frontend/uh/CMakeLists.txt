@@ -84,7 +84,7 @@ add_library (uh SHARED
     "src/hash40.c"
     "src/HashMap.cpp"
     "src/HitStatusMapping.cpp"
-    "src/HitStunCalculator.cpp"
+    "src/HitstunCalculator.cpp"
     "src/init.c"
     "src/KnockbackCalculator.cpp"
     "src/PlayerState.cpp"
