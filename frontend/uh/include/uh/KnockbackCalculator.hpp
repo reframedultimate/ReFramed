@@ -16,7 +16,7 @@ public:
     struct Move
     {
         Move(int id, double damage, double bkb, double kbg, bool isShorthop)
-            : id(id), dmg(dmg), bkb(bkb), kbg(kbg), isShorthop(isShorthop) {}
+            : id(id), dmg(damage), bkb(bkb), kbg(kbg), isShorthop(isShorthop) {}
 
         int id;
         double dmg;
@@ -26,7 +26,8 @@ public:
     };
 
     double addMove(const Move& move);
-    double knockbackOf(const Move& move);
+    double opponentPercent() const
+        { return percent_; }
 
 private:
     bool isInQueue(int id);
@@ -41,4 +42,5 @@ private:
     int staleQueue_[9];
     static double staleTable[9];
 };
+
 }

@@ -15,6 +15,7 @@ double KnockbackCalculator::staleTable[9] = {
     0.025
 };
 
+// ----------------------------------------------------------------------------
 KnockbackCalculator::KnockbackCalculator(
         double youPercent,
         double opponentPercent,
@@ -32,31 +33,40 @@ KnockbackCalculator::KnockbackCalculator(
         staleQueue_[i] = std::numeric_limits<int>::max();
 }
 
+// ----------------------------------------------------------------------------
 double KnockbackCalculator::addMove(const Move& move)
 {
-    double kb = knockbackOf(move);
+    // TODO
+    // - hitstun after tumble: ((knockback * 0.4) - (((knockback * 0.4) - 32) * 0.4)) - 1
+    // - when does a move tumble?
+
+    const double staleness = stalenessOf(move.id);
+    const double shorthop = move.isShorthop ? 0.85 : 1.0;
+    percent_ += move.dmg * shorthop * staleness * mul1v1_;
+
+    double knockback = percent_ / 10.0;
+    knockback += percent_ * (move.dmg + 0.3 * move.dmg * staleness) / 20.0;  // XXX: This is wrong but I can't figure out a correct formula
+    knockback *= 200.0 / (weight_+100.0) * 1.4;
+    knockback += 18;
+    knockback *= move.kbg / 100.0;
+    knockback += move.bkb;
+    knockback *= rage_;
+
     addToQueue(move.id);
-    return kb;
+
+    return knockback;
 }
 
-double KnockbackCalculator::knockbackOf(const Move& move)
-{
-    double effDamage = move.dmg * stalenessOf(move.id);
-    double percentAfter = percent_ + effDamage;
-    double effDamage = move.dmg *
-
-    double a = percentAfter / 10.0 + percentAfter * move.dmg / 20.0;
-
-    return (((((percent/10+percent*damage/20) * 200/(WEIGHT+100)*1.4) + 18) * kbg/100) + bkb) * rage;
-}
-
+// ----------------------------------------------------------------------------
 bool KnockbackCalculator::isInQueue(int id)
 {
     for (int i = 0; i != 9; ++i)
         if (id == staleQueue_[i])
             return true;
+    return false;
 }
 
+// ----------------------------------------------------------------------------
 void KnockbackCalculator::addToQueue(int id)
 {
     for (int i = 1; i != 9; ++i)
@@ -64,12 +74,18 @@ void KnockbackCalculator::addToQueue(int id)
     staleQueue_[0] = id;
 }
 
+// ----------------------------------------------------------------------------
 double KnockbackCalculator::stalenessOf(int id)
 {
     double staleness = 1.0;
     for (int i = 0; i != 9; ++i)
         if (staleQueue_[i] == id)
             staleness -= staleTable[i];
+
+    // Freshness bonus
+    if (staleness == 1.0)
+        staleness = 1.05;
+
     return staleness;
 }
 
