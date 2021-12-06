@@ -69,11 +69,6 @@ RealtimePlot::RealtimePlot(QWidget* parent) :
     plotGrid->setMinorPen(QPen(Qt::gray,  0, Qt::DotLine));
     plotGrid->attach(this);
 
-    // Legend
-    QwtPlotLegendItem* legend = new QwtPlotLegendItem;
-    legend->setAlignment(Qt::AlignRight | Qt::AlignTop);
-    legend->attach(this);
-
     // Display current x/y values using a tracker
     //unitTracker_ = new UnitTracker(canvas());
 
@@ -96,23 +91,21 @@ RealtimePlot::RealtimePlot(QWidget* parent) :
     // Track left clicks and drags in plot
     DeltaPlotPicker* picker = new DeltaPlotPicker(canvas());
     picker->setMousePattern(QwtEventPattern::MouseSelect1, Qt::LeftButton);
-    connect(picker, SIGNAL(activated(bool,QPointF)), this, SLOT(onPickerActivated(bool,QPointF)));
-    connect(picker, SIGNAL(moved(QPointF,QPointF)), this, SLOT(onPickerMoved(QPointF,QPointF)));
+    connect(picker, &DeltaPlotPicker::activated, this, &RealtimePlot::onPickerActivated);
+    connect(picker, &DeltaPlotPicker::moved, this, &RealtimePlot::onPickerMoved);
 
     // Don't show context menu if right click was dragged
     DeltaPlotPicker* trackRightMouseDrag = new DeltaPlotPicker(canvas());
     trackRightMouseDrag->setMousePattern(QwtEventPattern::MouseSelect1, Qt::RightButton);
     connect(trackRightMouseDrag, SIGNAL(moved(QPointF,QPointF)), this, SLOT(cancelContextMenu()));
 
-    // We want to auto-fit data without leaving any gaps (use maximum space)
+    // We want to auto-fit data without leaving any gaps
     axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, true);
     axisScaleEngine(QwtPlot::yLeft)->setAttribute(QwtScaleEngine::Floating, true);
-    axisScaleEngine(QwtPlot::yRight)->setAttribute(QwtScaleEngine::Floating, true);
 
     // By default, auto-scaling should be turned off.
     setAxisAutoScale(QwtPlot::xBottom, false);
     setAxisAutoScale(QwtPlot::yLeft, false);
-    setAxisAutoScale(QwtPlot::yRight, false);
 
     // Set up plot context menu
     setContextMenuPolicy(Qt::CustomContextMenu);
