@@ -5,4 +5,3 @@ foreach (CHILD ${CHILDREN})
         add_subdirectory (${CHILD})
     endif ()
 endforeach ()
-
