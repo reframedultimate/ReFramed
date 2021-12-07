@@ -3,7 +3,7 @@ include (TestBigEndian)
 include (CheckCXXSourceCompiles)
 
 project ("uh"
-    VERSION 0.0.1
+    VERSION ${UH_VERSION}
     LANGUAGES CXX C)
     
 option (UH_REFCOUNTED_DEBUG "Adds members to the uh::RefCounted class to help find memory leaks" OFF)

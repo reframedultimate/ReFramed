@@ -35,6 +35,9 @@ int main(int argc, char** argv)
     int result;
     processOptions(argc, argv);
 
+#ifdef _WIN32
+    QApplication::setStyle("fusion");
+#endif
     QApplication app(argc, argv);
     uhapp::MainWindow mainWindow;
 

@@ -1,10 +1,12 @@
 #pragma once
 
+#include "uh/config.hpp"
+
 namespace uh {
 
 class DamageCalculator;
 
-class KnockbackCalculator
+class UH_PUBLIC_API KnockbackCalculator
 {
 public:
     KnockbackCalculator(
