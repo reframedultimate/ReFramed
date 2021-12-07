@@ -1,8 +1,10 @@
 project ("application"
-    VERSION 1.0.0
+    VERSION ${UH_VERSION}
     LANGUAGES C CXX)
 
 include (GNUInstallDirs)
+
+configure_file ("templates/config.hpp.in" "include/application/config.hpp")
 
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
@@ -54,7 +56,7 @@ qt5_add_resources (UH_RESOURCES_GEN
 qt5_add_translation (UH_QM_FILES
     "")
 
-add_executable (ultimate-hindsight # WIN32
+add_executable (ultimate-hindsight WIN32
     ${UH_SOURCES_MOC}
     ${UH_FORMS_MOC}
     ${UH_RESOURCES_GEN}
@@ -95,7 +97,8 @@ add_executable (ultimate-hindsight # WIN32
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (ultimate-hindsight
-    PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 target_compile_options (ultimate-hindsight
     PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -pedantic>
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-W -Wall -Wextra -pedantic>)

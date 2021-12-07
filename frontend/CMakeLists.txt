@@ -19,6 +19,11 @@ project ("ultimate-hindsight"
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
+# Sets the version string for all UH related subprojects (not thirdparty)
+set (UH_VERSION "0.0.1")
+set (UH_VERSION_RC "alpha")
+
+# Configure build and install directory structures
 set (UH_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set (UH_BUILD_LIBDIR "${UH_BUILD_BINDIR}/lib")
 set (UH_BUILD_PLUGINDIR "${UH_BUILD_BINDIR}/share/uh/plugins")

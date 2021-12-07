@@ -3,7 +3,7 @@ include (TestBigEndian)
 include (CheckCXXSourceCompiles)
 
 project ("uhplot"
-    VERSION 0.0.1
+    VERSION ${UH_VERSION}
     LANGUAGES CXX)
     
 test_visibility_macros (

@@ -1,10 +1,12 @@
 #pragma once
 
+#include "uh/config.hpp"
+
 namespace uh {
 
 class KnockbackCalculator;
 
-class HitstunCalculator
+class UH_PUBLIC_API HitstunCalculator
 {
 public:
     int hitstun(double knockback)

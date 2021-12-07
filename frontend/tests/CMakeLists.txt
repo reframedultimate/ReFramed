@@ -1,5 +1,5 @@
 project ("uh-tests"
-	VERSION 0.0.1
+	VERSION ${UH_VERSION}
 	LANGUAGES CXX)
 	
 add_executable (uh-tests

@@ -1,3 +1,4 @@
+#include "application/config.hpp"
 #include "application/models/Config.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
@@ -46,6 +47,8 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui_->setupUi(this);
 
+    setWindowTitle("Ultimate Hindsight - " APP_VERSION_STR);
+
     QDir pluginDir("share/uh/plugins");
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
         pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
@@ -58,7 +61,6 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(runningGameSessionView_);
     mainView_->addWidget(new TrainingModeView(trainingModeModel_.get(), categoryModel_.get()));
     setCentralWidget(mainView_);
-    mainView_->setCurrentIndex(2);
 
     QDockWidget* categoryDock = new QDockWidget(this);
     categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -73,6 +75,8 @@ MainWindow::MainWindow(QWidget* parent)
             this, &MainWindow::onConnectActionTriggered);
     connect(ui_->action_disconnect, &QAction::triggered,
             this, &MainWindow::onDisconnectActionTriggered);
+
+    categoryModel_->selectTrainingModeCategory();
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
