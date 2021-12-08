@@ -53,6 +53,7 @@ target_link_libraries (rfplot
     PUBLIC ReFramed::rfcommon)
 set_target_properties (rfplot
     PROPERTIES
+        DEBUG_POSTFIX "d"
         LIBRARY_OUTPUT_DIRECTORY ${REFRAMED_BUILD_LIBDIR}
         LIBRARY_OUTPUT_DIRECTORY_DEBUG ${REFRAMED_BUILD_LIBDIR}
         LIBRARY_OUTPUT_DIRECTORY_RELEASE ${REFRAMED_BUILD_LIBDIR}

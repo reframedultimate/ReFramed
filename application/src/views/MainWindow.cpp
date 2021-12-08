@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui_->setupUi(this);
 
-    setWindowTitle("Ultimate Hindsight - " APP_VERSION_STR);
+    setWindowTitle("ReFramed - " APP_VERSION_STR);
 
     QDir pluginDir("share/reframed/plugins");
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))

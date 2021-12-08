@@ -4,7 +4,7 @@ project ("application"
 
 include (GNUInstallDirs)
 
-configure_file ("templates/config.hpp.in" "include/application/config.hpp")
+configure_file ("cmake/templates/config.hpp.in" "include/application/config.hpp")
 
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
@@ -134,6 +134,16 @@ if (WIN32 OR CYGWIN)
 
         COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_BINDIR}'"
         VERBATIM)
+    install (
+        FILES 
+            ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll
+        DESTINATION ${REFRAMED_INSTALL_BINDIR})
+    install (
+        FILES ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
+        DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
 endif ()
 
 install (
