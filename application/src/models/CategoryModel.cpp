@@ -2,7 +2,7 @@
 #include "application/models/CategoryModel.hpp"
 #include <QString>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 void CategoryModel::selectDataSetsCategory()

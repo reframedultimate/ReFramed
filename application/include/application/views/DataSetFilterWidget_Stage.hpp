@@ -6,7 +6,7 @@ namespace Ui {
     class DataSetFilterWidget_Stage;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget_Stage : public DataSetFilterWidget
 {

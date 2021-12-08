@@ -1,6 +1,6 @@
 #pragma once
 
-namespace uhapp {
+namespace rfapp {
 
 enum class CategoryType : int
 {

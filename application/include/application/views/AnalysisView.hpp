@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uh/LinearMap.hpp"
+#include "rfcommon/LinearMap.hpp"
 #include <QWidget>
 
 class QTabWidget;
@@ -10,11 +10,11 @@ namespace Ui {
     class AnalysisInputView;
 }
 
-namespace uh {
+namespace rfcommon {
     class AnalyzerPlugin;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class PluginManager;
 
@@ -41,7 +41,7 @@ private:
 
     struct LoadedPlugin
     {
-        uh::AnalyzerPlugin* model;
+        rfcommon::AnalyzerPlugin* model;
         QWidget* view;
     };
 

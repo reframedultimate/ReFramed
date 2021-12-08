@@ -6,7 +6,7 @@
 class QGroupBox;
 class QLabel;
 
-namespace uh {
+namespace rfcommon {
     class RunningGameSession;
 }
 
@@ -14,7 +14,7 @@ namespace Ui {
     class RunningGameSessionView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class RunningGameSessionManager;
 class SessionView;
@@ -42,14 +42,14 @@ private:
     void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onRunningGameSessionManagerDisconnectedFromServer() override;
 
-    void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording) override;
-    void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording) override;
+    void onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* recording) override;
+    void onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* recording) override;
 
-    void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
-    void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override;
-    void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override;
-    void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override;
-    void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+    void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override;
+    void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override;
+    void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override;
+    void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state) override;
     void onRunningGameSessionManagerWinnerChanged(int winner) override;
 
 private:

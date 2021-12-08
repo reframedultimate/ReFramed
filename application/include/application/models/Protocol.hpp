@@ -1,13 +1,13 @@
 #pragma once
 
-#include "uh/tcp_socket.h"
-#include "uh/Reference.hpp"
-#include "uh/PlayerState.hpp"  // Required by moc_Protocol.cpp
-#include "uh/ListenerDispatcher.hpp"
+#include "rfcommon/tcp_socket.h"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/PlayerState.hpp"  // Required by moc_Protocol.cpp
+#include "rfcommon/ListenerDispatcher.hpp"
 #include <memory>
 #include <QObject>
 
-namespace uh {
+namespace rfcommon {
     class MappingInfo;
     class ProtocolListener;
     class RunningSession;
@@ -15,7 +15,7 @@ namespace uh {
     class RunningTrainingSession;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class ProtocolConnectTask;
 class ProtocolCommunicateTask;
@@ -57,7 +57,7 @@ public:
     bool isTryingToConnect() const;
     bool isConnected() const;
 
-    uh::ListenerDispatcher<uh::ProtocolListener> dispatcher;
+    rfcommon::ListenerDispatcher<rfcommon::ProtocolListener> dispatcher;
 
 private slots:
     void onConnectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port);
@@ -65,10 +65,10 @@ private slots:
     void onProtocolDisconnected();
 
     // catch signals from listener thread so we have them in the main thread
-    void onTrainingStarted(uh::RunningTrainingSession* training);
+    void onTrainingStarted(rfcommon::RunningTrainingSession* training);
     void onTrainingEnded();
     void onTrainingReset();
-    void onMatchStarted(uh::RunningGameSession* match);
+    void onMatchStarted(rfcommon::RunningGameSession* match);
     void onMatchEnded();
     void onPlayerState(
             quint64 frameTimeStamp,
@@ -92,7 +92,7 @@ private:
 private:
     std::unique_ptr<ProtocolConnectTask> connectTask_;
     std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
-    uh::Reference<uh::RunningSession> session_;
+    rfcommon::Reference<rfcommon::RunningSession> session_;
 };
 
 }

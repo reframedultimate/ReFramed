@@ -6,7 +6,7 @@ namespace Ui {
     class DataSetFilterWidget_Date;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget_Date : public DataSetFilterWidget
 {

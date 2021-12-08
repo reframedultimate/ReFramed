@@ -3,7 +3,7 @@
 #include "application/models/Protocol.hpp"
 #include <QJsonObject>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ConnectView::ConnectView(Config* config, Protocol* protocol, Qt::WindowFlags flags)
@@ -53,7 +53,7 @@ void ConnectView::setConnecting()
 // ----------------------------------------------------------------------------
 void ConnectView::setConnectFailed(const QString& error)
 {
-    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + "\nMake sure the uhrecorder.nro mod is installed and active</font>");
+    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + "\nMake sure the rfrecorder.nro mod is installed and active</font>");
 }
 
 // ----------------------------------------------------------------------------

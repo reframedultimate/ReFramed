@@ -5,7 +5,7 @@
 #include <QByteArray>
 #include <QDataStream>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 SavedGameSessionListWidget::SavedGameSessionListWidget(QWidget* parent)
@@ -54,7 +54,7 @@ QVector<QFileInfo> SavedGameSessionListWidget::selectedSavedGameSessionFilePaths
 QStringList SavedGameSessionListWidget::mimeTypes() const
 {
     QStringList types;
-    types << "application/x-ultimate-hindsight-uhr";
+    types << "application/x-ultimate-hindsight-rfr";
     return types;
 }
 
@@ -68,7 +68,7 @@ QMimeData* SavedGameSessionListWidget::mimeData(const QList<QListWidgetItem*> it
     for (const auto& item : items)
         stream << item->data(Qt::UserRole).toString();
 
-    mimeData->setData("application/x-ultimate-hindsight-uhr", encodedData);
+    mimeData->setData("application/x-ultimate-hindsight-rfr", encodedData);
     return mimeData;
 }
 

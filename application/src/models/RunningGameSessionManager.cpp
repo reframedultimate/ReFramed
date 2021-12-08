@@ -2,17 +2,17 @@
 #include "application/listeners/RunningGameSessionManagerListener.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
 #include "application/models/SavedGameSessionManager.hpp"
-#include "uh/tcp_socket.h"
+#include "rfcommon/tcp_socket.h"
 #include <QDateTime>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 RunningGameSessionManager::RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject *parent)
     : QObject(parent)
     , protocol_(protocol)
     , savedSessionManager_(manager)
-    , format_(uh::SetFormat::FRIENDLIES)
+    , format_(rfcommon::SetFormat::FRIENDLIES)
 {
     protocol_->dispatcher.addListener(this);
     savedSessionManager_->dispatcher.addListener(this);
@@ -29,7 +29,7 @@ RunningGameSessionManager::~RunningGameSessionManager()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::setFormat(const uh::SetFormat& format)
+void RunningGameSessionManager::setFormat(const rfcommon::SetFormat& format)
 {
     if (activeSession_)
     {
@@ -59,7 +59,7 @@ void RunningGameSessionManager::setP1Name(const QString& name)
     else
     {
         p1Name_ = name;
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 0, uh::SmallString<15>(name.toStdString().c_str()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 0, rfcommon::SmallString<15>(name.toStdString().c_str()));
     }
 }
 
@@ -79,12 +79,12 @@ void RunningGameSessionManager::setP2Name(const QString& name)
     else
     {
         p2Name_ = name;
-        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 1, uh::SmallString<15>(name.toStdString().c_str()));
+        dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 1, rfcommon::SmallString<15>(name.toStdString().c_str()));
     }
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::setGameNumber(uh::GameNumber number)
+void RunningGameSessionManager::setGameNumber(rfcommon::GameNumber number)
 {
     if (activeSession_)
     {
@@ -108,16 +108,16 @@ bool RunningGameSessionManager::isSessionRunning() const
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSession* recording)
+void RunningGameSessionManager::findUniqueGameAndSetNumbers(rfcommon::RunningGameSession* recording)
 {
     const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
     while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
     {
         switch (format_.type())
         {
-            case uh::SetFormat::FRIENDLIES:
-            case uh::SetFormat::PRACTICE:
-            case uh::SetFormat::OTHER:
+            case rfcommon::SetFormat::FRIENDLIES:
+            case rfcommon::SetFormat::PRACTICE:
+            case rfcommon::SetFormat::OTHER:
                 recording->setGameNumber(recording->gameNumber() + 1);
                 break;
 
@@ -129,7 +129,7 @@ void RunningGameSessionManager::findUniqueGameAndSetNumbers(uh::RunningGameSessi
 }
 
 // ----------------------------------------------------------------------------
-bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* recording)
+bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSession* recording)
 {
     // For any game that doesn't have exactly 2 players we don't care about sets
     if (recording->playerCount() != 2)
@@ -165,34 +165,34 @@ bool RunningGameSessionManager::shouldStartNewSet(const uh::RunningGameSession* 
 
     switch (recording->format().type())
     {
-        case uh::SetFormat::BO3: {
+        case rfcommon::SetFormat::BO3: {
             if (win[0] >= 2 || win[1] >= 2)
                 return true;
         } break;
 
-        case uh::SetFormat::BO5: {
+        case rfcommon::SetFormat::BO5: {
             if (win[0] >= 3 || win[1] >= 3)
                 return true;
         } break;
 
-        case uh::SetFormat::BO7: {
+        case rfcommon::SetFormat::BO7: {
             if (win[0] >= 4 || win[1] >= 4)
                 return true;
         } break;
 
-        case uh::SetFormat::FT5: {
+        case rfcommon::SetFormat::FT5: {
             if (win[0] >= 5 || win[1] >= 5)
                 return true;
         } break;
 
-        case uh::SetFormat::FT10: {
+        case rfcommon::SetFormat::FT10: {
             if (win[0] >= 10 || win[1] >= 10)
                 return true;
         } break;
 
-        case uh::SetFormat::FRIENDLIES:
-        case uh::SetFormat::PRACTICE:
-        case uh::SetFormat::OTHER:
+        case rfcommon::SetFormat::FRIENDLIES:
+        case rfcommon::SetFormat::PRACTICE:
+        case rfcommon::SetFormat::OTHER:
             break;
     }
 
@@ -224,19 +224,19 @@ void RunningGameSessionManager::onProtocolDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolTrainingStarted(uh::RunningTrainingSession* session)
+void RunningGameSessionManager::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolTrainingEnded(uh::RunningTrainingSession* session)
+void RunningGameSessionManager::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolMatchStarted(uh::RunningGameSession* session)
+void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSession* session)
 {
     // first off, copy the data we've stored from the UI into the new recording
     // so comparing previous recordings is consistent
@@ -282,7 +282,7 @@ void RunningGameSessionManager::onProtocolMatchStarted(uh::RunningGameSession* s
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolMatchEnded(uh::RunningGameSession* session)
+void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSession* session)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchEnded, session);
 
@@ -333,7 +333,7 @@ void RunningGameSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     if (activeSession_->playerCount() == 2)
     {
@@ -345,32 +345,32 @@ void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionSetNumberChanged(uh::SetNumber number)
+void RunningGameSessionManager::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionGameNumberChanged(uh::GameNumber number)
+void RunningGameSessionManager::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionFormatChanged(const uh::SetFormat& format)
+void RunningGameSessionManager::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
 {
     (void)player;
     (void)state;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const uh::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewPlayerState, player, state);
 }

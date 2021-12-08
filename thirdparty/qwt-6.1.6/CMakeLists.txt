@@ -59,7 +59,7 @@ if (QWT_SVG)
     find_package (Qt5 COMPONENTS Svg REQUIRED)
 endif ()
 
-add_library (uhqwt ${QWT_LIB_TYPE}
+add_library (rfqwt ${QWT_LIB_TYPE}
     ###########################################################################
     # core
     ###########################################################################
@@ -164,44 +164,48 @@ add_library (uhqwt ${QWT_LIB_TYPE}
     ###########################################################################
 
     $<$<BOOL:${QWT_SVG}>:src/qwt_plot_svgitem.cpp>)
-target_include_directories (uhqwt
+target_include_directories (rfqwt
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
     PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
     PUBLIC $<INSTALL_INTERFACE:include>)
-target_link_libraries (uhqwt
-    PRIVATE Qt5::Core
-    PRIVATE Qt5::Gui
-    PRIVATE Qt5::Widgets
-    PRIVATE Qt5::PrintSupport
-    PRIVATE Qt5::Concurrent
-    PRIVATE $<$<BOOL:${QWT_SVG}>:Qt5::Svg>
-    PRIVATE $<$<BOOL:${QWT_OPENGL}>:Qt5::OpenGL>)
-target_compile_definitions (uhqwt
+target_link_libraries (rfqwt
+    PUBLIC Qt5::Core
+    PUBLIC Qt5::Gui
+    PUBLIC Qt5::Widgets
+    PUBLIC Qt5::PrintSupport
+    PUBLIC Qt5::Concurrent
+    PUBLIC $<$<BOOL:${QWT_SVG}>:Qt5::Svg>
+    PUBLIC $<$<BOOL:${QWT_OPENGL}>:Qt5::OpenGL>)
+target_compile_definitions (rfqwt
     PRIVATE QWT_BUILDING
     PRIVATE $<$<NOT:$<BOOL:${QWT_SVG}>>:QWT_NO_SVG>)
-set_target_properties (uhqwt
+set_target_properties (rfqwt
     PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}
-        LIBRARY_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_LIBDIR}
-        LIBRARY_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_LIBDIR}
-        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_BINDIR}
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_BINDIR})
+        LIBRARY_OUTPUT_DIRECTORY ${REFRAMED_BUILD_LIBDIR}
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG ${REFRAMED_BUILD_LIBDIR}
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE ${REFRAMED_BUILD_LIBDIR}
+        RUNTIME_OUTPUT_DIRECTORY ${REFRAMED_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${REFRAMED_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${REFRAMED_BUILD_BINDIR})
+
+add_library (ReFramed::rfqwt ALIAS rfqwt)
 
 install (
-    TARGETS uhqwt
-    EXPORT uhqwtConfig
-    LIBRARY DESTINATION ${UH_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${UH_INSTALL_BINDIR})
+    TARGETS rfqwt
+    EXPORT ReFramedTargets
+    INCLUDES DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
+    LIBRARY DESTINATION ${REFRAMED_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${REFRAMED_INSTALL_BINDIR})
 install (
-    DIRECTORY "src"
-    DESTINATION ${UH_INSTALL_INCLUDEDIR}
+    DIRECTORY "src/"
+    DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h")
 install (
-    DIRECTORY "${PROJECT_BINARY_DIR}/src"
-    DESTINATION ${UH_INSTALL_INCLUDEDIR}
+    DIRECTORY "${PROJECT_BINARY_DIR}/src/"
+    DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h")
-install (
-    EXPORT uhqwtConfig
-    DESTINATION ${UH_INSTALL_CMAKEDIR})
+export (
+    TARGETS rfqwt
+    NAMESPACE ReFramed::
+    FILE ReFramedTargets.cmake)
 

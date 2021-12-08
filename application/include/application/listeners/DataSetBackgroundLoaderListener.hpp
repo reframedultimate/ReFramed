@@ -1,17 +1,17 @@
 #pragma once
 
-namespace uh {
+namespace rfcommon {
     class DataSet;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayGroup;
 
 class DataSetBackgroundLoaderListener
 {
 public:
-    virtual void onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, uh::DataSet* dataSet) = 0;
+    virtual void onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, rfcommon::DataSet* dataSet) = 0;
 };
 
 }

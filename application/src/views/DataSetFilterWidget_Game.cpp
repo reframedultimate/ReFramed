@@ -1,13 +1,13 @@
 #include "application/ui_DataSetFilterWidget_Game.h"
 #include "application/views/DataSetFilterWidget_Game.hpp"
-#include "uh/DataSetFilter_Game.hpp"
-#include "uh/SetFormat.hpp"
+#include "rfcommon/DataSetFilter_Game.hpp"
+#include "rfcommon/SetFormat.hpp"
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 DataSetFilterWidget_Game::DataSetFilterWidget_Game(QWidget* parent)
-    : DataSetFilterWidget(new uh::DataSetFilter_Game, parent)
+    : DataSetFilterWidget(new rfcommon::DataSetFilter_Game, parent)
     , ui_(new Ui::DataSetFilterWidget_Game)
 {
     ui_->setupUi(contentWidget());
@@ -46,7 +46,7 @@ DataSetFilterWidget_Game::~DataSetFilterWidget_Game()
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
 {
-    uh::DataSetFilter_Game* f = static_cast<uh::DataSetFilter_Game*>(filter());
+    rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
 
     if (index == 0)
     {
@@ -54,12 +54,12 @@ void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
     }
     else
     {
-        uh::SetFormat::Type type = static_cast<uh::SetFormat::Type>(index - 1);
+        rfcommon::SetFormat::Type type = static_cast<rfcommon::SetFormat::Type>(index - 1);
         f->setAnySetFormat(false);
-        if (type == uh::SetFormat::OTHER)
-            f->setSetFormat(uh::SetFormat(type, ui_->lineEdit_formatName->text().toStdString().c_str()));
+        if (type == rfcommon::SetFormat::OTHER)
+            f->setSetFormat(rfcommon::SetFormat(type, ui_->lineEdit_formatName->text().toStdString().c_str()));
         else
-            f->setSetFormat(uh::SetFormat(type));
+            f->setSetFormat(rfcommon::SetFormat(type));
     }
 
     // Handle UI changes
@@ -70,9 +70,9 @@ void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
     }
     else
     {
-        uh::SetFormat::Type type = static_cast<uh::SetFormat::Type>(index - 1);
-        ui_->lineEdit_formatName->setVisible(type == uh::SetFormat::OTHER);
-        ui_->label_formatName->setVisible(type == uh::SetFormat::OTHER);
+        rfcommon::SetFormat::Type type = static_cast<rfcommon::SetFormat::Type>(index - 1);
+        ui_->lineEdit_formatName->setVisible(type == rfcommon::SetFormat::OTHER);
+        ui_->label_formatName->setVisible(type == rfcommon::SetFormat::OTHER);
     }
     updateSize();
 }
@@ -87,21 +87,21 @@ void DataSetFilterWidget_Game::onFormatDescChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onWinnerTextChanged(const QString& text)
 {
-    uh::DataSetFilter_Game* f = static_cast<uh::DataSetFilter_Game*>(filter());
+    rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setWinner(text.toStdString().c_str());
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onMinLengthChanged(const QTime& time)
 {
-    uh::DataSetFilter_Game* f = static_cast<uh::DataSetFilter_Game*>(filter());
+    rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setMinLengthMs(QTime(0, 0).msecsTo(time));
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onMaxLengthChanged(const QTime& time)
 {
-    uh::DataSetFilter_Game* f = static_cast<uh::DataSetFilter_Game*>(filter());
+    rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setMaxLengthMs(QTime(0, 0).msecsTo(time));
 }
 

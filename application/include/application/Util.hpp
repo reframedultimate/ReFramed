@@ -10,7 +10,7 @@ class QFileInfo;
 class QLayout;
 class QStackedWidget;
 
-namespace uh {
+namespace rfcommon {
     class GameSession;
 }
 
@@ -18,10 +18,10 @@ using qhash_result_t = size_t;
 qhash_result_t qHash(const QDir& c, qhash_result_t seed=0) noexcept;
 qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed=0) noexcept;
 
-namespace uhapp {
+namespace rfapp {
 
 /*!
- * \brief Allows QString to be used in uh::HashMap
+ * \brief Allows QString to be used in rfcommon::HashMap
  */
 template <typename H=uint32_t>
 struct QStringHasher
@@ -42,6 +42,6 @@ void clearLayout(QLayout* layout);
  */
 void clearStackedWidget(QStackedWidget* sw);
 
-QString composeFileName(const uh::GameSession* session);
+QString composeFileName(const rfcommon::GameSession* session);
 
 }

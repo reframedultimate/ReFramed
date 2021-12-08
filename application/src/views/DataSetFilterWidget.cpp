@@ -11,10 +11,10 @@
 #include <QCheckBox>
 #include <QPainter>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
-DataSetFilterWidget::DataSetFilterWidget(uh::DataSetFilter* filter, QWidget* parent)
+DataSetFilterWidget::DataSetFilterWidget(rfcommon::DataSetFilter* filter, QWidget* parent)
     : QWidget(parent)
     , filter_(filter)
     , toggleButton_(new QToolButton)
@@ -121,7 +121,7 @@ QWidget* DataSetFilterWidget::contentWidget()
 }
 
 // ----------------------------------------------------------------------------
-uh::DataSetFilter* DataSetFilterWidget::filter() const
+rfcommon::DataSetFilter* DataSetFilterWidget::filter() const
 {
     return filter_;
 }

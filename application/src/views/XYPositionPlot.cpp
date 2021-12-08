@@ -1,14 +1,14 @@
-#include "uhplot/ColorPalette.hpp"
+#include "rfplot/ColorPalette.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "uh/Session.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include <QMenu>
 #include <QAction>
 #include <QSignalMapper>
 
-namespace uhapp {
+namespace rfapp {
 
 namespace {
 
@@ -82,7 +82,7 @@ void XYPositionPlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::setSession(uh::Session* session)
+void XYPositionPlot::setSession(rfcommon::Session* session)
 {
     clear();
     session_ = session;
@@ -92,7 +92,7 @@ void XYPositionPlot::setSession(uh::Session* session)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(uhplot::ColorPalette::getColor(player), 2.0));
+        curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
         curve->setTitle(session_->playerName(player).cStr());
         curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
@@ -131,13 +131,13 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void XYPositionPlot::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     curves_[player]->setTitle(name.cStr());
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void XYPositionPlot::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
     data->append(QPointF(state.posx(), state.posy()));

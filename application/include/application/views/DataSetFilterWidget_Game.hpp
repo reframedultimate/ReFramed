@@ -6,7 +6,7 @@ namespace Ui {
     class DataSetFilterWidget_Game;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget_Game : public DataSetFilterWidget
 {

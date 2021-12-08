@@ -6,7 +6,7 @@
 
 class QFileInfo;
 
-namespace uhapp {
+namespace rfapp {
 
 class SavedGameSessionListWidget : public QListWidget
 {

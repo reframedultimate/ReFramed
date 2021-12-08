@@ -1,10 +1,10 @@
 #include "application/listeners/TrainingModeListener.hpp"
 #include "application/models/TrainingModeModel.hpp"
 #include "application/models/PluginManager.hpp"
-#include "uh/RealtimePlugin.hpp"
+#include "rfcommon/RealtimePlugin.hpp"
 #include <QWidget>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 TrainingModeModel::TrainingModeModel(PluginManager* pluginManager)
@@ -18,7 +18,7 @@ TrainingModeModel::~TrainingModeModel()
     for (auto it = runningPlugins_.begin(); it != runningPlugins_.end(); ++it)
     {
         const QString& name = it.key();
-        uh::Plugin* plugin = it.value();
+        rfcommon::Plugin* plugin = it.value();
         dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, it.key(), plugin);
         pluginManager_->destroyModel(name, plugin);
     }
@@ -27,7 +27,7 @@ TrainingModeModel::~TrainingModeModel()
 // ----------------------------------------------------------------------------
 QVector<QString> TrainingModeModel::availablePluginNames() const
 {
-    return pluginManager_->availableFactoryNames(UHPluginType::REALTIME | UHPluginType::STANDALONE);
+    return pluginManager_->availableFactoryNames(RFPluginType::REALTIME | RFPluginType::STANDALONE);
 }
 
 // ----------------------------------------------------------------------------
@@ -37,13 +37,13 @@ QList<QString> TrainingModeModel::runningPluginNames() const
 }
 
 // ----------------------------------------------------------------------------
-const UHPluginFactoryInfo* TrainingModeModel::getPluginInfo(const QString& pluginName) const
+const RFPluginFactoryInfo* TrainingModeModel::getPluginInfo(const QString& pluginName) const
 {
     return pluginManager_->getFactoryInfo(pluginName);
 }
 
 // ----------------------------------------------------------------------------
-uh::Plugin* TrainingModeModel::runningPlugin(const QString& name) const
+rfcommon::Plugin* TrainingModeModel::runningPlugin(const QString& name) const
 {
     auto it = runningPlugins_.find(name);
     if (it == runningPlugins_.end())
@@ -54,7 +54,7 @@ uh::Plugin* TrainingModeModel::runningPlugin(const QString& name) const
 // ----------------------------------------------------------------------------
 bool TrainingModeModel::launchPlugin(const QString& pluginName)
 {
-    uh::Plugin* plugin = pluginManager_->createModel(pluginName, UHPluginType::REALTIME | UHPluginType::STANDALONE);
+    rfcommon::Plugin* plugin = pluginManager_->createModel(pluginName, RFPluginType::REALTIME | RFPluginType::STANDALONE);
     if (plugin == nullptr)
         return false;
 
@@ -72,7 +72,7 @@ bool TrainingModeModel::stopPlugin(const QString& pluginName)
         return false;
 
     const QString& name = it.key();
-    uh::Plugin* plugin = it.value();
+    rfcommon::Plugin* plugin = it.value();
     dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, pluginName, plugin);
 
     pluginManager_->destroyModel(name, plugin);

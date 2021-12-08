@@ -1,15 +1,15 @@
 #pragma once
 
-#include "uh/tcp_socket.h"
+#include "rfcommon/tcp_socket.h"
 #include <QThread>
 #include <QMutex>
 
-namespace uh {
+namespace rfcommon {
     class RunningTrainingSession;
     class RunningGameSession;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class ProtocolCommunicateTask : public QThread
 {
@@ -36,10 +36,10 @@ public:
 
 signals:
     void connectionClosed();
-    void trainingStarted(uh::RunningTrainingSession* training);
+    void trainingStarted(rfcommon::RunningTrainingSession* training);
     void trainingEnded();
     void trainingReset();
-    void matchStarted(uh::RunningGameSession* match);
+    void matchStarted(rfcommon::RunningGameSession* match);
     void matchEnded();
     void playerState(
             quint64 frameTimeStamp,

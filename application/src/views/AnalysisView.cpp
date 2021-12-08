@@ -1,7 +1,7 @@
 #include "application/ui_AnalysisInputView.h"
 #include "application/views/AnalysisView.hpp"
 #include "application/models/PluginManager.hpp"
-#include "uh/AnalyzerPlugin.hpp"
+#include "rfcommon/AnalyzerPlugin.hpp"
 #include <QTabWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -9,7 +9,7 @@
 #include <QMouseEvent>
 #include <QIcon>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
@@ -22,7 +22,7 @@ AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
     setLayout(new QVBoxLayout);
     layout()->addWidget(tabWidget_);
 
-    for (const auto& name : pluginManager_->availableFactoryNames(UHPluginType::ANALYZER))
+    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::ANALYZER))
         addMenu_->addAction(name);
 
     QWidget* inputSettingsTab = new QWidget;
@@ -43,7 +43,7 @@ AnalysisView::~AnalysisView()
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
         const QString& name = it.key();
-        uh::AnalyzerPlugin* model = it.value().model;
+        rfcommon::AnalyzerPlugin* model = it.value().model;
         QWidget* view = it.value().view;
 
         int tabIndex = tabWidget_->indexOf(view);
@@ -69,7 +69,7 @@ void AnalysisView::onTabBarClicked(int index)
     int insertIdx = tabWidget_->count() - 1;
 
     const QString& name = action->text();
-    uh::AnalyzerPlugin* model = pluginManager_->createAnalyzerModel(name);
+    rfcommon::AnalyzerPlugin* model = pluginManager_->createAnalyzerModel(name);
     if (model == nullptr)
         return;
 
@@ -110,7 +110,7 @@ void AnalysisView::closeTab(QWidget* widget)
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
         const QString& name = it.key();
-        uh::AnalyzerPlugin* model = it.value().model;
+        rfcommon::AnalyzerPlugin* model = it.value().model;
         QWidget* view = it.value().view;
 
         if (view == widget)

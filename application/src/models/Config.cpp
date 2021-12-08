@@ -5,7 +5,7 @@
 #include <QStandardPaths>
 #include <QJsonDocument>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 Config::Config()

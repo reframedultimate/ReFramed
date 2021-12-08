@@ -1,10 +1,10 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "application/models/SavedGameSessionGroup.hpp"
-#include "uh/SavedGameSession.hpp"
+#include "rfcommon/SavedGameSession.hpp"
 #include <QRunnable>
 #include <QThreadPool>
 
-namespace uhapp {
+namespace rfapp {
 
 uint32_t DataSetBackgroundLoader::taskIDCounter_ = 0;
 
@@ -25,7 +25,7 @@ public:
     }
 
 signals:
-    void recordingLoaded(uh::SavedGameSession* recording);
+    void recordingLoaded(rfcommon::SavedGameSession* recording);
 
 private:
     void run() override
@@ -38,13 +38,13 @@ private:
 
             auto item = in_->dequeue();
             mutex_->unlock();
-                uh::Reference<uh::SavedSession> session = uh::SavedSession::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
+                rfcommon::Reference<rfcommon::SavedSession> session = rfcommon::SavedSession::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
             mutex_->lock();
 
             if (session)
             {
                 // We currently don't support loading training mode sessions, only game sessions
-                if (uh::SavedGameSession* gameSession = dynamic_cast<uh::SavedGameSession*>(session.get()))
+                if (rfcommon::SavedGameSession* gameSession = dynamic_cast<rfcommon::SavedGameSession*>(session.get()))
                 {
                     out_->enqueue({gameSession, item.group, item.taskID});
                     session.detach();
@@ -170,9 +170,9 @@ void DataSetBackgroundLoader::cancelAll()
 }
 
 // ----------------------------------------------------------------------------
-void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group)
+void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, rfcommon::DataSet* dataSet, ReplayGroup* group)
 {
-    uh::Reference<uh::DataSet> ds = dataSet;
+    rfcommon::Reference<rfcommon::DataSet> ds = dataSet;
 
     // Some sanity checks. There was a case where recordings had 0 player states
 #ifndef NDEBUG
@@ -202,11 +202,11 @@ void DataSetBackgroundLoader::run()
 {
     struct PendingDataSet
     {
-        uh::Reference<uh::DataSet> dataSet;
+        rfcommon::Reference<rfcommon::DataSet> dataSet;
         ReplayGroup* group;
     };
 
-    uh::SmallLinearMap<uint32_t, PendingDataSet, 4> pendingDataSets;
+    rfcommon::SmallLinearMap<uint32_t, PendingDataSet, 4> pendingDataSets;
 
     mutex_.lock();
     while (true)
@@ -237,7 +237,7 @@ void DataSetBackgroundLoader::run()
                 // Ensure that we've created a target dataset for each task
                 auto it = pendingDataSets.find(item.taskID);
                 if (it == pendingDataSets.end())
-                    it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new uh::DataSet, item.group});
+                    it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new rfcommon::DataSet, item.group});
 
                 it->value().dataSet->addSessionNoSort(item.session);
             }

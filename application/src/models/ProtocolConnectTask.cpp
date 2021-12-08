@@ -1,6 +1,6 @@
 #include "application/models/ProtocolConnectTask.hpp"
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ProtocolConnectTask::ProtocolConnectTask(const QString& ipAddress, uint16_t port, QObject* parent)

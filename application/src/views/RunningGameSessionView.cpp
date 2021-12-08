@@ -3,12 +3,12 @@
 #include "application/views/RunningGameSessionView.hpp"
 #include "application/views/SessionView.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
-#include "uh/RunningGameSession.hpp"
+#include "rfcommon/RunningGameSession.hpp"
 
 #include <QVBoxLayout>
 #include <QDateTime>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manager, QWidget* parent)
@@ -49,12 +49,12 @@ void RunningGameSessionView::showDamagePlot()
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
 {
-    if (static_cast<uh::SetFormat::Type>(index) == uh::SetFormat::OTHER)
+    if (static_cast<rfcommon::SetFormat::Type>(index) == rfcommon::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setVisible(true);
     else
         ui_->lineEdit_formatOther->setVisible(false);
-    runningGameSessionManager_->setFormat(uh::SetFormat(
-        static_cast<uh::SetFormat::Type>(index),
+    runningGameSessionManager_->setFormat(rfcommon::SetFormat(
+        static_cast<rfcommon::SetFormat::Type>(index),
         ui_->lineEdit_formatOther->text().toStdString().c_str()
     ));
 }
@@ -62,8 +62,8 @@ void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
 // ----------------------------------------------------------------------------
 void RunningGameSessionView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    runningGameSessionManager_->setFormat(uh::SetFormat(uh::SetFormat::OTHER, formatDesc.toStdString().c_str()));
-    ui_->comboBox_format->setCurrentIndex(static_cast<int>(uh::SetFormat::OTHER));
+    runningGameSessionManager_->setFormat(rfcommon::SetFormat(rfcommon::SetFormat::OTHER, formatDesc.toStdString().c_str()));
+    ui_->comboBox_format->setCurrentIndex(static_cast<int>(rfcommon::SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
@@ -107,7 +107,7 @@ void RunningGameSessionView::onRunningGameSessionManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* recording)
 {
     clearLayout(ui_->layout_playerInfo);
 
@@ -121,7 +121,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(uh::Running
     for (int i = 0; i != count; ++i)
     {
         fighterName_[i] = new QLabel();
-        const uh::String* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
+        const rfcommon::String* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
         fighterName_[i]->setText(fighterNameStr ? fighterNameStr->cStr() : "(Unknown Fighter)");
 
         fighterStatus_[i] = new QLabel();
@@ -149,7 +149,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(uh::Running
     }
 
     // Set game info
-    const uh::String* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
+    const rfcommon::String* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
     ui_->label_stage->setText(stageStr ? stageStr->cStr() : "(Unknown Stage)");
     ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString());
     ui_->label_timeRemaining->setText("");
@@ -162,13 +162,13 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(uh::Running
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* recording)
 {
     (void)recording;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int playerIdx, const uh::SmallString<15>& name)
+void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
 {
     if (names_.size() <= playerIdx)
         return;
@@ -188,32 +188,32 @@ void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int pl
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format)
+void RunningGameSessionView::onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format)
 {
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
 
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
 
-    if (format.type() == uh::SetFormat::OTHER)
+    if (format.type() == rfcommon::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number)
+void RunningGameSessionView::onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number)
 {
     (void)number;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number)
+void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number)
 {
     const QSignalBlocker blocker(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(number);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state)
+void RunningGameSessionView::onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state)
 {
     if (player >= fighterStatus_.size())
         return;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "application/models/ConfigAccessor.hpp"
-#include "uh/ProtocolListener.hpp"
+#include "rfcommon/ProtocolListener.hpp"
 #include <QDialog>
 
 class QTcpSocket;
@@ -10,13 +10,13 @@ namespace Ui {
     class ConnectView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class Protocol;
 
 class ConnectView : public QDialog
                   , public ConfigAccessor
-                  , public uh::ProtocolListener
+                  , public rfcommon::ProtocolListener
 {
     Q_OBJECT
 public:
@@ -40,10 +40,10 @@ private:
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolDisconnectedFromServer() override {}
 
-    void onProtocolTrainingStarted(uh::RunningTrainingSession* session) override { (void)session; }
-    void onProtocolTrainingEnded(uh::RunningTrainingSession* session) override { (void)session; }
-    void onProtocolMatchStarted(uh::RunningGameSession* session) override { (void)session; }
-    void onProtocolMatchEnded(uh::RunningGameSession* session) override { (void)session; }
+    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) override { (void)session; }
+    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) override { (void)session; }
+    void onProtocolMatchStarted(rfcommon::RunningGameSession* session) override { (void)session; }
+    void onProtocolMatchEnded(rfcommon::RunningGameSession* session) override { (void)session; }
 
 private:
     Protocol* protocol_;

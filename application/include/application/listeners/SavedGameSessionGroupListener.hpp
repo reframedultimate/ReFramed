@@ -3,7 +3,7 @@
 #include <QString>
 #include <QFileInfo>
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayGroup;
 

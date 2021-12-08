@@ -1,5 +1,5 @@
 project ("application"
-    VERSION ${UH_VERSION}
+    VERSION ${REFRAMED_VERSION}
     LANGUAGES C CXX)
 
 include (GNUInstallDirs)
@@ -8,7 +8,7 @@ configure_file ("templates/config.hpp.in" "include/application/config.hpp")
 
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
-qt5_wrap_cpp (UH_SOURCES_MOC
+qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolConnectTask.hpp"
@@ -35,7 +35,7 @@ qt5_wrap_cpp (UH_SOURCES_MOC
     "include/application/views/TrainingModeView.hpp"
     "include/application/views/VisualizerView.hpp"
     "include/application/views/XYPositionPlot.hpp")
-qt5_wrap_ui (UH_FORMS_MOC
+qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/AnalysisInputView.ui"
     "forms/ConnectView.ui"
     "forms/DataSetFilterView.ui"
@@ -51,16 +51,16 @@ qt5_wrap_ui (UH_FORMS_MOC
     "forms/SessionView.ui"
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
-qt5_add_resources (UH_RESOURCES_GEN
+qt5_add_resources (APPLICATION_RESOURCES_GEN
     "")
-qt5_add_translation (UH_QM_FILES
+qt5_add_translation (APPLICATION_QM_FILES
     "")
 
-add_executable (ultimate-hindsight WIN32
-    ${UH_SOURCES_MOC}
-    ${UH_FORMS_MOC}
-    ${UH_RESOURCES_GEN}
-    ${UH_QM_FILES}
+add_executable (application WIN32
+    ${APPLICATION_SOURCES_MOC}
+    ${APPLICATION_FORMS_MOC}
+    ${APPLICATION_RESOURCES_GEN}
+    ${APPLICATION_QM_FILES}
     "src/main.cpp"
     "src/Util.cpp"
     "src/models/CategoryModel.cpp"
@@ -96,44 +96,50 @@ add_executable (ultimate-hindsight WIN32
     "src/views/VisualizerView.cpp"
     "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
-target_include_directories (ultimate-hindsight
+target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
-target_compile_options (ultimate-hindsight
+target_compile_options (application
     PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -pedantic>
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-W -Wall -Wextra -pedantic>)
-target_link_libraries (ultimate-hindsight
+target_link_libraries (application
     PRIVATE Qt5::Core
     PRIVATE Qt5::Gui
     PRIVATE Qt5::Widgets
-    PRIVATE uhplot)
-set_target_properties (ultimate-hindsight
+    PRIVATE rfplot)
+set_target_properties (application
     PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${UH_BUILD_BINDIR}
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_BINDIR}
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_BINDIR})
+        RUNTIME_OUTPUT_DIRECTORY ${REFRAMED_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${REFRAMED_BUILD_BINDIR}
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${REFRAMED_BUILD_BINDIR}
+        OUTPUT_NAME "ReFramed")
+
+# workaround because uic generates headers into CMAKE_CURRENT_BINARY_DIR
+# and we want to include them from "application/ui_*.h"
+target_include_directories (application
+    PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/../>)
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
 ###############################################################################
 
 if (WIN32 OR CYGWIN)
-    add_custom_command (TARGET ultimate-hindsight POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${UH_BUILD_BINDIR}/platforms
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${UH_BUILD_BINDIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${UH_BUILD_BINDIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${UH_BUILD_BINDIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${UH_BUILD_BINDIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${UH_BUILD_BINDIR}/platforms
+    add_custom_command (TARGET application POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${REFRAMED_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${REFRAMED_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${REFRAMED_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${REFRAMED_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/platforms
 
-        COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${UH_BUILD_BINDIR}'"
+        COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_BINDIR}'"
         VERBATIM)
 endif ()
 
 install (
-    TARGETS ultimate-hindsight
-    RUNTIME DESTINATION "${UH_INSTALL_BINDIR}")
-set_target_properties (ultimate-hindsight
+    TARGETS application
+    RUNTIME DESTINATION "${REFRAMED_INSTALL_BINDIR}")
+set_target_properties (application
     PROPERTIES
-        INSTALL_RPATH ${UH_INSTALL_LIBDIR})
+        INSTALL_RPATH ${REFRAMED_INSTALL_LIBDIR})
 

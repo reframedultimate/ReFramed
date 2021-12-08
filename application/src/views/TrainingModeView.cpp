@@ -2,10 +2,10 @@
 #include "application/views/TrainingModeView.hpp"
 #include "application/models/TrainingModeModel.hpp"
 #include "application/models/CategoryModel.hpp"
-#include "uh/PluginInterface.hpp"
-#include "uh/RealtimePlugin.hpp"
+#include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/RealtimePlugin.hpp"
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 TrainingModeView::TrainingModeView(TrainingModeModel* trainingModel, CategoryModel* categoryModel, QWidget* parent)
@@ -45,7 +45,7 @@ TrainingModeView::~TrainingModeView()
 // ----------------------------------------------------------------------------
 void TrainingModeView::currentTextChanged(const QString& text)
 {
-    const UHPluginFactoryInfo* info = trainingModel_->getPluginInfo(text);
+    const RFPluginFactoryInfo* info = trainingModel_->getPluginInfo(text);
     if (info == nullptr)
     {
         ui_->pushButton_launch->setEnabled(false);
@@ -75,7 +75,7 @@ void TrainingModeView::launchPressed()
 }
 
 // ----------------------------------------------------------------------------
-void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::Plugin* model)
+void TrainingModeView::onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* model)
 {
     QWidget* view = model->createView();
     if (view == nullptr)
@@ -90,7 +90,7 @@ void TrainingModeView::onTrainingModePluginLaunched(const QString& name, uh::Plu
 }
 
 // ----------------------------------------------------------------------------
-void TrainingModeView::onTrainingModePluginStopped(const QString& name, uh::Plugin* model)
+void TrainingModeView::onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* model)
 {
     auto it = views_.find(model);
     assert(it != views_.end());
@@ -117,7 +117,7 @@ void TrainingModeView::onCategoryItemSelected(CategoryType category, const QStri
     if (category != CategoryType::TOP_LEVEL_TRAINING_MODE)
         return;
 
-    uh::Plugin* model = trainingModel_->runningPlugin(name);
+    rfcommon::Plugin* model = trainingModel_->runningPlugin(name);
     auto it = views_.find(model);
     assert(it != views_.end());
     QWidget* view = it.value();

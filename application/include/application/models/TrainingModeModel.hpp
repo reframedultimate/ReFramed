@@ -1,17 +1,17 @@
 #pragma once
 
-#include "uh/ListenerDispatcher.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include <QString>
 #include <QHash>
 
-struct UHPluginFactoryInfo;
+struct RFPluginFactoryInfo;
 class QWidget;
 
-namespace uh {
+namespace rfcommon {
     class Plugin;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class PluginManager;
 class TrainingModeListener;
@@ -24,18 +24,18 @@ public:
 
     QVector<QString> availablePluginNames() const;
     QList<QString> runningPluginNames() const;
-    const UHPluginFactoryInfo* getPluginInfo(const QString& pluginName) const;
+    const RFPluginFactoryInfo* getPluginInfo(const QString& pluginName) const;
 
-    uh::Plugin* runningPlugin(const QString& name) const;
+    rfcommon::Plugin* runningPlugin(const QString& name) const;
     bool launchPlugin(const QString& pluginName);
     bool stopPlugin(const QString& pluginName);
     bool isPluginRunning(const QString& pluginName) const;
 
-    uh::ListenerDispatcher<TrainingModeListener> dispatcher;
+    rfcommon::ListenerDispatcher<TrainingModeListener> dispatcher;
 
 private:
     PluginManager* pluginManager_;
-    QHash<QString, uh::Plugin*> runningPlugins_;
+    QHash<QString, rfcommon::Plugin*> runningPlugins_;
 };
 
 }

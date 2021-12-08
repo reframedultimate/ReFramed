@@ -3,7 +3,7 @@
 #include <QString>
 #include <QDir>
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayGroup;
 class ReplayManagerListener

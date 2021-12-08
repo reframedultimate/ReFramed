@@ -1,5 +1,5 @@
 #include "application/views/MainWindow.hpp"
-#include "uh/init.h"
+#include "rfcommon/init.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <iostream>
@@ -39,16 +39,16 @@ int main(int argc, char** argv)
     QApplication::setStyle("fusion");
 #endif
     QApplication app(argc, argv);
-    uhapp::MainWindow mainWindow;
+    rfapp::MainWindow mainWindow;
 
-    if (uh_init() != 0)
-        goto init_uh_library_failed;
+    if (rfcommon_init() != 0)
+        goto init_rfcommon_library_failed;
 
     mainWindow.show();
     result = app.exec();
 
-    uh_deinit();
+    rfcommon_deinit();
     return result;
 
-    init_uh_library_failed: return -1;
+    init_rfcommon_library_failed: return -1;
 }

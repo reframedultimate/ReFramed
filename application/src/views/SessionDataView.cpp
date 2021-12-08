@@ -1,13 +1,13 @@
 #include "application/ui_SessionDataView.h"
 #include "application/Util.hpp"
 #include "application/views/SessionDataView.hpp"
-#include "uh/GameSession.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/GameSession.hpp"
+#include "rfcommon/PlayerState.hpp"
 #include <QDateTime>
 
 #include <QDebug>
 
-namespace uhapp {
+namespace rfapp {
 
 class IntegerTableWidgetItem : public QTableWidgetItem
 {
@@ -73,7 +73,7 @@ SessionDataView::~SessionDataView()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::setSession(uh::Session* session)
+void SessionDataView::setSession(rfcommon::Session* session)
 {
     clear();
     session_ = session;
@@ -202,7 +202,7 @@ void SessionDataView::repopulateTree()
 // ----------------------------------------------------------------------------
 void SessionDataView::repopulateGameInfoTable()
 {
-    uh::GameSession* game = dynamic_cast<uh::GameSession*>(session_.get());
+    rfcommon::GameSession* game = dynamic_cast<rfcommon::GameSession*>(session_.get());
 
     // Fill in data
     ui_->tableWidget_gameInfo->setRowCount(6 + session_->playerCount());
@@ -214,7 +214,7 @@ void SessionDataView::repopulateGameInfoTable()
     ui_->tableWidget_gameInfo->setItem(2, 1, new QTableWidgetItem(game ? QString::number(game->setNumber()) : "--"));
     ui_->tableWidget_gameInfo->setItem(3, 0, new QTableWidgetItem("Game Number"));
     ui_->tableWidget_gameInfo->setItem(3, 1, new QTableWidgetItem(game ? QString::number(game->gameNumber()) : "--"));
-    const uh::String* stageName = session_->mappingInfo().stageID.map(session_->stageID());
+    const rfcommon::String* stageName = session_->mappingInfo().stageID.map(session_->stageID());
     ui_->tableWidget_gameInfo->setItem(4, 0, new QTableWidgetItem("Stage ID"));
     ui_->tableWidget_gameInfo->setItem(4, 1, new QTableWidgetItem(QString::number(session_->stageID()) + " (" + (stageName ? stageName->cStr() : "unknown stage") + ")"));
     ui_->tableWidget_gameInfo->setItem(5, 0, new QTableWidgetItem("Winner"));
@@ -222,7 +222,7 @@ void SessionDataView::repopulateGameInfoTable()
 
     for (int i = 0; i != session_->playerCount(); ++i)
     {
-        const uh::String* fighterName = session_->mappingInfo().fighterID.map(session_->playerFighterID(i));
+        const rfcommon::String* fighterName = session_->mappingInfo().fighterID.map(session_->playerFighterID(i));
         ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(session_->playerName(i).cStr()));
         ui_->tableWidget_gameInfo->setItem(6+i, 1, new QTableWidgetItem(fighterName ? fighterName->cStr() : "(Unknown fighter)"));
     }
@@ -368,7 +368,7 @@ void SessionDataView::updatePlayerDataTableRowsIfDirty()
 
         while (row < endRow)
         {
-            const uh::PlayerState& state = session_->playerStateAt(player, row);
+            const rfcommon::PlayerState& state = session_->playerStateAt(player, row);
             setPlayerDataTableRow(player, row, state);
             row++;
         }
@@ -381,15 +381,15 @@ void SessionDataView::updatePlayerDataTableRowsIfDirty()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::setPlayerDataTableRow(int player, int row, const uh::PlayerState& state)
+void SessionDataView::setPlayerDataTableRow(int player, int row, const rfcommon::PlayerState& state)
 {
     const auto& statusMapping = session_->mappingInfo().fighterStatus;
     const auto& hitStatusMapping = session_->mappingInfo().hitStatus;
 
-    const uh::String* baseEnum = statusMapping.statusToBaseEnumName(state.status());
-    const uh::String* specificEnum = statusMapping.statusToFighterSpecificEnumName(state.status(), session_->playerFighterID(player));
-    const uh::String statusStr = baseEnum ? *baseEnum : (specificEnum ? *specificEnum : "");
-    const uh::String* hitStatusStr = hitStatusMapping.map(state.hitStatus());
+    const rfcommon::String* baseEnum = statusMapping.statusToBaseEnumName(state.status());
+    const rfcommon::String* specificEnum = statusMapping.statusToFighterSpecificEnumName(state.status(), session_->playerFighterID(player));
+    const rfcommon::String statusStr = baseEnum ? *baseEnum : (specificEnum ? *specificEnum : "");
+    const rfcommon::String* hitStatusStr = hitStatusMapping.map(state.hitStatus());
 
     // "Frame", "Position", "Facing", "Damage", "Hitstun", "Shield", "Status", "Motion", "Hit Status", "Stocks", "Attack Connected"
     QTableWidget* table = playerDataTables_[player];
@@ -407,7 +407,7 @@ void SessionDataView::setPlayerDataTableRow(int player, int row, const uh::Playe
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void SessionDataView::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     if (player >= playerDataItems_.count())
         return;
@@ -418,25 +418,25 @@ void SessionDataView::onRunningGameSessionPlayerNameChanged(int player, const uh
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionSetNumberChanged(uh::SetNumber number)
+void SessionDataView::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number)
 {
     ui_->tableWidget_gameInfo->item(2, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionGameNumberChanged(uh::GameNumber number)
+void SessionDataView::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number)
 {
     ui_->tableWidget_gameInfo->item(3, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionFormatChanged(const uh::SetFormat& format)
+void SessionDataView::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format)
 {
     ui_->tableWidget_gameInfo->item(1, 1)->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
 {
     if (player >= playerDataTables_.count())
         return;
@@ -475,7 +475,7 @@ void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const uh:
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningSessionNewPlayerState(int player, const uh::PlayerState& state)
+void SessionDataView::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state)
 {
     (void)player;
     (void)state;

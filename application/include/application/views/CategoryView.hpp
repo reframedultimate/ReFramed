@@ -8,7 +8,7 @@
 #include <QHash>
 #include <QTreeWidget>
 
-namespace uhapp {
+namespace rfapp {
 
 class CategoryModel;
 class ReplayManager;
@@ -65,19 +65,19 @@ private:
     void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onRunningGameSessionManagerDisconnectedFromServer() override;
 
-    void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* session) override;
-    void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* session) override;
+    void onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session) override;
+    void onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session) override;
 
-    void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) override { (void)name; }
-    void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) override { (void)number; }
-    void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) override { (void)number; }
-    void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override { (void)name; }
+    void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override { (void)number; }
+    void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override { (void)number; }
+    void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override { (void)format; }
+    void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state) override { (void)player; (void)state; }
     void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:
-    void onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin) override;
-    void onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin) override;
+    void onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* plugin) override;
 
 private:
     void onCategorySelected(CategoryType category) override;

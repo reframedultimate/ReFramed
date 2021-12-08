@@ -1,7 +1,7 @@
 #pragma once
 
-#include "uh/VisualizerPlugin.hpp"
-#include "uh/String.hpp"
+#include "rfcommon/VisualizerPlugin.hpp"
+#include "rfcommon/String.hpp"
 #include <QWidget>
 
 extern "C" {
@@ -14,12 +14,12 @@ typedef struct AVStream AVStream;
 class QPlainTextEdit;
 
 class VideoPlayer : public QWidget
-                  , public uh::VisualizerPlugin
+                  , public rfcommon::VisualizerPlugin
 {
     Q_OBJECT
 
 public:
-    explicit VideoPlayer(UHPluginFactory* factory, QWidget* parent=nullptr);
+    explicit VideoPlayer(RFPluginFactory* factory, QWidget* parent=nullptr);
     ~VideoPlayer();
 
     bool openFile(const QString& fileName);

@@ -1,10 +1,12 @@
-include (UHPlugin)
+cmake_minimum_required (VERSION 3.2)
 
 project ("plugin-video-player"
     VERSION 0.0.1
     LANGUAGES CXX)
 
-uh_add_plugin (plugin-video-player
+include (ReFramedPlugin)
+
+reframed_add_plugin (plugin-video-player
     SOURCES
         "src/Plugin.cpp"
         "src/VideoPlayer.cpp"
@@ -13,7 +15,7 @@ uh_add_plugin (plugin-video-player
     INCLUDE_DIRECTORIES
         "include")
 
-if (${UH_plugin-video-player})
+if (${REFRAMED_plugin-video-player})
     find_package (FFMPEG COMPONENTS avcodec avformat avutil avdevice REQUIRED)
     target_link_libraries (plugin-video-player
         PRIVATE FFMPEG::avutil
@@ -21,3 +23,4 @@ if (${UH_plugin-video-player})
         PRIVATE FFMPEG::avformat
         PRIVATE FFMPEG::avdevice)
 endif ()
+

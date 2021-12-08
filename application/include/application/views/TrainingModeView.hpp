@@ -9,7 +9,7 @@ namespace Ui {
     class TrainingModeView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class CategoryModel;
 class TrainingModeModel;
@@ -29,8 +29,8 @@ private slots:
     void launchPressed();
 
 private:
-    void onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin) override;
-    void onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin) override;
+    void onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin) override;
+    void onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* plugin) override;
 
 private:
     void onCategorySelected(CategoryType category) override;
@@ -40,7 +40,7 @@ private:
     Ui::TrainingModeView* ui_;
     TrainingModeModel* trainingModel_;
     CategoryModel* categoryModel_;
-    QHash<uh::Plugin*, QWidget*> views_;
+    QHash<rfcommon::Plugin*, QWidget*> views_;
 };
 
 }

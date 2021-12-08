@@ -1,19 +1,19 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "uh/RunningGameSession.hpp"
-#include "uh/RunningGameSession.hpp"
-#include "uh/PluginInterface.hpp"
+#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/PluginInterface.hpp"
 #include "application/models/Protocol.hpp"
-#include "uh/AnalyzerPlugin.hpp"
-#include "uh/VisualizerPlugin.hpp"
-#include "uh/RealtimePlugin.hpp"
-#include "uh/StandalonePlugin.hpp"
-#include "uh/dynlib.h"
+#include "rfcommon/AnalyzerPlugin.hpp"
+#include "rfcommon/VisualizerPlugin.hpp"
+#include "rfcommon/RealtimePlugin.hpp"
+#include "rfcommon/StandalonePlugin.hpp"
+#include "rfcommon/dynlib.h"
 #include <cassert>
 #include <QDebug>
 #include <QWidget>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 PluginManager::PluginManager(Protocol* protocol)
@@ -26,26 +26,26 @@ PluginManager::~PluginManager()
 {
     for (const auto& dl : libraries_)
     {
-        UHPluginInterface* i = static_cast<UHPluginInterface*>(uh_dynlib_lookup_symbol_address(dl, "plugin_interface"));
+        RFPluginInterface* i = static_cast<RFPluginInterface*>(rfcommon_dynlib_lookup_symbol_address(dl, "plugin_interface"));
         assert(i != nullptr);
         i->stop();
-        uh_dynlib_close(dl);
+        rfcommon_dynlib_close(dl);
     }
 }
 
 // ----------------------------------------------------------------------------
 bool PluginManager::loadPlugin(const QString& fileName)
 {
-    UHPluginInterface* i;
+    RFPluginInterface* i;
     qDebug() << "Loading " << fileName;
-    uh_dynlib* dl = uh_dynlib_open(fileName.toStdString().c_str());
+    rfcommon_dynlib* dl = rfcommon_dynlib_open(fileName.toStdString().c_str());
     if (dl == nullptr)
     {
         qDebug() << "Failed to load " << fileName;
         goto open_failed;
     }
 
-    i = static_cast<UHPluginInterface*>(uh_dynlib_lookup_symbol_address(dl, "plugin_interface"));
+    i = static_cast<RFPluginInterface*>(rfcommon_dynlib_lookup_symbol_address(dl, "plugin_interface"));
     if (i == nullptr)
     {
         qDebug() << "Failed to lookup symbol 'plugin_interface' in " << fileName;
@@ -57,7 +57,7 @@ bool PluginManager::loadPlugin(const QString& fileName)
         goto init_plugin_failed;
     }
 
-    for (UHPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
+    for (RFPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
     {
         if (factories_.contains(factory->info.name))
             goto duplicate_factory_name;
@@ -70,20 +70,20 @@ bool PluginManager::loadPlugin(const QString& fileName)
     return true;
 
     duplicate_factory_name :
-        for (UHPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
+        for (RFPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
         {
             auto it = factories_.find(factory->info.name);
             if (it != factories_.end())
                 factories_.erase(it);
         }
     init_plugin_failed :
-        uh_dynlib_close(dl);
+        rfcommon_dynlib_close(dl);
     open_failed :
         return false;
 }
 
 // ----------------------------------------------------------------------------
-QVector<QString> PluginManager::availableFactoryNames(UHPluginType type) const
+QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
 {
     QVector<QString> list;
     for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
@@ -95,57 +95,57 @@ QVector<QString> PluginManager::availableFactoryNames(UHPluginType type) const
 }
 
 // ----------------------------------------------------------------------------
-const UHPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) const
+const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) const
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
-    UHPluginFactory* factory = it.value();
+    RFPluginFactory* factory = it.value();
     return &factory->info;
 }
 
 // ----------------------------------------------------------------------------
-uh::AnalyzerPlugin* PluginManager::createAnalyzerModel(const QString& name)
+rfcommon::AnalyzerPlugin* PluginManager::createAnalyzerModel(const QString& name)
 {
     // XXX is dynamic_cast required here due to some of these having multiple inheritance?
-    return static_cast<uh::AnalyzerPlugin*>(createModel(name, UHPluginType::ANALYZER));
+    return static_cast<rfcommon::AnalyzerPlugin*>(createModel(name, RFPluginType::ANALYZER));
 }
 
 // ----------------------------------------------------------------------------
-uh::VisualizerPlugin* PluginManager::createVisualizerModel(const QString& name)
+rfcommon::VisualizerPlugin* PluginManager::createVisualizerModel(const QString& name)
 {
-    return static_cast<uh::VisualizerPlugin*>(createModel(name, UHPluginType::VISUALIZER));
+    return static_cast<rfcommon::VisualizerPlugin*>(createModel(name, RFPluginType::VISUALIZER));
 }
 
 // ----------------------------------------------------------------------------
-uh::RealtimePlugin* PluginManager::createRealtimeModel(const QString& name)
+rfcommon::RealtimePlugin* PluginManager::createRealtimeModel(const QString& name)
 {
-    uh::RealtimePlugin* plugin = static_cast<uh::RealtimePlugin*>(createModel(name, UHPluginType::REALTIME));
+    rfcommon::RealtimePlugin* plugin = static_cast<rfcommon::RealtimePlugin*>(createModel(name, RFPluginType::REALTIME));
     protocol_->dispatcher.addListener(plugin);
     return plugin;
 }
 
 // ----------------------------------------------------------------------------
-uh::StandalonePlugin* PluginManager::createStandaloneModel(const QString& name)
+rfcommon::StandalonePlugin* PluginManager::createStandaloneModel(const QString& name)
 {
-    return static_cast<uh::StandalonePlugin*>(createModel(name, UHPluginType::STANDALONE));
+    return static_cast<rfcommon::StandalonePlugin*>(createModel(name, RFPluginType::STANDALONE));
 }
 
 // ----------------------------------------------------------------------------
-uh::Plugin* PluginManager::createModel(const QString& name, UHPluginType type)
+rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType type)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
-    UHPluginFactory* factory = it.value();
+    RFPluginFactory* factory = it.value();
     if (!(factory->type & type))
         return nullptr;
 
-    uh::Plugin* model = factory->createModel(factory);
+    rfcommon::Plugin* model = factory->createModel(factory);
 
-    uh::RealtimePlugin* realtime = dynamic_cast<uh::RealtimePlugin*>(model);
+    rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
     if (realtime)
         protocol_->dispatcher.addListener(realtime);
 
@@ -153,15 +153,15 @@ uh::Plugin* PluginManager::createModel(const QString& name, UHPluginType type)
 }
 
 // ----------------------------------------------------------------------------
-void PluginManager::destroyModel(const QString& name, uh::Plugin* model)
+void PluginManager::destroyModel(const QString& name, rfcommon::Plugin* model)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return;
 
-    UHPluginFactory* factory = it.value();
+    RFPluginFactory* factory = it.value();
 
-    uh::RealtimePlugin* realtime = dynamic_cast<uh::RealtimePlugin*>(model);
+    rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
     if (realtime)
         protocol_->dispatcher.removeListener(realtime);
 

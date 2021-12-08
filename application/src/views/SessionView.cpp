@@ -3,12 +3,12 @@
 #include "application/views/SessionDataView.hpp"
 #include "application/views/DamageTimePlot.hpp"
 #include "application/views/XYPositionPlot.hpp"
-#include "uh/Session.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/PlayerState.hpp"
 
 #include <QTreeWidgetItem>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 SessionView::SessionView(QWidget *parent)
@@ -54,7 +54,7 @@ void SessionView::showDamagePlot()
 }
 
 // ----------------------------------------------------------------------------
-void SessionView::setSession(uh::Session* session)
+void SessionView::setSession(rfcommon::Session* session)
 {
     sessionDataView_->setSession(session);
     damageTimePlot_->setSession(session);

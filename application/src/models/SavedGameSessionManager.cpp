@@ -5,7 +5,7 @@
 #include <QStandardPaths>
 #include <QJsonObject>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ReplayManager::ReplayManager(Config* config)
@@ -321,7 +321,7 @@ void ReplayManager::scanForRecordings()
     ReplayGroup* allGroup = allReplayGroup();
     allGroup->removeAllFiles();
     for (const auto& recdir : replayDirectories_)
-        for (const auto& file : recdir.entryList({"*.uhr", "*.UHR"}, QDir::Files))
+        for (const auto& file : recdir.entryList({"*.rfr", "*.RFR"}, QDir::Files))
             allGroup->addFile(QFileInfo(recdir, file));
 }
 

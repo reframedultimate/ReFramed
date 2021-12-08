@@ -11,7 +11,7 @@ namespace Ui {
     class SavedGameSessionGroupView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayManager;
 class ReplayGroup;

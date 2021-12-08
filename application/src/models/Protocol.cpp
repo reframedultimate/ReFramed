@@ -1,11 +1,11 @@
 #include "application/models/Protocol.hpp"
 #include "application/models/ProtocolCommunicateTask.hpp"
 #include "application/models/ProtocolConnectTask.hpp"
-#include "uh/RunningGameSession.hpp"
-#include "uh/RunningTrainingSession.hpp"
-#include "uh/ProtocolListener.hpp"
+#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/RunningTrainingSession.hpp"
+#include "rfcommon/ProtocolListener.hpp"
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 Protocol::Protocol(QObject* parent)
@@ -26,7 +26,7 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 
     QByteArray ba = ipAddress.toLocal8Bit();
     const char* ipCstr = ba.data();
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolAttemptConnectToServer, ipCstr, port);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolAttemptConnectToServer, ipCstr, port);
 
     connect(connectTask_.get(), &ProtocolConnectTask::connectionSuccess,
             this, &Protocol::onConnectionSuccess);
@@ -61,7 +61,7 @@ void Protocol::onConnectionSuccess(tcp_socket socket, const QString& ipAddress, 
     connectTask_.reset();
     QByteArray ba = ipAddress.toLocal8Bit();
     const char* ipCstr = ba.data();
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolConnectedToServer, ipCstr, port);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolConnectedToServer, ipCstr, port);
 
     communicateTask_.reset(new ProtocolCommunicateTask(socket));
 
@@ -91,24 +91,24 @@ void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAdd
     const char* ipCstr = ipba.data();
     QByteArray errorba = errormsg.toLocal8Bit();
     const char* errorCstr = errorba.data();
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolFailedToConnectToServer, errorCstr, ipCstr, port);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolFailedToConnectToServer, errorCstr, ipCstr, port);
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onProtocolDisconnected()
 {
     communicateTask_.reset();
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolDisconnectedFromServer);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolDisconnectedFromServer);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStarted(uh::RunningTrainingSession* training)
+void Protocol::onTrainingStarted(rfcommon::RunningTrainingSession* training)
 {
     // Handle case where match end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     session_ = training;
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolTrainingStarted, training);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingStarted, training);
 }
 
 // ----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ void Protocol::onTrainingEnded()
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingReset()
 {
-    uh::RunningTrainingSession* training = dynamic_cast<uh::RunningTrainingSession*>(session_.get());
+    rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get());
     if (training)
     {
         training->resetTraining();
@@ -128,13 +128,13 @@ void Protocol::onTrainingReset()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onMatchStarted(uh::RunningGameSession* match)
+void Protocol::onMatchStarted(rfcommon::RunningGameSession* match)
 {
     // Handle case where match end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     session_ = match;
-    dispatcher.dispatch(&uh::ProtocolListener::onProtocolMatchStarted, match);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchStarted, match);
 }
 
 // ----------------------------------------------------------------------------
@@ -161,7 +161,7 @@ void Protocol::onPlayerState(
         bool facing_direction)
 {
     if (session_.notNull())
-        session_->addPlayerState(playerID, uh::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+        session_->addPlayerState(playerID, rfcommon::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
 }
 
 // ----------------------------------------------------------------------------
@@ -170,13 +170,13 @@ void Protocol::endSessionIfNecessary()
     if (session_.isNull())
         return;
 
-    if (uh::RunningGameSession* match = dynamic_cast<uh::RunningGameSession*>(session_.get()))
+    if (rfcommon::RunningGameSession* match = dynamic_cast<rfcommon::RunningGameSession*>(session_.get()))
     {
-        dispatcher.dispatch(&uh::ProtocolListener::onProtocolMatchEnded, match);
+        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchEnded, match);
     }
-    else if (uh::RunningTrainingSession* training = dynamic_cast<uh::RunningTrainingSession*>(session_.get()))
+    else if (rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get()))
     {
-        dispatcher.dispatch(&uh::ProtocolListener::onProtocolTrainingEnded, training);
+        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, training);
     }
 
     session_.reset();

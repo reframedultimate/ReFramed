@@ -1,12 +1,12 @@
 #include "application/ui_DataSetFilterWidget_Date.h"
 #include "application/views/DataSetFilterWidget_Date.hpp"
-#include "uh/DataSetFilter_Date.hpp"
+#include "rfcommon/DataSetFilter_Date.hpp"
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 DataSetFilterWidget_Date::DataSetFilterWidget_Date(QWidget* parent)
-    : DataSetFilterWidget(new uh::DataSetFilter_Date, parent)
+    : DataSetFilterWidget(new rfcommon::DataSetFilter_Date, parent)
     , ui_(new Ui::DataSetFilterWidget_Date)
 {
     ui_->setupUi(contentWidget());
@@ -34,14 +34,14 @@ DataSetFilterWidget_Date::~DataSetFilterWidget_Date()
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Date::onFromChanged(const QDateTime& dt)
 {
-    uh::DataSetFilter_Date* f = static_cast<uh::DataSetFilter_Date*>(filter());
+    rfcommon::DataSetFilter_Date* f = static_cast<rfcommon::DataSetFilter_Date*>(filter());
     f->setStartTimeMs(dt.toMSecsSinceEpoch());
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Date::onToChanged(const QDateTime& dt)
 {
-    uh::DataSetFilter_Date* f = static_cast<uh::DataSetFilter_Date*>(filter());
+    rfcommon::DataSetFilter_Date* f = static_cast<rfcommon::DataSetFilter_Date*>(filter());
     f->setEndTimeMs(dt.toMSecsSinceEpoch());
 }
 

@@ -2,18 +2,18 @@
 
 #include "application/listeners/SavedGameSessionManagerListener.hpp"
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
-#include "uh/Reference.hpp"
-#include "uh/SetFormat.hpp"
-#include "uh/ListenerDispatcher.hpp"
-#include "uh/PlayerState.hpp"  // MOC requires this because of smart pointers
-#include "uh/ProtocolListener.hpp"
-#include "uh/RunningGameSession.hpp"  // MOC requires this because of smart pointers
-#include "uh/SessionListener.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/SetFormat.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/PlayerState.hpp"  // MOC requires this because of smart pointers
+#include "rfcommon/ProtocolListener.hpp"
+#include "rfcommon/RunningGameSession.hpp"  // MOC requires this because of smart pointers
+#include "rfcommon/SessionListener.hpp"
 #include <QObject>
 #include <QDir>
 #include <vector>
 
-namespace uhapp {
+namespace rfapp {
 
 class Protocol;
 class Settings;
@@ -26,8 +26,8 @@ class ReplayManager;
  */
 class RunningGameSessionManager : public QObject
                                 , public ReplayManagerListener
-                                , public uh::ProtocolListener
-                                , public uh::SessionListener
+                                , public rfcommon::ProtocolListener
+                                , public rfcommon::SessionListener
 {
     Q_OBJECT
 
@@ -35,18 +35,18 @@ public:
     RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent=nullptr);
     ~RunningGameSessionManager();
 
-    void setFormat(const uh::SetFormat& format);
+    void setFormat(const rfcommon::SetFormat& format);
     void setP1Name(const QString& name);
     void setP2Name(const QString& name);
-    void setGameNumber(uh::GameNumber number);
+    void setGameNumber(rfcommon::GameNumber number);
 
     bool isSessionRunning() const;
 
-    uh::ListenerDispatcher<RunningGameSessionManagerListener> dispatcher;
+    rfcommon::ListenerDispatcher<RunningGameSessionManagerListener> dispatcher;
 
 private:
-    void findUniqueGameAndSetNumbers(uh::RunningGameSession* recording);
-    bool shouldStartNewSet(const uh::RunningGameSession* recording);
+    void findUniqueGameAndSetNumbers(rfcommon::RunningGameSession* recording);
+    bool shouldStartNewSet(const rfcommon::RunningGameSession* recording);
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
@@ -54,10 +54,10 @@ private:
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolDisconnectedFromServer() override;
 
-    void onProtocolTrainingStarted(uh::RunningTrainingSession* session) override;
-    void onProtocolTrainingEnded(uh::RunningTrainingSession* session) override;
-    void onProtocolMatchStarted(uh::RunningGameSession* session) override;
-    void onProtocolMatchEnded(uh::RunningGameSession* session) override;
+    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) override;
+    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) override;
+    void onProtocolMatchStarted(rfcommon::RunningGameSession* session) override;
+    void onProtocolMatchEnded(rfcommon::RunningGameSession* session) override;
 
 private:
     void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;
@@ -77,27 +77,27 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    void onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name) override;
-    void onRunningGameSessionSetNumberChanged(uh::SetNumber number) override;
-    void onRunningGameSessionGameNumberChanged(uh::GameNumber number) override;
-    void onRunningGameSessionFormatChanged(const uh::SetFormat& format) override;
+    void onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+    void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override;
+    void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
+    void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
 
     void onRunningTrainingSessionTrainingReset() override {}
 
-    void onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state) override;
-    void onRunningSessionNewPlayerState(int player, const uh::PlayerState& state) override;
+    void onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state) override;
+    void onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) override;
 
 private:
     Protocol* protocol_;
-    std::vector<uh::Reference<uh::RunningGameSession>> pastSessions_;
-    uh::Reference<uh::RunningGameSession> activeSession_;
+    std::vector<rfcommon::Reference<rfcommon::RunningGameSession>> pastSessions_;
+    rfcommon::Reference<rfcommon::RunningGameSession> activeSession_;
     ReplayManager* savedSessionManager_;
     QString p1Name_;
     QString p2Name_;
-    uh::SetFormat format_;
-    uh::GameNumber gameNumber_ = 1;
-    uh::SetNumber setNumber_ = 1;
+    rfcommon::SetFormat format_;
+    rfcommon::GameNumber gameNumber_ = 1;
+    rfcommon::SetNumber setNumber_ = 1;
 };
 
 }

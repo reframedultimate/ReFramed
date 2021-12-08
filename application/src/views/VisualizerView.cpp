@@ -1,11 +1,11 @@
 #include "application/views/VisualizerView.hpp"
 #include "application/models/PluginManager.hpp"
-#include "uh/VisualizerPlugin.hpp"
+#include "rfcommon/VisualizerPlugin.hpp"
 
 #include <QVBoxLayout>
 #include <QMdiArea>
 
-namespace uhapp {
+namespace rfapp {
 
 class PluginWidget : public QWidget
 {
@@ -38,7 +38,7 @@ public:
 private:
     PluginManager* manager_;
     QString name_;
-    uh::VisualizerPlugin* model_ = nullptr;
+    rfcommon::VisualizerPlugin* model_ = nullptr;
     QWidget* view_ = nullptr;
 };
 

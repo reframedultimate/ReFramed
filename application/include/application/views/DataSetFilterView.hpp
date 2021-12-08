@@ -4,15 +4,15 @@
 #include "application/listeners/SavedGameSessionManagerListener.hpp"
 #include "application/listeners/SavedGameSessionGroupListener.hpp"
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
-#include "uh/DataSetFilterListener.hpp"
-#include "uh/Reference.hpp"
+#include "rfcommon/DataSetFilterListener.hpp"
+#include "rfcommon/Reference.hpp"
 #include <unordered_map>
 #include <memory>
 
 class QVBoxLayout;
 class QListWidgetItem;
 
-namespace uh {
+namespace rfcommon {
     class DataSetFilterChain;
     class DataSet;
 }
@@ -21,7 +21,7 @@ namespace Ui {
     class DataSetFilterView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget;
 class DataSetBackgroundLoader;
@@ -31,7 +31,7 @@ class DataSetFilterView : public QWidget
                         , public ReplayManagerListener
                         , public ReplayGroupListener
                         , public DataSetBackgroundLoaderListener
-                        , public uh::DataSetFilterListener
+                        , public rfcommon::DataSetFilterListener
 {
     Q_OBJECT
 
@@ -69,9 +69,9 @@ private:
     void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
     void onReplayManagerGroupRemoved(ReplayGroup* group) override;
 
-    void onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, uh::DataSet* dataSet) override;
+    void onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, rfcommon::DataSet* dataSet) override;
 
-    void onDataSetFilterDirtied(uh::DataSetFilter* filter);
+    void onDataSetFilterDirtied(rfcommon::DataSetFilter* filter);
 
     void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override { (void)path; }
     void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
@@ -88,10 +88,10 @@ private:
     QVBoxLayout* filterWidgetsLayout_;
     ReplayManager* savedGameSessionManager_;
     DataSetBackgroundLoader* dataSetBackgroundLoader_;
-    std::unique_ptr<uh::DataSetFilterChain> dataSetFilterChain_;
-    std::unique_ptr<uh::DataSet> inputDataSetMerged_;
-    uh::Reference<uh::DataSet> outputDataSet_;
-    std::unordered_map<const ReplayGroup*, uh::Reference<uh::DataSet>> inputDataSets_;
+    std::unique_ptr<rfcommon::DataSetFilterChain> dataSetFilterChain_;
+    std::unique_ptr<rfcommon::DataSet> inputDataSetMerged_;
+    rfcommon::Reference<rfcommon::DataSet> outputDataSet_;
+    std::unordered_map<const ReplayGroup*, rfcommon::Reference<rfcommon::DataSet>> inputDataSets_;
     bool dataSetFiltersDirty_ = true;
 };
 

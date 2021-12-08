@@ -1,15 +1,15 @@
 #pragma once
 
-#include "uh/Vector.hpp"
+#include "rfcommon/Vector.hpp"
 #include <QWidget>
 
 class QMdiArea;
 
-namespace uh {
+namespace rfcommon {
     class VisualizerPlugin;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class PluginManager;
 

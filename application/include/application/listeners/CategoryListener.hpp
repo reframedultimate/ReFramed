@@ -3,7 +3,7 @@
 #include "application/models/CategoryType.hpp"
 #include <QString>
 
-namespace uhapp {
+namespace rfapp {
 
 class CategoryListener
 {

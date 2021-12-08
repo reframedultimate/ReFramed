@@ -14,7 +14,7 @@
 
 #include <QDebug>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 CategoryView::CategoryView(
@@ -91,7 +91,7 @@ CategoryView::~CategoryView()
 // ----------------------------------------------------------------------------
 void CategoryView::dragEnterEvent(QDragEnterEvent* event)
 {
-    if (!event->mimeData()->formats().contains("application/x-ultimate-hindsight-uhr"))
+    if (!event->mimeData()->formats().contains("application/x-ultimate-hindsight-rfr"))
     {
         event->ignore();
         return;
@@ -163,7 +163,7 @@ void CategoryView::dropEvent(QDropEvent* event)
                 return;
             }
 
-            QByteArray encodedData = event->mimeData()->data("application/x-ultimate-hindsight-uhr");
+            QByteArray encodedData = event->mimeData()->data("application/x-ultimate-hindsight-rfr");
             QDataStream stream(&encodedData, QIODevice::ReadOnly);
             while (!stream.atEnd())
             {
@@ -561,19 +561,19 @@ void CategoryView::onRunningGameSessionManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* session)
+void CategoryView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* session)
+void CategoryView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::Plugin* plugin)
+void CategoryView::onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin)
 {
     // TODO tooltip containing plugin description
     trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_TRAINING_MODE)));
@@ -581,7 +581,7 @@ void CategoryView::onTrainingModePluginLaunched(const QString& name, uh::Plugin*
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginStopped(const QString& name, uh::Plugin* plugin)
+void CategoryView::onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* plugin)
 {
     for (int i = 0; i != trainingModeItem_->childCount(); ++i)
     {

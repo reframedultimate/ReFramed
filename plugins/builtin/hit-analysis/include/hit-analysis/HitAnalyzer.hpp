@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uh/AnalyzerPlugin.hpp"
+#include "rfcommon/AnalyzerPlugin.hpp"
 #include <QWidget>
 
 namespace Ui {
@@ -8,21 +8,21 @@ namespace Ui {
 }
 
 class HitAnalyzer : public QWidget
-                  , public uh::AnalyzerPlugin
+                  , public rfcommon::AnalyzerPlugin
 {
     Q_OBJECT
 
 public:
-    explicit HitAnalyzer(UHPluginFactory* factory, QWidget* parent=nullptr);
+    explicit HitAnalyzer(RFPluginFactory* factory, QWidget* parent=nullptr);
     ~HitAnalyzer();
 
     QWidget* createView() override;
     void destroyView(QWidget* view) override;
 
-    void setPointOfView(const uh::String& playerName) override;
-    void dataSetPreparing(float progress, const uh::String& info) override;
+    void setPointOfView(const rfcommon::String& playerName) override;
+    void dataSetPreparing(float progress, const rfcommon::String& info) override;
     void dataSetCancelled() override;
-    void processDataSet(const uh::DataSet* dataSet) override;
+    void processDataSet(const rfcommon::DataSet* dataSet) override;
 
 private:
     Ui::HitAnalyzer* ui_;

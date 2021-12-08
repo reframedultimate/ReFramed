@@ -1,18 +1,18 @@
 #pragma once
 
-#include "uh/PluginType.hpp"
+#include "rfcommon/PluginType.hpp"
 #include <QString>
 #include <QVector>
 #include <QHash>
 
-struct uh_dynlib;
-struct UHPluginFactory;
-struct UHPluginInterface;
-struct UHPluginFactoryInfo;
+struct rfcommon_dynlib;
+struct RFPluginFactory;
+struct RFPluginInterface;
+struct RFPluginFactoryInfo;
 
 class QWidget;
 
-namespace uh {
+namespace rfcommon {
     class Plugin;
     class AnalyzerPlugin;
     class VisualizerPlugin;
@@ -20,7 +20,7 @@ namespace uh {
     class StandalonePlugin;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class Protocol;
 
@@ -48,26 +48,26 @@ public:
      * These can be used to instantiate models/views using one of the create*()
      * methods.
      */
-    QVector<QString> availableFactoryNames(UHPluginType type) const;
+    QVector<QString> availableFactoryNames(RFPluginType type) const;
 
     /*!
      * \brief Returns a pointer to the info structure in the loaded shared
      * library, giving the name, author, description, etc. of the plugin.
      */
-    const UHPluginFactoryInfo* getFactoryInfo(const QString& name) const;
+    const RFPluginFactoryInfo* getFactoryInfo(const QString& name) const;
 
-    uh::AnalyzerPlugin* createAnalyzerModel(const QString& name);
-    uh::VisualizerPlugin* createVisualizerModel(const QString& name);
-    uh::RealtimePlugin* createRealtimeModel(const QString& name);
-    uh::StandalonePlugin* createStandaloneModel(const QString& name);
+    rfcommon::AnalyzerPlugin* createAnalyzerModel(const QString& name);
+    rfcommon::VisualizerPlugin* createVisualizerModel(const QString& name);
+    rfcommon::RealtimePlugin* createRealtimeModel(const QString& name);
+    rfcommon::StandalonePlugin* createStandaloneModel(const QString& name);
 
-    uh::Plugin* createModel(const QString& name, UHPluginType type);
-    void destroyModel(const QString& name, uh::Plugin* plugin);
+    rfcommon::Plugin* createModel(const QString& name, RFPluginType type);
+    void destroyModel(const QString& name, rfcommon::Plugin* plugin);
 
 private:
     Protocol* protocol_;
-    QHash<QString, UHPluginFactory*> factories_;
-    QVector<uh_dynlib*> libraries_;
+    QHash<QString, RFPluginFactory*> factories_;
+    QVector<rfcommon_dynlib*> libraries_;
 };
 
 }

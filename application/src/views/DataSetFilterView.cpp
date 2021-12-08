@@ -10,12 +10,12 @@
 #include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/SavedGameSessionGroup.hpp"
 #include "application/models/DataSetBackgroundLoader.hpp"
-#include "uh/DataSetFilterChain.hpp"
-#include "uh/DataSet.hpp"
-#include "uh/DataSetFilter.hpp"
-#include "uh/PlayerState.hpp"
-#include "uh/Reference.hpp"
-#include "uh/SavedGameSession.hpp"
+#include "rfcommon/DataSetFilterChain.hpp"
+#include "rfcommon/DataSet.hpp"
+#include "rfcommon/DataSetFilter.hpp"
+#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/SavedGameSession.hpp"
 
 #include <QMenu>
 #include <QListWidgetItem>
@@ -30,7 +30,7 @@
     X(PlayerCount) \
     X(Stage)
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 DataSetFilterView::DataSetFilterView(ReplayManager* manager, QWidget* parent)
@@ -39,9 +39,9 @@ DataSetFilterView::DataSetFilterView(ReplayManager* manager, QWidget* parent)
     , filterWidgetsLayout_(new QVBoxLayout)
     , savedGameSessionManager_(manager)
     , dataSetBackgroundLoader_(new DataSetBackgroundLoader(this))
-    , dataSetFilterChain_(new uh::DataSetFilterChain)
-    , inputDataSetMerged_(new uh::DataSet)
-    , outputDataSet_(new uh::DataSet)
+    , dataSetFilterChain_(new rfcommon::DataSetFilterChain)
+    , inputDataSetMerged_(new rfcommon::DataSet)
+    , outputDataSet_(new rfcommon::DataSet)
 {
     ui_->setupUi(this);
 
@@ -201,8 +201,8 @@ void DataSetFilterView::reprocessInputDataSet()
 
     outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
 
-    std::unordered_set<uh::SavedGameSession*> uniqueSessions;
-    for (const uh::DataPoint* p = outputDataSet_->dataPointsBegin(); p != outputDataSet_->dataPointsEnd(); ++p)
+    std::unordered_set<rfcommon::SavedGameSession*> uniqueSessions;
+    for (const rfcommon::DataPoint* p = outputDataSet_->dataPointsBegin(); p != outputDataSet_->dataPointsEnd(); ++p)
         uniqueSessions.emplace(p->session());
 
     ui_->listWidget_outputGroup->clear();
@@ -328,7 +328,7 @@ void DataSetFilterView::onReplayManagerGroupRemoved(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, uh::DataSet* dataSet)
+void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, rfcommon::DataSet* dataSet)
 {
     inputDataSets_.emplace(group, dataSet);
     inputDataSetMerged_->mergeDataFrom(dataSet);
@@ -337,7 +337,7 @@ void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* grou
 }
 
 // ----------------------------------------------------------------------------
-void DataSetFilterView::onDataSetFilterDirtied(uh::DataSetFilter* filter)
+void DataSetFilterView::onDataSetFilterDirtied(rfcommon::DataSetFilter* filter)
 {
     (void)filter;
     dirtyDataSetFilters();

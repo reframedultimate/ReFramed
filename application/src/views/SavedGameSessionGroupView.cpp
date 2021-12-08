@@ -4,8 +4,8 @@
 #include "application/models/SavedGameSessionGroup.hpp"
 #include "application/views/SavedGameSessionListWidget.hpp"
 #include "application/views/SessionView.hpp"
-#include "uh/SavedGameSession.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/SavedGameSession.hpp"
+#include "rfcommon/PlayerState.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -16,7 +16,7 @@
 
 #include <QDebug>
 
-namespace uhapp {
+namespace rfapp {
 
 class SavedGameSessionNameCompleter : public QCompleter
 {
@@ -160,7 +160,7 @@ void ReplayGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidget
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (savedGameSessionListWidget_->itemMatchesSavedGameSessionFileName(current, fileName))
         {
-            uh::SavedSession* session = uh::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
+            rfcommon::SavedSession* session = rfcommon::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
             if (session)
                 sessionView_->setSession(session);
             else

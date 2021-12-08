@@ -1,10 +1,10 @@
 #pragma once
 
-#include "uh/tcp_socket.h"
+#include "rfcommon/tcp_socket.h"
 #include <QThread>
 #include <QString>
 
-namespace uhapp {
+namespace rfapp {
 
 class ProtocolConnectTask : public QThread
 {

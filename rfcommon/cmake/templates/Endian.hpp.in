@@ -1,0 +1,147 @@
+#pragma once
+
+#cmakedefine I_AM_BIG
+#define RFCOMMON_SWAP_ENDIAN_16 ${RFCOMMON_SWAP_ENDIAN_16}
+#define RFCOMMON_SWAP_ENDIAN_32 ${RFCOMMON_SWAP_ENDIAN_32}
+#define RFCOMMON_SWAP_ENDIAN_64 ${RFCOMMON_SWAP_ENDIAN_64}
+
+namespace rfcommon {
+
+namespace detail {
+
+/// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
+static inline uint16_t generic_bswap16(uint16_t a)
+{
+    return (a<<8) | (a>>8);
+}
+/// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
+static inline uint32_t generic_bswap32(uint32_t a)
+{
+    return (a<<24) | (a>>24) |
+           ((a&0xFF00)<<8) | ((a&0xFF0000)>>8);
+}
+/// generic swaps, use the SWAP_ENDIAN_X() macros defined in config.hpp
+static inline uint64_t generic_bswap64(uint64_t a)
+{
+    /*
+     * 56 48 40 32 24 16  8  0
+     * AA BB CC DD EE FF GG HH
+    */
+    return (a<<56) | (a>>56) |
+            ((a&0x000000000000FF00)<<40) | ((a&0xFF000000000000)>>40) |
+            ((a&0x0000000000FF0000)<<24) | ((a&0x00FF0000000000)>>24) |
+            ((a&0x00000000FF000000)<<8)  | ((a&0x0000FF00000000)>>8);
+}
+
+}
+
+static inline uint16_t fromLittleEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_16(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint16_t toLittleEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_16(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint32_t fromLittleEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_32(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint32_t toLittleEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_32(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint64_t fromLittleEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_64(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint64_t toLittleEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return RFCOMMON_SWAP_ENDIAN_64(x);
+#else
+    return x;
+#endif
+}
+
+static inline uint16_t fromBigEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_16(x);
+#endif
+}
+
+static inline uint16_t toBigEndian16(uint16_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_16(x);
+#endif
+}
+
+static inline uint32_t fromBigEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_32(x);
+#endif
+}
+
+static inline uint32_t toBigEndian32(uint32_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_32(x);
+#endif
+}
+
+static inline uint64_t fromBigEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_64(x);
+#endif
+}
+
+static inline uint64_t toBigEndian64(uint64_t x)
+{
+#if defined(I_AM_BIG)
+    return x;
+#else
+    return RFCOMMON_SWAP_ENDIAN_64(x);
+#endif
+}
+
+}
+

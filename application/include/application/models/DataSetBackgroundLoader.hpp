@@ -1,10 +1,10 @@
 #pragma once
 
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
-#include "uh/ListenerDispatcher.hpp"
-#include "uh/Reference.hpp"
-#include "uh/DataSet.hpp"  // required by MOC
-#include "uh/SavedGameSession.hpp"  // required by MOC, required by explicit template instantiation of Reference<Recording>
+#include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/DataSet.hpp"  // required by MOC
+#include "rfcommon/SavedGameSession.hpp"  // required by MOC, required by explicit template instantiation of Reference<Recording>
 #include <QThread>
 #include <QMutex>
 #include <QObject>
@@ -13,12 +13,12 @@
 #include <QFileInfo>
 #include <unordered_map>
 
-namespace uh {
+namespace rfcommon {
     class DataSet;
     class GameSession;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayGroup;
 
@@ -34,7 +34,7 @@ public:
     };
 
     struct InData {
-        uh::Reference<uh::SavedGameSession> session;
+        rfcommon::Reference<rfcommon::SavedGameSession> session;
         ReplayGroup* group;
         uint32_t taskID;
     };
@@ -46,14 +46,14 @@ public:
     void cancelGroup(ReplayGroup* group);
     void cancelAll();
 
-    uh::ListenerDispatcher<DataSetBackgroundLoaderListener> dispatcher;
+    rfcommon::ListenerDispatcher<DataSetBackgroundLoaderListener> dispatcher;
 
 signals:
     // NOTE: For internal use only
-    void _dataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group);
+    void _dataSetLoaded(quint32 taskID, rfcommon::DataSet* dataSet, ReplayGroup* group);
 
 private slots:
-    void onDataSetLoaded(quint32 taskID, uh::DataSet* dataSet, ReplayGroup* group);
+    void onDataSetLoaded(quint32 taskID, rfcommon::DataSet* dataSet, ReplayGroup* group);
 
 private:
     void run() override;

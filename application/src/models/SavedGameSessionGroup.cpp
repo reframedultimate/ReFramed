@@ -4,7 +4,7 @@
 
 #include <QDebug>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ReplayGroup::ReplayGroup(const QString& name)

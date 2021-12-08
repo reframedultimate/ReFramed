@@ -8,7 +8,7 @@ extern "C" {
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayer::VideoPlayer(UHPluginFactory* factory, QWidget *parent)
+VideoPlayer::VideoPlayer(RFPluginFactory* factory, QWidget *parent)
     : QWidget(parent)
     , VisualizerPlugin(factory)
     , logWidget_(new QPlainTextEdit)

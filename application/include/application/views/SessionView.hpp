@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-namespace uh {
+namespace rfcommon {
     class Session;
 }
 
@@ -10,7 +10,7 @@ namespace Ui {
     class SessionView;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DamageTimePlot;
 class SessionDataView;
@@ -26,7 +26,7 @@ public:
     void showDamagePlot();
 
 public slots:
-    void setSession(uh::Session* session);
+    void setSession(rfcommon::Session* session);
     void clear();
 
 private slots:

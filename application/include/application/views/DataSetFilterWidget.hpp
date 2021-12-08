@@ -1,7 +1,7 @@
 #pragma once
 
-#include "uh/Reference.hpp"
-#include "uh/DataSetFilter.hpp"  // required by MOC
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/DataSetFilter.hpp"  // required by MOC
 #include <QWidget>
 
 class QToolButton;
@@ -9,7 +9,7 @@ class QCheckBox;
 class QParallelAnimationGroup;
 class QScrollArea;
 
-namespace uhapp {
+namespace rfapp {
 
 /*!
  * @brief Collapsible widget. Code was copied from here and adapted:
@@ -30,12 +30,12 @@ class DataSetFilterWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit DataSetFilterWidget(uh::DataSetFilter* filter, QWidget* parent=nullptr);
+    explicit DataSetFilterWidget(rfcommon::DataSetFilter* filter, QWidget* parent=nullptr);
 
     void setTitle(const QString& title);
     QWidget* contentWidget();
 
-    uh::DataSetFilter* filter() const;
+    rfcommon::DataSetFilter* filter() const;
 
 signals:
     void enableFilter(DataSetFilterWidget*, bool);
@@ -54,7 +54,7 @@ private slots:
     void onToggleButtonClicked(bool checked);
 
 private:
-    uh::Reference<uh::DataSetFilter> filter_;
+    rfcommon::Reference<rfcommon::DataSetFilter> filter_;
     QToolButton* toggleButton_;
     QCheckBox* enableCheckbox_;
     QCheckBox* notCheckbox_;

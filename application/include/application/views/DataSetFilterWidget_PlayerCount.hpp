@@ -6,7 +6,7 @@ namespace Ui {
     class DataSetFilterWidget_PlayerCount;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget_PlayerCount : public DataSetFilterWidget
 {

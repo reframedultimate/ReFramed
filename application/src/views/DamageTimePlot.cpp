@@ -1,11 +1,11 @@
-#include "uhplot/ColorPalette.hpp"
+#include "rfplot/ColorPalette.hpp"
 #include "application/views/DamageTimePlot.hpp"
-#include "uh/Session.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 
-namespace uhapp {
+namespace rfapp {
 
 namespace {
 
@@ -93,7 +93,7 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setSession(uh::Session* recording)
+void DamageTimePlot::setSession(rfcommon::Session* recording)
 {
     clear();
     session_ = recording;
@@ -103,7 +103,7 @@ void DamageTimePlot::setSession(uh::Session* recording)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(uhplot::ColorPalette::getColor(player), 2.0));
+        curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
         curve->setTitle(session_->playerName(player).cStr());
         curve->attach(this);
@@ -150,14 +150,14 @@ void DamageTimePlot::clear()
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onRunningGameSessionPlayerNameChanged(int player, const uh::SmallString<15>& name)
+void DamageTimePlot::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onRunningSessionNewUniquePlayerState(int player, const uh::PlayerState& state)
+void DamageTimePlot::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
 

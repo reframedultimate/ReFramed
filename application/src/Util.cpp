@@ -1,6 +1,6 @@
 #include "application/Util.hpp"
-#include "uh/RunningGameSession.hpp"
-#include "uh/PlayerState.hpp"
+#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/PlayerState.hpp"
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
@@ -20,7 +20,7 @@ qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed) noexcept
     return qHash(c.absoluteFilePath().toUtf8(), seed);
 }
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 void clearLayout(QLayout* layout)
@@ -47,13 +47,13 @@ void clearStackedWidget(QStackedWidget* sw)
 }
 
 // ----------------------------------------------------------------------------
-QString composeFileName(const uh::GameSession* session)
+QString composeFileName(const rfcommon::GameSession* session)
 {
     QString date = QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs()).toString("yyyy-MM-dd");
     QStringList playerList;
     for (int i = 0; i < session->playerCount(); ++i)
     {
-        const uh::String* fighterName = session->mappingInfo().fighterID.map(
+        const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(
                     session->playerFighterID(i));
         if (fighterName)
             playerList.append((session->playerName(i) + " (" + *fighterName + ")").cStr());
@@ -66,9 +66,9 @@ QString composeFileName(const uh::GameSession* session)
     QString gameNumber = QString::number(session->gameNumber());
 
     if (session->setNumber() == 1)
-        return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".uhr";
+        return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".rfr";
 
-    return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".uhr";
+    return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".rfr";
 }
 
 }

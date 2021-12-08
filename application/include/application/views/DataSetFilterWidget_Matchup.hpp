@@ -6,7 +6,7 @@ namespace Ui {
     class DataSetFilterWidget_Matchup;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class DataSetFilterWidget_Matchup : public DataSetFilterWidget
 {

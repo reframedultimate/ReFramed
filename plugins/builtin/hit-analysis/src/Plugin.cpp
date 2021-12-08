@@ -1,32 +1,32 @@
 #include "hit-analysis/PluginConfig.hpp"
 #include "hit-analysis/HitAnalyzer.hpp"
-#include "uh/PluginInterface.hpp"
-#include "uh/PluginType.hpp"
+#include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/PluginType.hpp"
 
 #include <QWidget>
 
-static uh::Plugin* createModel(UHPluginFactory* factory)
+static rfcommon::Plugin* createModel(RFPluginFactory* factory)
 {
     return new HitAnalyzer(factory);
 }
 
-static void destroyModel(uh::Plugin* model)
+static void destroyModel(rfcommon::Plugin* model)
 {
     delete model;
 }
 
-static QWidget* createView(uh::Plugin* model)
+static QWidget* createView(rfcommon::Plugin* model)
 {
     HitAnalyzer* analyzer = dynamic_cast<HitAnalyzer*>(model);
     return analyzer;
 }
 
-static void destroyView(uh::Plugin* model, QWidget* view)
+static void destroyView(rfcommon::Plugin* model, QWidget* view)
 {
 }
 
-static UHPluginFactory factories[] = {
-    {createModel, destroyModel, createView, destroyView, UHPluginType::ANALYZER,
+static RFPluginFactory factories[] = {
+    {createModel, destroyModel, createView, destroyView, RFPluginType::ANALYZER,
      "Hit Analysis", "TheComet", "alex.murray@gmx.ch", "Finds all instances where you got hit"},
     {NULL}
 };

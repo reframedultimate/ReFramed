@@ -1,11 +1,11 @@
 #include "application/models/ProtocolCommunicateTask.hpp"
-#include "uh/PlayerState.hpp"
-#include "uh/RunningGameSession.hpp"
-#include "uh/RunningTrainingSession.hpp"
-#include "uh/time.h"
+#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/RunningTrainingSession.hpp"
+#include "rfcommon/time.h"
 #include <QDebug>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ProtocolCommunicateTask::ProtocolCommunicateTask(tcp_socket socket, QObject* parent)
@@ -31,8 +31,8 @@ ProtocolCommunicateTask::~ProtocolCommunicateTask()
 // ----------------------------------------------------------------------------
 void ProtocolCommunicateTask::run()
 {
-    uh::SmallVector<uint8_t, 8> entryIDs;
-    uh::MappingInfo mappingInfo;
+    rfcommon::SmallVector<uint8_t, 8> entryIDs;
+    rfcommon::MappingInfo mappingInfo;
 
     while (true)
     {
@@ -67,15 +67,15 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read(&socket_, tag, playerTagLen) != playerTagLen) break;
             tag[static_cast<int>(playerTagLen)] = '\0';
 
-            static_assert(sizeof(uh::StageID) == 2);
-            uh::StageID stageID = (stageH << 8)
+            static_assert(sizeof(rfcommon::StageID) == 2);
+            rfcommon::StageID stageID = (stageH << 8)
                                 | (stageL << 0);
 
-            uh::SmallVector<uh::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
-            uh::SmallVector<uh::SmallString<15>, 8> tags({tag, ""});
+            rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags({tag, ""});
 
-            emit trainingStarted(new uh::RunningTrainingSession(
-                uh::MappingInfo(mappingInfo),
+            emit trainingStarted(new rfcommon::RunningTrainingSession(
+                rfcommon::MappingInfo(mappingInfo),
                 stageID,
                 std::move(fighterIDs),
                 std::move(tags)
@@ -107,18 +107,18 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read(&socket_, buf, 3) != 3)
                 break;
 
-            static_assert(sizeof(uh::StageID) == 2);
-            uh::StageID stageID = (stageH << 8) | (stageL << 0);
+            static_assert(sizeof(rfcommon::StageID) == 2);
+            rfcommon::StageID stageID = (stageH << 8) | (stageL << 0);
 
-            uh::SmallVector<uh::FighterID, 8> fighterIDs(playerCount);
-            uh::SmallVector<uh::SmallString<15>, 8> tags(playerCount);
-            uh::SmallVector<uh::SmallString<15>, 8> names(playerCount);
+            rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs(playerCount);
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags(playerCount);
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> names(playerCount);
 
             entryIDs.resize(playerCount);
             if (tcp_socket_read(&socket_, entryIDs.data(), playerCount) != playerCount)
                 break;
 
-            static_assert(sizeof(uh::FighterID) == 1);
+            static_assert(sizeof(rfcommon::FighterID) == 1);
             if (tcp_socket_read(&socket_, fighterIDs.data(), playerCount) != playerCount)
                 break;
 
@@ -136,8 +136,8 @@ void ProtocolCommunicateTask::run()
 
             qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
 
-            emit matchStarted(new uh::RunningGameSession(
-                uh::MappingInfo(mappingInfo),
+            emit matchStarted(new rfcommon::RunningGameSession(
+                rfcommon::MappingInfo(mappingInfo),
                 stageID,
                 std::move(fighterIDs),
                 std::move(tags),
@@ -154,10 +154,10 @@ void ProtocolCommunicateTask::run()
         }
         else if (msg == FighterKinds)
         {
-            uh::FighterID fighterID;
+            rfcommon::FighterID fighterID;
             uint8_t len;
             char name[256];
-            static_assert(sizeof(uh::FighterID) == 1);
+            static_assert(sizeof(rfcommon::FighterID) == 1);
             if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;
@@ -168,10 +168,10 @@ void ProtocolCommunicateTask::run()
         }
         else if (msg == FighterStatusKinds)
         {
-            uh::FighterID fighterID;
+            rfcommon::FighterID fighterID;
             uint8_t statusID_l, statusID_h, len;
             char name[256];
-            static_assert(sizeof(uh::FighterID) == 1);
+            static_assert(sizeof(rfcommon::FighterID) == 1);
             if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
             if (tcp_socket_read(&socket_, &statusID_h, 1) != 1) break;
             if (tcp_socket_read(&socket_, &statusID_l, 1) != 1) break;
@@ -179,8 +179,8 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read(&socket_, name, len) != len) break;
             name[static_cast<int>(len)] = '\0';
 
-            static_assert(sizeof(uh::FighterStatus) == 2);
-            uh::FighterStatus statusID = (statusID_h << 8)
+            static_assert(sizeof(rfcommon::FighterStatus) == 2);
+            rfcommon::FighterStatus statusID = (statusID_h << 8)
                                        | (statusID_l << 0);
 
             if (fighterID == 255)
@@ -204,8 +204,8 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read(&socket_, name, len) != len) break;
             name[static_cast<int>(len)] = '\0';
 
-            static_assert(sizeof(uh::StageID) == 2);
-            uh::StageID stageID = (stageID_h << 8)
+            static_assert(sizeof(rfcommon::StageID) == 2);
+            rfcommon::StageID stageID = (stageID_h << 8)
                                 | (stageID_l << 0);
 
             mappingInfo.stageID.add(stageID, name);
@@ -213,10 +213,10 @@ void ProtocolCommunicateTask::run()
         }
         else if (msg == HitStatusKinds)
         {
-            uh::FighterHitStatus status;
+            rfcommon::FighterHitStatus status;
             uint8_t len;
             char name[256];
-            static_assert(sizeof(uh::FighterHitStatus) == 1);
+            static_assert(sizeof(rfcommon::FighterHitStatus) == 1);
             if (tcp_socket_read(&socket_, &status, 1) != 1) break;
             if (tcp_socket_read(&socket_, &len, 1) != 1) break;
             if (tcp_socket_read(&socket_, name, len) != len) break;

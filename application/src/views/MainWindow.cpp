@@ -18,7 +18,7 @@
 #include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
 
-#include "uh/VisualizerPlugin.hpp"
+#include "rfcommon/VisualizerPlugin.hpp"
 
 #include <QStackedWidget>
 #include <QDockWidget>
@@ -27,7 +27,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-namespace uhapp {
+namespace rfapp {
 
 // ----------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget* parent)
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle("Ultimate Hindsight - " APP_VERSION_STR);
 
-    QDir pluginDir("share/uh/plugins");
+    QDir pluginDir("share/reframed/plugins");
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
         pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 

@@ -1,26 +1,26 @@
 #pragma once
 
-#include "uh/Types.hpp"
-#include "uh/String.hpp"
+#include "rfcommon/Types.hpp"
+#include "rfcommon/String.hpp"
 
-namespace uh {
+namespace rfcommon {
     class RunningGameSession;
     class PlayerState;
     class SetFormat;
 }
 
-namespace uhapp {
+namespace rfapp {
 
 class RunningGameSessionManagerListener
 {
 public:
     // We re-propagate all RunningGameSession SessionListener events because
     // RunningGameSessionManager allows you to change these properties even when there is no running session
-    virtual void onRunningGameSessionManagerNewPlayerState(int player, const uh::PlayerState& state) = 0;
-    virtual void onRunningGameSessionManagerPlayerNameChanged(int player, const uh::SmallString<15>& name) = 0;
-    virtual void onRunningGameSessionManagerSetNumberChanged(uh::SetNumber number) = 0;
-    virtual void onRunningGameSessionManagerGameNumberChanged(uh::GameNumber number) = 0;
-    virtual void onRunningGameSessionManagerFormatChanged(const uh::SetFormat& format) = 0;
+    virtual void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state) = 0;
+    virtual void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) = 0;
+    virtual void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) = 0;
+    virtual void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) = 0;
+    virtual void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) = 0;
     virtual void onRunningGameSessionManagerWinnerChanged(int winner) = 0;
 
     // We also re-propagate all (to RunningGameSessionManager) relevant ProtocolListener
@@ -30,8 +30,8 @@ public:
     virtual void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) = 0;
     virtual void onRunningGameSessionManagerDisconnectedFromServer() = 0;
 
-    virtual void onRunningGameSessionManagerMatchStarted(uh::RunningGameSession* recording) = 0;
-    virtual void onRunningGameSessionManagerMatchEnded(uh::RunningGameSession* recording) = 0;
+    virtual void onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* recording) = 0;
+    virtual void onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* recording) = 0;
 };
 
 }

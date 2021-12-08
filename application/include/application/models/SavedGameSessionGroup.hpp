@@ -1,11 +1,11 @@
 #pragma once
 
-#include "uh/ListenerDispatcher.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include <QString>
 #include <QFileInfo>
 #include <QSet>
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayGroupListener;
 class ReplayManager;
@@ -26,7 +26,7 @@ public:
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
 
-    uh::ListenerDispatcher<ReplayGroupListener> dispatcher;
+    rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
 private:
     // Only the saved game session manager is allowed to change names of

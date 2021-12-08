@@ -4,13 +4,13 @@
 #include "application/models/SavedGameSessionGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
 #include "application/Util.hpp"
-#include "uh/ListenerDispatcher.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include <QString>
 #include <QDir>
 #include <unordered_map>
 #include <memory>
 
-namespace uhapp {
+namespace rfapp {
 
 class ReplayManagerListener;
 
@@ -73,7 +73,7 @@ public:
     QString videoSourceName(int idx) const;
     QDir videoSourcePath(int idx) const;
 
-    uh::ListenerDispatcher<ReplayManagerListener> dispatcher;
+    rfcommon::ListenerDispatcher<ReplayManagerListener> dispatcher;
 
 private:
     void scanForRecordings();

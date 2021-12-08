@@ -3,11 +3,11 @@
 #include "application/listeners/SavedGameSessionManagerListener.hpp"
 #include "application/listeners/TrainingModeListener.hpp"
 #include "application/models/CategoryType.hpp"
-#include "uh/ListenerDispatcher.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include <QVector>
 #include <QString>
 
-namespace uhapp {
+namespace rfapp {
 
 class CategoryListener;
 class ReplayGroup;
@@ -39,7 +39,7 @@ public:
     const QString& currentItemSelected() const
         { return currentItemName_; }
 
-    uh::ListenerDispatcher<CategoryListener> dispatcher;
+    rfcommon::ListenerDispatcher<CategoryListener> dispatcher;
 
 private:
     ReplayManager* savedGameSessionManager_;
