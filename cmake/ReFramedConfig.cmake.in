@@ -3,7 +3,7 @@
 include ("${PACKAGE_PREFIX_DIR}/share/reframed/cmake/ReFramedTargets.cmake")
 list (APPEND CMAKE_MODULE_PATH "${PACKAGE_PREFIX_DIR}/share/reframed/cmake/modules")
 
-set (REFRAMED_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+set (REFRAMED_BUILD_BINDIR "${PACKAGE_PREFIX_DIR}")
 set (REFRAMED_BUILD_LIBDIR "${REFRAMED_BUILD_BINDIR}/lib")
 set (REFRAMED_BUILD_PLUGINDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugins")
 
@@ -16,6 +16,4 @@ set (REFRAMED_INSTALL_PLUGINDIR "share/reframed/plugins")
 set (REFRAMED_INSTALL_CMAKEDIR "share/reframed/cmake")
 
 set (REFRAMED_PLUGIN_TEMPLATE_PATH "${PACKAGE_PREFIX_DIR}/share/reframed/cmake/templates")
-
-message (FATAL_ERROR "uuugh")
 
