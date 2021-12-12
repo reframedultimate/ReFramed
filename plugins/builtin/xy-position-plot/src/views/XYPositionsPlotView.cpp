@@ -74,8 +74,19 @@ XYPositionsPlotView::~XYPositionsPlotView()
 }
 
 // ----------------------------------------------------------------------------
+void XYPositionsPlotView::clearUI()
+{
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    replot();
+}
+
+// ----------------------------------------------------------------------------
 void XYPositionsPlotView::onXYPositionsPlotSessionSet(rfcommon::Session* session)
 {
+    clearUI();
+
     for (int player = 0; player != session->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
@@ -101,10 +112,7 @@ void XYPositionsPlotView::onXYPositionsPlotSessionSet(rfcommon::Session* session
 // ----------------------------------------------------------------------------
 void XYPositionsPlotView::onXYPositionsPlotSessionCleared(rfcommon::Session* session)
 {
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    replot();
+    (void)session;
 }
 
 // ----------------------------------------------------------------------------

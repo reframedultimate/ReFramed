@@ -14,6 +14,7 @@ extern "C" {
 struct RFPluginFactoryInfo
 {
     const char* name;
+    const char* category;
     const char* author;
     const char* contact;
     const char* description;

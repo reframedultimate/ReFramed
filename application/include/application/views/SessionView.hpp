@@ -41,7 +41,8 @@ private:
     QWidget* damageTimePlot_ = nullptr;
     rfcommon::RealtimePlugin* xyPositionsPlugin_ = nullptr;
     QWidget* xyPositionPlot_ = nullptr;
-    SessionDataView* sessionDataView_;
+    rfcommon::RealtimePlugin* frameDataListPlugin_ = nullptr;
+    QWidget* frameDataListView_ = nullptr;
 };
 
 }

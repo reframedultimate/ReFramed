@@ -1,41 +1,32 @@
 #pragma once
 
+#include "frame-data-list/listeners/FrameDataListListener.hpp"
 #include "rfcommon/SessionListener.hpp"
-#include "rfcommon/Reference.hpp"
+#include "rfcommon/Vector.hpp"
 #include <QWidget>
-#include <QVector>
 
+class FrameDataListModel;
 class QTreeWidgetItem;
 class QTableWidget;
 
 namespace Ui {
-    class SessionDataView;
+    class FrameDataListView;
 }
 
-namespace rfcommon {
-    class Session;
-    class SavedGameSession;
-}
-
-namespace rfapp {
-
-class SessionDataView : public QWidget
-                      , public rfcommon::SessionListener
+class FrameDataListView : public QWidget
+                        , public FrameDataListListener
+                        , public rfcommon::SessionListener
 {
     Q_OBJECT
 
 public:
-    explicit SessionDataView(QWidget* parent=nullptr);
-    ~SessionDataView();
-
-public slots:
-    void setSavedGameSession(rfcommon::SavedGameSession* session);
-    void clearSavedGameSession(rfcommon::SavedGameSession* session);
+    explicit FrameDataListView(FrameDataListModel* model, QWidget* parent=nullptr);
 
 private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
+    void clearUI();
     void repopulateTree();
     void repopulateGameInfoTable();
     void repopulateStageMappingTable();
@@ -45,20 +36,27 @@ private:
     void repopulateHitStatusMappingTable();
 
     void updatePlayerDataTableRowsIfDirty();
-    void setPlayerDataTableRow(int player, int row, const rfcommon::PlayerState& state);
+    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::PlayerState& state);
+    ~FrameDataListView();
 
 private:
-    void onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) override;
+    void onFrameDataListSessionSet(rfcommon::Session* session) override;
+    void onFrameDataListSessionCleared(rfcommon::Session* session) override;
 
-    void onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+private:
+    void onRunningGameSessionPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
     void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override;
     void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
-    void onRunningGameSessionWinnerChanged(int winner) override;
+    void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) override;
+
+    // RunningSession events
+    void onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
+    void onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
 
 private:
-    Ui::SessionDataView* ui_;
+    FrameDataListModel* model_;
+    Ui::FrameDataListView* ui_;
     QTreeWidgetItem* gameInfoItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;
@@ -67,7 +65,6 @@ private:
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
     rfcommon::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     rfcommon::SmallVector<QTableWidget*, 8> playerDataTables_;
-    rfcommon::Reference<rfcommon::Session> session_;
 
     // When a new recording is set, we want to remember which player was selected so the
     // user doesn't have to keep clicking on the player when browsing recordings
@@ -77,5 +74,3 @@ private:
     uint64_t lastTimePlayerDataTablesUpdated_ = 0;
     uint64_t playerDataTablesUpdateTime_ = 0;
 };
-
-}

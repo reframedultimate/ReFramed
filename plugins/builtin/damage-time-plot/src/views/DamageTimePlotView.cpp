@@ -74,6 +74,17 @@ DamageTimePlotView::~DamageTimePlotView()
 }
 
 // ----------------------------------------------------------------------------
+void DamageTimePlotView::clearUI()
+{
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
+    largestTimeSeen_ = 0.0;
+}
+
+// ----------------------------------------------------------------------------
 static void appendDataPoint(CurveData* data, float frame, float damage, float* largestTimeSeen)
 {
     float time = static_cast<float>(frame) / 60.0;
@@ -100,6 +111,8 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onDamageTimePlotSessionSet(rfcommon::Session* session)
 {
+    clearUI();
+
     for (int player = 0; player != model_->session()->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
@@ -137,12 +150,7 @@ void DamageTimePlotView::onDamageTimePlotSessionSet(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onDamageTimePlotSessionCleared(rfcommon::Session* session)
 {
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    prevFrames_.clear();
-    prevDamageValues_.clear();
-    largestTimeSeen_ = 0.0;
+    (void)session;
 }
 
 // ----------------------------------------------------------------------------

@@ -20,6 +20,9 @@ public:
     ~XYPositionsPlotView();
 
 private:
+    void clearUI();
+
+private:
     void onXYPositionsPlotSessionSet(rfcommon::Session* session) override;
     void onXYPositionsPlotSessionCleared(rfcommon::Session* session) override;
     void onXYPositionsPlotNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;

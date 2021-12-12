@@ -1,26 +1,24 @@
-#include "video-player/PluginConfig.hpp"
-#include "video-player/VideoPlayer.hpp"
+#include "frame-data-list/PluginConfig.hpp"
+#include "frame-data-list/models/FrameDataListModel.hpp"
 #include "rfcommon/PluginInterface.hpp"
-#include "rfcommon/PluginType.hpp"
-
-#include <QWidget>
 
 static rfcommon::Plugin* createModel(RFPluginFactory* factory)
 {
-    return new VideoPlayer(factory);
+    return new FrameDataListModel(factory);
 }
+
 static void destroyModel(rfcommon::Plugin* model)
 {
     delete model;
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::VISUALIZER,
-    {"Video Player",
+    {createModel, destroyModel, RFPluginType::REALTIME,
+    {"Frame Data List",
      "misc",
      "TheComet",
      "TheComet#5387, @TheComet93",
-     "A video player"}},
+     "View the data of each frame"}},
 
     {nullptr}
 };

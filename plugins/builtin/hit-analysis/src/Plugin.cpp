@@ -17,8 +17,13 @@ static void destroyModel(rfcommon::Plugin* model)
 
 static RFPluginFactory factories[] = {
     {createModel, destroyModel, RFPluginType::ANALYZER,
-     "Hit Analysis", "TheComet", "alex.murray@gmx.ch", "Finds all instances where you got hit"},
-    {NULL}
+    {"Hit Analysis",
+     "misc",
+     "TheComet",
+     "TheComet#5387, @TheComet93",
+     "Finds all instances where you got hit"}},
+
+    {nullptr}
 };
 
 static int start(uint32_t version)

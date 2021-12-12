@@ -1,14 +1,13 @@
-#include "application/ui_SessionDataView.h"
-#include "application/Util.hpp"
-#include "application/views/SessionDataView.hpp"
+#include "ui_FrameDataListView.h"
+#include "frame-data-list/views/FrameDataListView.hpp"
+#include "frame-data-list/models/FrameDataListModel.hpp"
 #include "rfcommon/GameSession.hpp"
 #include "rfcommon/PlayerState.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 #include <QDateTime>
-
 #include <QDebug>
 
-namespace rfapp {
+namespace {
 
 class IntegerTableWidgetItem : public QTableWidgetItem
 {
@@ -52,32 +51,55 @@ private:
     int value2;
 };
 
+}
+
+static void clearStackedWidget(QStackedWidget* sw)
+{
+    while (sw->count())
+    {
+        QWidget* widget = sw->widget(0);
+        sw->removeWidget(widget);
+        widget->deleteLater();
+    }
+}
+
 // ----------------------------------------------------------------------------
-SessionDataView::SessionDataView(QWidget* parent)
+FrameDataListView::FrameDataListView(FrameDataListModel* model, QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::SessionDataView)
+    , model_(model)
+    , ui_(new Ui::FrameDataListView)
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
     ui_->splitter->setStretchFactor(1, 1);
 
-    connect(ui_->treeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
-            this, SLOT(onCurrentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)));
+    model_->dispatcher.addListener(this);
+
+    if (model_->session())
+    {
+        onFrameDataListSessionSet(model_->session());
+        model_->session()->dispatcher.addListener(this);
+    }
+
+    connect(ui_->treeWidget, &QTreeWidget::currentItemChanged,
+            this, &FrameDataListView::onCurrentItemChanged);
 }
 
 // ----------------------------------------------------------------------------
-SessionDataView::~SessionDataView()
+FrameDataListView::~FrameDataListView()
 {
-    if (session_)
-        session_->dispatcher.removeListener(this);
+    if (model_->session())
+        model_->session()->dispatcher.removeListener(this);
+
+    model_->dispatcher.removeListener(this);
+
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::setSavedGameSession(rfcommon::SavedGameSession* session)
+void FrameDataListView::onFrameDataListSessionSet(rfcommon::Session* session)
 {
-    assert(session_.isNull());
-    session_ = session;
+    clearUI();
 
     int storeCurrentPageIndex = ui_->stackedWidget->currentIndex();
 
@@ -98,41 +120,18 @@ void SessionDataView::setSavedGameSession(rfcommon::SavedGameSession* session)
     if (ui_->stackedWidget->currentWidget() == ui_->page_playerData)
         updatePlayerDataTableRowsIfDirty();
 
-    session_->dispatcher.addListener(this);
+    session->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::clearSavedGameSession(rfcommon::SavedGameSession* session)
+void FrameDataListView::onFrameDataListSessionCleared(rfcommon::Session* session)
 {
-    assert(session_ == session && session_.notNull());
-
-    session_->dispatcher.removeListener(this);
-    session_.drop();
-
-    storeCurrentPageIndex_ = ui_->stackedWidget_playerData->currentIndex();
-
-    ui_->treeWidget->clear();
-    ui_->tableWidget_gameInfo->clearContents();
-    ui_->tableWidget_gameInfo->setRowCount(0);
-    ui_->tableWidget_stageIDs->clearContents();
-    ui_->tableWidget_stageIDs->setRowCount(0);
-    ui_->tableWidget_fighterIDs->clearContents();
-    ui_->tableWidget_fighterIDs->setRowCount(0);
-    ui_->tableWidget_baseStatusIDs->clearContents();
-    ui_->tableWidget_baseStatusIDs->setRowCount(0);
-    ui_->tableWidget_specificStatusIDs->clearContents();
-    ui_->tableWidget_specificStatusIDs->setRowCount(0);
-    ui_->tableWidget_hitStatusIDs->clearContents();
-    ui_->tableWidget_hitStatusIDs->setRowCount(0);
-
-    clearStackedWidget(ui_->stackedWidget_playerData);
-
-    playerDataItems_.clear();
-    playerDataTables_.clear();
+    assert(session);
+    session->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+void FrameDataListView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
     (void)previous;
 
@@ -166,7 +165,32 @@ void SessionDataView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidget
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateTree()
+void FrameDataListView::clearUI()
+{
+    storeCurrentPageIndex_ = ui_->stackedWidget_playerData->currentIndex();
+
+    ui_->treeWidget->clear();
+    ui_->tableWidget_gameInfo->clearContents();
+    ui_->tableWidget_gameInfo->setRowCount(0);
+    ui_->tableWidget_stageIDs->clearContents();
+    ui_->tableWidget_stageIDs->setRowCount(0);
+    ui_->tableWidget_fighterIDs->clearContents();
+    ui_->tableWidget_fighterIDs->setRowCount(0);
+    ui_->tableWidget_baseStatusIDs->clearContents();
+    ui_->tableWidget_baseStatusIDs->setRowCount(0);
+    ui_->tableWidget_specificStatusIDs->clearContents();
+    ui_->tableWidget_specificStatusIDs->setRowCount(0);
+    ui_->tableWidget_hitStatusIDs->clearContents();
+    ui_->tableWidget_hitStatusIDs->setRowCount(0);
+
+    clearStackedWidget(ui_->stackedWidget_playerData);
+
+    playerDataItems_.clear();
+    playerDataTables_.clear();
+}
+
+// ----------------------------------------------------------------------------
+void FrameDataListView::repopulateTree()
 {
     // Game info
     gameInfoItem_ = new QTreeWidgetItem({"Game Info"});
@@ -188,9 +212,10 @@ void SessionDataView::repopulateTree()
     // Player states
     QTreeWidgetItem* playerStates = new QTreeWidgetItem({"Player States"});
     ui_->treeWidget->addTopLevelItem(playerStates);
-    for (int i = 0; i != session_->playerCount(); ++i)
+    rfcommon::Session* session = model_->session();
+    for (int i = 0; i != session->playerCount(); ++i)
     {
-        QTreeWidgetItem* player = new QTreeWidgetItem({session_->playerName(i).cStr()});
+        QTreeWidgetItem* player = new QTreeWidgetItem({session->playerName(i).cStr()});
         playerDataItems_.push(player);
         playerStates->addChild(player);
         player->setExpanded(true);
@@ -202,30 +227,32 @@ void SessionDataView::repopulateTree()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateGameInfoTable()
+void FrameDataListView::repopulateGameInfoTable()
 {
-    rfcommon::GameSession* game = dynamic_cast<rfcommon::GameSession*>(session_.get());
+    // Slightly different behavior if this is from a game and not from training mode
+    rfcommon::Session* session = model_->session();
+    rfcommon::GameSession* game = dynamic_cast<rfcommon::GameSession*>(session);
 
     // Fill in data
-    ui_->tableWidget_gameInfo->setRowCount(6 + session_->playerCount());
+    ui_->tableWidget_gameInfo->setRowCount(6 + session->playerCount());
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
-    ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(session_->timeStampStartedMs()).toString()));
+    ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs()).toString()));
     ui_->tableWidget_gameInfo->setItem(1, 0, new QTableWidgetItem("Format"));
     ui_->tableWidget_gameInfo->setItem(1, 1, new QTableWidgetItem(game ? game ->format().description().cStr() : "--"));
     ui_->tableWidget_gameInfo->setItem(2, 0, new QTableWidgetItem("Set Number"));
     ui_->tableWidget_gameInfo->setItem(2, 1, new QTableWidgetItem(game ? QString::number(game->setNumber()) : "--"));
     ui_->tableWidget_gameInfo->setItem(3, 0, new QTableWidgetItem("Game Number"));
     ui_->tableWidget_gameInfo->setItem(3, 1, new QTableWidgetItem(game ? QString::number(game->gameNumber()) : "--"));
-    const rfcommon::String* stageName = session_->mappingInfo().stageID.map(session_->stageID());
+    const rfcommon::String* stageName = session->mappingInfo().stageID.map(session->stageID());
     ui_->tableWidget_gameInfo->setItem(4, 0, new QTableWidgetItem("Stage ID"));
-    ui_->tableWidget_gameInfo->setItem(4, 1, new QTableWidgetItem(QString::number(session_->stageID()) + " (" + (stageName ? stageName->cStr() : "unknown stage") + ")"));
+    ui_->tableWidget_gameInfo->setItem(4, 1, new QTableWidgetItem(QString::number(session->stageID()) + " (" + (stageName ? stageName->cStr() : "unknown stage") + ")"));
     ui_->tableWidget_gameInfo->setItem(5, 0, new QTableWidgetItem("Winner"));
-    ui_->tableWidget_gameInfo->setItem(5, 1, new QTableWidgetItem(session_->playerName(session_->winner()).cStr()));
+    ui_->tableWidget_gameInfo->setItem(5, 1, new QTableWidgetItem(session->winner() >= 0 ? session->playerName(session->winner()).cStr() : "--"));
 
-    for (int i = 0; i != session_->playerCount(); ++i)
+    for (int i = 0; i != session->playerCount(); ++i)
     {
-        const rfcommon::String* fighterName = session_->mappingInfo().fighterID.map(session_->playerFighterID(i));
-        ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(session_->playerName(i).cStr()));
+        const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(session->playerFighterID(i));
+        ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(session->playerName(i).cStr()));
         ui_->tableWidget_gameInfo->setItem(6+i, 1, new QTableWidgetItem(fighterName ? fighterName->cStr() : "(Unknown fighter)"));
     }
 
@@ -233,11 +260,12 @@ void SessionDataView::repopulateGameInfoTable()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateStageMappingTable()
+void FrameDataListView::repopulateStageMappingTable()
 {
     // Fill in data
     int i = 0;
-    const auto& stageMapping = session_->mappingInfo().stageID.get();
+    rfcommon::Session* session = model_->session();
+    const auto& stageMapping = session->mappingInfo().stageID.get();
     ui_->tableWidget_stageIDs->setRowCount(stageMapping.count());
     for (const auto& it : stageMapping)
     {
@@ -250,11 +278,12 @@ void SessionDataView::repopulateStageMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateFighterMappingTable()
+void FrameDataListView::repopulateFighterMappingTable()
 {
     // Fill in data
     int i = 0;
-    const auto& fighterMapping = session_->mappingInfo().fighterID.get();
+    rfcommon::Session* session = model_->session();
+    const auto& fighterMapping = session->mappingInfo().fighterID.get();
     ui_->tableWidget_fighterIDs->setRowCount(fighterMapping.count());
     for (const auto& it : fighterMapping)
     {
@@ -267,12 +296,13 @@ void SessionDataView::repopulateFighterMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateStatusMappingTable()
+void FrameDataListView::repopulateStatusMappingTable()
 {
     // Fill in base status mapping info
     int i = 0;
-    const auto& baseStatusMapping = session_->mappingInfo().fighterStatus.baseEnumNames();
-    const auto& specificStatusMappings = session_->mappingInfo().fighterStatus.fighterSpecificEnumNames();
+    rfcommon::Session* session = model_->session();
+    const auto& baseStatusMapping = session->mappingInfo().fighterStatus.baseEnumNames();
+    const auto& specificStatusMappings = session->mappingInfo().fighterStatus.fighterSpecificEnumNames();
     ui_->tableWidget_baseStatusIDs->setRowCount(baseStatusMapping.count());
     for (const auto& it : baseStatusMapping)
     {
@@ -305,11 +335,12 @@ void SessionDataView::repopulateStatusMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulateHitStatusMappingTable()
+void FrameDataListView::repopulateHitStatusMappingTable()
 {
     // Fill in data
     int i = 0;
-    const auto& hitStatusMapping = session_->mappingInfo().hitStatus.get();
+    rfcommon::Session* session = model_->session();
+    const auto& hitStatusMapping = session->mappingInfo().hitStatus.get();
     ui_->tableWidget_hitStatusIDs->setRowCount(hitStatusMapping.count());
     for (const auto& it : hitStatusMapping)
     {
@@ -322,10 +353,11 @@ void SessionDataView::repopulateHitStatusMappingTable()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::repopulatePlayerDataTables()
+void FrameDataListView::repopulatePlayerDataTables()
 {
     // Fill in data
-    for (int player = 0; player != session_->playerCount(); ++player)
+    rfcommon::Session* session = model_->session();
+    for (int player = 0; player != session->playerCount(); ++player)
     {
         QTableWidget* table = new QTableWidget(0, 11);
         playerDataTables_.push(table);
@@ -336,7 +368,7 @@ void SessionDataView::repopulatePlayerDataTables()
     // Since we cleared the stacked widget, it won't remember which one was
     // selected. storeCurrentPageIndex_ is saved in clear() and we try to
     // select the same player index again
-    if (storeCurrentPageIndex_ >= session_->playerCount())
+    if (storeCurrentPageIndex_ >= session->playerCount())
         ui_->stackedWidget_playerData->setCurrentIndex(0);
     else
         ui_->stackedWidget_playerData->setCurrentIndex(storeCurrentPageIndex_);
@@ -347,14 +379,13 @@ void SessionDataView::repopulatePlayerDataTables()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::updatePlayerDataTableRowsIfDirty()
+void FrameDataListView::updatePlayerDataTableRowsIfDirty()
 {
     if (playerDataTableRowsDirty_ == false)
         return;
 
-    qDebug() << "Updating player data tables";
-
-    for (int player = 0; player != session_->playerCount(); ++player)
+    rfcommon::Session* session = model_->session();
+    for (int player = 0; player != session->playerCount(); ++player)
     {
         QTableWidget* table = playerDataTables_[player];
 
@@ -364,13 +395,13 @@ void SessionDataView::updatePlayerDataTableRowsIfDirty()
         // rows are already populated and how many need to be added using new
         // data
         int row = table->rowCount();
-        if (table->rowCount() < session_->playerStateCount(player))
-            table->setRowCount(session_->playerStateCount(player));
+        if (table->rowCount() < session->playerStateCount(player))
+            table->setRowCount(session->playerStateCount(player));
         int endRow = table->rowCount();
 
         while (row < endRow)
         {
-            const rfcommon::PlayerState& state = session_->playerStateAt(player, row);
+            const rfcommon::PlayerState& state = session->playerStateAt(player, row);
             setPlayerDataTableRow(player, row, state);
             row++;
         }
@@ -383,13 +414,14 @@ void SessionDataView::updatePlayerDataTableRowsIfDirty()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::setPlayerDataTableRow(int player, int row, const rfcommon::PlayerState& state)
+void FrameDataListView::setPlayerDataTableRow(int player, int row, const rfcommon::PlayerState& state)
 {
-    const auto& statusMapping = session_->mappingInfo().fighterStatus;
-    const auto& hitStatusMapping = session_->mappingInfo().hitStatus;
+    rfcommon::Session* session = model_->session();
+    const auto& statusMapping = session->mappingInfo().fighterStatus;
+    const auto& hitStatusMapping = session->mappingInfo().hitStatus;
 
     const rfcommon::String* baseEnum = statusMapping.statusToBaseEnumName(state.status());
-    const rfcommon::String* specificEnum = statusMapping.statusToFighterSpecificEnumName(state.status(), session_->playerFighterID(player));
+    const rfcommon::String* specificEnum = statusMapping.statusToFighterSpecificEnumName(state.status(), session->playerFighterID(player));
     const rfcommon::String statusStr = baseEnum ? *baseEnum : (specificEnum ? *specificEnum : "");
     const rfcommon::String* hitStatusStr = hitStatusMapping.map(state.hitStatus());
 
@@ -409,38 +441,47 @@ void SessionDataView::setPlayerDataTableRow(int player, int row, const rfcommon:
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void FrameDataListView::onRunningGameSessionPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
 {
-    if (player >= playerDataItems_.count())
-        return;
-    playerDataItems_[player]->setText(0, name.cStr());
+    rfcommon::Session* session = model_->session();
 
-    for (int i = 0; i != session_->playerCount(); ++i)
-        ui_->tableWidget_gameInfo->item(6+i, 0)->setText(session_->playerName(i).cStr());
+    if (playerIdx >= playerDataItems_.count())
+        return;
+    playerDataItems_[playerIdx]->setText(0, name.cStr());
+
+    for (int i = 0; i != session->playerCount(); ++i)
+        ui_->tableWidget_gameInfo->item(6+i, 0)->setText(session->playerName(i).cStr());
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number)
+void FrameDataListView::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number)
 {
     ui_->tableWidget_gameInfo->item(2, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number)
+void FrameDataListView::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number)
 {
     ui_->tableWidget_gameInfo->item(3, 1)->setText(QString::number(number));
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format)
+void FrameDataListView::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format)
 {
     ui_->tableWidget_gameInfo->item(1, 1)->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void FrameDataListView::onRunningGameSessionWinnerChanged(int winnerPlayerIdx)
 {
-    if (player >= playerDataTables_.count())
+    rfcommon::Session* session = model_->session();
+    ui_->tableWidget_gameInfo->item(5, 1)->setText(session->playerName(winnerPlayerIdx).cStr());
+}
+
+// ----------------------------------------------------------------------------
+void FrameDataListView::onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state)
+{
+    if (playerIdx >= playerDataTables_.count())
         return;
 
     // The fact this callback was called means there's new data
@@ -454,7 +495,7 @@ void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const rfc
     const uint64_t time = QDateTime::currentMSecsSinceEpoch();
     const uint64_t leeway = playerDataTablesUpdateTime_ * 2;
     if (ui_->stackedWidget->currentWidget() != ui_->page_playerData
-     || ui_->stackedWidget_playerData->currentIndex() != player
+     || ui_->stackedWidget_playerData->currentIndex() != playerIdx
      || time - lastTimePlayerDataTablesUpdated_ < playerDataTablesUpdateTime_ + leeway)
     {
         return;
@@ -469,24 +510,16 @@ void SessionDataView::onRunningSessionNewUniquePlayerState(int player, const rfc
         lastTimePlayerDataTablesUpdated_ = timeAfterUpdate;
     }
 
-    QTableWidget* table = playerDataTables_[player];
+    QTableWidget* table = playerDataTables_[playerIdx];
     int row = table->rowCount();
     table->setRowCount(row + 1);
-    setPlayerDataTableRow(player, row, state);
+    setPlayerDataTableRow(playerIdx, row, state);
     table->scrollToBottom();
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state)
+void FrameDataListView::onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state)
 {
-    (void)player;
+    (void)playerIdx;
     (void)state;
-}
-
-// ----------------------------------------------------------------------------
-void SessionDataView::onRunningGameSessionWinnerChanged(int winner)
-{
-    ui_->tableWidget_gameInfo->item(5, 1)->setText(session_->playerName(winner).cStr());
-}
-
 }

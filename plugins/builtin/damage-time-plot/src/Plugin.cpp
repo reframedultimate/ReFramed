@@ -14,7 +14,12 @@ static void destroyModel(rfcommon::Plugin* model)
 
 static RFPluginFactory factories[] = {
     {createModel, destroyModel, RFPluginType::REALTIME,
-     "Damage vs Time Plot", "TheComet", "TheComet#5387, @TheComet93", "Plots each player's damage over time"},
+    {"Damage vs Time Plot",
+    "misc",
+    "TheComet",
+    "TheComet#5387, @TheComet93",
+    "Plots each player's damage over time"}},
+
     {nullptr}
 };
 

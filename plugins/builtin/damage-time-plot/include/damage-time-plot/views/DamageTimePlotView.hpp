@@ -16,6 +16,9 @@ public:
     ~DamageTimePlotView();
 
 private:
+    void clearUI();
+
+private:
     void onDamageTimePlotSessionSet(rfcommon::Session* session) override;
     void onDamageTimePlotSessionCleared(rfcommon::Session* session) override;
     void onDamageTimePlotNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
