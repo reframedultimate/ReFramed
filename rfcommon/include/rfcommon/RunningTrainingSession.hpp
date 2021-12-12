@@ -25,6 +25,11 @@ public:
     // Make MSVC shut up about dominance
     TimeStampMS timeStampStartedMs() const override
         { return TrainingSession::timeStampStartedMs(); }
+
+    void addPlayerState(int playerIdx, PlayerState&& state) override;
+
+private:
+    int frameCounter_;
 };
 
 }

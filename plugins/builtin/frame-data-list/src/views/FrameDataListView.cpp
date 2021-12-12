@@ -128,6 +128,10 @@ void FrameDataListView::onFrameDataListSessionCleared(rfcommon::Session* session
 {
     assert(session);
     session->dispatcher.removeListener(this);
+
+    // Have to update all tables now because the session object is about to
+    // be de-ref'd and we won't have a chance to do it later
+    updatePlayerDataTableRowsIfDirty();
 }
 
 // ----------------------------------------------------------------------------

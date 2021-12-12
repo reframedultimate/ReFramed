@@ -21,6 +21,7 @@ class FrameDataListView : public QWidget
 
 public:
     explicit FrameDataListView(FrameDataListModel* model, QWidget* parent=nullptr);
+    ~FrameDataListView();
 
 private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
@@ -37,7 +38,6 @@ private:
 
     void updatePlayerDataTableRowsIfDirty();
     void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::PlayerState& state);
-    ~FrameDataListView();
 
 private:
     void onFrameDataListSessionSet(rfcommon::Session* session) override;

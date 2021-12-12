@@ -17,7 +17,7 @@ protected:
     );
 
 public:
-    virtual void addPlayerState(int PlayerIdx, PlayerState&& state);
+    virtual void addPlayerState(int playerIdx, PlayerState&& state);
 };
 
 }
