@@ -169,7 +169,7 @@ SavedSession::SavedSession()
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::load(const String& fileName)
+SavedGameSession* SavedSession::load(const String& fileName)
 {
     json j;
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
@@ -188,7 +188,7 @@ SavedSession* SavedSession::load(const String& fileName)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    SavedSession* session;
+    SavedGameSession* session;
     std::string version = j["version"];
     if (version == "1.4")
     {
@@ -220,7 +220,7 @@ SavedSession* SavedSession::load(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadVersion_1_0(const void* jptr)
+SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -351,7 +351,7 @@ SavedSession* SavedSession::loadVersion_1_0(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadVersion_1_1(const void* jptr)
+SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -526,7 +526,7 @@ SavedSession* SavedSession::loadVersion_1_1(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadVersion_1_2(const void* jptr)
+SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -721,7 +721,7 @@ SavedSession* SavedSession::loadVersion_1_2(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadVersion_1_3(const void* jptr)
+SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -936,7 +936,7 @@ SavedSession* SavedSession::loadVersion_1_3(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
+SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -1089,7 +1089,7 @@ SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
     if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
+    std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
         jsonGameInfo["stageid"].get<StageID>(),
         std::move(playerFighterIDs),
@@ -1102,7 +1102,7 @@ SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < recording->playerCount(); ++i)
+    for (int i = 0; i < session->playerCount(); ++i)
     {
         int error = 0;
         Frame stateCount = stream.readLU32(&error);
@@ -1134,14 +1134,14 @@ SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
 
-            recording->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+            session->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
         }
     }
 
     // Cache winner
-    recording->winner_ = recording->findWinner();
+    session->winner_ = session->findWinner();
 
-    return recording.release();
+    return session.release();
 }
 
 // ----------------------------------------------------------------------------

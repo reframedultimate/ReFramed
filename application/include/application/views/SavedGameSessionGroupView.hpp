@@ -2,6 +2,7 @@
 
 #include "application/listeners/SavedGameSessionManagerListener.hpp"
 #include "application/listeners/SavedGameSessionGroupListener.hpp"
+#include "rfcommon/Reference.hpp"
 #include <QWidget>
 
 class QListWidgetItem;
@@ -9,6 +10,10 @@ class QStringListModel;
 
 namespace Ui {
     class SavedGameSessionGroupView;
+}
+
+namespace rfcommon {
+    class SavedGameSession;
 }
 
 namespace rfapp {
@@ -40,7 +45,7 @@ public slots:
      * the group is deleted the view will clear itself.
      */
     void setSavedGameSessionGroup(ReplayGroup* group);
-    void clear();
+    void clearSavedGameSessionGroup(ReplayGroup* group);
 
 private slots:
     void onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
@@ -71,6 +76,7 @@ private:
     Ui::SavedGameSessionGroupView* ui_;
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
+    rfcommon::Reference<rfcommon::SavedGameSession> currentSession_;
     SavedGameSessionListWidget* savedGameSessionListWidget_;
     SavedGameSessionNameCompleter* filterCompleter_;
     SessionView* sessionView_;

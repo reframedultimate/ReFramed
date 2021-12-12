@@ -19,9 +19,6 @@ public:
     virtual void onRunningGameSessionFormatChanged(const SetFormat& format) = 0;
     virtual void onRunningGameSessionWinnerChanged(int winner) = 0;
 
-    // RunningTrainingSession events
-    virtual void onRunningTrainingSessionTrainingReset() = 0;
-
     // RunningSession events
     virtual void onRunningSessionNewUniquePlayerState(int player, const PlayerState& state) = 0;
     virtual void onRunningSessionNewPlayerState(int player, const PlayerState& state) = 0;

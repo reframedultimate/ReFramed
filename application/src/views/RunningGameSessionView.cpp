@@ -157,9 +157,6 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
     ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString());
     ui_->label_timeRemaining->setText("");
 
-    // Prepare recording view for new game
-    sessionView_->setSession(recording);
-
     // Show active page, if not already
     ui_->stackedWidget->setCurrentWidget(ui_->page_active);
 }

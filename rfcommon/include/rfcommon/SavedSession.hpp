@@ -5,22 +5,28 @@
 
 namespace rfcommon {
 
+class SavedGameSession;
+
 class RFCOMMON_PUBLIC_API SavedSession : virtual public Session
 {
 protected:
     SavedSession();
 
 public:
-    static SavedSession* load(const String& fileName);
+    static SavedGameSession* load(const String& fileName);
+    // NOTE: Since training session saving currently isn't supported, this
+    // returns a SavedGameSession instead of just a SavedSession. If we
+    // decide to support saving training sessions in the future then this
+    // should be changed back to SavedSession*
 
 private:
     // Using void* here to avoid json objects leaking into the rest of the
     // program
-    static SavedSession* loadVersion_1_0(const void* jptr);
-    static SavedSession* loadVersion_1_1(const void* jptr);
-    static SavedSession* loadVersion_1_2(const void* jptr);
-    static SavedSession* loadVersion_1_3(const void* jptr);
-    static SavedSession* loadVersion_1_4(const void* jptr);
+    static SavedGameSession* loadVersion_1_0(const void* jptr);
+    static SavedGameSession* loadVersion_1_1(const void* jptr);
+    static SavedGameSession* loadVersion_1_2(const void* jptr);
+    static SavedGameSession* loadVersion_1_3(const void* jptr);
+    static SavedGameSession* loadVersion_1_4(const void* jptr);
 
 public:
     /*!

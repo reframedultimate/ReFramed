@@ -1,14 +1,13 @@
+#include "xy-positions-plot/views/XYPositionsPlotView.hpp"
+#include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
-#include "application/views/XYPositionPlot.hpp"
-#include "rfcommon/Session.hpp"
+#include "rfcommon/SavedGameSession.hpp"
 #include "rfcommon/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include <QMenu>
 #include <QAction>
 #include <QSignalMapper>
-
-namespace rfapp {
 
 namespace {
 
@@ -46,62 +45,52 @@ public:
 }
 
 // ----------------------------------------------------------------------------
-XYPositionPlot::XYPositionPlot(QWidget* parent)
+XYPositionsPlotView::XYPositionsPlotView(XYPositionsPlotModel* model, QWidget* parent)
     : RealtimePlot(parent)
+    , model_(model)
     , curveTypeActionGroup_(new QActionGroup(this))
 {
     setTitle("XY Positions");
 
     QAction* dotted = curveTypeActionGroup_->addAction("Dotted");
     dotted->setCheckable(true);
-    dotted->setChecked(true);
     QAction* lines = curveTypeActionGroup_->addAction("Lines");
     lines->setCheckable(true);
+    lines->setChecked(true);
 
-    connect(dotted, &QAction::triggered, this, &XYPositionPlot::onDottedAction);
-    connect(lines, &QAction::triggered, this, &XYPositionPlot::onLinesAction);
+    if (model_->session())
+        XYPositionsPlotView::onXYPositionsPlotSessionSet(model_->session());
+
+    model_->dispatcher.addListener(this);
+
+    connect(dotted, &QAction::triggered, this, &XYPositionsPlotView::onDottedAction);
+    connect(lines, &QAction::triggered, this, &XYPositionsPlotView::onLinesAction);
 }
 
 // ----------------------------------------------------------------------------
-XYPositionPlot::~XYPositionPlot()
+XYPositionsPlotView::~XYPositionsPlotView()
 {
-    clear();
+    model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::clear()
+void XYPositionsPlotView::onXYPositionsPlotSessionSet(rfcommon::Session* session)
 {
-    if (session_)
-        session_->dispatcher.removeListener(this);
-    session_ = nullptr;
-
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    replot();
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionPlot::setSession(rfcommon::Session* session)
-{
-    clear();
-    session_ = session;
-    session_->dispatcher.addListener(this);
-
-    for (int player = 0; player != session_->playerCount(); ++player)
+    for (int player = 0; player != session->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
+        const QList<QAction*>& actions = curveTypeActionGroup_->actions();
         curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(session_->playerName(player).cStr());
-        curve->setStyle(curveTypeActionGroup_->actions()[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
+        curve->setTitle(session->playerName(player).cStr());
+        curve->setStyle(actions[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
 
-        for (int i = 0; i < session_->playerStateCount(player); ++i)
+        for (int i = 0; i < session->playerStateCount(player); ++i)
         {
-            const auto& state = session_->playerStateAt(player, i);
+            const auto& state = session->playerStateAt(player, i);
             data->append(QPointF(state.posx(), state.posy()));
         }
     }
@@ -110,17 +99,28 @@ void XYPositionPlot::setSession(rfcommon::Session* session)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::prependContextMenuActions(QMenu* menu)
+void XYPositionsPlotView::onXYPositionsPlotSessionCleared(rfcommon::Session* session)
+{
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    replot();
+}
+
+// ----------------------------------------------------------------------------
+void XYPositionsPlotView::prependContextMenuActions(QMenu* menu)
 {
     for (const auto& action : curveTypeActionGroup_->actions())
         menu->addAction(action);
     menu->addSeparator();
 
-    if (session_ == nullptr)
+    rfcommon::Session* session = model_->session();
+    if (session == nullptr)
         return;
-    for (int i = 0; i != session_->playerCount(); ++i)
+
+    for (int i = 0; i != session->playerCount(); ++i)
     {
-        QAction* a = menu->addAction(session_->playerName(i).cStr());
+        QAction* a = menu->addAction(session->playerName(i).cStr());
         a->setCheckable(true);
         a->setChecked(curves_[i]->isVisible());
         connect(a, &QAction::triggered, [=](bool checked) {
@@ -131,21 +131,21 @@ void XYPositionPlot::prependContextMenuActions(QMenu* menu)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void XYPositionsPlotView::onXYPositionsPlotNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
 {
-    curves_[player]->setTitle(name.cStr());
+    curves_[playerIdx]->setTitle(name.cStr());
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void XYPositionsPlotView::onXYPositionsPlotNewValue(int playerIdx, float posx, float posy)
 {
-    CurveData* data = static_cast<CurveData*>(curves_[player]->data());
-    data->append(QPointF(state.posx(), state.posy()));
+    CurveData* data = static_cast<CurveData*>(curves_[playerIdx]->data());
+    data->append(QPointF(posx, posy));
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onDottedAction(bool enable)
+void XYPositionsPlotView::onDottedAction(bool enable)
 {
     if (!enable)
         return;
@@ -157,7 +157,7 @@ void XYPositionPlot::onDottedAction(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::onLinesAction(bool enable)
+void XYPositionsPlotView::onLinesAction(bool enable)
 {
     if (!enable)
         return;
@@ -169,10 +169,8 @@ void XYPositionPlot::onLinesAction(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionPlot::setCurveVisible(int player, bool visible)
+void XYPositionsPlotView::setCurveVisible(int player, bool visible)
 {
     curves_[player]->setVisible(visible);
     replot();
-}
-
 }

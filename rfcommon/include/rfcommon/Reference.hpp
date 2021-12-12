@@ -124,7 +124,7 @@ public:
         return ptr_ ? ptr_->refs() : 0;
     }
 
-    void reset()
+    void drop()
     {
         unref();
     }

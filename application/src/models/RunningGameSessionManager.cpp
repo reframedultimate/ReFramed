@@ -324,7 +324,7 @@ void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSessio
 
     session->dispatcher.removeListener(this);
     pastSessions_.push_back(session);
-    activeSession_.reset();
+    activeSession_.drop();
 }
 
 // ----------------------------------------------------------------------------

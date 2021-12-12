@@ -62,7 +62,7 @@ DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* pare
     setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
 
     if (model_->session())
-        onDamageTimePlotSessionChanged();
+        onDamageTimePlotSessionSet(model_->session());
 
     model_->dispatcher.addListener(this);
 }
@@ -98,15 +98,8 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotView::onDamageTimePlotSessionChanged()
+void DamageTimePlotView::onDamageTimePlotSessionSet(rfcommon::Session* session)
 {
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    prevFrames_.clear();
-    prevDamageValues_.clear();
-    largestTimeSeen_ = 0.0;
-
     for (int player = 0; player != model_->session()->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
@@ -139,6 +132,17 @@ void DamageTimePlotView::onDamageTimePlotSessionChanged()
     }
 
     forceAutoScale();
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlotView::onDamageTimePlotSessionCleared(rfcommon::Session* session)
+{
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
+    largestTimeSeen_ = 0.0;
 }
 
 // ----------------------------------------------------------------------------

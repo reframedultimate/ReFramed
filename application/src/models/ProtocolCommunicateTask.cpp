@@ -223,6 +223,12 @@ void ProtocolCommunicateTask::run()
             rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
             rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags({"Player 1", "CPU"});
 
+            // With training mode we always assume there are 2 fighters
+            // with entry IDs 0 and 1
+            entryIDs.resize(2);
+            entryIDs[0] = 0;
+            entryIDs[1] = 1;
+
             if (msg == TrainingStart)
             {
                 qDebug() << "Traininig started";
@@ -383,9 +389,7 @@ void ProtocolCommunicateTask::run()
             // (reading data might skew the time)
             quint64 frameTimeStamp = time_milli_seconds_since_epoch();
 
-            int bread = tcp_socket_read_exact(&socket_, buf, sizeof(buf));
-            int exp = sizeof(buf);
-            if (bread != exp)
+            if (tcp_socket_read_exact(&socket_, buf, sizeof(buf)) != sizeof(buf))
                 break;
 
             quint32 frame = (frame0 << 24)

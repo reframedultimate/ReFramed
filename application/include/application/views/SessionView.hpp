@@ -3,7 +3,7 @@
 #include <QWidget>
 
 namespace rfcommon {
-    class Session;
+    class SavedGameSession;
     class RealtimePlugin;
 }
 
@@ -26,8 +26,8 @@ public:
     void showDamagePlot();
 
 public slots:
-    void setSession(rfcommon::Session* session);
-    void clear();
+    void setSavedGameSession(rfcommon::SavedGameSession* session);
+    void clearSavedGameSession(rfcommon::SavedGameSession* session);
 
 private slots:
     // This is still broken, see

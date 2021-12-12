@@ -100,6 +100,8 @@ void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAdd
 // ----------------------------------------------------------------------------
 void Protocol::onProtocolDisconnected()
 {
+    endSessionIfNecessary();
+
     communicateTask_.reset();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolDisconnectedFromServer);
 }
@@ -186,7 +188,7 @@ void Protocol::endSessionIfNecessary()
         dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, training);
     }
 
-    session_.reset();
+    session_.drop();
 }
 
 }

@@ -1,13 +1,10 @@
-#include "hit-analysis/PluginConfig.hpp"
-#include "hit-analysis/HitAnalyzer.hpp"
+#include "xy-positions-plot/PluginConfig.hpp"
+#include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "rfcommon/PluginInterface.hpp"
-#include "rfcommon/PluginType.hpp"
-
-#include <QWidget>
 
 static rfcommon::Plugin* createModel(RFPluginFactory* factory)
 {
-    return new HitAnalyzer(factory);
+    return new XYPositionsPlotModel(factory);
 }
 
 static void destroyModel(rfcommon::Plugin* model)
@@ -16,9 +13,9 @@ static void destroyModel(rfcommon::Plugin* model)
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::ANALYZER,
-     "Hit Analysis", "TheComet", "alex.murray@gmx.ch", "Finds all instances where you got hit"},
-    {NULL}
+    {createModel, destroyModel, RFPluginType::REALTIME,
+     "XY Positions Plot", "TheComet", "TheComet#5387, @TheComet93", "Plots each player's X and Y positions"},
+    {nullptr}
 };
 
 static int start(uint32_t version)

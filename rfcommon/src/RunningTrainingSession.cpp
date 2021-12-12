@@ -16,10 +16,4 @@ RunningTrainingSession::RunningTrainingSession(
 {
 }
 
-// ----------------------------------------------------------------------------
-void RunningTrainingSession::resetTraining()
-{
-    dispatcher.dispatch(&SessionListener::onRunningTrainingSessionTrainingReset);
-}
-
 }

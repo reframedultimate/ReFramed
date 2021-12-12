@@ -169,7 +169,6 @@ void MainWindow::onCategorySelected(CategoryType category)
     switch (category)
     {
         case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
-            replayGroupView_->clear();  // Kinda ugly, should make this a listener of CategoryModel
             mainView_->setCurrentIndex(0);
             break;
 

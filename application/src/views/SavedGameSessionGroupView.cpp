@@ -130,7 +130,7 @@ ReplayGroupView::~ReplayGroupView()
 // ----------------------------------------------------------------------------
 void ReplayGroupView::setSavedGameSessionGroup(ReplayGroup* group)
 {
-    clear();
+    assert(currentGroup_ == nullptr);
 
     currentGroup_ = group;
     currentGroup_->dispatcher.addListener(this);
@@ -143,14 +143,19 @@ void ReplayGroupView::setSavedGameSessionGroup(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayGroupView::clear()
+void ReplayGroupView::clearSavedGameSessionGroup(ReplayGroup* group)
 {
-    if (currentGroup_)
-        currentGroup_->dispatcher.removeListener(this);
+    assert(currentGroup_ == group && group != nullptr);
+
+    if (currentSession_)
+        sessionView_->clearSavedGameSession(currentSession_);
+    currentSession_.drop();
+
+    currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
 
     savedGameSessionListWidget_->clear();
-    sessionView_->clear();
+
     /*filterCompleter_->recordingGroupExpired();*/
 }
 
@@ -163,11 +168,12 @@ void ReplayGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidget
     for (const auto& fileName : currentGroup_->absFilePathList())
         if (savedGameSessionListWidget_->itemMatchesSavedGameSessionFileName(current, fileName))
         {
-            rfcommon::SavedSession* session = rfcommon::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
-            if (session)
-                sessionView_->setSession(session);
-            else
-                sessionView_->clear();
+            if (currentSession_)
+                sessionView_->clearSavedGameSession(currentSession_);
+
+            currentSession_ = rfcommon::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
+            if (currentSession_)
+                sessionView_->setSavedGameSession(currentSession_);
 
             break;
         }
@@ -198,7 +204,7 @@ void ReplayGroupView::onDeleteKeyPressed()
 void ReplayGroupView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
     if (currentGroup_ == group)
-        clear();
+        clearSavedGameSessionGroup(group);
 }
 
 // ----------------------------------------------------------------------------

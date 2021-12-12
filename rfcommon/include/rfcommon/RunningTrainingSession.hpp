@@ -16,8 +16,6 @@ public:
             SmallVector<SmallString<15>, 8>&& playerTags
     );
 
-    void resetTraining();
-
     const SmallString<15>& playerName(int playerIdx) const
         { return playerTag(playerIdx); }
 

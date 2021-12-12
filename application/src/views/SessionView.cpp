@@ -81,15 +81,23 @@ void SessionView::showDamagePlot()
 }
 
 // ----------------------------------------------------------------------------
-void SessionView::setSession(rfcommon::Session* session)
+void SessionView::setSavedGameSession(rfcommon::SavedGameSession* session)
 {
-    sessionDataView_->setSession(session);
+    if (damageTimePlugin_)
+        damageTimePlugin_->setSavedGameSession(session);
+    if (xyPositionsPlugin_)
+        xyPositionsPlugin_->setSavedGameSession(session);
+    sessionDataView_->setSavedGameSession(session);
 }
 
 // ----------------------------------------------------------------------------
-void SessionView::clear()
+void SessionView::clearSavedGameSession(rfcommon::SavedGameSession* session)
 {
-    sessionDataView_->clear();
+    if (damageTimePlugin_)
+        damageTimePlugin_->clearSavedGameSession(session);
+    if (xyPositionsPlugin_)
+        xyPositionsPlugin_->clearSavedGameSession(session);
+    sessionDataView_->clearSavedGameSession(session);
 }
 
 }

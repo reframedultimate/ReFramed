@@ -85,8 +85,6 @@ private:
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
 
-    void onRunningTrainingSessionTrainingReset() override {}
-
     void onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state) override;
     void onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) override;
 

@@ -14,6 +14,7 @@ namespace Ui {
 
 namespace rfcommon {
     class Session;
+    class SavedGameSession;
 }
 
 namespace rfapp {
@@ -28,8 +29,8 @@ public:
     ~SessionDataView();
 
 public slots:
-    void setSession(rfcommon::Session* session);
-    void clear();
+    void setSavedGameSession(rfcommon::SavedGameSession* session);
+    void clearSavedGameSession(rfcommon::SavedGameSession* session);
 
 private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
@@ -55,8 +56,6 @@ private:
     void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
-
-    void onRunningTrainingSessionTrainingReset() override;
 
 private:
     Ui::SessionDataView* ui_;

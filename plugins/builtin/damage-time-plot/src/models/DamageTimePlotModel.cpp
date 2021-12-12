@@ -3,6 +3,7 @@
 #include "damage-time-plot/listeners/DamageTimePlotListener.hpp"
 #include "rfcommon/PlayerState.hpp"
 #include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/SavedGameSession.hpp"
 
 // ----------------------------------------------------------------------------
 DamageTimePlotModel::DamageTimePlotModel(RFPluginFactory* factory)
@@ -13,6 +14,22 @@ DamageTimePlotModel::DamageTimePlotModel(RFPluginFactory* factory)
 // ----------------------------------------------------------------------------
 DamageTimePlotModel::~DamageTimePlotModel()
 {
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlotModel::setSession(rfcommon::Session* session)
+{
+    session_ = session;
+    session_->dispatcher.addListener(this);
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionSet, session);
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlotModel::clearSession(rfcommon::Session* session)
+{
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionCleared, session);
+    session->dispatcher.removeListener(this);
+    session_.drop();
 }
 
 // ----------------------------------------------------------------------------
@@ -28,6 +45,18 @@ void DamageTimePlotModel::destroyView(QWidget* view)
 }
 
 // ----------------------------------------------------------------------------
+void DamageTimePlotModel::setSavedGameSession(rfcommon::SavedGameSession* session)
+{
+    setSession(session);
+}
+
+// ----------------------------------------------------------------------------
+void DamageTimePlotModel::clearSavedGameSession(rfcommon::SavedGameSession* session)
+{
+    clearSession(session);
+}
+
+// ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
 void DamageTimePlotModel::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) { (void)errormsg; (void)ipAddress; (void)port; }
 void DamageTimePlotModel::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
@@ -39,36 +68,31 @@ void DamageTimePlotModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSessi
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchStarted(rfcommon::RunningGameSession* match)
 {
-    session_ = match;
-    match->dispatcher.addListener(this);
-    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionChanged);
+    setSession(match);
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchResumed(rfcommon::RunningGameSession* match)
 {
-    session_ = match;
-    match->dispatcher.addListener(this);
-    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionChanged);
+    setSession(match);
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchEnded(rfcommon::RunningGameSession* match)
 {
-    session_.reset();
-    match->dispatcher.removeListener(this);
+    clearSession(match);
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotModel::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void DamageTimePlotModel::onRunningGameSessionPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
 {
-    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotNameChanged, player, name);
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotNameChanged, playerIdx, name);
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotModel::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void DamageTimePlotModel::onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state)
 {
-    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotNewValue, player, state.frame(), state.damage());
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotNewValue, playerIdx, state.frame(), state.damage());
 }
 
 // ----------------------------------------------------------------------------
@@ -76,6 +100,4 @@ void DamageTimePlotModel::onRunningGameSessionSetNumberChanged(rfcommon::SetNumb
 void DamageTimePlotModel::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) { (void)number; }
 void DamageTimePlotModel::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
 void DamageTimePlotModel::onRunningGameSessionWinnerChanged(int winner) { (void)winner; }
-void DamageTimePlotModel::onRunningTrainingSessionTrainingReset() {}
 void DamageTimePlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) { (void)player; (void)state; }
-

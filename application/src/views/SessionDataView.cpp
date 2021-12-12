@@ -3,6 +3,7 @@
 #include "application/views/SessionDataView.hpp"
 #include "rfcommon/GameSession.hpp"
 #include "rfcommon/PlayerState.hpp"
+#include "rfcommon/SavedGameSession.hpp"
 #include <QDateTime>
 
 #include <QDebug>
@@ -73,9 +74,9 @@ SessionDataView::~SessionDataView()
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::setSession(rfcommon::Session* session)
+void SessionDataView::setSavedGameSession(rfcommon::SavedGameSession* session)
 {
-    clear();
+    assert(session_.isNull());
     session_ = session;
 
     int storeCurrentPageIndex = ui_->stackedWidget->currentIndex();
@@ -101,11 +102,12 @@ void SessionDataView::setSession(rfcommon::Session* session)
 }
 
 // ----------------------------------------------------------------------------
-void SessionDataView::clear()
+void SessionDataView::clearSavedGameSession(rfcommon::SavedGameSession* session)
 {
-    if (session_)
-        session_->dispatcher.removeListener(this);
-    session_.reset();
+    assert(session_ == session && session_.notNull());
+
+    session_->dispatcher.removeListener(this);
+    session_.drop();
 
     storeCurrentPageIndex_ = ui_->stackedWidget_playerData->currentIndex();
 
@@ -485,11 +487,6 @@ void SessionDataView::onRunningSessionNewPlayerState(int player, const rfcommon:
 void SessionDataView::onRunningGameSessionWinnerChanged(int winner)
 {
     ui_->tableWidget_gameInfo->item(5, 1)->setText(session_->playerName(winner).cStr());
-}
-
-// ----------------------------------------------------------------------------
-void SessionDataView::onRunningTrainingSessionTrainingReset()
-{
 }
 
 }
