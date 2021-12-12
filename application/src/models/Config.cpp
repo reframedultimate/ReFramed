@@ -22,7 +22,7 @@ Config::~Config()
 // ----------------------------------------------------------------------------
 void Config::load()
 {
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     QFile f(dir.absoluteFilePath("config.json"));
     if (!f.open(QIODevice::ReadOnly))
         return;
@@ -32,7 +32,7 @@ void Config::load()
 // ----------------------------------------------------------------------------
 void Config::save()
 {
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
     QFileInfo pathInfo(dir.path());
     if (!pathInfo.exists())
         QDir().mkdir(pathInfo.filePath());

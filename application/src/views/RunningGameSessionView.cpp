@@ -11,11 +11,14 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionView::RunningGameSessionView(RunningGameSessionManager* manager, QWidget* parent)
+RunningGameSessionView::RunningGameSessionView(
+        RunningGameSessionManager* runningGameSessionManager,
+        PluginManager* pluginManager,
+        QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::RunningGameSessionView)
-    , runningGameSessionManager_(manager)
-    , sessionView_(new SessionView)
+    , runningGameSessionManager_(runningGameSessionManager)
+    , sessionView_(new SessionView(pluginManager))
 {
     ui_->setupUi(this);
     ui_->layout_recordingView->addWidget(sessionView_);

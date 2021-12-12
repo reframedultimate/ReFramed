@@ -190,3 +190,34 @@ int tcp_socket_write(union tcp_socket* sock, const void* buf, int len)
     return send(fd, buf, len, 0);
 #endif
 }
+
+/* ------------------------------------------------------------------------- */
+void* tcp_socket_to_handle(union tcp_socket* sock)
+{
+    void* p = sock->handle;
+    return p;
+}
+
+/* ------------------------------------------------------------------------- */
+union tcp_socket tcp_socket_from_handle(void* p)
+{
+    union tcp_socket sock;
+    sock.handle = p;
+    return sock;
+}
+
+/* ------------------------------------------------------------------------- */
+int tcp_socket_read_exact(union tcp_socket* sock, void* buf, int len)
+{
+    uint8_t* ptr = (uint8_t*)buf;
+    while (len > 0)
+    {
+        int bytes_read = tcp_socket_read(sock, ptr, len);
+        if (bytes_read <= 0)
+            return bytes_read;
+        ptr += bytes_read;
+        len -= bytes_read;
+    }
+
+    return (int)(ptr - (uint8_t*)buf);
+}

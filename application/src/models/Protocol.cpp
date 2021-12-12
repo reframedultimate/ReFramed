@@ -56,25 +56,28 @@ bool Protocol::isConnected() const
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onConnectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port)
+void Protocol::onConnectionSuccess(void* socket_handle, const QString& ipAddress, quint16 port)
 {
     connectTask_.reset();
     QByteArray ba = ipAddress.toLocal8Bit();
     const char* ipCstr = ba.data();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolConnectedToServer, ipCstr, port);
 
-    communicateTask_.reset(new ProtocolCommunicateTask(socket));
+    communicateTask_.reset(new ProtocolCommunicateTask(
+                               tcp_socket_from_handle(socket_handle)));
 
     connect(communicateTask_.get(), &ProtocolCommunicateTask::connectionClosed,
             this, &Protocol::onProtocolDisconnected);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingStarted,
             this, &Protocol::onTrainingStarted);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingReset,
-            this, &Protocol::onTrainingReset);
+    connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingResumed,
+            this, &Protocol::onTrainingResumed);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingEnded,
             this, &Protocol::onTrainingEnded);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::matchStarted,
             this, &Protocol::onMatchStarted);
+    connect(communicateTask_.get(), &ProtocolCommunicateTask::matchResumed,
+            this, &Protocol::onMatchResumed);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::matchEnded,
             this, &Protocol::onMatchEnded);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::playerState,
@@ -112,19 +115,16 @@ void Protocol::onTrainingStarted(rfcommon::RunningTrainingSession* training)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingEnded()
+void Protocol::onTrainingResumed(rfcommon::RunningTrainingSession* training)
 {
-    endSessionIfNecessary();
+    session_ = training;
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingResumed, training);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingReset()
+void Protocol::onTrainingEnded()
 {
-    rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get());
-    if (training)
-    {
-        training->resetTraining();
-    }
+    endSessionIfNecessary();
 }
 
 // ----------------------------------------------------------------------------
@@ -135,6 +135,13 @@ void Protocol::onMatchStarted(rfcommon::RunningGameSession* match)
 
     session_ = match;
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchStarted, match);
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onMatchResumed(rfcommon::RunningGameSession* match)
+{
+    session_ = match;
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchResumed, match);
 }
 
 // ----------------------------------------------------------------------------

@@ -202,37 +202,40 @@ bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSes
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
-
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerAttemptConnectToServer, ipAddress, port);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port)
 {
-
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFailedToConnectToServer, ipAddress, port);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
-
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerConnectedToServer, ipAddress, port);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolDisconnectedFromServer()
 {
-
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerDisconnectedFromServer);
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session)
 {
+}
 
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session)
+{
 }
 
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session)
 {
-
 }
 
 // ----------------------------------------------------------------------------
@@ -279,6 +282,11 @@ void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSess
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
                             1, session->playerName(1));
     }
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onProtocolMatchResumed(rfcommon::RunningGameSession* session)
+{
 }
 
 // ----------------------------------------------------------------------------

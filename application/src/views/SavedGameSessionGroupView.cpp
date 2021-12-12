@@ -86,13 +86,16 @@ QStringList SavedGameSessionNameCompleter::splitPath(const QString &path) const
 }
 
 // ----------------------------------------------------------------------------
-ReplayGroupView::ReplayGroupView(ReplayManager* manager, QWidget* parent)
+ReplayGroupView::ReplayGroupView(
+        ReplayManager* replayManager,
+        PluginManager* pluginManager,
+        QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::SavedGameSessionGroupView)
-    , savedGameSessionManager_(manager)
+    , replayManager_(replayManager)
     , savedGameSessionListWidget_(new SavedGameSessionListWidget)
     /*, filterCompleter_(new RecordingNameCompleter)*/
-    , sessionView_(new SessionView)
+    , sessionView_(new SessionView(pluginManager))
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
@@ -105,7 +108,7 @@ ReplayGroupView::ReplayGroupView(ReplayManager* manager, QWidget* parent)
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), savedGameSessionListWidget_, nullptr, nullptr, Qt::WidgetShortcut);
 
-    savedGameSessionManager_->dispatcher.addListener(this);
+    replayManager_->dispatcher.addListener(this);
 
     connect(savedGameSessionListWidget_, &QListWidget::currentItemChanged,
             this, &ReplayGroupView::onCurrentItemChanged);
@@ -120,7 +123,7 @@ ReplayGroupView::~ReplayGroupView()
 {
     if (currentGroup_)
         currentGroup_->dispatcher.removeListener(this);
-    savedGameSessionManager_->dispatcher.removeListener(this);
+    replayManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
@@ -184,7 +187,7 @@ void ReplayGroupView::onFiltersTextChanged(const QString& text)
 void ReplayGroupView::onDeleteKeyPressed()
 {
     // Can't delete stuff in all group
-    if (currentGroup_ == nullptr || currentGroup_ == savedGameSessionManager_->allReplayGroup())
+    if (currentGroup_ == nullptr || currentGroup_ == replayManager_->allReplayGroup())
         return;
 
     for (const auto& absFilePath : savedGameSessionListWidget_->selectedSavedGameSessionFilePaths())

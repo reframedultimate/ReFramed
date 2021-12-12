@@ -13,6 +13,7 @@ namespace Ui {
 
 namespace rfapp {
 
+class PluginManager;
 class ReplayManager;
 class ReplayGroup;
 class SavedGameSessionNameCompleter;
@@ -26,7 +27,10 @@ class ReplayGroupView : public QWidget
     Q_OBJECT
 
 public:
-    explicit ReplayGroupView(ReplayManager* manager, QWidget* parent=nullptr);
+    explicit ReplayGroupView(
+            ReplayManager* manager,
+            PluginManager* pluginManager,
+            QWidget* parent=nullptr);
     ~ReplayGroupView();
 
 public slots:
@@ -65,7 +69,7 @@ private:
 
 private:
     Ui::SavedGameSessionGroupView* ui_;
-    ReplayManager* savedGameSessionManager_;
+    ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
     SavedGameSessionListWidget* savedGameSessionListWidget_;
     SavedGameSessionNameCompleter* filterCompleter_;

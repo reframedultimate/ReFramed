@@ -25,6 +25,7 @@ public:
 
     // We also re-propagate all (to RunningGameSessionManager) relevant ProtocolListener
     // events because it makes interfacing with RunningGameSessionManager less complicated.
+    // TODO: This is stupid, remove all of these
     virtual void onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) = 0;
     virtual void onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) = 0;
     virtual void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) = 0;

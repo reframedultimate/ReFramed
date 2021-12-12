@@ -62,7 +62,7 @@ public:
     rfcommon::StandalonePlugin* createStandaloneModel(const QString& name);
 
     rfcommon::Plugin* createModel(const QString& name, RFPluginType type);
-    void destroyModel(const QString& name, rfcommon::Plugin* plugin);
+    void destroyModel(rfcommon::Plugin* plugin);
 
 private:
     Protocol* protocol_;

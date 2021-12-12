@@ -17,7 +17,6 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
     "include/application/views/ConnectView.hpp"
-    "include/application/views/DamageTimePlot.hpp"
     "include/application/views/DataSetFilterView.hpp"
     "include/application/views/DataSetFilterWidget.hpp"
     "include/application/views/DataSetFilterWidget_Date.hpp"
@@ -33,8 +32,7 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/SavedGameSessionGroupView.hpp"
     "include/application/views/SessionView.hpp"
     "include/application/views/TrainingModeView.hpp"
-    "include/application/views/VisualizerView.hpp"
-    "include/application/views/XYPositionPlot.hpp")
+    "include/application/views/VisualizerView.hpp")
 qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/AnalysisInputView.ui"
     "forms/ConnectView.ui"
@@ -78,7 +76,6 @@ add_executable (application WIN32
     "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"
-    "src/views/DamageTimePlot.cpp"
     "src/views/DataSetFilterView.cpp"
     "src/views/DataSetFilterWidget.cpp"
     "src/views/DataSetFilterWidget_Date.cpp"
@@ -94,7 +91,6 @@ add_executable (application WIN32
     "src/views/SessionView.cpp"
     "src/views/TrainingModeView.cpp"
     "src/views/VisualizerView.cpp"
-    "src/views/XYPositionPlot.cpp"
     "src/views/MainWindow.cpp")
 target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -135,7 +131,7 @@ if (WIN32 OR CYGWIN)
         COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_BINDIR}'"
         VERBATIM)
     install (
-        FILES 
+        FILES
             ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll
             ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll
             ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll

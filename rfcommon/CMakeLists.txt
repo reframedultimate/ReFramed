@@ -87,6 +87,7 @@ add_library (rfcommon SHARED
     "src/HitstunCalculator.cpp"
     "src/init.c"
     "src/KnockbackCalculator.cpp"
+    "src/MappingInfo.cpp"
     "src/PlayerState.cpp"
     "src/Plugin.cpp"
     "src/RealtimePlugin.cpp"

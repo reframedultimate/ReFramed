@@ -4,6 +4,7 @@
 
 namespace rfcommon {
     class Session;
+    class RealtimePlugin;
 }
 
 namespace Ui {
@@ -12,15 +13,14 @@ namespace Ui {
 
 namespace rfapp {
 
-class DamageTimePlot;
+class PluginManager;
 class SessionDataView;
-class XYPositionPlot;
 
 class SessionView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SessionView(QWidget* parent=nullptr);
+    explicit SessionView(PluginManager* pluginManager, QWidget* parent=nullptr);
     ~SessionView();
 
     void showDamagePlot();
@@ -35,9 +35,12 @@ private slots:
     void addPlotsToUI();
 
 private:
+    PluginManager* pluginManager_;
     Ui::SessionView* ui_;
-    DamageTimePlot* damageTimePlot_;
-    XYPositionPlot* xyPositionPlot_;
+    rfcommon::RealtimePlugin* damageTimePlugin_ = nullptr;
+    QWidget* damageTimePlot_ = nullptr;
+    rfcommon::RealtimePlugin* xyPositionsPlugin_ = nullptr;
+    QWidget* xyPositionPlot_ = nullptr;
     SessionDataView* sessionDataView_;
 };
 

@@ -551,13 +551,13 @@ void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 // ----------------------------------------------------------------------------
 void CategoryView::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
-
+    sessionItem_->setDisabled(false);
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onRunningGameSessionManagerDisconnectedFromServer()
 {
-
+    sessionItem_->setDisabled(true);
 }
 
 // ----------------------------------------------------------------------------

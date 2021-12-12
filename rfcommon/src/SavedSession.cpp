@@ -243,7 +243,7 @@ SavedSession* SavedSession::loadVersion_1_0(const void* jptr)
     if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
         return nullptr;
 
-    MappingInfo mappingInfo;
+    MappingInfo mappingInfo(0);
 
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
@@ -374,7 +374,7 @@ SavedSession* SavedSession::loadVersion_1_1(const void* jptr)
     if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
         return nullptr;
 
-    MappingInfo mappingInfo;
+    MappingInfo mappingInfo(0);
 
     const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
@@ -549,7 +549,7 @@ SavedSession* SavedSession::loadVersion_1_2(const void* jptr)
     if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
         return nullptr;
 
-    MappingInfo mappingInfo;
+    MappingInfo mappingInfo(0);
 
     const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
@@ -746,7 +746,7 @@ SavedSession* SavedSession::loadVersion_1_3(const void* jptr)
     if (jsonMappingInfo.contains("hitstatus") == false || jsonMappingInfo["hitstatus"].is_object() == false)
         return nullptr;
 
-    MappingInfo mappingInfo;
+    MappingInfo mappingInfo(0);
 
     const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)
@@ -961,7 +961,7 @@ SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
     if (jsonMappingInfo.contains("hitstatus") == false || jsonMappingInfo["hitstatus"].is_object() == false)
         return nullptr;
 
-    MappingInfo mappingInfo;
+    MappingInfo mappingInfo(0);
 
     const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];
     if (jsonFighterStatusMapping.contains("base") == false || jsonFighterStatusMapping["base"].is_object() == false)

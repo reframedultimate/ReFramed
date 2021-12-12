@@ -16,6 +16,7 @@ namespace Ui {
 
 namespace rfapp {
 
+class PluginManager;
 class RunningGameSessionManager;
 class SessionView;
 
@@ -24,7 +25,10 @@ class RunningGameSessionView : public QWidget
 {
     Q_OBJECT
 public:
-    RunningGameSessionView(RunningGameSessionManager* manager, QWidget* parent=nullptr);
+    RunningGameSessionView(
+            RunningGameSessionManager* runningGameSessionManager,
+            PluginManager* pluginManager,
+            QWidget* parent=nullptr);
     ~RunningGameSessionView();
 
     void showDamagePlot();

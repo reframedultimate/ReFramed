@@ -57,18 +57,22 @@ public:
     bool isTryingToConnect() const;
     bool isConnected() const;
 
+    rfcommon::RunningSession* runningSession()
+        { return session_; }
+
     rfcommon::ListenerDispatcher<rfcommon::ProtocolListener> dispatcher;
 
 private slots:
-    void onConnectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port);
+    void onConnectionSuccess(void* socket_handle, const QString& ipAddress, quint16 port);
     void onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
     void onProtocolDisconnected();
 
     // catch signals from listener thread so we have them in the main thread
     void onTrainingStarted(rfcommon::RunningTrainingSession* training);
+    void onTrainingResumed(rfcommon::RunningTrainingSession* training);
     void onTrainingEnded();
-    void onTrainingReset();
     void onMatchStarted(rfcommon::RunningGameSession* match);
+    void onMatchResumed(rfcommon::RunningGameSession* match);
     void onMatchEnded();
     void onPlayerState(
             quint64 frameTimeStamp,

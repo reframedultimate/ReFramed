@@ -1,11 +1,10 @@
+#include "damage-time-plot/views/DamageTimePlotView.hpp"
+#include "damage-time-plot/models/DamageTimePlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
-#include "application/views/DamageTimePlot.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/PlayerState.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
-
-namespace rfapp {
 
 namespace {
 
@@ -55,17 +54,20 @@ private:
 }
 
 // ----------------------------------------------------------------------------
-DamageTimePlot::DamageTimePlot(QWidget* parent)
+DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* parent)
     : RealtimePlot(parent)
+    , model_(model)
 {
     setTitle("Damage over Time");
     setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
+
+    model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-DamageTimePlot::~DamageTimePlot()
+DamageTimePlotView::~DamageTimePlotView()
 {
-    clear();
+    model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -93,29 +95,32 @@ static void appendDataPoint(CurveData* data, float frame, float damage, float* l
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::setSession(rfcommon::Session* recording)
+void DamageTimePlotView::onDamageTimePlotSessionChanged()
 {
-    clear();
-    session_ = recording;
-    session_->dispatcher.addListener(this);
+    for (auto& curve : curves_)
+        delete curve;
+    curves_.clear();
+    prevFrames_.clear();
+    prevDamageValues_.clear();
+    largestTimeSeen_ = 0.0;
 
-    for (int player = 0; player != session_->playerCount(); ++player)
+    for (int player = 0; player != model_->session()->playerCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
         curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(session_->playerName(player).cStr());
+        curve->setTitle(model_->session()->playerName(player).cStr());
         curve->attach(this);
         curves_.push(curve);
 
         prevFrames_.push(0);
         prevDamageValues_.push(0.0);
-        for (int i = 0; i < session_->playerStateCount(player); ++i)
+        for (int i = 0; i < model_->session()->playerStateCount(player); ++i)
         {
-            const auto& state = session_->playerStateAt(player, i);
+            const auto& state = model_->session()->playerStateAt(player, i);
 
-            if (i == 0 || i == session_->playerStateCount(player) - 1)
+            if (i == 0 || i == model_->session()->playerStateCount(player) - 1)
             {
                 prevDamageValues_[player] = state.damage();
                 appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
@@ -134,46 +139,28 @@ void DamageTimePlot::setSession(rfcommon::Session* recording)
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::clear()
-{
-    if (session_)
-        session_->dispatcher.removeListener(this);
-    session_ = nullptr;
-
-    for (auto& curve : curves_)
-        delete curve;
-    curves_.clear();
-    prevFrames_.clear();
-    prevDamageValues_.clear();
-    largestTimeSeen_ = 0.0;
-    replot();
-}
-
-// ----------------------------------------------------------------------------
-void DamageTimePlot::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void DamageTimePlotView::onDamageTimePlotNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlot::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void DamageTimePlotView::onDamageTimePlotNewValue(int player, rfcommon::Frame frame, float damage)
 {
     CurveData* data = static_cast<CurveData*>(curves_[player]->data());
 
     if (prevFrames_[player] == 0)
     {
-        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
+        appendDataPoint(data, frame, damage, &largestTimeSeen_);
     }
-    else if (state.damage() != prevDamageValues_[player])
+    else if (damage != prevDamageValues_[player])
     {
         appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
-        appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
-        prevDamageValues_[player] = state.damage();
+        appendDataPoint(data, frame, damage, &largestTimeSeen_);
+        prevDamageValues_[player] = damage;
     }
-    prevFrames_[player] = state.frame();
+    prevFrames_[player] = frame;
 
     conditionalAutoScale();
-}
-
 }

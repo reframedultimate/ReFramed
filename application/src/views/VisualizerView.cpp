@@ -12,10 +12,9 @@ class PluginWidget : public QWidget
 public:
     PluginWidget(PluginManager* manager, const char* name)
         : manager_(manager)
-        , name_(name)
     {
         setLayout(new QVBoxLayout);
-        model_ = manager_->createVisualizerModel(name_);
+        model_ = manager_->createVisualizerModel(name);
         if (model_)
         {
             view_ = model_->createView();
@@ -31,13 +30,12 @@ public:
             if (view_)
                 model_->destroyView(view_);
 
-            manager_->destroyModel(name_, model_);
+            manager_->destroyModel(model_);
         }
     }
 
 private:
     PluginManager* manager_;
-    QString name_;
     rfcommon::VisualizerPlugin* model_ = nullptr;
     QWidget* view_ = nullptr;
 };

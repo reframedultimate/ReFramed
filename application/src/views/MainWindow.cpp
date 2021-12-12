@@ -40,8 +40,8 @@ MainWindow::MainWindow(QWidget* parent)
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
     , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
-    , replayGroupView_(new ReplayGroupView(replayManager_.get()))
-    , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get()))
+    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get()))
+    , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -102,10 +102,6 @@ MainWindow::~MainWindow()
 // ----------------------------------------------------------------------------
 void MainWindow::setStateConnected()
 {
-    // Be (hopefully) helpful and switch to the active recording view
-    mainView_->setCurrentIndex(5);
-    runningGameSessionView_->showDamagePlot();  // This seems to be the most useful page so set it as a default
-
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
     ui_->action_disconnect->setVisible(true);

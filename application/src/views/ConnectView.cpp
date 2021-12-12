@@ -53,7 +53,7 @@ void ConnectView::setConnecting()
 // ----------------------------------------------------------------------------
 void ConnectView::setConnectFailed(const QString& error)
 {
-    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + "\nMake sure the rfrecorder.nro mod is installed and active</font>");
+    ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + ". Make sure the reframed-server.nro mod is installed and active</font>");
 }
 
 // ----------------------------------------------------------------------------

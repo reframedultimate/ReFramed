@@ -15,7 +15,7 @@ public:
     ~ProtocolConnectTask();
 
 signals:
-    void connectionSuccess(tcp_socket socket, const QString& ipAddress, quint16 port);
+    void connectionSuccess(void* socket_handle, const QString& ipAddress, quint16 port);
     void connectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
 
 private:

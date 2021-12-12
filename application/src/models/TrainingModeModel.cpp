@@ -17,10 +17,9 @@ TrainingModeModel::~TrainingModeModel()
 {
     for (auto it = runningPlugins_.begin(); it != runningPlugins_.end(); ++it)
     {
-        const QString& name = it.key();
         rfcommon::Plugin* plugin = it.value();
         dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, it.key(), plugin);
-        pluginManager_->destroyModel(name, plugin);
+        pluginManager_->destroyModel(plugin);
     }
 }
 
@@ -71,11 +70,10 @@ bool TrainingModeModel::stopPlugin(const QString& pluginName)
     if (it == runningPlugins_.end())
         return false;
 
-    const QString& name = it.key();
     rfcommon::Plugin* plugin = it.value();
     dispatcher.dispatch(&TrainingModeListener::onTrainingModePluginStopped, pluginName, plugin);
 
-    pluginManager_->destroyModel(name, plugin);
+    pluginManager_->destroyModel(plugin);
     runningPlugins_.erase(it);
 
     return true;

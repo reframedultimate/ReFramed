@@ -3,7 +3,10 @@
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/time.h"
+#include "rfcommon/MappingInfo.hpp"
 #include <QDebug>
+#include <QDir>
+#include <QStandardPaths>
 
 namespace rfapp {
 
@@ -31,8 +34,26 @@ ProtocolCommunicateTask::~ProtocolCommunicateTask()
 // ----------------------------------------------------------------------------
 void ProtocolCommunicateTask::run()
 {
+    std::unique_ptr<rfcommon::MappingInfo> mappingInfo;
+    {
+        QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+        std::string path = dir.absoluteFilePath("mappingInfo.json").toStdString();
+        mappingInfo.reset(rfcommon::MappingInfo::load(path.c_str()));
+    }
+    if (mappingInfo == nullptr)
+    {
+        qDebug() << "No mapping info saved, requesting from server";
+        uint8_t buf[1] = {MappingInfoRequest};
+        tcp_socket_write(&socket_, buf, 1);
+    }
+    else
+    {
+        qDebug() << "Requesting mapping info checksum";
+        uint8_t buf[1] = {MappingInfoChecksum};
+        tcp_socket_write(&socket_, buf, 1);
+    }
+
     rfcommon::SmallVector<uint8_t, 8> entryIDs;
-    rfcommon::MappingInfo mappingInfo;
 
     while (true)
     {
@@ -45,41 +66,183 @@ void ProtocolCommunicateTask::run()
         mutex_.unlock();
 
         uint8_t msg;
-        if (tcp_socket_read(&socket_, &msg, 1) != 1)
+        if (tcp_socket_read_exact(&socket_, &msg, 1) != 1)
             break;
 
-        if (msg == Version)
+        if (msg == ProtocolVersion)
         {
-            uint8_t version;
-            if (tcp_socket_read(&socket_, &version, 1) != 1) break;
+            uint8_t version[2];
+            if (tcp_socket_read_exact(&socket_, &version, 2) != 2)
+                break;
         }
-        else if (msg == TrainingStart)
+        else if (msg == MappingInfoChecksum)
         {
-            uint8_t buf[5];
-            char tag[256];
+            uint8_t buf[4];
+            if (tcp_socket_read_exact(&socket_, buf, 4) != 4)
+                break;
+
+            uint32_t checksum = (buf[0] << 24) | (buf[1] << 16) | (buf[2] <<  8) | (buf[3] <<  0);
+
+            if (mappingInfo)
+            {
+                if (checksum == mappingInfo->checksum())
+                {
+                    qDebug() << "Mapping info checksum up to date: " << checksum;
+
+                    // If a game or training session is running, try to resume
+                    buf[0] = MatchResume;
+                    buf[1] = TrainingResume;
+                    tcp_socket_write(&socket_, buf, 2);
+
+                    continue;  // All good
+                }
+            }
+
+            // Our mapping info is out of date, request new
+            qDebug() << "Mapping info checksum outdated (" << checksum << "!=" << mappingInfo->checksum() << "), requesting new mapping info";
+            buf[0] = MappingInfoRequest;
+            tcp_socket_write(&socket_, buf, 1);
+        }
+        else if (msg == MappingInfoRequest)
+        {
+            uint8_t buf[4];
+            if (tcp_socket_read_exact(&socket_, buf, 4) != 4)
+                break;
+
+            uint32_t checksum = (buf[0] << 24) | (buf[1] << 16) | (buf[2] <<  8) | (buf[3] <<  0);
+            qDebug() << "Start of new mapping info, checksum: " << checksum;
+            mappingInfo.reset(new rfcommon::MappingInfo(checksum));
+        }
+        else if (msg == MappingInfoFighterKinds)
+        {
+            rfcommon::FighterID fighterID;
+            uint8_t len;
+            char name[256];
+            static_assert(sizeof(rfcommon::FighterID) == 1);
+            if (tcp_socket_read_exact(&socket_, &fighterID, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &len, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, name, len) != len) break;
+            name[static_cast<int>(len)] = '\0';
+
+            mappingInfo->fighterID.add(fighterID, name);
+            qDebug() << "fighter kind: " << fighterID <<": " << name;
+        }
+        else if (msg == MappingInfoFighterStatusKinds)
+        {
+            rfcommon::FighterID fighterID;
+            uint8_t statusID_l, statusID_h, len;
+            char name[256];
+            static_assert(sizeof(rfcommon::FighterID) == 1);
+            if (tcp_socket_read_exact(&socket_, &fighterID, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &statusID_h, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &statusID_l, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &len, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, name, len) != len) break;
+            name[static_cast<int>(len)] = '\0';
+
+            static_assert(sizeof(rfcommon::FighterStatus) == 2);
+            rfcommon::FighterStatus statusID = (statusID_h << 8)
+                                       | (statusID_l << 0);
+
+            if (fighterID == 255)
+            {
+                mappingInfo->fighterStatus.addBaseEnumName(statusID, name);
+                qDebug() << "base status: " << statusID <<": " << name;
+            }
+            else
+            {
+                mappingInfo->fighterStatus.addFighterSpecificEnumName(statusID, fighterID, name);
+                qDebug() << "specific status: " << statusID <<": " << name;
+            }
+        }
+        else if (msg == MappingInfoStageKinds)
+        {
+            uint8_t stageID_l, stageID_h, len;
+            char name[256];
+            if (tcp_socket_read_exact(&socket_, &stageID_h, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &stageID_l, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &len, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, name, len) != len) break;
+            name[static_cast<int>(len)] = '\0';
+
+            static_assert(sizeof(rfcommon::StageID) == 2);
+            rfcommon::StageID stageID = (stageID_h << 8)
+                                | (stageID_l << 0);
+
+            mappingInfo->stageID.add(stageID, name);
+            qDebug() << "stage kind: " << stageID <<": " << name;
+        }
+        else if (msg == MappingInfoHitStatusKinds)
+        {
+            rfcommon::FighterHitStatus status;
+            uint8_t len;
+            char name[256];
+            static_assert(sizeof(rfcommon::FighterHitStatus) == 1);
+            if (tcp_socket_read_exact(&socket_, &status, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, &len, 1) != 1) break;
+            if (tcp_socket_read_exact(&socket_, name, len) != len) break;
+            name[static_cast<int>(len)] = '\0';
+
+            mappingInfo->hitStatus.add(status, name);
+            qDebug() << "hit status: " << status <<": " << name;
+
+        }
+        else if (msg == MappingInfoRequestComplete)
+        {
+            QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+            qDebug() << "dir: " << dir;
+            if (!dir.exists())
+            {
+                qDebug() << "Doesn't exist, creating...";
+                dir.mkdir(".");
+            }
+
+            QString path = dir.absoluteFilePath("mappingInfo.json");
+            qDebug() << "Saving mapping info to " << path;
+            std::string pathStdString = path.toStdString();
+            mappingInfo->save(pathStdString.c_str());
+
+            // If a game or training session is running, try to resume
+            uint8_t buf[2] = {MatchResume, TrainingResume};
+            tcp_socket_write(&socket_, buf, 2);
+        }
+        else if (msg == TrainingStart || msg == TrainingResume)
+        {
+            uint8_t buf[4];
 #define stageH          buf[0]
 #define stageL          buf[1]
 #define playerFighterID buf[2]
 #define cpuFighterID    buf[3]
-#define playerTagLen    buf[4]
 
-            if (tcp_socket_read(&socket_, buf, 5) != 5) break;
-            if (tcp_socket_read(&socket_, tag, playerTagLen) != playerTagLen) break;
-            tag[static_cast<int>(playerTagLen)] = '\0';
+            if (tcp_socket_read_exact(&socket_, buf, 4) != 4)
+                break;
 
             static_assert(sizeof(rfcommon::StageID) == 2);
-            rfcommon::StageID stageID = (stageH << 8)
-                                | (stageL << 0);
+            rfcommon::StageID stageID = (stageH << 8) | (stageL << 0);
 
             rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
-            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags({tag, ""});
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags({"Player 1", "CPU"});
 
-            emit trainingStarted(new rfcommon::RunningTrainingSession(
-                rfcommon::MappingInfo(mappingInfo),
-                stageID,
-                std::move(fighterIDs),
-                std::move(tags)
-            ));
+            if (msg == TrainingStart)
+            {
+                qDebug() << "Traininig started";
+                emit trainingStarted(new rfcommon::RunningTrainingSession(
+                    rfcommon::MappingInfo(*mappingInfo),
+                    stageID,
+                    std::move(fighterIDs),
+                    std::move(tags)
+                ));
+            }
+            else
+            {
+                qDebug() << "Traininig resumed";
+                emit trainingResumed(new rfcommon::RunningTrainingSession(
+                    rfcommon::MappingInfo(*mappingInfo),
+                    stageID,
+                    std::move(fighterIDs),
+                    std::move(tags)
+                ));
+            }
 #undef stageH
 #undef stageL
 #undef playerFighterID
@@ -91,12 +254,7 @@ void ProtocolCommunicateTask::run()
             qDebug() << "Traininig ended";
             emit trainingEnded();
         }
-        else if (msg == TrainingReset)
-        {
-            qDebug() << "Traininig reset";
-            emit trainingReset();
-        }
-        else if (msg == MatchStart)
+        else if (msg == MatchStart || msg == MatchResume)
         {
             uint8_t buf[3];
             char tag[256];
@@ -104,7 +262,7 @@ void ProtocolCommunicateTask::run()
 #define stageL buf[1]
 #define playerCount buf[2]
 
-            if (tcp_socket_read(&socket_, buf, 3) != 3)
+            if (tcp_socket_read_exact(&socket_, buf, 3) != 3)
                 break;
 
             static_assert(sizeof(rfcommon::StageID) == 2);
@@ -115,11 +273,11 @@ void ProtocolCommunicateTask::run()
             rfcommon::SmallVector<rfcommon::SmallString<15>, 8> names(playerCount);
 
             entryIDs.resize(playerCount);
-            if (tcp_socket_read(&socket_, entryIDs.data(), playerCount) != playerCount)
+            if (tcp_socket_read_exact(&socket_, entryIDs.data(), playerCount) != playerCount)
                 break;
 
             static_assert(sizeof(rfcommon::FighterID) == 1);
-            if (tcp_socket_read(&socket_, fighterIDs.data(), playerCount) != playerCount)
+            if (tcp_socket_read_exact(&socket_, fighterIDs.data(), playerCount) != playerCount)
                 break;
 
             for (int i = 0; i < playerCount; ++i)
@@ -127,22 +285,36 @@ void ProtocolCommunicateTask::run()
                 // TODO Tags on switch are stored as UTF-16. Have to update
                 // protocol at some point
                 uint8_t len;
-                if (tcp_socket_read(&socket_, &len, 1) != 1) goto fail;
-                if (tcp_socket_read(&socket_, tag, len) != len) goto fail;
+                if (tcp_socket_read_exact(&socket_, &len, 1) != 1) goto fail;
+                if (tcp_socket_read_exact(&socket_, tag, len) != len) goto fail;
                 tag[static_cast<int>(len)] = '\0';
                 tags[i] = tag;
                 names[i] = tag;
             } fail: break;
 
-            qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
 
-            emit matchStarted(new rfcommon::RunningGameSession(
-                rfcommon::MappingInfo(mappingInfo),
-                stageID,
-                std::move(fighterIDs),
-                std::move(tags),
-                std::move(names)
-            ));
+            if (msg == MatchStart)
+            {
+                qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
+                emit matchStarted(new rfcommon::RunningGameSession(
+                    rfcommon::MappingInfo(*mappingInfo),
+                    stageID,
+                    std::move(fighterIDs),
+                    std::move(tags),
+                    std::move(names)
+                ));
+            }
+            else
+            {
+                qDebug() << "Match resumed: Stage: " << stageID << ", players: " << playerCount;
+                emit matchResumed(new rfcommon::RunningGameSession(
+                    rfcommon::MappingInfo(*mappingInfo),
+                    stageID,
+                    std::move(fighterIDs),
+                    std::move(tags),
+                    std::move(names)
+                ));
+            }
 #undef stageH
 #undef stageL
 #undef playerCount
@@ -151,80 +323,6 @@ void ProtocolCommunicateTask::run()
         {
             qDebug() << "Match end";
             emit matchEnded();
-        }
-        else if (msg == FighterKinds)
-        {
-            rfcommon::FighterID fighterID;
-            uint8_t len;
-            char name[256];
-            static_assert(sizeof(rfcommon::FighterID) == 1);
-            if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &len, 1) != 1) break;
-            if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[static_cast<int>(len)] = '\0';
-
-            mappingInfo.fighterID.add(fighterID, name);
-            qDebug() << "fighter kind: " << fighterID <<": " << name;
-        }
-        else if (msg == FighterStatusKinds)
-        {
-            rfcommon::FighterID fighterID;
-            uint8_t statusID_l, statusID_h, len;
-            char name[256];
-            static_assert(sizeof(rfcommon::FighterID) == 1);
-            if (tcp_socket_read(&socket_, &fighterID, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &statusID_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &statusID_l, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &len, 1) != 1) break;
-            if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[static_cast<int>(len)] = '\0';
-
-            static_assert(sizeof(rfcommon::FighterStatus) == 2);
-            rfcommon::FighterStatus statusID = (statusID_h << 8)
-                                       | (statusID_l << 0);
-
-            if (fighterID == 255)
-            {
-                mappingInfo.fighterStatus.addBaseEnumName(statusID, name);
-                qDebug() << "base status: " << statusID <<": " << name;
-            }
-            else
-            {
-                mappingInfo.fighterStatus.addFighterSpecificEnumName(statusID, fighterID, name);
-                qDebug() << "specific status: " << statusID <<": " << name;
-            }
-        }
-        else if (msg == StageKinds)
-        {
-            uint8_t stageID_l, stageID_h, len;
-            char name[256];
-            if (tcp_socket_read(&socket_, &stageID_h, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &stageID_l, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &len, 1) != 1) break;
-            if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[static_cast<int>(len)] = '\0';
-
-            static_assert(sizeof(rfcommon::StageID) == 2);
-            rfcommon::StageID stageID = (stageID_h << 8)
-                                | (stageID_l << 0);
-
-            mappingInfo.stageID.add(stageID, name);
-            qDebug() << "stage kind: " << stageID <<": " << name;
-        }
-        else if (msg == HitStatusKinds)
-        {
-            rfcommon::FighterHitStatus status;
-            uint8_t len;
-            char name[256];
-            static_assert(sizeof(rfcommon::FighterHitStatus) == 1);
-            if (tcp_socket_read(&socket_, &status, 1) != 1) break;
-            if (tcp_socket_read(&socket_, &len, 1) != 1) break;
-            if (tcp_socket_read(&socket_, name, len) != len) break;
-            name[static_cast<int>(len)] = '\0';
-
-            mappingInfo.hitStatus.add(status, name);
-            qDebug() << "hit status: " << status <<": " << name;
-
         }
         else if (msg == FighterState)
         {
@@ -281,7 +379,9 @@ void ProtocolCommunicateTask::run()
             // (reading data might skew the time)
             quint64 frameTimeStamp = time_milli_seconds_since_epoch();
 
-            if (tcp_socket_read(&socket_, buf, sizeof(buf)) != sizeof(buf))
+            int bread = tcp_socket_read_exact(&socket_, buf, sizeof(buf));
+            int exp = sizeof(buf);
+            if (bread != exp)
                 break;
 
             quint32 frame = (frame0 << 24)
@@ -313,6 +413,21 @@ void ProtocolCommunicateTask::run()
                            | ((quint64)motion4 << 0);
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
+
+            /*
+            qDebug() << "PlayerState: " << frameTimeStamp
+                     << ", frame: " << frame
+                     << ", posx: " << posx
+                     << ", posy: " << posy
+                     << ", damage: " << damage
+                     << ", hitstun: " << hitstun
+                     << ", shield: " << shield
+                     << ", status: " << status
+                     << ", motion: " << motion
+                     << ", hit_status: " << hit_status
+                     << ", stocks: " << stocks
+                     << ", attack_connected: " << attack_connected
+                     << ", facing_direction: " << facing_direction;*/
 
             // Map the entry ID to an index
             for (int i = 0; i != entryIDs.count(); ++i)

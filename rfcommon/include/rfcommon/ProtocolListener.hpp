@@ -16,8 +16,10 @@ public:
     virtual void onProtocolDisconnectedFromServer() = 0;
 
     virtual void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) = 0;
+    virtual void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session) = 0;
     virtual void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) = 0;
     virtual void onProtocolMatchStarted(rfcommon::RunningGameSession* session) = 0;
+    virtual void onProtocolMatchResumed(rfcommon::RunningGameSession* session) = 0;
     virtual void onProtocolMatchEnded(rfcommon::RunningGameSession* session) = 0;
 };
 

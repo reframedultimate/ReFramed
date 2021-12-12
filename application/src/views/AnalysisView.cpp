@@ -42,7 +42,6 @@ AnalysisView::~AnalysisView()
 {
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
-        const QString& name = it.key();
         rfcommon::AnalyzerPlugin* model = it.value().model;
         QWidget* view = it.value().view;
 
@@ -50,7 +49,7 @@ AnalysisView::~AnalysisView()
         tabWidget_->removeTab(tabIndex);
 
         model->destroyView(view);
-        pluginManager_->destroyModel(name, model);
+        pluginManager_->destroyModel(model);
     }
 
     delete inputUi_;
@@ -76,7 +75,7 @@ void AnalysisView::onTabBarClicked(int index)
     QWidget* view = model->createView();
     if (view == nullptr)
     {
-        pluginManager_->destroyModel(name, model);
+        pluginManager_->destroyModel(model);
         return;
     }
 
@@ -109,7 +108,6 @@ void AnalysisView::closeTab(QWidget* widget)
 {
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
-        const QString& name = it.key();
         rfcommon::AnalyzerPlugin* model = it.value().model;
         QWidget* view = it.value().view;
 
@@ -119,7 +117,7 @@ void AnalysisView::closeTab(QWidget* widget)
             tabWidget_->removeTab(tabIndex);
 
             model->destroyView(view);
-            pluginManager_->destroyModel(name, model);
+            pluginManager_->destroyModel(model);
             loadedPlugins_.erase(it);
             break;
         }

@@ -41,8 +41,10 @@ private:
     void onProtocolDisconnectedFromServer() override {}
 
     void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) override { (void)session; }
+    void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session) override { (void)session; }
     void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) override { (void)session; }
     void onProtocolMatchStarted(rfcommon::RunningGameSession* session) override { (void)session; }
+    void onProtocolMatchResumed(rfcommon::RunningGameSession* session) override { (void)session; }
     void onProtocolMatchEnded(rfcommon::RunningGameSession* session) override { (void)session; }
 
 private:

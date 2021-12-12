@@ -23,6 +23,11 @@ RFCOMMON_PUBLIC_API void tcp_socket_close(union tcp_socket* sock);
 RFCOMMON_PUBLIC_API int tcp_socket_read(union tcp_socket* sock, void* buf, int len);
 RFCOMMON_PUBLIC_API int tcp_socket_write(union tcp_socket* sock, const void* buf, int len);
 
+RFCOMMON_PUBLIC_API void* tcp_socket_to_handle(union tcp_socket* sock);
+RFCOMMON_PUBLIC_API union tcp_socket tcp_socket_from_handle(void* p);
+
+RFCOMMON_PUBLIC_API int tcp_socket_read_exact(union tcp_socket* sock, void* buf, int len);
+
 #ifdef __cplusplus
 }
 #endif

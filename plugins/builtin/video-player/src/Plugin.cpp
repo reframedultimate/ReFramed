@@ -13,17 +13,9 @@ static void destroyModel(rfcommon::Plugin* model)
 {
     delete model;
 }
-static QWidget* createView(rfcommon::Plugin* model)
-{
-    VideoPlayer* videoPlayer = dynamic_cast<VideoPlayer*>(model);
-    return videoPlayer;
-}
-static void destroyView(rfcommon::Plugin* model, QWidget* view)
-{
-}
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, createView, destroyView, RFPluginType::VISUALIZER,
+    {createModel, destroyModel, RFPluginType::VISUALIZER,
      "Video Player", "TheComet", "alex.murray@gmx.ch", "A video player"},
     {NULL}
 };

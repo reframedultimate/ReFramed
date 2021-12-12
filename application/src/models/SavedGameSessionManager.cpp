@@ -18,6 +18,7 @@ ReplayManager::ReplayManager(Config* config)
     if (cfgRecMgr["defaultrecordingdir"].isNull())
         cfgRecMgr["defaultrecordingdir"] = QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation)).canonicalPath();
     cfg["SavedGameSessionManager"] = cfgRecMgr;
+    saveConfig();
 
     // Default location is always at index 0
     replayDirectories_.insert("Default", defaultRecordingSourceDirectory());

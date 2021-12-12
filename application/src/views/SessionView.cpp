@@ -1,8 +1,8 @@
 #include "application/ui_SessionView.h"
 #include "application/views/SessionView.hpp"
 #include "application/views/SessionDataView.hpp"
-#include "application/views/DamageTimePlot.hpp"
-#include "application/views/XYPositionPlot.hpp"
+#include "application/models/PluginManager.hpp"
+#include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/PlayerState.hpp"
 
@@ -11,14 +11,21 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-SessionView::SessionView(QWidget *parent)
+SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
     : QWidget(parent)
+    , pluginManager_(pluginManager)
     , ui_(new Ui::SessionView)
-    , damageTimePlot_(new DamageTimePlot)
-    , xyPositionPlot_(new XYPositionPlot)
     , sessionDataView_(new SessionDataView)
 {
     ui_->setupUi(this);
+
+    damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
+    xyPositionsPlugin_ = pluginManager_->createRealtimeModel("XY Positions Plot");
+
+    if (damageTimePlugin_)
+        damageTimePlot_ = damageTimePlugin_->createView();
+    if (xyPositionsPlugin_)
+        xyPositionPlot_ = xyPositionsPlugin_->createView();
 
     QVBoxLayout* dataLayout = new QVBoxLayout;
     dataLayout->addWidget(sessionDataView_);
@@ -32,18 +39,38 @@ SessionView::SessionView(QWidget *parent)
 // ----------------------------------------------------------------------------
 void SessionView::addPlotsToUI()
 {
-    QVBoxLayout* layout = new QVBoxLayout;
-    layout->addWidget(damageTimePlot_);
-    ui_->tab_damage_vs_time->setLayout(layout);
+    if (damageTimePlot_)
+    {
+        QVBoxLayout* layout = new QVBoxLayout;
+        layout->addWidget(damageTimePlot_);
+        ui_->tab_damage_vs_time->setLayout(layout);
+    }
 
-    layout = new QVBoxLayout;
-    layout->addWidget(xyPositionPlot_);
-    ui_->tab_xy_positions->setLayout(layout);
+    if (xyPositionPlot_)
+    {
+        QVBoxLayout* layout = new QVBoxLayout;
+        layout->addWidget(xyPositionPlot_);
+        ui_->tab_xy_positions->setLayout(layout);
+    }
 }
 
 // ----------------------------------------------------------------------------
 SessionView::~SessionView()
 {
+    if (xyPositionPlot_)
+    {
+        xyPositionPlot_->setParent(nullptr);
+        xyPositionsPlugin_->destroyView(xyPositionPlot_);
+        pluginManager_->destroyModel(xyPositionsPlugin_);
+    }
+
+    if (damageTimePlot_)
+    {
+        damageTimePlot_->setParent(nullptr);
+        damageTimePlugin_->destroyView(damageTimePlot_);
+        pluginManager_->destroyModel(damageTimePlugin_);
+    }
+
     delete ui_;
 }
 
@@ -57,16 +84,12 @@ void SessionView::showDamagePlot()
 void SessionView::setSession(rfcommon::Session* session)
 {
     sessionDataView_->setSession(session);
-    damageTimePlot_->setSession(session);
-    xyPositionPlot_->setSession(session);
 }
 
 // ----------------------------------------------------------------------------
 void SessionView::clear()
 {
     sessionDataView_->clear();
-    damageTimePlot_->clear();
-    xyPositionPlot_->clear();
 }
 
 }

@@ -1,7 +1,7 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/AnalyzerPlugin.hpp"
@@ -121,9 +121,7 @@ rfcommon::VisualizerPlugin* PluginManager::createVisualizerModel(const QString& 
 // ----------------------------------------------------------------------------
 rfcommon::RealtimePlugin* PluginManager::createRealtimeModel(const QString& name)
 {
-    rfcommon::RealtimePlugin* plugin = static_cast<rfcommon::RealtimePlugin*>(createModel(name, RFPluginType::REALTIME));
-    protocol_->dispatcher.addListener(plugin);
-    return plugin;
+    return static_cast<rfcommon::RealtimePlugin*>(createModel(name, RFPluginType::REALTIME));
 }
 
 // ----------------------------------------------------------------------------
@@ -147,19 +145,33 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
 
     rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
     if (realtime)
+    {
+        // Realtime plugins listen to protocol events
         protocol_->dispatcher.addListener(realtime);
+
+        // It's possible the plugin was created during an active session. Some plugins
+        // might be interested in hookin in to the middle of a match/training mode session
+        rfcommon::RunningSession* session = protocol_->runningSession();
+        if (session != nullptr)
+        {
+            if (rfcommon::RunningGameSession* match = dynamic_cast<rfcommon::RunningGameSession*>(session))
+            {
+                realtime->onProtocolMatchResumed(match);
+            }
+            else if (rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session))
+            {
+                realtime->onProtocolTrainingResumed(training);
+            }
+        }
+    }
 
     return model;
 }
 
 // ----------------------------------------------------------------------------
-void PluginManager::destroyModel(const QString& name, rfcommon::Plugin* model)
+void PluginManager::destroyModel(rfcommon::Plugin* model)
 {
-    auto it = factories_.find(name);
-    if (it == factories_.end())
-        return;
-
-    RFPluginFactory* factory = it.value();
+    RFPluginFactory* factory = model->factory();
 
     rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
     if (realtime)

@@ -11,7 +11,7 @@ class RunningGameSession;
 class RunningTrainingSession;
 
 class RFCOMMON_PUBLIC_API RealtimePlugin : public Plugin
-                                   , public ProtocolListener
+                                         , public ProtocolListener
 {
 public:
     RealtimePlugin(RFPluginFactory* factory);

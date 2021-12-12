@@ -15,31 +15,40 @@ class ProtocolCommunicateTask : public QThread
 {
     Q_OBJECT
 
+public:
     enum MessageType
     {
-        Version,
-        TrainingStart,
-        TrainingEnd,
-        TrainingReset,
+        ProtocolVersion,
+
+        MappingInfoChecksum,
+        MappingInfoRequest,
+        MappingInfoFighterKinds,
+        MappingInfoFighterStatusKinds,
+        MappingInfoStageKinds,
+        MappingInfoHitStatusKinds,
+        MappingInfoRequestComplete,
+
         MatchStart,
+        MatchResume,
         MatchEnd,
+        TrainingStart,
+        TrainingResume,
+        TrainingReset,
+        TrainingEnd,
+
         FighterState,
-        FighterKinds,
-        FighterStatusKinds,
-        StageKinds,
-        HitStatusKinds
     };
 
-public:
     ProtocolCommunicateTask(tcp_socket socket, QObject* parent=nullptr);
     ~ProtocolCommunicateTask();
 
 signals:
     void connectionClosed();
     void trainingStarted(rfcommon::RunningTrainingSession* training);
+    void trainingResumed(rfcommon::RunningTrainingSession* training);
     void trainingEnded();
-    void trainingReset();
     void matchStarted(rfcommon::RunningGameSession* match);
+    void matchResumed(rfcommon::RunningGameSession* match);
     void matchEnded();
     void playerState(
             quint64 frameTimeStamp,

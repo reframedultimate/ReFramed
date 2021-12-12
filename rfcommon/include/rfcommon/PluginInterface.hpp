@@ -24,9 +24,6 @@ struct RFPluginFactory
     rfcommon::Plugin* (*createModel)(RFPluginFactory*);
     void (*destroyModel)(rfcommon::Plugin* plugin);
 
-    QWidget* (*createView)(rfcommon::Plugin* model);
-    void (*destroyView)(rfcommon::Plugin* model, QWidget* view);
-
     RFPluginType type;
     RFPluginFactoryInfo info;
 };
