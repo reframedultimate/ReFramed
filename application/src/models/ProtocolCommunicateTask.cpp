@@ -290,8 +290,7 @@ void ProtocolCommunicateTask::run()
                 tag[static_cast<int>(len)] = '\0';
                 tags[i] = tag;
                 names[i] = tag;
-            } fail: break;
-
+            }
 
             if (msg == MatchStart)
             {
@@ -315,6 +314,11 @@ void ProtocolCommunicateTask::run()
                     std::move(names)
                 ));
             }
+
+            // success
+            continue;
+
+            fail: break;
 #undef stageH
 #undef stageL
 #undef playerCount
@@ -340,10 +344,10 @@ void ProtocolCommunicateTask::run()
 #define posy1 buf[10]
 #define posy2 buf[11]
 #define posy3 buf[12]
-#define hitstun0 buf[13]
-#define hitstun1 buf[14]
-#define damage0 buf[15]
-#define damage1 buf[16]
+#define damage0 buf[13]
+#define damage1 buf[14]
+#define hitstun0 buf[15]
+#define hitstun1 buf[16]
 #define shield0 buf[17]
 #define shield1 buf[18]
 #define status0 buf[19]

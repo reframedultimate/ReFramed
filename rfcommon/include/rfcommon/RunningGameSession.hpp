@@ -32,9 +32,10 @@ public:
     const SmallString<15>& playerName(int playerIdx) const override
         { return GameSession::playerName(playerIdx); }
     TimeStampMS timeStampStartedMs() const override
-        { return GameSession::timeStampStartedMs(); }
+        { return timeStampStarted_; }
 
 private:
+    TimeStampMS timeStampStarted_;
     int currentWinner_ = 0;
 };
 

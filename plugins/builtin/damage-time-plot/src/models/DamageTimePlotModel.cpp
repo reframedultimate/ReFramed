@@ -39,18 +39,23 @@ void DamageTimePlotModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSessi
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchStarted(rfcommon::RunningGameSession* match)
 {
+    session_ = match;
     match->dispatcher.addListener(this);
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionChanged);
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchResumed(rfcommon::RunningGameSession* match)
 {
+    session_ = match;
     match->dispatcher.addListener(this);
+    dispatcher.dispatch(&DamageTimePlotListener::onDamageTimePlotSessionChanged);
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimePlotModel::onProtocolMatchEnded(rfcommon::RunningGameSession* match)
 {
+    session_.reset();
     match->dispatcher.removeListener(this);
 }
 

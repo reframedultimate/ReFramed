@@ -12,6 +12,7 @@
 #include <cassert>
 #include <QDebug>
 #include <QWidget>
+#include <QDir>
 
 namespace rfapp {
 
@@ -19,6 +20,9 @@ namespace rfapp {
 PluginManager::PluginManager(Protocol* protocol)
     : protocol_(protocol)
 {
+    QDir pluginDir("share/reframed/plugins");
+    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
+        loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 }
 
 // ----------------------------------------------------------------------------
@@ -62,7 +66,7 @@ bool PluginManager::loadPlugin(const QString& fileName)
         if (factories_.contains(factory->info.name))
             goto duplicate_factory_name;
         factories_.insert(factory->info.name, factory);
-        qDebug() << "  - Successfully registered plugin factory " << factory->info.name;
+        qDebug() << "  - Successfully registered plugin factory \"" << factory->info.name << "\"";
     }
 
     libraries_.push_back(dl);

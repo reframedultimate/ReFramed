@@ -23,6 +23,7 @@ RunningGameSession::RunningGameSession(
     : Session(std::move(mapping), stageID, std::move(playerFighterIDs), std::move(playerTags))
     , RunningSession()
     , GameSession(std::move(playerNames))
+    , timeStampStarted_(time_milli_seconds_since_epoch())
 {
 }
 
@@ -252,23 +253,8 @@ void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
     if (playerStates_[playerIdx].count() == 0)
     {
         playerStates_[playerIdx].push(std::move(state));
-        return;
-    }
-
-    // Check to see if the game has started yet
-    if (playerStates_[playerIdx].count() == 1)
-    {
-        if (playerStates_[playerIdx][0].frame() == state.frame())
-        {
-            playerStates_[playerIdx][0] = std::move(state);
-            return;  // has not started yet
-        }
-
-        playerStates_[playerIdx].push(std::move(state));
         dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, playerStates_[playerIdx][0]);
         dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, playerStates_[playerIdx][0]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, playerStates_[playerIdx][1]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, playerStates_[playerIdx][1]);
         return;
     }
 

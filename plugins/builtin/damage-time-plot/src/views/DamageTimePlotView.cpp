@@ -61,6 +61,9 @@ DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* pare
     setTitle("Damage over Time");
     setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
 
+    if (model_->session())
+        onDamageTimePlotSessionChanged();
+
     model_->dispatcher.addListener(this);
 }
 

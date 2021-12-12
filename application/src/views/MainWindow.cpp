@@ -49,10 +49,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle("ReFramed - " APP_VERSION_STR);
 
-    QDir pluginDir("share/reframed/plugins");
-    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
-        pluginManager_->loadPlugin(pluginDir.absoluteFilePath(pluginFile));
-
     mainView_->addWidget(replayGroupView_);
     mainView_->addWidget(new DataSetFilterView(replayManager_.get()));
     mainView_->addWidget(new VisualizerView(pluginManager_.get()));
