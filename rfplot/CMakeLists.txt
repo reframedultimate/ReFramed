@@ -76,7 +76,7 @@ install (
 install (
     DIRECTORY "${PROJECT_BINARY_DIR}/include/rfplot"
     DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
-    FILES_MATCHING "*.hpp")
+    FILES_MATCHING PATTERN "*.hpp")
 export (
     TARGETS rfplot
     NAMESPACE ReFramed::

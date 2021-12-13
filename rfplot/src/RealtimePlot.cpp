@@ -285,9 +285,9 @@ void RealtimePlot::copyImageToClipboard()
     pal.setColor(backgroundRole(), Qt::white);
     setPalette(pal);
 
-    QwtPlotRenderer renderer;
     QImage img(this->size(), QImage::Format_ARGB32);
     QPainter painter(&img);
+    QwtPlotRenderer renderer;
     renderer.render(this, &painter, this->rect());
     QApplication::clipboard()->setImage(img);
 

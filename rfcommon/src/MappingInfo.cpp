@@ -1,4 +1,3 @@
-#include "rfcommon/MappingInfoSerialization.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "nlohmann/json.hpp"
 
