@@ -14,6 +14,7 @@ namespace Ui {
 
 namespace rfcommon {
     class SavedGameSession;
+    extern template class RFCOMMON_TEMPLATE_API Reference<SavedGameSession>;
 }
 
 namespace rfapp {

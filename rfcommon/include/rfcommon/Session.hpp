@@ -27,6 +27,7 @@ public:
             StageID stageID,
             SmallVector<FighterID, 8>&& playerFighterIDs,
             SmallVector<SmallString<15>, 8>&& playerTags);
+    virtual ~Session();
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to

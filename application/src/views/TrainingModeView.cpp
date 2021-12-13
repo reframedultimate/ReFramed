@@ -20,6 +20,7 @@ TrainingModeView::TrainingModeView(TrainingModeModel* trainingModel, CategoryMod
 
     for (const auto& name : trainingModel_->availablePluginNames())
         ui_->listWidget_plugins->addItem(name);
+    ui_->listWidget_plugins->sortItems();
 
     trainingModel_->dispatcher.addListener(this);
     categoryModel_->dispatcher.addListener(this);

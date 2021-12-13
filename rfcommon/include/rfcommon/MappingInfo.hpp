@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rfcommon/config.hpp"
 #include "rfcommon/FighterStatusMapping.hpp"
 #include "rfcommon/HitStatusMapping.hpp"
 #include "rfcommon/FighterIDMapping.hpp"
@@ -7,7 +8,7 @@
 
 namespace rfcommon {
 
-class MappingInfo
+class RFCOMMON_PUBLIC_API MappingInfo
 {
 public:
     MappingInfo(uint32_t checksum);

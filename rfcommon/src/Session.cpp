@@ -20,6 +20,11 @@ Session::Session(
 }
 
 // ----------------------------------------------------------------------------
+Session::~Session()
+{
+}
+
+// ----------------------------------------------------------------------------
 int Session::playerCount() const
 {
     return static_cast<int>(playerTags_.count());
