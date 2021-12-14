@@ -25,26 +25,36 @@ void ProtocolConnectTask::run()
     if (tcp_socket_connect_to_host(&socket, ba.data(), port_) != 0)
     {
         emit connectionFailure(
-                    tcp_socket_get_last_error(&socket),
+                    tcp_socket_get_connect_error(&socket),
                     ipAddress_, port_);
         return;
     }
 
     // Get protocol version from switch and verify we're compatible
     char buf[3] = {ProtocolCommunicateTask::ProtocolVersion};
+    const char* errormsg = "";
     if (tcp_socket_write(&socket, buf, 1) != 1)
+    {
+        errormsg = "Write error";
         goto socket_error;
+    }
 
     while (true)
     {
         if (tcp_socket_read(&socket, buf, 1) != 1)
+        {
+            errormsg = "Read error";
             goto socket_error;
+        }
 
         switch (buf[0])
         {
             case ProtocolCommunicateTask::ProtocolVersion: {
                 if (tcp_socket_read(&socket, buf, 2) != 2)
+                {
+                    errormsg = "Read error";
                     goto socket_error;
+                }
 
                 const char major = 0x01;
                 const char minor = 0x00;
@@ -82,9 +92,7 @@ void ProtocolConnectTask::run()
     return;
 
 socket_error:
-    emit connectionFailure(
-                tcp_socket_get_last_error(&socket),
-                ipAddress_, port_);
+    emit connectionFailure(errormsg, ipAddress_, port_);
     tcp_socket_close(&socket);
 }
 

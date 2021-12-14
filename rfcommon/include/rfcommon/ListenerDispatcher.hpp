@@ -90,11 +90,6 @@ public:
     void removeListener(Listener* listener);
 
     /*!
-     * @brief Removes all listeners
-     */
-    void removeAllListeners();
-
-    /*!
      * @brief Dispatches a message to all listeners
      * @param func A pointer to a member function of the listener interface class.
      * For example:
@@ -143,9 +138,11 @@ ListenerDispatcher<Listener>::~ListenerDispatcher()
 template <class Listener>
 void ListenerDispatcher<Listener>::addListener(Listener* listener)
 {
+#if defined(DEBUG)
     for (const auto& l : listeners_)
         if (l == listener)
-            return;
+            std::terminate();
+#endif
 
     listeners_.push(listener);
 }
@@ -160,13 +157,6 @@ void ListenerDispatcher<Listener>::removeListener(Listener* listener)
             listeners_.erase(it);
             return;
         }
-}
-
-// ----------------------------------------------------------------------------
-template <class Listener>
-void ListenerDispatcher<Listener>::removeAllListeners()
-{
-    listeners_.clear();
 }
 
 // ----------------------------------------------------------------------------

@@ -138,7 +138,7 @@ getaddrinfo_failed: return -1;
 }
 
 /* ------------------------------------------------------------------------- */
-const char* tcp_socket_get_last_error(union tcp_socket* sock)
+const char* tcp_socket_get_connect_error(union tcp_socket* sock)
 {
     return sock->error_msg;
 }

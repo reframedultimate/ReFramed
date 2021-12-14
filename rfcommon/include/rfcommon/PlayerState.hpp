@@ -71,13 +71,13 @@ private:
 
 inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)
 {
-    if (lhs.motion() != rhs.motion()) return false;
     if (lhs.posx() != rhs.posx()) return false;
     if (lhs.posy() != rhs.posy()) return false;
     if (lhs.damage() != rhs.damage()) return false;
     if (lhs.hitstun() != rhs.hitstun()) return false;
     if (lhs.shield() != rhs.shield()) return false;
     if (lhs.status() != rhs.status()) return false;
+    if (lhs.motion() != rhs.motion()) return false;
     if (lhs.hitStatus() != rhs.hitStatus()) return false;
     if (lhs.stocks() != rhs.stocks()) return false;
     if (lhs.attackConnected() != rhs.attackConnected()) return false;

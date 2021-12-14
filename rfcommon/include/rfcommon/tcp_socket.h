@@ -17,7 +17,7 @@ RFCOMMON_PUBLIC_API int tcp_socket_global_init(void);
 RFCOMMON_PUBLIC_API void tcp_socket_global_deinit(void);
 
 RFCOMMON_PUBLIC_API int tcp_socket_connect_to_host(union tcp_socket* sock, const char* ip, uint16_t port);
-RFCOMMON_PUBLIC_API const char* tcp_socket_get_last_error(union tcp_socket* sock);
+RFCOMMON_PUBLIC_API const char* tcp_socket_get_connect_error(union tcp_socket* sock);
 RFCOMMON_PUBLIC_API void tcp_socket_shutdown(union tcp_socket* sock);
 RFCOMMON_PUBLIC_API void tcp_socket_close(union tcp_socket* sock);
 RFCOMMON_PUBLIC_API int tcp_socket_read(union tcp_socket* sock, void* buf, int len);
