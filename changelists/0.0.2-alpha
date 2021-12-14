@@ -1,0 +1,6 @@
+Enhancements
+- Plugins are alphabetically sorted
+
+Bugfixes
+- Frame Data List no longer inserts duplicate rows when updating from live data
+
