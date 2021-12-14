@@ -76,10 +76,7 @@ FrameDataListView::FrameDataListView(FrameDataListModel* model, QWidget* parent)
     model_->dispatcher.addListener(this);
 
     if (model_->session())
-    {
         onFrameDataListSessionSet(model_->session());
-        model_->session()->dispatcher.addListener(this);
-    }
 
     connect(ui_->treeWidget, &QTreeWidget::currentItemChanged,
             this, &FrameDataListView::onCurrentItemChanged);
@@ -508,17 +505,12 @@ void FrameDataListView::onRunningSessionNewUniquePlayerState(int playerIdx, cons
     if (ui_->stackedWidget->currentWidget() == ui_->page_playerData)
     {
         updatePlayerDataTableRowsIfDirty();
+        playerDataTables_[playerIdx]->scrollToBottom();
 
         const uint64_t timeAfterUpdate = QDateTime::currentMSecsSinceEpoch();
         playerDataTablesUpdateTime_ = timeAfterUpdate - time;
         lastTimePlayerDataTablesUpdated_ = timeAfterUpdate;
     }
-
-    QTableWidget* table = playerDataTables_[playerIdx];
-    int row = table->rowCount();
-    table->setRowCount(row + 1);
-    setPlayerDataTableRow(playerIdx, row, state);
-    table->scrollToBottom();
 }
 
 // ----------------------------------------------------------------------------
