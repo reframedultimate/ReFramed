@@ -124,6 +124,9 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read_exact(&socket_, name, len) != len) break;
             name[static_cast<int>(len)] = '\0';
 
+            if (mappingInfo == nullptr)
+                continue;
+
             mappingInfo->fighterID.add(fighterID, name);
             qDebug() << "fighter kind: " << fighterID <<": " << name;
         }
@@ -143,6 +146,9 @@ void ProtocolCommunicateTask::run()
             static_assert(sizeof(rfcommon::FighterStatus) == 2);
             rfcommon::FighterStatus statusID = (statusID_h << 8)
                                        | (statusID_l << 0);
+
+            if (mappingInfo == nullptr)
+                continue;
 
             if (fighterID == 255)
             {
@@ -169,6 +175,9 @@ void ProtocolCommunicateTask::run()
             rfcommon::StageID stageID = (stageID_h << 8)
                                 | (stageID_l << 0);
 
+            if (mappingInfo == nullptr)
+                continue;
+
             mappingInfo->stageID.add(stageID, name);
             qDebug() << "stage kind: " << stageID <<": " << name;
         }
@@ -183,12 +192,19 @@ void ProtocolCommunicateTask::run()
             if (tcp_socket_read_exact(&socket_, name, len) != len) break;
             name[static_cast<int>(len)] = '\0';
 
+            if (mappingInfo == nullptr)
+                continue;
+
             mappingInfo->hitStatus.add(status, name);
             qDebug() << "hit status: " << status <<": " << name;
 
         }
         else if (msg == MappingInfoRequestComplete)
         {
+
+            if (mappingInfo == nullptr)
+                continue;
+
             QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
             qDebug() << "dir: " << dir;
             if (!dir.exists())
@@ -228,6 +244,9 @@ void ProtocolCommunicateTask::run()
             entryIDs.resize(2);
             entryIDs[0] = 0;
             entryIDs[1] = 1;
+
+            if (mappingInfo == nullptr)
+                continue;
 
             if (msg == TrainingStart)
             {
@@ -297,6 +316,9 @@ void ProtocolCommunicateTask::run()
                 tags[i] = tag;
                 names[i] = tag;
             }
+
+            if (mappingInfo == nullptr)
+                continue;
 
             if (msg == MatchStart)
             {

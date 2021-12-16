@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <sstream>
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #   include <windows.h>
 #else
 #   include <time.h>
