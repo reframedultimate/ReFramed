@@ -68,9 +68,11 @@ private slots:
     void onProtocolDisconnected();
 
     // catch signals from listener thread so we have them in the main thread
-    void onTrainingStarted(rfcommon::RunningTrainingSession* training);
+    void onTrainingStartedProxy(rfcommon::RunningTrainingSession* training);
+    void onTrainingStartedActually(rfcommon::RunningTrainingSession* training);
     void onTrainingResumed(rfcommon::RunningTrainingSession* training);
-    void onTrainingEnded();
+    void onTrainingEndedProxy();
+    void onTrainingEndedActually();
     void onMatchStarted(rfcommon::RunningGameSession* match);
     void onMatchResumed(rfcommon::RunningGameSession* match);
     void onMatchEnded();
@@ -97,6 +99,7 @@ private:
     std::unique_ptr<ProtocolConnectTask> connectTask_;
     std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
     rfcommon::Reference<rfcommon::RunningSession> session_;
+    bool trainingEndedProxyWasCalled_ = false;
 };
 
 }

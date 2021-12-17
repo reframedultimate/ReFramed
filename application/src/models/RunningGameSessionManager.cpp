@@ -224,82 +224,86 @@ void RunningGameSessionManager::onProtocolDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session)
+void RunningGameSessionManager::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session)
+void RunningGameSessionManager::onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training)
+{
+}
+
+void RunningGameSessionManager::onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session)
+void RunningGameSessionManager::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSession* session)
+void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSession* match)
 {
     // first off, copy the data we've stored from the UI into the new recording
     // so comparing previous recordings is consistent
-    session->setFormat(format_);
-    session->setGameNumber(gameNumber_);
-    session->setSetNumber(setNumber_);
-    if (session->playerCount() == 2)
+    match->setFormat(format_);
+    match->setGameNumber(gameNumber_);
+    match->setSetNumber(setNumber_);
+    if (match->playerCount() == 2)
     {
         if (p1Name_.length() > 0)
-            session->setPlayerName(0, p1Name_.toStdString().c_str());
+            match->setPlayerName(0, p1Name_.toStdString().c_str());
         if (p2Name_.length() > 0)
-            session->setPlayerName(1, p2Name_.toStdString().c_str());
+            match->setPlayerName(1, p2Name_.toStdString().c_str());
     }
 
-    if (shouldStartNewSet(session))
+    if (shouldStartNewSet(match))
     {
-        session->setGameNumber(1);
-        session->setSetNumber(1);
+        match->setGameNumber(1);
+        match->setSetNumber(1);
         pastSessions_.clear();
     }
     else
     {
         // Go to the next game in the set
-        session->setGameNumber(session->gameNumber() + 1);
+        match->setGameNumber(match->gameNumber() + 1);
     }
 
     // Modify game/set numbers until we have a unique filename
-    findUniqueGameAndSetNumbers(session);
+    findUniqueGameAndSetNumbers(match);
 
-    session->dispatcher.addListener(this);
-    activeSession_ = session;
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchStarted, session);
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, session->setNumber());
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, session->gameNumber());
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, session->format());
-    if (session->playerCount() == 2)
+    match->dispatcher.addListener(this);
+    activeSession_ = match;
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchStarted, match);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, match->setNumber());
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, match->gameNumber());
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, match->format());
+    if (match->playerCount() == 2)
     {
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            0, session->playerName(0));
+                            0, match->playerName(0));
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            1, session->playerName(1));
+                            1, match->playerName(1));
     }
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolMatchResumed(rfcommon::RunningGameSession* session)
+void RunningGameSessionManager::onProtocolMatchResumed(rfcommon::RunningGameSession* match)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSession* session)
+void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSession* match)
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchEnded, session);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchEnded, match);
 
     // Save recording
     QFileInfo fileInfo(
         savedSessionManager_->defaultRecordingSourceDirectory(),
-        composeFileName(session)
+        composeFileName(match)
     );
-    if (session->save(fileInfo.absoluteFilePath().toStdString().c_str()))
+    if (match->save(fileInfo.absoluteFilePath().toStdString().c_str()))
     {
         // Add the new recording to the "All" recording group
         savedSessionManager_->allReplayGroup()->addFile(fileInfo.absoluteFilePath());
@@ -313,17 +317,17 @@ void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSessio
     // recording, but it's still possible to edit the names/format/game number/etc
     // so copy the data out of the recording here so it can be edited, and when
     // a new recording starts again we copy the data into the recording.
-    format_ = session->format();
-    gameNumber_ = session->gameNumber();
-    setNumber_ = session->setNumber();
-    if (session->playerCount() == 2)
+    format_ = match->format();
+    gameNumber_ = match->gameNumber();
+    setNumber_ = match->setNumber();
+    if (match->playerCount() == 2)
     {
-        p1Name_ = session->playerName(0).cStr();
-        p2Name_ = session->playerName(1).cStr();
+        p1Name_ = match->playerName(0).cStr();
+        p2Name_ = match->playerName(1).cStr();
     }
 
-    session->dispatcher.removeListener(this);
-    pastSessions_.push_back(session);
+    match->dispatcher.removeListener(this);
+    pastSessions_.push_back(match);
     activeSession_.drop();
 }
 

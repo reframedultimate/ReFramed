@@ -76,6 +76,14 @@ void XYPositionsPlotModel::onProtocolTrainingResumed(rfcommon::RunningTrainingSe
 }
 
 // ----------------------------------------------------------------------------
+void XYPositionsPlotModel::onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining)
+{
+    // We probably want to reset everything in this case
+    clearSession(oldTraining);
+    setSession(newTraining);
+}
+
+// ----------------------------------------------------------------------------
 void XYPositionsPlotModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training)
 {
     clearSession(training);

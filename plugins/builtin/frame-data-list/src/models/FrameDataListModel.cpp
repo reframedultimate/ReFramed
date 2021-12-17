@@ -74,6 +74,14 @@ void FrameDataListModel::onProtocolTrainingResumed(rfcommon::RunningTrainingSess
 }
 
 // ----------------------------------------------------------------------------
+void FrameDataListModel::onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining)
+{
+    // We probably want to clear the existing data in this case
+    clearSession(oldTraining);
+    setSession(newTraining);
+}
+
+// ----------------------------------------------------------------------------
 void FrameDataListModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training)
 {
     clearSession(training);

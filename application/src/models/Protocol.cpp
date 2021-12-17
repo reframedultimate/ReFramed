@@ -4,6 +4,7 @@
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/ProtocolListener.hpp"
+#include <QTimer>
 
 namespace rfapp {
 
@@ -69,11 +70,11 @@ void Protocol::onConnectionSuccess(void* socket_handle, const QString& ipAddress
     connect(communicateTask_.get(), &ProtocolCommunicateTask::connectionClosed,
             this, &Protocol::onProtocolDisconnected);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingStarted,
-            this, &Protocol::onTrainingStarted);
+            this, &Protocol::onTrainingStartedProxy);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingResumed,
             this, &Protocol::onTrainingResumed);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingEnded,
-            this, &Protocol::onTrainingEnded);
+            this, &Protocol::onTrainingEndedProxy);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::matchStarted,
             this, &Protocol::onMatchStarted);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::matchResumed,
@@ -107,7 +108,39 @@ void Protocol::onProtocolDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStarted(rfcommon::RunningTrainingSession* training)
+void Protocol::onTrainingStartedProxy(rfcommon::RunningTrainingSession* training)
+{
+    // If the timer did not reset this in time, it means that a stop and a
+    // start event occurred in quick succession. This is how we detect a reset
+    // in training mode.
+    if (trainingEndedProxyWasCalled_)
+    {
+        trainingEndedProxyWasCalled_ = false;
+
+        rfcommon::RunningTrainingSession* oldTraining =
+                dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get());
+
+        if (oldTraining)
+        {
+            rfcommon::Reference<rfcommon::RunningSession> oldSession = session_;
+            session_ = training;
+            dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingReset, oldTraining, training);
+        }
+        else
+        {
+            // fallback
+            onTrainingStartedActually(training);
+        }
+    }
+    else
+    {
+        // This was a valid start event
+        onTrainingStartedActually(training);
+    }
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onTrainingStartedActually(rfcommon::RunningTrainingSession* training)
 {
     // Handle case where match end is not sent (should never happen but you never know)
     endSessionIfNecessary();
@@ -124,7 +157,20 @@ void Protocol::onTrainingResumed(rfcommon::RunningTrainingSession* training)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingEnded()
+void Protocol::onTrainingEndedProxy()
+{
+    trainingEndedProxyWasCalled_ = true;
+    QTimer::singleShot(1000, this, [this](){
+        if (trainingEndedProxyWasCalled_)
+        {
+            onTrainingEndedActually();
+            trainingEndedProxyWasCalled_ = false;
+        }
+    });
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onTrainingEndedActually()
 {
     endSessionIfNecessary();
 }

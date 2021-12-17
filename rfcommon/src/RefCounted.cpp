@@ -50,6 +50,13 @@ void RefCounted::decRefNoSeppuku()
 }
 
 // ----------------------------------------------------------------------------
+void RefCounted::touchRef()
+{
+    incRef();
+    decRef();
+}
+
+// ----------------------------------------------------------------------------
 void RefCounted::seppuku()
 {
     delete this;

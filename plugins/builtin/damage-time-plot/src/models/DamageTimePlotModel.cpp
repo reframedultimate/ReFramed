@@ -63,6 +63,7 @@ void DamageTimePlotModel::onProtocolConnectedToServer(const char* ipAddress, uin
 void DamageTimePlotModel::onProtocolDisconnectedFromServer() {}
 void DamageTimePlotModel::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) { (void)training; }
 void DamageTimePlotModel::onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) { (void)training; }
+void DamageTimePlotModel::onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining) { (void)oldTraining; (void)newTraining; }
 void DamageTimePlotModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training) { (void)training; }
 
 // ----------------------------------------------------------------------------

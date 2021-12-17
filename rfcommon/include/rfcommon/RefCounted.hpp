@@ -20,6 +20,7 @@ public:
     void incRef();
     void decRef();
     void decRefNoSeppuku();
+    void touchRef();
 
     int refs() const { return refs_; }
 

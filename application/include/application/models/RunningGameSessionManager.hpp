@@ -54,12 +54,13 @@ private:
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolDisconnectedFromServer() override;
 
-    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) override;
-    void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session) override;
-    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) override;
-    void onProtocolMatchStarted(rfcommon::RunningGameSession* session) override;
-    void onProtocolMatchResumed(rfcommon::RunningGameSession* session) override;
-    void onProtocolMatchEnded(rfcommon::RunningGameSession* session) override;
+    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) override;
+    void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) override;
+    void onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining) override;
+    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training) override;
+    void onProtocolMatchStarted(rfcommon::RunningGameSession* match) override;
+    void onProtocolMatchResumed(rfcommon::RunningGameSession* match) override;
+    void onProtocolMatchEnded(rfcommon::RunningGameSession* match) override;
 
 private:
     void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;

@@ -43,6 +43,7 @@ private:
 
     void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) override;
     void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) override;
+    void onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining) override;
     void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training) override;
     void onProtocolMatchStarted(rfcommon::RunningGameSession* match) override;
     void onProtocolMatchResumed(rfcommon::RunningGameSession* match) override;

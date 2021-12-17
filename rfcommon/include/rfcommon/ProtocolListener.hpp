@@ -17,6 +17,7 @@ public:
 
     virtual void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* session) = 0;
     virtual void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* session) = 0;
+    virtual void onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldSession, rfcommon::RunningTrainingSession* newSession) = 0;
     virtual void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* session) = 0;
     virtual void onProtocolMatchStarted(rfcommon::RunningGameSession* session) = 0;
     virtual void onProtocolMatchResumed(rfcommon::RunningGameSession* session) = 0;
