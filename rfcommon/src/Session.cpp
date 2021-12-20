@@ -1,4 +1,5 @@
 #include "rfcommon/Session.hpp"
+#include "rfcommon/SessionListener.hpp"
 #include "rfcommon/PlayerState.hpp"
 
 namespace rfcommon {
@@ -76,6 +77,32 @@ const PlayerState* Session::playerStatesBegin(int playerIdx) const
 const PlayerState* Session::playerStatesEnd(int playerIdx) const
 {
     return playerStatesBegin(playerIdx) + playerStateCount(playerIdx);
+}
+
+// ----------------------------------------------------------------------------
+void Session::replayUniqueStateEvents()
+{
+    SmallVector<int, 8> stateIdx({0, 0, 0, 0, 0, 0, 0, 0});
+
+    Frame currentFrame = 1;
+    bool atEnd;
+    do
+    {
+        for (int p = 0; p != playerCount(); ++p)
+            if (stateIdx[p] < playerStateCount(p))
+                if (playerStateAt(p, stateIdx[p]).frame() <= currentFrame)
+                {
+                    dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, p, playerStateAt(p, stateIdx[p]));
+                    ++stateIdx[p];
+                }
+
+        atEnd = true;
+        for (int p = 0; p != playerCount(); ++p)
+            if (stateIdx[p] < playerStateCount(p))
+                atEnd = false;
+
+        currentFrame++;
+    } while (!atEnd);
 }
 
 // ----------------------------------------------------------------------------

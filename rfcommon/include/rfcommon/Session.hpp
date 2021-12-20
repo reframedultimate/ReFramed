@@ -33,7 +33,8 @@ public:
      * \brief Returns information on how to map fighter/stage/state IDs to
      * strings.
      */
-    const MappingInfo& mappingInfo() const { return mappingInfo_; }
+    const MappingInfo& mappingInfo() const
+        { return mappingInfo_; }
 
     /*!
      * \brief Gets the number of players
@@ -79,6 +80,8 @@ public:
     const PlayerState* playerStatesBegin(int playerIdx) const;
 
     const PlayerState* playerStatesEnd(int playerIdx) const;
+
+    void replayUniqueStateEvents();
 
     virtual int winner() const = 0;
 
