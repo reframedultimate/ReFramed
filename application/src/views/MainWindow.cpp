@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui_->setupUi(this);
 
+    // Window icon and title
+    setWindowIcon(QIcon(":/icons/reframed-icon2.ico"));
     setWindowTitle("ReFramed - " APP_VERSION_STR);
 
     mainView_->addWidget(replayGroupView_);

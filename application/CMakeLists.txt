@@ -48,7 +48,7 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (APPLICATION_RESOURCES_GEN
-    "")
+    "res/res.qrc")
 qt5_add_translation (APPLICATION_QM_FILES
     "")
 
@@ -57,6 +57,7 @@ add_executable (application WIN32
     ${APPLICATION_FORMS_MOC}
     ${APPLICATION_RESOURCES_GEN}
     ${APPLICATION_QM_FILES}
+    ${APPLICATION_RESOURCES_GEN}
     "src/main.cpp"
     "src/Util.cpp"
     "src/models/CategoryModel.cpp"
