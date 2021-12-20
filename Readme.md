@@ -6,7 +6,7 @@
 ```sh
 git clone .. && cd ultimate-hindsight
 mkdir build && cd build
-set Qt5_DIR=C:\Qt\Qt5.12.10\5.12.10\msvc2017_64
+set Qt5_DIR=C:\Qt\Qt5.14.1\5.14.1\msvc2017_64
 cmake -A x64 -DCMAKE_BUILD_TYPE=<Debug|Release> -DCMAKE_INSTALL_PREFIX:PATH="path\to\install\dir" -DCMAKE_CXX_FLAGS="/MP" ..\
 cmake --build . --config <Debug|Release> --target install
 ```

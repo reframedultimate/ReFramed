@@ -48,7 +48,7 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (APPLICATION_RESOURCES_GEN
-    "res/res.qrc")
+    "res/reframed.qrc")
 qt5_add_translation (APPLICATION_QM_FILES
     "")
 
@@ -58,6 +58,7 @@ add_executable (application WIN32
     ${APPLICATION_RESOURCES_GEN}
     ${APPLICATION_QM_FILES}
     ${APPLICATION_RESOURCES_GEN}
+    $<$<PLATFORM_ID:Windows>:res/windows.rc>
     "src/main.cpp"
     "src/Util.cpp"
     "src/models/CategoryModel.cpp"
@@ -120,11 +121,13 @@ target_include_directories (application
 if (WIN32 OR CYGWIN)
     add_custom_command (TARGET application POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/imageformats
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/imageformats
 
         COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_BINDIR}'"
         VERBATIM)
@@ -138,6 +141,9 @@ if (WIN32 OR CYGWIN)
     install (
         FILES ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
+    install (
+        FILES ${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll
+        DESTINATION "${REFRAMED_INSTALL_BINDIR}/imageformats")
 endif ()
 
 install (

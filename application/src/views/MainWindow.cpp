@@ -48,8 +48,8 @@ MainWindow::MainWindow(QWidget* parent)
     ui_->setupUi(this);
 
     // Window icon and title
-    setWindowIcon(QIcon(":/icons/reframed-icon2.ico"));
     setWindowTitle("ReFramed - " APP_VERSION_STR);
+    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
     mainView_->addWidget(replayGroupView_);
     mainView_->addWidget(new DataSetFilterView(replayManager_.get()));
