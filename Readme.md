@@ -1,5 +1,6 @@
-# Ultimate Hindsight
+# ReFramed
 
+A general frame-data analysis tool for Super Smash Bros. Ultimate.
 
 ## Building on Windows
 
