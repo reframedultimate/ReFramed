@@ -281,7 +281,12 @@ void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
     {
         rfcommon::SmallVector<PlayerState, 8> states;
         for (int i = 0; i != playerCount(); ++i)
+        {
+            if (playerStateCount(i) < 1)
+                return;
+
             states.push(playerStateAt(i, playerStateCount(i) - 1));
+        }
 
         if (frameUniqueBits_)
             dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, states);
