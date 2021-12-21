@@ -53,6 +53,8 @@ private:
     // RunningSession events
     void onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
     void onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
+    void onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
+    void onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
 
 private:
     FrameDataListModel* model_;

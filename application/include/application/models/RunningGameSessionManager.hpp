@@ -88,6 +88,8 @@ private:
 
     void onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state) override;
     void onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) override;
+    void onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
+    void onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
 
 private:
     Protocol* protocol_;

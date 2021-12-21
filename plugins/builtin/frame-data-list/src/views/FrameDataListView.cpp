@@ -519,3 +519,15 @@ void FrameDataListView::onRunningSessionNewPlayerState(int playerIdx, const rfco
     (void)playerIdx;
     (void)state;
 }
+
+// ----------------------------------------------------------------------------
+void FrameDataListView::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+{
+    (void)states;
+}
+
+// ----------------------------------------------------------------------------
+void FrameDataListView::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+{
+    (void)states;
+}

@@ -22,6 +22,8 @@ public:
     // RunningSession events
     virtual void onRunningSessionNewUniquePlayerState(int playerIdx, const PlayerState& state) = 0;
     virtual void onRunningSessionNewPlayerState(int playerIdx, const PlayerState& state) = 0;
+    virtual void onRunningSessionNewUniqueFrame(const SmallVector<PlayerState, 8>& states) = 0;
+    virtual void onRunningSessionNewFrame(const SmallVector<PlayerState, 8>& states) = 0;
 };
 
 }

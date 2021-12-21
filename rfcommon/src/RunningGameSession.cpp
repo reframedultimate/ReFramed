@@ -275,6 +275,20 @@ void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
 
     // The UI still cares about every frame
     dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, state);
+
+    // Reached end of frame
+    if (playerIdx == playerCount() - 1)
+    {
+        rfcommon::SmallVector<PlayerState, 8> states;
+        for (int i = 0; i != playerCount(); ++i)
+            states.push(playerStateAt(i, playerStateCount(i) - 1));
+
+        if (frameUniqueBits_)
+            dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, states);
+        frameUniqueBits_ = 0;
+
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame, states);
+    }
 }
 
 }

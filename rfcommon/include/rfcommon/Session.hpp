@@ -81,7 +81,8 @@ public:
 
     const PlayerState* playerStatesEnd(int playerIdx) const;
 
-    void replayUniqueStateEvents();
+    void replayUniqueStateEvents(SessionListener* listener);
+    void replayUniqueFrameEvents(SessionListener* listener);
 
     virtual int winner() const = 0;
 

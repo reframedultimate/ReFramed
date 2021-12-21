@@ -125,3 +125,5 @@ void XYPositionsPlotModel::onRunningGameSessionGameNumberChanged(rfcommon::GameN
 void XYPositionsPlotModel::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
 void XYPositionsPlotModel::onRunningGameSessionWinnerChanged(int winner) { (void)winner; }
 void XYPositionsPlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) { (void)player; (void)state; }
+void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }
+void XYPositionsPlotModel::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }

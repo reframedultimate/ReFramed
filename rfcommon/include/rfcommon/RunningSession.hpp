@@ -18,6 +18,9 @@ protected:
 
 public:
     virtual void addPlayerState(int playerIdx, PlayerState&& state);
+
+protected:
+    uint8_t frameUniqueBits_;
 };
 
 }

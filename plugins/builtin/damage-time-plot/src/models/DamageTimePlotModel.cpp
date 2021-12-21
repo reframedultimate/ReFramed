@@ -102,3 +102,5 @@ void DamageTimePlotModel::onRunningGameSessionGameNumberChanged(rfcommon::GameNu
 void DamageTimePlotModel::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
 void DamageTimePlotModel::onRunningGameSessionWinnerChanged(int winner) { (void)winner; }
 void DamageTimePlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) { (void)player; (void)state; }
+void DamageTimePlotModel::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }
+void DamageTimePlotModel::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }

@@ -80,7 +80,7 @@ const PlayerState* Session::playerStatesEnd(int playerIdx) const
 }
 
 // ----------------------------------------------------------------------------
-void Session::replayUniqueStateEvents()
+void Session::replayUniqueStateEvents(SessionListener* listener)
 {
     SmallVector<int, 8> stateIdx({0, 0, 0, 0, 0, 0, 0, 0});
 
@@ -92,13 +92,49 @@ void Session::replayUniqueStateEvents()
             if (stateIdx[p] < playerStateCount(p))
                 if (playerStateAt(p, stateIdx[p]).frame() <= currentFrame)
                 {
-                    dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, p, playerStateAt(p, stateIdx[p]));
+                    listener->onRunningSessionNewUniquePlayerState(p, playerStateAt(p, stateIdx[p]));
                     ++stateIdx[p];
                 }
 
         atEnd = true;
         for (int p = 0; p != playerCount(); ++p)
             if (stateIdx[p] < playerStateCount(p))
+                atEnd = false;
+
+        currentFrame++;
+    } while (!atEnd);
+}
+
+// ----------------------------------------------------------------------------
+void Session::replayUniqueFrameEvents(SessionListener* listener)
+{
+    SmallVector<int, 8> stateIdx({0, 0, 0, 0, 0, 0, 0, 0});
+
+    // All players must have at least one state
+    for (int p = 0; p != playerCount(); ++p)
+        if (playerStateCount(p) == 0)
+            return;
+
+    Frame currentFrame = 1;
+    bool atEnd;
+    do
+    {
+        rfcommon::SmallVector<PlayerState, 8> states;
+        for (int p = 0; p != playerCount(); ++p)
+        {
+            states.push(playerStateAt(p, stateIdx[p]));
+            if (stateIdx[p] < playerStateCount(p) - 1)
+            {
+                if (playerStateAt(p, stateIdx[p]).frame() <= currentFrame)
+                    ++stateIdx[p];
+            }
+        }
+
+        listener->onRunningSessionNewUniqueFrame(states);
+
+        atEnd = true;
+        for (int p = 0; p != playerCount(); ++p)
+            if (stateIdx[p] < playerStateCount(p) - 1)
                 atEnd = false;
 
         currentFrame++;

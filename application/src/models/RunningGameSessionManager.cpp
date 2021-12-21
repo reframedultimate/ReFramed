@@ -388,6 +388,18 @@ void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const
 }
 
 // ----------------------------------------------------------------------------
+void RunningGameSessionManager::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+{
+    (void)states;
+}
+
+// ----------------------------------------------------------------------------
+void RunningGameSessionManager::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+{
+    (void)states;
+}
+
+// ----------------------------------------------------------------------------
 void RunningGameSessionManager::onRunningGameSessionWinnerChanged(int winner)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerWinnerChanged, winner);
