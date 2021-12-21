@@ -1,6 +1,14 @@
 Enhancements
 - Plugins are alphabetically sorted
+- Implemented a training reset callback
+- Added icons and logos to application
+- BridgeLab
+  + uairs are correctly detected and plottet in the live view
+  + Past bridges are stored into a tree view and can be viewed at any time
+  + Ability to favorite/unfavorite bridges
 
 Bugfixes
 - Frame Data List no longer inserts duplicate rows when updating from live data
-
+- Fixed crash when trying to update a partial frame (such as when initially connecting)
+- BridgeLab
+  + Damage and hitstun is no longer off by one sometimes, an issue caused by partial frames
