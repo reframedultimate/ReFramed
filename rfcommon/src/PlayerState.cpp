@@ -34,4 +34,23 @@ PlayerState::PlayerState(
 {
 }
 
+// ----------------------------------------------------------------------------
+PlayerState PlayerState::copyWithModifiedFrame(Frame frame) const
+{
+    return PlayerState(
+        timeStampMs(),
+        frame,
+        posx(), posy(),
+        damage(),
+        hitstun(),
+        shield(),
+        status(),
+        motion(),
+        hitStatus(),
+        stocks(),
+        attackConnected(),
+        facingDirection()
+    );
+}
+
 }

@@ -33,6 +33,8 @@ public:
             bool attack_connected,
             bool facing_direction);
 
+    PlayerState copyWithModifiedFrame(Frame frame) const;
+
     TimeStampMS timeStampMs() const { return timeStampMs_; }
     Frame frame() const { return frame_; }
     float posx() const { return posx_; }
