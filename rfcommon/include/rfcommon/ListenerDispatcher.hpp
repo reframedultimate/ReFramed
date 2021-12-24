@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/Vector.hpp"
+#include <exception>
 
 namespace rfcommon {
 
@@ -101,6 +102,9 @@ public:
     template <class RET_TYPE, class... ARGS, class... PARAMS>
     void dispatch(RET_TYPE (Listener::*func)(ARGS...), PARAMS&&... params) const;
 
+    template <class RET_TYPE, class... ARGS, class... PARAMS>
+    void dispatchIgnore(Listener* ignore, RET_TYPE (Listener::*func)(ARGS...), PARAMS&&... params) const;
+
     /*!
      * @brief Dispatches a message to all listeners
      * If any of the listeners return false, then this method will return false.
@@ -119,6 +123,10 @@ public:
 
 private:
     ContainerType listeners_;
+
+#ifndef NDEBUG
+    mutable bool isDispatching_ = false;
+#endif
 };
 
 
@@ -138,7 +146,10 @@ ListenerDispatcher<Listener>::~ListenerDispatcher()
 template <class Listener>
 void ListenerDispatcher<Listener>::addListener(Listener* listener)
 {
-#if defined(DEBUG)
+#ifndef NDEBUG
+    if (isDispatching_)
+        std::terminate();
+
     for (const auto& l : listeners_)
         if (l == listener)
             std::terminate();
@@ -151,6 +162,11 @@ void ListenerDispatcher<Listener>::addListener(Listener* listener)
 template <class Listener>
 void ListenerDispatcher<Listener>::removeListener(Listener* listener)
 {
+#ifndef NDEBUG
+    if (isDispatching_)
+        std::terminate();
+#endif
+
     for (auto it = listeners_.begin(); it != listeners_.end(); ++it)
         if (*it == listener)
         {
@@ -165,8 +181,35 @@ template <class RET_TYPE, typename... ARGS, typename... PARAMS>
 void ListenerDispatcher<Listener>::
     dispatch(RET_TYPE(Listener::*func)(ARGS...), PARAMS&&... params) const
 {
+#ifndef NDEBUG
+    isDispatching_ = true;
+#endif
+
     for(auto listener : listeners_)
         (listener->*func)(std::forward<ARGS>(params)...);
+
+#ifndef NDEBUG
+    isDispatching_ = false;
+#endif
+}
+
+// ----------------------------------------------------------------------------
+template <class Listener>
+template <class RET_TYPE, typename... ARGS, typename... PARAMS>
+void ListenerDispatcher<Listener>::
+    dispatchIgnore(Listener* ignore, RET_TYPE(Listener::*func)(ARGS...), PARAMS&&... params) const
+{
+#ifndef NDEBUG
+    isDispatching_ = true;
+#endif
+
+    for(auto listener : listeners_)
+        if (listener != ignore)
+            (listener->*func)(std::forward<ARGS>(params)...);
+
+#ifndef NDEBUG
+    isDispatching_ = false;
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -175,10 +218,18 @@ template <class... ARGS, class... PARAMS>
 bool ListenerDispatcher<Listener>::
     dispatchAndFindFalse(bool (Listener::*func)(ARGS...), PARAMS&&... params) const
 {
+#ifndef NDEBUG
+    isDispatching_ = true;
+#endif
+
     for(auto listener : listeners_)
         if ((listener->*func)(std::forward<ARGS>(params)...) == false)
             return false;
     return true;
+
+#ifndef NDEBUG
+    isDispatching_ = false;
+#endif
 }
 
 }

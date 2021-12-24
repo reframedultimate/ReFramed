@@ -2,6 +2,7 @@
 
 #include "rfcommon/tcp_socket.h"
 #include <QThread>
+#include <QMutex>
 #include <QString>
 
 namespace rfapp {
@@ -22,8 +23,11 @@ private:
     void run() override;
 
 private:
+    tcp_socket socket_;
     QString ipAddress_;
     uint16_t port_;
+    QMutex mutex_;
+    bool socketCreated_;
 };
 
 }

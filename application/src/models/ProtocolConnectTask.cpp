@@ -9,31 +9,45 @@ ProtocolConnectTask::ProtocolConnectTask(const QString& ipAddress, uint16_t port
     : QThread(parent)
     , ipAddress_(ipAddress)
     , port_(port)
-{}
+    , socketCreated_(false)
+{
+}
 
 // ----------------------------------------------------------------------------
 ProtocolConnectTask::~ProtocolConnectTask()
 {
+    mutex_.lock();
+        if (socketCreated_)
+            tcp_socket_shutdown(&socket_);
+    mutex_.unlock();
+
     wait();
+
+    if (socketCreated_)
+        tcp_socket_shutdown(&socket_);
 }
 
 // ----------------------------------------------------------------------------
 void ProtocolConnectTask::run()
 {
-    tcp_socket socket;
     QByteArray ba = ipAddress_.toLocal8Bit();
-    if (tcp_socket_connect_to_host(&socket, ba.data(), port_) != 0)
-    {
-        emit connectionFailure(
-                    tcp_socket_get_connect_error(&socket),
-                    ipAddress_, port_);
-        return;
-    }
+    mutex_.lock();
+        if (tcp_socket_connect_to_host(&socket_, ba.data(), port_) != 0)
+        {
+            emit connectionFailure(
+                        tcp_socket_get_connect_error(&socket_),
+                        ipAddress_, port_);
+            mutex_.unlock();
+            return;
+        }
+
+        socketCreated_ = true;
+    mutex_.unlock();
 
     // Get protocol version from switch and verify we're compatible
     char buf[3] = {ProtocolCommunicateTask::ProtocolVersion};
     const char* errormsg = "";
-    if (tcp_socket_write(&socket, buf, 1) != 1)
+    if (tcp_socket_write(&socket_, buf, 1) != 1)
     {
         errormsg = "Write error";
         goto socket_error;
@@ -41,7 +55,7 @@ void ProtocolConnectTask::run()
 
     while (true)
     {
-        if (tcp_socket_read(&socket, buf, 1) != 1)
+        if (tcp_socket_read(&socket_, buf, 1) != 1)
         {
             errormsg = "Read error";
             goto socket_error;
@@ -50,7 +64,7 @@ void ProtocolConnectTask::run()
         switch (buf[0])
         {
             case ProtocolCommunicateTask::ProtocolVersion: {
-                if (tcp_socket_read(&socket, buf, 2) != 2)
+                if (tcp_socket_read(&socket_, buf, 2) != 2)
                 {
                     errormsg = "Read error";
                     goto socket_error;
@@ -64,7 +78,6 @@ void ProtocolConnectTask::run()
                 emit connectionFailure(
                             QString("Unsupported protocol version major=%1, minor=%2").arg(buf[0]).arg(buf[1]),
                             ipAddress_, port_);
-                tcp_socket_close(&socket);
                 return;
 
             } break;
@@ -88,12 +101,11 @@ void ProtocolConnectTask::run()
         break;
     }
 
-    emit connectionSuccess(tcp_socket_to_handle(&socket), ipAddress_, port_);
+    emit connectionSuccess(tcp_socket_to_handle(&socket_), ipAddress_, port_);
     return;
 
 socket_error:
     emit connectionFailure(errormsg, ipAddress_, port_);
-    tcp_socket_close(&socket);
 }
 
 }
