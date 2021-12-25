@@ -101,6 +101,10 @@ void ProtocolConnectTask::run()
         break;
     }
 
+    mutex_.lock();
+        socketCreated_ = false;
+    mutex_.unlock();
+
     emit connectionSuccess(tcp_socket_to_handle(&socket_), ipAddress_, port_);
     return;
 
