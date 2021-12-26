@@ -10,7 +10,7 @@ class AnalysisResult;
 class DataSet;
 
 class RFCOMMON_PUBLIC_API AnalyzerPlugin : public Plugin
-                                   , public DataSetProcessor
+                                         , public DataSetProcessor
 {
 public:
     // MSVC requires classes to have constructors/destructors defined in exported classes
