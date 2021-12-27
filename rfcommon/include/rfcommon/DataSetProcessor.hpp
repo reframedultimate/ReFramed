@@ -4,6 +4,7 @@
 #include "rfcommon/DataSetProcessorListener.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/SessionListener.hpp"
+#include "rfcommon/Reference.hpp"
 
 namespace rfcommon {
 
@@ -18,9 +19,9 @@ class DataSetOut;
 class RFCOMMON_PUBLIC_API DataSetIn
 {
 public:
-    virtual void onDataSetProcessorSessionStarted(rfcommon::Session* session) = 0;
-    virtual void onDataSetProcessorNewUniqueFrame(rfcommon::Session* session, const SmallVector<int, 8>& stateIdxs) = 0;
-    virtual void onDataSetProcessorSessionEnded(rfcommon::Session* session) = 0;
+    virtual void onDataSetProcessorStartSession(const String& name) = 0;
+    virtual void onDataSetProcessorFrame(int frame, const SmallVector<PlayerState, 8>& states) = 0;
+    virtual void onDataSetProcessorEndSession(const String& name) = 0;
 };
 
 class RFCOMMON_PUBLIC_API DataSetOut
@@ -29,9 +30,9 @@ public:
     ListenerDispatcher<DataSetIn> dispatcher;
 
 protected:
-    void notifySessionStarted(rfcommon::Session* session);
-    void notifyNewUniqueFrame(rfcommon::Session* session, const SmallVector<int, 8>& stateIdxs);
-    void notifySessionEnded(rfcommon::Session* session);
+    void notifyStartDataSetRange(const String& name);
+    void notifyFrame(Session* session, const SmallVector<PlayerState, 8>& states);
+    void notifyEndDataSetRange(const String& name);
 };
 
 class RFCOMMON_PUBLIC_API AnalysisResultOut
@@ -40,8 +41,11 @@ public:
     ListenerDispatcher<DataSetIn> dispatcher;
 
 protected:
-    AnalysisResult* newAnalysis();
-    void finishAnalysis(AnalysisResult* a);
+    void notifyStartAnalysis(const String& name);
+    void notifyStartDataSetRange(const String& name);
+    void notifyFrame(Session* session, const SmallVector<PlayerState, 8>& states);
+    void notifyEndDataSetRange(const String& name);
+    void notifyEndAnalysis(const String& name);
 };
 
 class RFCOMMON_PUBLIC_API DataSetProcessor : public SessionListener
