@@ -22,9 +22,9 @@ public:
      * \param player The player's index within that recording from which the
      * state originated.
      */
-    DataPoint(const PlayerState& state, SavedGameSession* session, int player);
+    DataPoint(const FighterFrame& state, SavedGameSession* session, int player);
 
-    const PlayerState& state() const { return state_; }
+    const FighterFrame& state() const { return state_; }
     SavedGameSession* session() const { return session_; }
     int player() const { return playerIdx_;  }
 
@@ -33,13 +33,12 @@ public:
     uint32_t combinedState() const;
 
 private:
-    // Fix MSVC complaining about Vector::resize() requiring a default constructor. It
-    // never gets called
     friend class Vector<DataPoint>;
-    DataPoint() { assert(false); }
+    DataPoint() {}
 
+private:
     Reference<SavedGameSession> session_;
-    PlayerState state_;
+    FighterFrame state_;
     int playerIdx_;
 };
 

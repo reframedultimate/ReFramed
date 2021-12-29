@@ -15,7 +15,7 @@ DataSetFilter_Game::DataSetFilter_Game()
 DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    out->reserve(dataSet->dataPointCount());
+    /*out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
         const SavedGameSession* s = p->session();
@@ -27,7 +27,7 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 
         if (lengthInRange && formatType && formatName)
             out->addDataPointToEnd(*p);
-    }
+    }*/
 
     return out;
 }
@@ -36,7 +36,7 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    out->reserve(dataSet->dataPointCount());
+    /*out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
         const SavedGameSession* s = p->session();
@@ -48,7 +48,7 @@ DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
 
         if (!(lengthInRange && formatType && formatName))
             out->addDataPointToEnd(*p);
-    }
+    }*/
 
     return out;
 }

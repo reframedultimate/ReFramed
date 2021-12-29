@@ -9,18 +9,18 @@
 
 namespace rfcommon {
 
-class PlayerState;
-extern template class RFCOMMON_TEMPLATE_API Vector<PlayerState, int32_t>;
+class FighterFrame;
+extern template class RFCOMMON_TEMPLATE_API Vector<FighterFrame, int32_t>;
 
 /*!
  * \brief Stores information about a single state of one player. This includes
  * the animation state, frame it occurred on, damage, and stock count.
  */
-class RFCOMMON_PUBLIC_API PlayerState
+class RFCOMMON_PUBLIC_API FighterFrame
 {
 public:
-    PlayerState(
-            uint64_t timeStampMs,
+    FighterFrame(
+            TimeStampMS timeStampMs,
             Frame frame,
             float posx, float posy,
             float damage,
@@ -30,10 +30,7 @@ public:
             FighterMotion motion,
             FighterHitStatus hit_status,
             FighterStocks stocks,
-            bool attack_connected,
-            bool facing_direction);
-
-    PlayerState copyWithModifiedFrame(Frame frame) const;
+            FighterFlags flags);
 
     TimeStampMS timeStampMs() const { return timeStampMs_; }
     Frame frame() const { return frame_; }
@@ -43,35 +40,32 @@ public:
     float hitstun() const { return hitstun_; }
     float shield() const { return shield_; }
     FighterStatus status() const { return status_; }
-    FighterMotion motion() const { return static_cast<FighterMotion>(motionL_) | (static_cast<FighterMotion>(motionH_) << 32); }
+    FighterMotion motion() const { return motion_; }
     FighterHitStatus hitStatus() const { return hitStatus_; }
     FighterStocks stocks() const { return stocks_; }
-    bool attackConnected() const { return !!(flags_ & 0x01); }
-    bool facingDirection() const { return !!(flags_ & 0x02); }
+    FighterFlags flags() const { return flags_; }
 
 private:
-    // Fix MSVC complaining about Vector::resize() requiring a default constructor. It
-    // never gets called
     friend class DataPoint;
-    friend class Vector<PlayerState>;
-    PlayerState() { assert(false); }
+    friend class Vector<FighterFrame>;
+    FighterFrame() {}
 
-    TimeStampMS timeStampMs_;
-    Frame frame_;
+private:
+    TimeStampMS timeStampMs_;     // u64
+    FighterMotion motion_;        // u64
+    Frame frame_;                 // u32
     float posx_;
     float posy_;
     float damage_;
     float hitstun_;
     float shield_;
-    uint32_t motionL_;
-    uint8_t motionH_;
-    FighterHitStatus hitStatus_;
-    FighterStocks stocks_;
-    uint8_t flags_;
-    FighterStatus status_;
+    FighterStatus status_;        // u16
+    FighterHitStatus hitStatus_;  // u8
+    FighterStocks stocks_;        // u8
+    FighterFlags flags_;          // u8
 };
 
-inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)
+inline bool operator==(const FighterFrame& lhs, const FighterFrame& rhs)
 {
     if (lhs.posx() != rhs.posx()) return false;
     if (lhs.posy() != rhs.posy()) return false;
@@ -82,10 +76,9 @@ inline bool operator==(const PlayerState& lhs, const PlayerState& rhs)
     if (lhs.motion() != rhs.motion()) return false;
     if (lhs.hitStatus() != rhs.hitStatus()) return false;
     if (lhs.stocks() != rhs.stocks()) return false;
-    if (lhs.attackConnected() != rhs.attackConnected()) return false;
-    if (lhs.facingDirection() != rhs.facingDirection()) return false;
+    if (lhs.flags() != rhs.flags()) return false;
     return true;
 }
-inline bool operator!=(const PlayerState& lhs, const PlayerState& rhs) { return !operator==(lhs, rhs); }
+inline bool operator!=(const FighterFrame& lhs, const FighterFrame& rhs) { return !operator==(lhs, rhs); }
 
 }

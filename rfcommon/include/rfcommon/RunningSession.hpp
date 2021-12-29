@@ -12,15 +12,12 @@ protected:
     RunningSession(
             MappingInfo&& mapping,
             StageID stageID,
-            SmallVector<FighterID, 8>&& playerFighterIDs,
-            SmallVector<SmallString<15>, 8>&& playerTags
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags
     );
 
 public:
-    virtual void addPlayerState(int playerIdx, PlayerState&& state);
-
-protected:
-    uint8_t frameUniqueBits_;
+    virtual void addFrame(SmallVector<FighterFrame, 2>&& frame);
 };
 
 }

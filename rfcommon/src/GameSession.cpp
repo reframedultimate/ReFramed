@@ -5,7 +5,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 GameSession::GameSession(
-        SmallVector<SmallString<15>, 8>&& playerNames,
+        SmallVector<SmallString<15>, 2>&& playerNames,
         GameNumber gameNumber,
         SetNumber setNumber,
         SetFormat setFormat)
@@ -17,7 +17,7 @@ GameSession::GameSession(
 }
 
 // ----------------------------------------------------------------------------
-const SmallString<15>& GameSession::playerName(int playerIdx) const
+const SmallString<15>& GameSession::name(int playerIdx) const
 {
     return playerNames_[playerIdx];
 }
@@ -38,12 +38,6 @@ SetNumber GameSession::setNumber() const
 SetFormat GameSession::format() const
 {
     return format_;
-}
-
-// ----------------------------------------------------------------------------
-TimeStampMS GameSession::timeStampStartedMs() const
-{
-    return playerStates_[0][0].timeStampMs();
 }
 
 }

@@ -34,7 +34,7 @@ void FighterStatusMapping::addBaseEnumName(FighterStatus status, const String& n
 // ----------------------------------------------------------------------------
 void FighterStatusMapping::addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name)
 {
-    auto result = fighterSpecificEnumNames_.insertOrGet(fighterID, HashMap<FighterStatus, String>());
+    auto result = fighterSpecificEnumNames_.insertOrGet(fighterID, BaseEnumNames());
     result->value().insertOrGet(status, name);
 }
 

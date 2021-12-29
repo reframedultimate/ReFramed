@@ -2,6 +2,7 @@
 #include "rfcommon/SessionListener.hpp"
 #include "rfcommon/PlayerState.hpp"
 
+
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
@@ -13,48 +14,27 @@ RunningSession::RunningSession()
 RunningSession::RunningSession(
         MappingInfo&& mapping,
         StageID stageID,
-        SmallVector<FighterID, 8>&& playerFighterIDs,
-        SmallVector<SmallString<15>, 8>&& playerTags)
-    : Session(std::move(mapping), stageID, std::move(playerFighterIDs), std::move(playerTags))
-    , frameUniqueBits_(0)
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags)
+    : Session(std::move(mapping), stageID, std::move(fighterIDs), std::move(tags))
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningSession::addPlayerState(int playerIdx, PlayerState&& state)
+void RunningSession::addFrame(SmallVector<FighterFrame, 2>&& frame)
 {
-    frameUniqueBits_ <<= 1;
+    frames_.push(std::move(frame));
 
-    // Only add a new state if the previous one was different
-    if (playerStates_[playerIdx].count() == 0 || playerStates_[playerIdx].back() != state)
-    {
-        playerStates_[playerIdx].push(state);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, state);
-
-        frameUniqueBits_ |= 1;
-    }
-
-    // The UI still cares about every state
-    dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, state);
-
-    // Reached end of frame
-    if (playerIdx == playerCount() - 1)
-    {
-        rfcommon::SmallVector<PlayerState, 8> states;
-        for (int i = 0; i != playerCount(); ++i)
+    // If any fighter state is different from the previous one, notify
+    for (int i = 0; i != frames_.count(); ++i)
+        if (frames_[i].count() < 2 || frames_[i].back(1) != frames_[i].back(2))
         {
-            if (playerStateCount(i) < 1)
-                return;
-
-            states.push(playerStateAt(i, playerStateCount(i) - 1));
+            dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame);
+            break;
         }
 
-        if (frameUniqueBits_)
-            dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, states);
-        frameUniqueBits_ = 0;
-
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame, states);
-    }
+    // The UI cares about every frame
+    dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame);
 }
 
 }

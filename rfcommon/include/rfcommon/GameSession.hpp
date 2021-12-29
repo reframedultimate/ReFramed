@@ -8,17 +8,17 @@
 
 namespace rfcommon {
 
-class PlayerState;
+class FighterFrame;
 
 extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 8>;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 8>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<PlayerState>, 8>;
+extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<FighterFrame>, 8>;
 
 class RFCOMMON_PUBLIC_API GameSession : virtual public Session
 {
 protected:
     GameSession(
-            SmallVector<SmallString<15>, 8>&& playerNames,
+            SmallVector<SmallString<15>, 2>&& playerNames,
             GameNumber gameNumber=1,
             SetNumber setNumber=1,
             SetFormat setFormat=SetFormat::FRIENDLIES
@@ -30,9 +30,10 @@ public:
      * the tag, but many players like to create tags that are shorter or a
      * variation of their real name. This string is their real name.
      * Unlike tags, there is also no character limit to a player's name.
-     * \param index Which player to get
+     * \note If training mode, this will always be the same as the tag.
+     * \param fighterIdx Which player to get
      */
-    const SmallString<15>& playerName(int playerIdx) const override;
+    const SmallString<15>& name(int playerIdx) const override;
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -51,10 +52,8 @@ public:
      */
     SetFormat format() const;
 
-    TimeStampMS timeStampStartedMs() const override;
-
 protected:
-    SmallVector<SmallString<15>, 8> playerNames_;
+    SmallVector<SmallString<15>, 2> playerNames_;
     GameNumber gameNumber_;
     SetNumber setNumber_;
     SetFormat format_;

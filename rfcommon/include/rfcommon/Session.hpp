@@ -10,13 +10,13 @@
 
 namespace rfcommon {
 
-class PlayerState;
+class FighterFrame;
 class SessionListener;
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 8>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 8>;
-extern template class RFCOMMON_TEMPLATE_API Vector<PlayerState>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<PlayerState>, 8>;
+extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 2>;
+extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 2>;
+extern template class RFCOMMON_TEMPLATE_API Vector<FighterFrame>;
+extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<FighterFrame>, 2>;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<SessionListener*, 4>;
 extern template class RFCOMMON_TEMPLATE_API ListenerDispatcher<SessionListener>;
 
@@ -25,9 +25,11 @@ class RFCOMMON_PUBLIC_API Session : public RefCounted
 public:
     Session(MappingInfo&& mapping,
             StageID stageID,
-            SmallVector<FighterID, 8>&& playerFighterIDs,
-            SmallVector<SmallString<15>, 8>&& playerTags);
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags);
     virtual ~Session();
+
+    bool save(const String& fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
@@ -37,52 +39,56 @@ public:
         { return mappingInfo_; }
 
     /*!
-     * \brief Gets the number of players
+     * \brief Gets the number of fighters in this session. Usually 2, but can
+     * go up to 8.
      */
-    int playerCount() const;
+    int fighterCount() const
+        { return tags_.count(); }
 
     /*!
      * \brief Gets the tag used by the player. This is the string that appears
      * above the player in-game and is created when the player sets their controls.
-     * \param index Which player to get
+     * \param fighterIdx Which player to get
      */
-    const SmallString<15>& playerTag(int playerIdx) const;
+    const SmallString<15>& tag(int fighterIdx) const
+        { return tags_[fighterIdx]; }
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
      * the tag, but many players like to create tags that are shorter or a
      * variation of their real name. This string is their real name.
      * Unlike tags, there is also no character limit to a player's name.
-     * \param index Which player to get
+     * \note If training mode, this will always be the same as the tag.
+     * \param fighterIdx Which player to get
      */
-    virtual const SmallString<15>& playerName(int playerIdx) const = 0;
+    virtual const SmallString<15>& name(int fighterIdx) const = 0;
 
     /*!
-     * \brief Gets the fighter ID being used by the specified player.
-     * \param index The player to get
+     * \brief Gets the fighter ID being used by the specified player. The ID
+     * can be used to look up the character's type or name by using the
+     * MappingInfo structure.
+     * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
      */
-    FighterID playerFighterID(int playerIdx) const;
+    FighterID fighterID(int fighterIdx) const;
 
     /*!
-     * \brief Gets the stage ID being played on.
+     * \brief Gets the stage ID being played on. The ID can be used to look up
+     * the stage name by using the MappingInfo structure.
      */
     StageID stageID() const
         { return stageID_; }
 
-    int playerStateCount(int playerIdx) const;
+    int frameCount() const
+        { return frames_[0].count(); }
 
-    const PlayerState& playerStateAt(int playerIdx, int stateIdx) const;
+    const FighterFrame& frame(int fighterIdx, int frameIdx) const
+        { assert(fighterIdx < fighterCount() - 1); assert(frameIdx < frameCount() - 1); return frames_[fighterIdx][frameIdx]; }
 
-    const PlayerState& firstPlayerState(int playerIdx) const;
+    const FighterFrame& firstFrame(int fighterIdx) const
+        { assert(frameCount() > 0); return frames_[fighterIdx][0]; }
 
-    const PlayerState& lastPlayerState(int playerIdx) const;
-
-    const PlayerState* playerStatesBegin(int playerIdx) const;
-
-    const PlayerState* playerStatesEnd(int playerIdx) const;
-
-    void replayUniqueStateEvents(SessionListener* listener);
-    void replayUniqueFrameEvents(SessionListener* listener);
+    const FighterFrame& lastFrame(int fighterIdx) const
+        { assert(frameCount() > 0); return frames_[fighterIdx][frames_[fighterIdx].count() - 1]; }
 
     virtual int winner() const = 0;
 
@@ -98,7 +104,23 @@ public:
      * received (may not be the first frame of training mode depending on when
      * the user connected).
      */
-    virtual TimeStampMS timeStampStartedMs() const = 0;
+    TimeStampMS timeStampStartedMs() const;
+
+    /*!
+     * \brief Gets the absolute time of when the last timestamp was received in
+     * unix time (milli-seconds since Jan 1 1970). May be slightly off by 1
+     * second or so depending on latency.
+     *
+     * In the case of a running session, this will be the timestamp of the most
+     * current frame received.
+     *
+     * In the case of a saved session, this will be the timestamp of the last
+     * frame received.
+     */
+    TimeStampMS timeStampEndedMs() const;
+
+    DeltaTimeMS lengthMs() const
+        { return timeStampStartedMs() - timeStampEndedMs(); }
 
     ListenerDispatcher<SessionListener> dispatcher;
 
@@ -108,9 +130,9 @@ protected:
 protected:
     MappingInfo mappingInfo_;
     StageID stageID_;
-    SmallVector<FighterID, 8> playerFighterIDs_;
-    SmallVector<SmallString<15>, 8> playerTags_;
-    SmallVector<Vector<PlayerState>, 8> playerStates_;
+    SmallVector<FighterID, 2> fighterIDs_;
+    SmallVector<SmallString<15>, 2> tags_;
+    SmallVector<Vector<FighterFrame>, 2> frames_;
 };
 
 }

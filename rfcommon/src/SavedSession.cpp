@@ -169,7 +169,7 @@ SavedSession::SavedSession()
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::load(const String& fileName)
+SavedSession* SavedSession::load(const String& fileName)
 {
     json j;
     for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
@@ -188,7 +188,7 @@ SavedGameSession* SavedSession::load(const String& fileName)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    SavedGameSession* session;
+    SavedSession* session;
     std::string version = j["version"];
     if (version == "1.4")
     {
@@ -220,7 +220,7 @@ SavedGameSession* SavedSession::load(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
+SavedSession* SavedSession::loadVersion_1_0(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -248,7 +248,7 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
+        FighterID fighterID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -260,7 +260,7 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
+        StageID stageID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -272,9 +272,9 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
     // skip loading status mappings, it was broken in 1.0
     /*const json jsonFighterStatusMapping = jsonMappingInfo["fighterstatus"];*/
 
-    SmallVector<FighterID, 8> playerFighterIDs;
-    SmallVector<SmallString<15>, 8> playerTags;
-    SmallVector<SmallString<15>, 8> playerNames;
+    SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<SmallString<15>, 2> playerTags;
+    SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -282,7 +282,7 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID::Type>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
         playerNames.emplace(info["tag"].get<std::string>().c_str());  // "name" property didn't exist in 1.0
     }
@@ -298,51 +298,69 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
 
     std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
-        jsonGameInfo["stageid"].get<StageID>(),
+        jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jsonGameInfo["number"].get<GameNumber>(),
+        jsonGameInfo["number"].get<GameNumber::Type>(),
         1, // SetFormat did not exist in 1.0 yet
         SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
     ));
 
-    TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    const TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < session->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         int error = 0;
-        Frame stateCount = stream.readBU32(&error);
+        const Frame::Type stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        Frame framesPassed = 0;
-        Frame prevFrame = std::numeric_limits<Frame>::max();
-        for (Frame f = 0; f < stateCount; ++f)
+        // zero states are invalid
+        if (stateCount == 0)
+            return nullptr;
+
+        Frame::Type frameCounter = 0;
+        for (Frame::Type f = 0; f < stateCount; ++f)
         {
-            Frame frame = stream.readBU32(&error);
-            FighterStatus status = stream.readBU16(&error);
-            float damage = static_cast<float>(stream.readBF64(&error));
-            FighterStocks stocks = stream.readU8(&error);
+            const Frame frame = stream.readBU32(&error);
+            const FighterStatus status = stream.readBU16(&error);
+            const float damage = static_cast<float>(stream.readBF64(&error));
+            const FighterStocks stocks = stream.readU8(&error);
+            const FighterFlags flags(false, false);
 
             if (error)
                 return nullptr;
+            if (frame.value() == 0)
+                return nullptr;
 
-            // Version 1.0 did not timestamp each frame so we have to make a guesstimate
-            // based on the timestamp of when the recording started and how many
-            // frames passed since. This will not account for game pauses or
-            // lag, but it should be good enough.
-            TimeStampMS frameTimeStamp = firstFrameTimeStampMs + static_cast<TimeStampMS>(framesPassed * 1000.0 / 60.0);
-            if (prevFrame != std::numeric_limits<Frame>::max())
-                framesPassed += prevFrame - frame;
-            prevFrame = frame;
-
-            session->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
-
+            // Usually only unique states are saved, which means there will be
+            // gaps in between frames. Duplicate the current frame as many times
+            // as necessary and make sure to update the time stamp and frame
+            // counter
+            for (; frameCounter < frame.value(); ++frameCounter)
+            {
+                // Version 1.0 did not timestamp each frame so we have to make a guesstimate
+                // based on the timestamp of when the recording started and how many
+                // frames passed since. This will not account for game pauses or
+                // lag, but it should be good enough.
+                const TimeStampMS frameTimeStamp =  firstFrameTimeStampMs +
+                        DeltaTimeMS(frameCounter * 1000.0 / 60.0);
+                session->frames_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
+            }
         }
     }
+
+    // Ensure that every fighter has the same number of frames
+    const int highestFrameIdx = std::max_element(session->frames_.begin(), session->frames_.end(),
+        [](const Vector<FighterFrame>& a, const Vector<FighterFrame>& b){
+            return a.count() < b.count();
+    })->count();
+    for (auto& frames : session->frames_)
+        while (frames.count() < highestFrameIdx)
+            frames.emplace(frames.back());
 
     // Cache winner
     session->winner_ = session->findWinner();
@@ -351,7 +369,7 @@ SavedGameSession* SavedSession::loadVersion_1_0(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
+SavedSession* SavedSession::loadVersion_1_1(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -385,7 +403,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+        FighterStatus status(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -401,7 +419,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
+        FighterID fighterID(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -409,7 +427,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+            FighterStatus status(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -427,7 +445,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
+        FighterID fighterID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -448,9 +466,9 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
         mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
-    SmallVector<FighterID, 8> playerFighterIDs;
-    SmallVector<SmallString<15>, 8> playerTags;
-    SmallVector<SmallString<15>, 8> playerNames;
+    SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<SmallString<15>, 2> playerTags;
+    SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -458,7 +476,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
         if (info.contains("tag") == false || info["tag"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID::Type>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
         playerNames.emplace(info["tag"].get<std::string>().c_str());  // "name" property didn't exist in 1.1
     }
@@ -474,7 +492,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
 
     std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
-        jsonGameInfo["stageid"].get<StageID>(),
+        jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
@@ -483,41 +501,60 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
         SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
     ));
 
-    TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    const TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
 
-    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < session->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         int error = 0;
-        Frame stateCount = stream.readBU32(&error);
+        const Frame::Type stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        Frame framesPassed = 0;
-        Frame prevFrame = std::numeric_limits<Frame>::max();
-        for (Frame f = 0; f < stateCount; ++f)
+        // zero states are invalid
+        if (stateCount == 0)
+            return nullptr;
+
+        Frame::Type frameCounter = 0;
+        for (Frame::Type f = 0; f < stateCount; ++f)
         {
-            Frame frame = stream.readBU32(&error);
-            FighterStatus status = stream.readBU16(&error);
-            float damage = static_cast<float>(stream.readBF64(&error));
-            FighterStocks stocks = stream.readU8(&error);
+            const Frame frame = stream.readBU32(&error);
+            const FighterStatus status = stream.readBU16(&error);
+            const float damage = static_cast<float>(stream.readBF64(&error));
+            const FighterStocks stocks = stream.readU8(&error);
+            const FighterFlags flags(false, false);
 
             if (error)
                 return nullptr;
+            if (frame.value() == 0)
+                return nullptr;
 
-            // Version 1.1 did not timestamp each frame so we have to make a guesstimate
-            // based on the timestamp of when the recording started and how many
-            // frames passed since. This will not account for game pauses or
-            // lag, but it should be good enough.
-            TimeStampMS frameTimeStamp = firstFrameTimeStampMs + static_cast<TimeStampMS>(framesPassed * 1000.0 / 60.0);
-            if (prevFrame != std::numeric_limits<Frame>::max())
-                framesPassed += prevFrame - frame;
-            prevFrame = frame;
-
-            session->playerStates_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, false, false);
+            // Usually only unique states are saved, which means there will be
+            // gaps in between frames. Duplicate the current frame as many times
+            // as necessary and make sure to update the time stamp and frame
+            // counter
+            for (; frameCounter < frame.value(); ++frameCounter)
+            {
+                // Version 1.1 did not timestamp each frame so we have to make a guesstimate
+                // based on the timestamp of when the recording started and how many
+                // frames passed since. This will not account for game pauses or
+                // lag, but it should be good enough.
+                const TimeStampMS frameTimeStamp =  firstFrameTimeStampMs +
+                        DeltaTimeMS(frameCounter * 1000.0 / 60.0);
+                session->frames_[i].emplace(frameTimeStamp, frame, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
+            }
         }
     }
+
+    // Ensure that every fighter has the same number of frames
+    const int highestFrameIdx = std::max_element(session->frames_.begin(), session->frames_.end(),
+        [](const Vector<FighterFrame>& a, const Vector<FighterFrame>& b){
+            return a.count() < b.count();
+    })->count();
+    for (auto& frames : session->frames_)
+        while (frames.count() < highestFrameIdx)
+            frames.emplace(frames.back());
 
     // Cache winner
     session->winner_ = session->findWinner();
@@ -526,7 +563,7 @@ SavedGameSession* SavedSession::loadVersion_1_1(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
+SavedSession* SavedSession::loadVersion_1_2(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -560,7 +597,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+        FighterStatus status(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -579,7 +616,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
+        FighterID fighterID(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -587,7 +624,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+            FighterStatus status(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -608,7 +645,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
+        FighterID fighterID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -620,7 +657,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
+        StageID stageID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -629,9 +666,9 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
         mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
     }
 
-    SmallVector<FighterID, 8> playerFighterIDs;
-    SmallVector<SmallString<15>, 8> playerTags;
-    SmallVector<SmallString<15>, 8> playerNames;
+    SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<SmallString<15>, 2> playerTags;
+    SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -641,7 +678,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID::Type>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
         playerNames.emplace(info["name"].get<std::string>().c_str());
     }
@@ -659,60 +696,75 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
 
     std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
-        jsonGameInfo["stageid"].get<StageID>(),
+        jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jsonGameInfo["number"].get<GameNumber>(),
-        jsonGameInfo["set"].get<SetNumber>(),
+        jsonGameInfo["number"].get<GameNumber::Type>(),
+        jsonGameInfo["set"].get<SetNumber::Type>(),
         SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
     ));
 
-    TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    const TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
 
-    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < session->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         int error = 0;
-        Frame stateCount = stream.readBU32(&error);
+        const Frame::Type stateCount = stream.readBU32(&error);
         if (error)
             return nullptr;
 
-        Frame framesPassed = 0;
-        Frame prevFrame = std::numeric_limits<Frame>::max();
-        for (Frame f = 0; f < stateCount; ++f)
+        // zero states are invalid
+        if (stateCount == 0)
+            return nullptr;
+
+        Frame::Type frameCounter = 0;
+        for (Frame::Type f = 0; f < stateCount; ++f)
         {
-            Frame frame = stream.readBU32(&error);
-            float posx = static_cast<float>(stream.readBF64(&error));
-            float posy = static_cast<float>(stream.readBF64(&error));
-            float damage = static_cast<float>(stream.readBF64(&error));
-            float hitstun = static_cast<float>(stream.readBF64(&error));
-            float shield = static_cast<float>(stream.readBF64(&error));
-            FighterStatus status = stream.readBU16(&error);
-            FighterMotion motion = stream.readBU64(&error);
-            FighterHitStatus hit_status = stream.readU8(&error);
-            FighterStocks stocks = stream.readU8(&error);
-            uint8_t flags = stream.readU8(&error);
+            const Frame frame = stream.readBU32(&error);
+            const float posx = static_cast<float>(stream.readBF64(&error));
+            const float posy = static_cast<float>(stream.readBF64(&error));
+            const float damage = static_cast<float>(stream.readBF64(&error));
+            const float hitstun = static_cast<float>(stream.readBF64(&error));
+            const float shield = static_cast<float>(stream.readBF64(&error));
+            const FighterStatus status = stream.readBU16(&error);
+            const FighterMotion motion = stream.readBU64(&error);
+            const FighterHitStatus hit_status = stream.readU8(&error);
+            const FighterStocks stocks = stream.readU8(&error);
+            const FighterFlags flags = stream.readU8(&error);
 
             if (error)
                 return nullptr;
+            if (frame.value() == 0)
+                return nullptr;
 
-            // Version 1.2 did not timestamp each frame so we have to make a guesstimate
-            // based on the timestamp of when the recording started and how many
-            // frames passed since. This will not account for game pauses or
-            // lag, but it should be good enough.
-            TimeStampMS frameTimeStamp = firstFrameTimeStampMs + static_cast<TimeStampMS>(framesPassed * 1000.0 / 60.0);
-            if (prevFrame != std::numeric_limits<Frame>::max())
-                framesPassed += prevFrame - frame;
-            prevFrame = frame;
-
-            bool attack_connected = !!(flags & 0x01);
-            bool facing_direction = !!(flags & 0x02);
-
-            session->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+            // Usually only unique states are saved, which means there will be
+            // gaps in between frames. Duplicate the current frame as many times
+            // as necessary and make sure to update the time stamp and frame
+            // counter
+            for (; frameCounter < frame.value(); ++frameCounter)
+            {
+                // Version 1.2 did not timestamp each frame so we have to make a guesstimate
+                // based on the timestamp of when the recording started and how many
+                // frames passed since. This will not account for game pauses or
+                // lag, but it should be good enough.
+                const TimeStampMS frameTimeStamp =  firstFrameTimeStampMs +
+                        DeltaTimeMS(frameCounter * 1000.0 / 60.0);
+                session->frames_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+            }
         }
     }
+
+    // Ensure that every fighter has the same number of frames
+    const int highestFrameIdx = std::max_element(session->frames_.begin(), session->frames_.end(),
+        [](const Vector<FighterFrame>& a, const Vector<FighterFrame>& b){
+            return a.count() < b.count();
+    })->count();
+    for (auto& frames : session->frames_)
+        while (frames.count() < highestFrameIdx)
+            frames.emplace(frames.back());
 
     // Cache winner
     session->winner_ = session->findWinner();
@@ -721,7 +773,7 @@ SavedGameSession* SavedSession::loadVersion_1_2(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
+SavedSession* SavedSession::loadVersion_1_3(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -757,7 +809,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+        FighterStatus status(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -776,7 +828,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
+        FighterID fighterID(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -784,7 +836,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+            FighterStatus status(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -805,7 +857,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
+        FighterID fighterID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -817,7 +869,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
+        StageID stageID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -829,7 +881,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID = static_cast<FighterHitStatus>(std::stoul(key, &pos));
+        FighterHitStatus hitStatusID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -838,9 +890,9 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
         mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
 
-    SmallVector<FighterID, 8> playerFighterIDs;
-    SmallVector<SmallString<15>, 8> playerTags;
-    SmallVector<SmallString<15>, 8> playerNames;
+    SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<SmallString<15>, 2> playerTags;
+    SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -850,7 +902,7 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID::Type>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
         playerNames.emplace(info["name"].get<std::string>().c_str());
     }
@@ -868,75 +920,90 @@ SavedGameSession* SavedSession::loadVersion_1_3(const void* jptr)
     if (jsonGameInfo.contains("winner") == false || jsonGameInfo["winner"].is_number() == false)
         return nullptr;
 
-    std::unique_ptr<SavedGameSession> recording(new SavedGameSession(
+    std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
-        jsonGameInfo["stageid"].get<StageID>(),
+        jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jsonGameInfo["number"].get<GameNumber>(),
-        jsonGameInfo["set"].get<SetNumber>(),
+        jsonGameInfo["number"].get<GameNumber::Type>(),
+        jsonGameInfo["set"].get<SetNumber::Type>(),
         SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
     ));
 
-    TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    const TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
 
-    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < recording->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         int error = 0;
-        Frame stateCount = stream.readLU32(&error);
+        const Frame::Type stateCount = stream.readLU32(&error);
         if (error)
             return nullptr;
 
-        Frame framesPassed = 0;
-        Frame prevFrame = std::numeric_limits<Frame>::max();
-        for (Frame f = 0; f < stateCount; ++f)
+        // zero states are invalid
+        if (stateCount == 0)
+            return nullptr;
+
+        Frame::Type frameCounter = 0;
+        for (Frame::Type f = 0; f < stateCount; ++f)
         {
-            Frame frame = stream.readLU32(&error);
-            float posx = stream.readLF32(&error);
-            float posy = stream.readLF32(&error);
-            float damage = stream.readLF32(&error);
-            float hitstun = stream.readLF32(&error);
-            float shield = stream.readLF32(&error);
-            FighterStatus status = stream.readLU16(&error);
-            uint32_t motion_l = stream.readLU32(&error);
-            uint8_t motion_h = stream.readU8(&error);
-            FighterHitStatus hit_status = stream.readU8(&error);
-            FighterStocks stocks = stream.readU8(&error);
-            uint8_t flags = stream.readU8(&error);
+            const Frame frame = stream.readLU32(&error);
+            const float posx = stream.readLF32(&error);
+            const float posy = stream.readLF32(&error);
+            const float damage = stream.readLF32(&error);
+            const float hitstun = stream.readLF32(&error);
+            const float shield = stream.readLF32(&error);
+            const FighterStatus status = stream.readLU16(&error);
+            const uint32_t motion_l = stream.readLU32(&error);
+            const uint8_t motion_h = stream.readU8(&error);
+            const FighterHitStatus hit_status = stream.readU8(&error);
+            const FighterStocks stocks = stream.readU8(&error);
+            const uint8_t flags = stream.readU8(&error);
 
             if (error)
                 return nullptr;
+            if (frame.value() == 0)
+                return nullptr;
 
-            FighterMotion motion = static_cast<uint64_t>(motion_l)
-                                 | (static_cast<uint64_t>(motion_h) << 32);
+            const FighterMotion motion = static_cast<uint64_t>(motion_l)
+                                       | (static_cast<uint64_t>(motion_h) << 32);
 
-            bool attack_connected = !!(flags & 0x01);
-            bool facing_direction = !!(flags & 0x02);
-
-            // Version 1.3 did not timestamp each frame so we have to make a guesstimate
-            // based on the timestamp of when the recording started and how many
-            // frames passed since. This will not account for game pauses or
-            // lag, but it should be good enough.
-            TimeStampMS frameTimeStamp = firstFrameTimeStampMs + static_cast<TimeStampMS>(framesPassed * 1000.0 / 60.0);
-            if (prevFrame != std::numeric_limits<Frame>::max())
-                framesPassed += prevFrame - frame;
-            prevFrame = frame;
-
-            recording->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+            // Usually only unique states are saved, which means there will be
+            // gaps in between frames. Duplicate the current frame as many times
+            // as necessary and make sure to update the time stamp and frame
+            // counter
+            for (; frameCounter < frame.value(); ++frameCounter)
+            {
+                // Version 1.3 did not timestamp each frame so we have to make a guesstimate
+                // based on the timestamp of when the recording started and how many
+                // frames passed since. This will not account for game pauses or
+                // lag, but it should be good enough.
+                const TimeStampMS frameTimeStamp =  firstFrameTimeStampMs +
+                        DeltaTimeMS(frameCounter * 1000.0 / 60.0);
+                session->frames_[i].emplace(frameTimeStamp, frameCounter + 1, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+            }
         }
     }
 
-    // Cache winner
-    recording->winner_ = recording->findWinner();
+    // Ensure that every fighter has the same number of frames
+    const int highestFrameIdx = std::max_element(session->frames_.begin(), session->frames_.end(),
+        [](const Vector<FighterFrame>& a, const Vector<FighterFrame>& b){
+            return a.count() < b.count();
+    })->count();
+    for (auto& frames : session->frames_)
+        while (frames.count() < highestFrameIdx)
+            frames.emplace(frames.back());
 
-    return recording.release();
+    // Cache winner
+    session->winner_ = session->findWinner();
+
+    return session.release();
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
+SavedSession* SavedSession::loadVersion_1_4(const void* jptr)
 {
     const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
@@ -972,7 +1039,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonFighterStatusMapping["base"].items())
     {
         std::size_t pos;
-        FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+        FighterStatus status(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -994,7 +1061,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
         for (const auto& [fighter, jsonSpecificMapping] : jsonFighterStatusMapping["specific"].items())
         {
             std::size_t pos;
-            FighterID fighterID = static_cast<FighterID>(std::stoul(fighter, &pos));
+            FighterID fighterID(std::stoul(fighter, &pos));
             if (pos != fighter.length())
                 return nullptr;
             if (jsonSpecificMapping.is_object() == false)
@@ -1002,7 +1069,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
 
             for (const auto& [key, value] : jsonSpecificMapping.items())
             {
-                FighterStatus status = static_cast<FighterStatus>(std::stoul(key, &pos));
+                FighterStatus status(std::stoul(key, &pos));
                 if (pos != key.length())
                     return nullptr;
                 if (value.is_array() == false)
@@ -1024,7 +1091,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
-        FighterID fighterID = static_cast<FighterID>(std::stoul(key, &pos));
+        FighterID fighterID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1036,7 +1103,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
     {
         std::size_t pos;
-        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
+        StageID stageID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1048,7 +1115,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
     for (const auto& [key, value] : jsonMappingInfo["hitstatus"].items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID = static_cast<FighterHitStatus>(std::stoul(key, &pos));
+        FighterHitStatus hitStatusID(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -1057,9 +1124,9 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
         mappingInfo.hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
 
-    SmallVector<FighterID, 8> playerFighterIDs;
-    SmallVector<SmallString<15>, 8> playerTags;
-    SmallVector<SmallString<15>, 8> playerNames;
+    SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<SmallString<15>, 2> playerTags;
+    SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jsonPlayerInfo)
     {
         if (info.contains("fighterid") == false || info["fighterid"].is_number() == false)
@@ -1069,7 +1136,7 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
         if (info.contains("name") == false || info["name"].is_string() == false)
             return nullptr;
 
-        playerFighterIDs.emplace(info["fighterid"].get<FighterID>());
+        playerFighterIDs.emplace(info["fighterid"].get<FighterID::Type>());
         playerTags.emplace(info["tag"].get<std::string>().c_str());
         playerNames.emplace(info["name"].get<std::string>().c_str());
     }
@@ -1091,63 +1158,79 @@ SavedGameSession* SavedSession::loadVersion_1_4(const void* jptr)
 
     std::unique_ptr<SavedGameSession> session(new SavedGameSession(
         std::move(mappingInfo),
-        jsonGameInfo["stageid"].get<StageID>(),
+        jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jsonGameInfo["number"].get<GameNumber>(),
-        jsonGameInfo["set"].get<SetNumber>(),
+        jsonGameInfo["number"].get<GameNumber::Type>(),
+        jsonGameInfo["set"].get<SetNumber::Type>(),
         SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
     ));
 
-    std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < session->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         int error = 0;
-        Frame stateCount = stream.readLU32(&error);
+        const Frame::Type stateCount = stream.readLU32(&error);
         if (error)
             return nullptr;
 
-        for (Frame f = 0; f < stateCount; ++f)
+        // zero states are invalid
+        if (stateCount == 0)
+            return nullptr;
+
+        Frame::Type frameCounter = 0;
+        for (Frame::Type f = 0; f < stateCount; ++f)
         {
-            TimeStampMS frameTimeStamp = stream.readLU64(&error);
-            Frame frame = stream.readLU32(&error);
-            float posx = stream.readLF32(&error);
-            float posy = stream.readLF32(&error);
-            float damage = stream.readLF32(&error);
-            float hitstun = stream.readLF32(&error);
-            float shield = stream.readLF32(&error);
-            FighterStatus status = stream.readLU16(&error);
-            uint32_t motion_l = stream.readLU32(&error);
-            uint8_t motion_h = stream.readU8(&error);
-            FighterHitStatus hit_status = stream.readU8(&error);
-            FighterStocks stocks = stream.readU8(&error);
-            uint8_t flags = stream.readU8(&error);
+            const TimeStampMS frameTimeStamp = stream.readLU64(&error);
+            const Frame frame = stream.readLU32(&error);
+            const float posx = stream.readLF32(&error);
+            const float posy = stream.readLF32(&error);
+            const float damage = stream.readLF32(&error);
+            const float hitstun = stream.readLF32(&error);
+            const float shield = stream.readLF32(&error);
+            const FighterStatus status = stream.readLU16(&error);
+            const uint32_t motion_l = stream.readLU32(&error);
+            const uint8_t motion_h = stream.readU8(&error);
+            const FighterHitStatus hit_status = stream.readU8(&error);
+            const FighterStocks stocks = stream.readU8(&error);
+            const uint8_t flags = stream.readU8(&error);
 
             if (error)
                 return nullptr;
+            if (frame.value() == 0)
+                return nullptr;
 
-            FighterMotion motion = static_cast<uint64_t>(motion_l)
-                                 | (static_cast<uint64_t>(motion_h) << 32);
+            const FighterMotion motion = static_cast<uint64_t>(motion_l)
+                                       | (static_cast<uint64_t>(motion_h) << 32);
 
-            bool attack_connected = !!(flags & 0x01);
-            bool facing_direction = !!(flags & 0x02);
-
-            session->playerStates_[i].emplace(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+            // Usually only unique states are saved, which means there will be
+            // gaps in between frames. Duplicate the current frame as many times
+            // as necessary and make sure to update the time stamp and frame
+            // counter
+            for (; frameCounter < frame.value(); ++frameCounter)
+            {
+                const TimeStampMS actualTimeStamp = frameTimeStamp +
+                        DeltaTimeMS((frame.value() - frameCounter - 1) * 1000.0 / 60.0);
+                session->frames_[i].emplace(actualTimeStamp, frameCounter + 1, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+            }
         }
     }
+
+    // Ensure that every fighter has the same number of frames
+    const int highestFrameIdx = std::max_element(session->frames_.begin(), session->frames_.end(),
+        [](const Vector<FighterFrame>& a, const Vector<FighterFrame>& b){
+            return a.count() < b.count();
+    })->count();
+    for (auto& frames : session->frames_)
+        while (frames.count() < highestFrameIdx)
+            frames.emplace(frames.back());
 
     // Cache winner
     session->winner_ = session->findWinner();
 
     return session.release();
-}
-
-// ----------------------------------------------------------------------------
-TimeStampMS SavedSession::timeStampEndedMs() const
-{
-    return lastPlayerState(playerCount() - 1).timeStampMs();
 }
 
 }

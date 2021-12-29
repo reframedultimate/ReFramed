@@ -12,31 +12,23 @@ public:
     RunningGameSession(
             MappingInfo&& mapping,
             StageID stageID,
-            SmallVector<FighterID, 8>&& playerFighterIDs,
-            SmallVector<SmallString<15>, 8>&& playerTags,
-            SmallVector<SmallString<15>, 8>&& playerNames
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<SmallString<15>, 2>&& playerNames
     );
 
-    bool save(const String& fileName);
-
-    void setPlayerName(int index, const SmallString<15>& name);
+    void setPlayerName(int fighterIdx, const SmallString<15>& name);
     void setGameNumber(GameNumber number);
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
 
-    void addPlayerState(int playerIdx, PlayerState&& state) override;
-    int winner() const override
-        { return currentWinner_; }
+    void addFrame(SmallVector<FighterFrame, 2>&& frame) override;
 
-    // Make MSVC shut up about dominance
-    const SmallString<15>& playerName(int playerIdx) const override
-        { return GameSession::playerName(playerIdx); }
-    TimeStampMS timeStampStartedMs() const override
-        { return timeStampStarted_; }
+    int winner() const override
+        { assert(currentWinner_ != -1); return currentWinner_; }
 
 private:
-    TimeStampMS timeStampStarted_;
-    int currentWinner_ = 0;
+    int currentWinner_ = -1;
 };
 
 }

@@ -15,9 +15,9 @@
 
 namespace rfcommon {
 
-template class HashMap<FighterID, String>;
-template class HashMap<FighterStatus, String>;
-template class HashMap<FighterID, HashMap<FighterStatus, String>>;
+template class HashMap<FighterID, String, FighterIDHasher>;
+template class HashMap<FighterStatus, String, FighterStatusHasher>;
+template class HashMap<FighterID, HashMap<FighterStatus, String, FighterStatusHasher>, FighterIDHasher>;
 template class ListenerDispatcher<DataSetFilterListener>;
 template class ListenerDispatcher<DataSetProcessorListener>;
 template class ListenerDispatcher<SessionListener>;
@@ -29,18 +29,18 @@ template class SmallLinearMap<StageID, String, 10>;
 template class SmallString<15>;
 template class SmallVector<DataSetFilterListener*, 4>;
 template class SmallVector<DataSetProcessorListener*, 4>;
-template class SmallVector<FighterID, 8>;
+template class SmallVector<FighterID, 2>;
 template class SmallVector<FighterHitStatus, 6>;
 template class SmallVector<SessionListener*, 4>;
 template class SmallVector<Reference<DataSetFilter>, 8>;
-template class SmallVector<SmallString<15>, 8>;
+template class SmallVector<SmallString<15>, 2>;
 template class SmallVector<StageID, 10>;
 template class SmallVector<String, 6>;
 template class SmallVector<String, 10>;
-template class SmallVector<Vector<PlayerState>, 8>;
+template class SmallVector<Vector<FighterFrame>, 2>;
 template class Vector<uint32_t>;
 template class Vector<DataPoint>;
-template class Vector<PlayerState>;
+template class Vector<FighterFrame>;
 template class Vector<char>;
 
 }

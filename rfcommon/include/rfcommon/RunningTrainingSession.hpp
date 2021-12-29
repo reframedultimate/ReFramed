@@ -12,24 +12,12 @@ public:
     RunningTrainingSession(
             MappingInfo&& mapping,
             StageID stageID,
-            SmallVector<FighterID, 8>&& playerFighterIDs,
-            SmallVector<SmallString<15>, 8>&& playerTags
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags
     );
-
-    const SmallString<15>& playerName(int playerIdx) const
-        { return playerTag(playerIdx); }
 
     int winner() const override
         { return -1; }
-
-    // Make MSVC shut up about dominance
-    TimeStampMS timeStampStartedMs() const override
-        { return TrainingSession::timeStampStartedMs(); }
-
-    void addPlayerState(int playerIdx, PlayerState&& state) override;
-
-private:
-    int frameCounter_;
 };
 
 }

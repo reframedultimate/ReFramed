@@ -4,7 +4,7 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-DataPoint::DataPoint(const PlayerState& state, SavedGameSession* session, int player)
+DataPoint::DataPoint(const FighterFrame& state, SavedGameSession* session, int player)
     : session_(session)
     , state_(state)
     , playerIdx_(player)
@@ -14,7 +14,7 @@ DataPoint::DataPoint(const PlayerState& state, SavedGameSession* session, int pl
 // ----------------------------------------------------------------------------
 const SmallString<15>& DataPoint::playerName() const
 {
-    return session_->playerName(playerIdx_);
+    return session_->name(playerIdx_);
 }
 
 // ----------------------------------------------------------------------------
