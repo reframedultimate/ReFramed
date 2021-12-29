@@ -41,8 +41,8 @@ public:
     const T& operator[](S i) const { return begin_[i]; }
     T& front() { return begin_[0]; }
     const T& front() const { return begin_[0]; }
-    T& back() { return begin_[count_ - 1]; }
-    const T& back() const { return begin_[count_ - 1]; }
+    T& back(S offset=1) { return begin_[count_ - offset]; }
+    const T& back(S offset=1) const { return begin_[count_ - offset]; }
     T& at(S pos) { return begin_[pos]; }
     const T& at(S pos) const { return begin_[pos]; }
 
@@ -433,7 +433,7 @@ public:
     {}
 
     Vector(const Vector& other)
-        : VectorBase<T, S>()
+        : Vector()
     {
         insertCopy(0, other.begin_, other.end());
     }
@@ -442,6 +442,20 @@ public:
         : Vector()
     {
         swap(*this, other);
+    }
+
+    template <int N>
+    Vector(const SmallVector<T, N>& other)
+        : Vector()
+    {
+        insertCopy(0, other.begin(), other.end());
+    }
+
+    template <int N>
+    Vector(SmallVector<T, N>&& other)
+        : Vector()
+    {
+        insertMove(0, other.begin(), other.end());
     }
 
     Vector(S resizeCount)

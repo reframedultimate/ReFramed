@@ -14,12 +14,12 @@ class RFCOMMON_PUBLIC_API FighterIDMapping
 {
 public:
     const String* map(FighterID fighterID) const;
-    void add(FighterID fighterId, const String& name);
+    void add(FighterID fighterID, const String& name);
 
-    const HashMap<FighterID, String>& get() const { return map_; }
+    const HashMap<FighterID, String, FighterIDHasher>& get() const { return map_; }
 
 private:
-    HashMap<FighterID, String> map_;
+    HashMap<FighterID, String, FighterIDHasher> map_;
 };
 
 }

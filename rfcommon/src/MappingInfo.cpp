@@ -21,7 +21,7 @@ bool MappingInfo::save(const String& fileName) const
         /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
         const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-        fighterBaseStatusMapping[std::to_string(it->key())] = {it->value().cStr(), "", ""};
+        fighterBaseStatusMapping[it->key().toStdString()] = {it->value().cStr(), "", ""};
     }
 
     json fighterSpecificStatusMapping;
@@ -34,11 +34,11 @@ bool MappingInfo::save(const String& fileName) const
             /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
             const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
 
-            specificMapping[std::to_string(it->key())] = {it->value().cStr(), "", ""};
+            specificMapping[it->key().toStdString()] = {it->value().cStr(), "", ""};
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[std::to_string(fighter->key())] = specificMapping;
+            fighterSpecificStatusMapping[fighter->key().toStdString()] = specificMapping;
     }
 
     json fighterStatusMapping = {
@@ -49,17 +49,17 @@ bool MappingInfo::save(const String& fileName) const
     json fighterIDMapping;
     const auto& fighterIDMap = fighterID.get();
     for (const auto& it : fighterIDMap)
-        fighterIDMapping[std::to_string(it->key())] = it->value().cStr();
+        fighterIDMapping[it->key().toStdString()] = it->value().cStr();
 
     json stageIDMapping;
     const auto& stageIDMap = stageID.get();
     for (const auto& it : stageIDMap)
-        stageIDMapping[std::to_string(it->key())] = it->value().cStr();
+        stageIDMapping[it->key().toStdString()] = it->value().cStr();
 
     json hitStatusMapping;
     const auto& hitStatusMap = hitStatus.get();
     for (const auto& it : hitStatusMap)
-        hitStatusMapping[std::to_string(it.key())] = it.value().cStr();
+        hitStatusMapping[it.key().toStdString()] = it.value().cStr();
 
     json mappingInfo = {
         {"checksum", checksum_},

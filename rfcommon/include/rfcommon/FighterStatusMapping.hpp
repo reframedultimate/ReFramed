@@ -36,18 +36,21 @@ extern template class RFCOMMON_TEMPLATE_API HashMap<FighterID, HashMap<FighterSt
 class RFCOMMON_PUBLIC_API FighterStatusMapping
 {
 public:
+    typedef HashMap<FighterStatus, String, FighterStatusHasher> BaseEnumNames;
+    typedef HashMap<FighterID, BaseEnumNames, FighterIDHasher> FighterSpecificEnumNames;
+
     const String* statusToBaseEnumName(FighterStatus status) const;
     const String* statusToFighterSpecificEnumName(FighterStatus status, FighterID fighterID) const;
 
     void addBaseEnumName(FighterStatus status, const String& name);
     void addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const String& name);
 
-    const HashMap<FighterStatus, String>& baseEnumNames() const { return baseEnumNames_; }
-    const HashMap<FighterID, HashMap<FighterStatus, String>>& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
+    const BaseEnumNames& baseEnumNames() const { return baseEnumNames_; }
+    const FighterSpecificEnumNames& fighterSpecificEnumNames() const { return fighterSpecificEnumNames_; }
 
 private:
-    HashMap<FighterStatus, String> baseEnumNames_;
-    HashMap<FighterID, HashMap<FighterStatus, String>> fighterSpecificEnumNames_;
+    BaseEnumNames baseEnumNames_;
+    FighterSpecificEnumNames fighterSpecificEnumNames_;
 };
 
 }

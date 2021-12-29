@@ -15,37 +15,48 @@ class DataSet;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<DataSetProcessorListener*, 4>;
 extern template class RFCOMMON_TEMPLATE_API ListenerDispatcher<DataSetProcessorListener>;
 
+/*
 class DataSetOut;
-class RFCOMMON_PUBLIC_API DataSetIn
+class RFCOMMON_PUBLIC_API DataSetProcessorListener
 {
 public:
     virtual void onDataSetProcessorStartSession(const String& name) = 0;
-    virtual void onDataSetProcessorFrame(int frame, const SmallVector<PlayerState, 8>& states) = 0;
+    virtual void onDataSetProcessorFrame(int frame, const SmallVector<FighterFrame, 8>& states) = 0;
     virtual void onDataSetProcessorEndSession(const String& name) = 0;
 };
 
-class RFCOMMON_PUBLIC_API DataSetOut
+class RFCOMMON_PUBLIC_API AnalysisProcessorListener
 {
 public:
-    ListenerDispatcher<DataSetIn> dispatcher;
-
-protected:
-    void notifyStartDataSetRange(const String& name);
-    void notifyFrame(Session* session, const SmallVector<PlayerState, 8>& states);
-    void notifyEndDataSetRange(const String& name);
+    virtual void onAnalysisProcessorStartSession(const String& name) = 0;
+    virtual void onAnalysisProcessorStartSessionRange(const String& name) = 0;
+    virtual void onAnalysisProcessorFrame(const SmallVector<FighterFrame, 8>& states) = 0;
+    virtual void onAnalysisProcessorEndSessionRange(const String& name) = 0;
+    virtual void onAnalysisProcessorEndSession(const String& name) = 0;
 };
 
-class RFCOMMON_PUBLIC_API AnalysisResultOut
+class RFCOMMON_PUBLIC_API DataSetProcessor : public DataSetProcessorListener
 {
 public:
-    ListenerDispatcher<DataSetIn> dispatcher;
+    ListenerDispatcher<DataSetProcessorListener> dispatcher;
 
 protected:
-    void notifyStartAnalysis(const String& name);
-    void notifyStartDataSetRange(const String& name);
-    void notifyFrame(Session* session, const SmallVector<PlayerState, 8>& states);
-    void notifyEndDataSetRange(const String& name);
-    void notifyEndAnalysis(const String& name);
+    void notifyDataSetStartSession(const String& name);
+    void notifyDataSetFrame(Session* session, const SmallVector<FighterFrame, 8>& states);
+    void notifyDataSetEndSession(const String& name);
+};
+
+class RFCOMMON_PUBLIC_API AnalysisProcessor : public DataSetProcessorListener
+{
+public:
+    ListenerDispatcher<AnalysisProcessorListener> dispatcher;
+
+protected:
+    void notifyAnalysisProcessorStartSession(const String& name);
+    void notifyAnalysisProcessorStartSessionRange(const String& name);
+    void notifyAnalysisProcessorFrame(const SmallVector<FighterFrame, 8>& states);
+    void notifyAnalysisProcessorEndSessionRange(const String& name);
+    void notifyAnalysisProcessorEndSession(const String& name);
 };
 
 class RFCOMMON_PUBLIC_API DataSetProcessor : public SessionListener
@@ -59,13 +70,13 @@ public:
     virtual void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) = 0;
 
     // RunningSession events
-    virtual void onRunningSessionNewUniquePlayerState(int playerIdx, const PlayerState& state) = 0;
-    virtual void onRunningSessionNewPlayerState(int playerIdx, const PlayerState& state) = 0;
-    virtual void onRunningSessionNewUniqueFrame(const SmallVector<PlayerState, 8>& states) = 0;
-    virtual void onRunningSessionNewFrame(const SmallVector<PlayerState, 8>& states) = 0;
-};
+    virtual void onRunningSessionNewUniquePlayerState(int playerIdx, const FighterFrame& state) = 0;
+    virtual void onRunningSessionNewPlayerState(int playerIdx, const FighterFrame& state) = 0;
+    virtual void onRunningSessionNewUniqueFrame(const SmallVector<FighterFrame, 8>& states) = 0;
+    virtual void onRunningSessionNewFrame(const SmallVector<FighterFrame, 8>& states) = 0;
+};*/
 
-class RFCOMMON_PUBLIC_API DataSetProcessorOld : public DataSetProcessorListener
+class RFCOMMON_PUBLIC_API DataSetProcessor : public DataSetProcessorListener
 {
 public:
     ListenerDispatcher<DataSetProcessorListener> dispatcher;

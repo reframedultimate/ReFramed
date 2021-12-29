@@ -11,7 +11,7 @@ DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
     out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
-        const PlayerState& state = p->state();
+        const FighterFrame& state = p->state();
         if (state.timeStampMs() >= startTime_ && state.timeStampMs() <= endTime_)
             out->addDataPointToEnd(*p);
     }
@@ -26,7 +26,7 @@ DataSet* DataSetFilter_Date::applyInverse(const DataSet* dataSet)
     out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
     {
-        const PlayerState& state = p->state();
+        const FighterFrame& state = p->state();
         if (state.timeStampMs() < startTime_ || state.timeStampMs() > endTime_)
             out->addDataPointToEnd(*p);
     }

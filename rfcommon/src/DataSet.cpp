@@ -34,9 +34,9 @@ void DataSet::addDataPointToEnd(const DataPoint& dataPoint)
 // ----------------------------------------------------------------------------
 void DataSet::addSessionNoSort(SavedGameSession* gameSession)
 {
-    for (int p = 0; p != gameSession->playerCount(); ++p)
-        for (int i = 0; i != gameSession->playerStateCount(p); ++i)
-            points_.emplace(gameSession->playerStateAt(p, i), gameSession, p);
+    for (int p = 0; p != gameSession->fighterCount(); ++p)
+        for (int i = 0; i != gameSession->frameCount(); ++i)
+            points_.emplace(gameSession->frame(p, i), gameSession, p);
 }
 
 // ----------------------------------------------------------------------------

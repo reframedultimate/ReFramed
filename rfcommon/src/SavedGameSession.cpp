@@ -6,14 +6,14 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 SavedGameSession::SavedGameSession(
         MappingInfo&& mapping,
-        uint16_t stageID,
-        SmallVector<FighterID, 8>&& playerFighterIDs,
-        SmallVector<SmallString<15>, 8>&& playerTags,
-        SmallVector<SmallString<15>, 8>&& playerNames,
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<SmallString<15>, 2>&& playerNames,
         GameNumber gameNumber,
         SetNumber setNumber,
         SetFormat setFormat)
-    : Session(std::move(mapping), stageID, std::move(playerFighterIDs), std::move(playerTags))
+    : Session(std::move(mapping), stageID, std::move(fighterIDs), std::move(tags))
     , SavedSession()
     , GameSession(std::move(playerNames), gameNumber, setNumber, setFormat)
 {
