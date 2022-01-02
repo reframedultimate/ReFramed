@@ -8,7 +8,7 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionManager::RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject *parent)
+RunningGameSessionManager::RunningGameSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent)
     : QObject(parent)
     , protocol_(protocol)
     , savedSessionManager_(manager)
@@ -46,15 +46,15 @@ void RunningGameSessionManager::setFormat(const rfcommon::SetFormat& format)
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setP1Name(const QString& name)
 {
-    if (activeSession_ && activeSession_->playerCount() == 2)
+    if (activeSession_ && activeSession_->fighterCount() == 2)
     {
         if (name == "")
-            activeSession_->setPlayerName(0, activeSession_->playerTag(0));
+            activeSession_->setPlayerName(0, activeSession_->tag(0));
         else
             activeSession_->setPlayerName(0, name.toStdString().c_str());
 
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            0, activeSession_->playerName(0));
+                0, activeSession_->name(0));
     }
     else
     {
@@ -66,15 +66,15 @@ void RunningGameSessionManager::setP1Name(const QString& name)
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::setP2Name(const QString& name)
 {
-    if (activeSession_ && activeSession_->playerCount() == 2)
+    if (activeSession_ && activeSession_->fighterCount() == 2)
     {
         if (name == "")
-            activeSession_->setPlayerName(1, activeSession_->playerTag(1));
+            activeSession_->setPlayerName(1, activeSession_->tag(1));
         else
             activeSession_->setPlayerName(1, name.toStdString().c_str());
 
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            1, activeSession_->playerName(1));
+                1, activeSession_->name(1));
     }
     else
     {
@@ -108,31 +108,31 @@ bool RunningGameSessionManager::isSessionRunning() const
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::findUniqueGameAndSetNumbers(rfcommon::RunningGameSession* recording)
+void RunningGameSessionManager::findUniqueGameAndSetNumbers(rfcommon::RunningGameSession* session)
 {
     const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
-    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(recording))))
+    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(session))))
     {
         switch (format_.type())
         {
             case rfcommon::SetFormat::FRIENDLIES:
             case rfcommon::SetFormat::PRACTICE:
             case rfcommon::SetFormat::OTHER:
-                recording->setGameNumber(recording->gameNumber() + 1);
+                session->setGameNumber(session->gameNumber() + 1);
                 break;
 
             default:
-                recording->setSetNumber(recording->setNumber() + 1);
+                session->setSetNumber(session->setNumber() + 1);
                 break;
         }
     }
 }
 
 // ----------------------------------------------------------------------------
-bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSession* recording)
+bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSession* session)
 {
     // For any game that doesn't have exactly 2 players we don't care about sets
-    if (recording->playerCount() != 2)
+    if (session->fighterCount() != 2)
         return true;
 
     // No past recordings? -> new set
@@ -141,21 +141,21 @@ bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSes
     const auto& prev = pastSessions_.back();
 
     // Player tags might have changed
-    if (prev->playerTag(0) != recording->playerTag(0) ||
-        prev->playerTag(1) != recording->playerTag(1))
+    if (prev->tag(0) != session->tag(0) ||
+        prev->tag(1) != session->tag(1))
     {
         return true;
     }
 
     // Player names might have changed
-    if (prev->playerName(0) != recording->playerName(0) ||
-        prev->playerName(1) != recording->playerName(1))
+    if (prev->name(0) != session->name(0) ||
+        prev->name(1) != session->name(1))
     {
         return true;
     }
 
     // Format might have changed
-    if (prev->format().type() != recording->format().type())
+    if (prev->format().type() != session->format().type())
         return true;
 
     // tally up wins for each player
@@ -163,7 +163,7 @@ bool RunningGameSessionManager::shouldStartNewSet(const rfcommon::RunningGameSes
     for (const auto& rec : pastSessions_)
         win[rec->winner()]++;
 
-    switch (recording->format().type())
+    switch (session->format().type())
     {
         case rfcommon::SetFormat::BO3: {
             if (win[0] >= 2 || win[1] >= 2)
@@ -250,7 +250,7 @@ void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSess
     match->setFormat(format_);
     match->setGameNumber(gameNumber_);
     match->setSetNumber(setNumber_);
-    if (match->playerCount() == 2)
+    if (match->fighterCount() == 2)
     {
         if (p1Name_.length() > 0)
             match->setPlayerName(0, p1Name_.toStdString().c_str());
@@ -279,12 +279,12 @@ void RunningGameSessionManager::onProtocolMatchStarted(rfcommon::RunningGameSess
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, match->setNumber());
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, match->gameNumber());
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, match->format());
-    if (match->playerCount() == 2)
+    if (match->fighterCount() == 2)
     {
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            0, match->playerName(0));
+                0, match->name(0));
         dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged,
-                            1, match->playerName(1));
+                1, match->name(1));
     }
 }
 
@@ -320,10 +320,10 @@ void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSessio
     format_ = match->format();
     gameNumber_ = match->gameNumber();
     setNumber_ = match->setNumber();
-    if (match->playerCount() == 2)
+    if (match->fighterCount() == 2)
     {
-        p1Name_ = match->playerName(0).cStr();
-        p2Name_ = match->playerName(1).cStr();
+        p1Name_ = match->name(0).cStr();
+        p2Name_ = match->name(1).cStr();
     }
 
     match->dispatcher.removeListener(this);
@@ -347,7 +347,7 @@ void RunningGameSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
-    if (activeSession_->playerCount() == 2)
+    if (activeSession_->fighterCount() == 2)
     {
         if (player == 0)
             dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerPlayerNameChanged, 0, name);
@@ -375,28 +375,14 @@ void RunningGameSessionManager::onRunningGameSessionFormatChanged(const rfcommon
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewUniqueFrame()
 {
-    (void)player;
-    (void)state;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state)
+void RunningGameSessionManager::onRunningSessionNewFrame()
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewPlayerState, player, state);
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
-{
-    (void)states;
-}
-
-// ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
-{
-    (void)states;
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewFrame);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/SessionListener.hpp"
 #include "rfcommon/StreamBuffer.hpp"

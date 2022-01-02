@@ -2,7 +2,7 @@
 #include "frame-data-list/views/FrameDataListView.hpp"
 #include "frame-data-list/models/FrameDataListModel.hpp"
 #include "rfcommon/GameSession.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 #include <QDateTime>
 #include <QDebug>
@@ -214,7 +214,7 @@ void FrameDataListView::repopulateTree()
     QTreeWidgetItem* playerStates = new QTreeWidgetItem({"Player States"});
     ui_->treeWidget->addTopLevelItem(playerStates);
     rfcommon::Session* session = model_->session();
-    for (int i = 0; i != session->playerCount(); ++i)
+    for (int i = 0; i != session->fighterCount(); ++i)
     {
         QTreeWidgetItem* player = new QTreeWidgetItem({session->playerName(i).cStr()});
         playerDataItems_.push(player);
@@ -235,7 +235,7 @@ void FrameDataListView::repopulateGameInfoTable()
     rfcommon::GameSession* game = dynamic_cast<rfcommon::GameSession*>(session);
 
     // Fill in data
-    ui_->tableWidget_gameInfo->setRowCount(6 + session->playerCount());
+    ui_->tableWidget_gameInfo->setRowCount(6 + session->fighterCount());
     ui_->tableWidget_gameInfo->setItem(0, 0, new QTableWidgetItem("Time Started"));
     ui_->tableWidget_gameInfo->setItem(0, 1, new QTableWidgetItem(QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs()).toString()));
     ui_->tableWidget_gameInfo->setItem(1, 0, new QTableWidgetItem("Format"));
@@ -250,7 +250,7 @@ void FrameDataListView::repopulateGameInfoTable()
     ui_->tableWidget_gameInfo->setItem(5, 0, new QTableWidgetItem("Winner"));
     ui_->tableWidget_gameInfo->setItem(5, 1, new QTableWidgetItem(session->winner() >= 0 ? session->playerName(session->winner()).cStr() : "--"));
 
-    for (int i = 0; i != session->playerCount(); ++i)
+    for (int i = 0; i != session->fighterCount(); ++i)
     {
         const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(session->playerFighterID(i));
         ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(session->playerName(i).cStr()));
@@ -358,7 +358,7 @@ void FrameDataListView::repopulatePlayerDataTables()
 {
     // Fill in data
     rfcommon::Session* session = model_->session();
-    for (int player = 0; player != session->playerCount(); ++player)
+    for (int player = 0; player != session->fighterCount(); ++player)
     {
         QTableWidget* table = new QTableWidget(0, 11);
         playerDataTables_.push(table);
@@ -369,7 +369,7 @@ void FrameDataListView::repopulatePlayerDataTables()
     // Since we cleared the stacked widget, it won't remember which one was
     // selected. storeCurrentPageIndex_ is saved in clear() and we try to
     // select the same player index again
-    if (storeCurrentPageIndex_ >= session->playerCount())
+    if (storeCurrentPageIndex_ >= session->fighterCount())
         ui_->stackedWidget_playerData->setCurrentIndex(0);
     else
         ui_->stackedWidget_playerData->setCurrentIndex(storeCurrentPageIndex_);
@@ -386,7 +386,7 @@ void FrameDataListView::updatePlayerDataTableRowsIfDirty()
         return;
 
     rfcommon::Session* session = model_->session();
-    for (int player = 0; player != session->playerCount(); ++player)
+    for (int player = 0; player != session->fighterCount(); ++player)
     {
         QTableWidget* table = playerDataTables_[player];
 
@@ -402,7 +402,7 @@ void FrameDataListView::updatePlayerDataTableRowsIfDirty()
 
         while (row < endRow)
         {
-            const rfcommon::PlayerState& state = session->playerStateAt(player, row);
+            const rfcommon::FighterFrame& state = session->playerStateAt(player, row);
             setPlayerDataTableRow(player, row, state);
             row++;
         }
@@ -415,7 +415,7 @@ void FrameDataListView::updatePlayerDataTableRowsIfDirty()
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::setPlayerDataTableRow(int player, int row, const rfcommon::PlayerState& state)
+void FrameDataListView::setPlayerDataTableRow(int player, int row, const rfcommon::FighterFrame& state)
 {
     rfcommon::Session* session = model_->session();
     const auto& statusMapping = session->mappingInfo().fighterStatus;
@@ -450,7 +450,7 @@ void FrameDataListView::onRunningGameSessionPlayerNameChanged(int playerIdx, con
         return;
     playerDataItems_[playerIdx]->setText(0, name.cStr());
 
-    for (int i = 0; i != session->playerCount(); ++i)
+    for (int i = 0; i != session->fighterCount(); ++i)
         ui_->tableWidget_gameInfo->item(6+i, 0)->setText(session->playerName(i).cStr());
 }
 
@@ -480,7 +480,7 @@ void FrameDataListView::onRunningGameSessionWinnerChanged(int winnerPlayerIdx)
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state)
+void FrameDataListView::onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::FighterFrame& state)
 {
     if (playerIdx >= playerDataTables_.count())
         return;
@@ -514,20 +514,20 @@ void FrameDataListView::onRunningSessionNewUniquePlayerState(int playerIdx, cons
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state)
+void FrameDataListView::onRunningSessionNewPlayerState(int playerIdx, const rfcommon::FighterFrame& state)
 {
     (void)playerIdx;
     (void)state;
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+void FrameDataListView::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states)
 {
     (void)states;
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states)
+void FrameDataListView::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states)
 {
     (void)states;
 }

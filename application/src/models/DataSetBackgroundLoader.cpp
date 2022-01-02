@@ -25,7 +25,7 @@ public:
     }
 
 signals:
-    void recordingLoaded(rfcommon::SavedGameSession* recording);
+    void recordingLoaded(rfcommon::SavedGameSession* session);
 
 private:
     void run() override
@@ -50,8 +50,7 @@ private:
                     session.detach();
                 }
 #ifndef NDEBUG
-                for (int i = 0; i < session->playerCount(); ++i)
-                    assert(session->playerStateCount(i) > 0);
+                assert(session->frameCount() > 0);
 #endif
             }
             else

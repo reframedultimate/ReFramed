@@ -2,7 +2,7 @@
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
 #include "rfcommon/SavedGameSession.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include <QMenu>
@@ -86,7 +86,7 @@ void XYPositionsPlotView::onXYPositionsPlotSessionSet(rfcommon::Session* session
 {
     clearUI();
 
-    for (int player = 0; player != session->playerCount(); ++player)
+    for (int player = 0; player != session->fighterCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;
@@ -125,7 +125,7 @@ void XYPositionsPlotView::prependContextMenuActions(QMenu* menu)
     if (session == nullptr)
         return;
 
-    for (int i = 0; i != session->playerCount(); ++i)
+    for (int i = 0; i != session->fighterCount(); ++i)
     {
         QAction* a = menu->addAction(session->playerName(i).cStr());
         a->setCheckable(true);

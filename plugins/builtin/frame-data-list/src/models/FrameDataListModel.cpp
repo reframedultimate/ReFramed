@@ -1,7 +1,7 @@
 #include "frame-data-list/models/FrameDataListModel.hpp"
 #include "frame-data-list/views/FrameDataListView.hpp"
 #include "frame-data-list/listeners/FrameDataListListener.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/SavedGameSession.hpp"

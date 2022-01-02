@@ -88,7 +88,7 @@ add_library (rfcommon SHARED
     "src/init.c"
     "src/KnockbackCalculator.cpp"
     "src/MappingInfo.cpp"
-    "src/PlayerState.cpp"
+    "src/FighterFrame.cpp"
     "src/Plugin.cpp"
     "src/RealtimePlugin.cpp"
     "src/RefCounted.cpp"

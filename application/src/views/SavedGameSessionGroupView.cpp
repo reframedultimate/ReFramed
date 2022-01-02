@@ -4,8 +4,8 @@
 #include "application/models/SavedGameSessionGroup.hpp"
 #include "application/views/SavedGameSessionListWidget.hpp"
 #include "application/views/SessionView.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SavedGameSession.hpp"
-#include "rfcommon/PlayerState.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>

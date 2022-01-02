@@ -2,7 +2,7 @@
 #include "damage-time-plot/models/DamageTimePlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 
@@ -113,7 +113,7 @@ void DamageTimePlotView::onDamageTimePlotSessionSet(rfcommon::Session* session)
 {
     clearUI();
 
-    for (int player = 0; player != model_->session()->playerCount(); ++player)
+    for (int player = 0; player != model_->session()->fighterCount(); ++player)
     {
         CurveData* data = new CurveData;
         QwtPlotCurve* curve = new QwtPlotCurve;

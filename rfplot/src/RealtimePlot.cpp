@@ -357,7 +357,7 @@ void RealtimePlot::copyCSVToClipboard()
 // ----------------------------------------------------------------------------
 void RealtimePlot::copyMatlabToClipboard()
 {
-    QVector<QVector<QString> > itemSamples;
+    QVector<QVector<QString>> itemSamples;
     extractCurveData(&itemSamples);
     if(itemSamples.size() == 0)
         return;

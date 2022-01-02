@@ -72,7 +72,7 @@ private:
     void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override { (void)number; }
     void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override { (void)number; }
     void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state) override { (void)player; (void)state; }
+    void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::FighterFrame& state) override { (void)player; (void)state; }
     void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:

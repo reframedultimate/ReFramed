@@ -3,7 +3,7 @@
 #include "application/models/PluginManager.hpp"
 #include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 
 #include <QTreeWidgetItem>
 

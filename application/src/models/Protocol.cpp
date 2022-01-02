@@ -202,7 +202,7 @@ void Protocol::onMatchEnded()
 void Protocol::onPlayerState(
         quint64 frameTimeStamp,
         quint32 frame,
-        quint8 playerID,
+        quint8 playerIdx,
         float posx,
         float posy,
         float damage,
@@ -215,8 +215,27 @@ void Protocol::onPlayerState(
         bool attack_connected,
         bool facing_direction)
 {
-    if (session_.notNull())
-        session_->addPlayerState(playerID, rfcommon::PlayerState(frameTimeStamp, frame, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction));
+    if (session_.isNull())
+        return;
+
+    if (playerIdx == fighterFrames_.count())
+        fighterFrames_.emplace(
+                    rfcommon::TimeStampMS(frameTimeStamp),
+                    rfcommon::Frame(frame),
+                    posx, posy,
+                    damage,
+                    hitstun,
+                    shield,
+                    rfcommon::FighterStatus(status),
+                    rfcommon::FighterMotion(motion),
+                    rfcommon::FighterHitStatus(hit_status),
+                    rfcommon::FighterStocks(stocks),
+                    rfcommon::FighterFlags(attack_connected, facing_direction));
+
+    if (playerIdx == 0 && fighterFrames_.count() > 0)
+    {
+        session_->addFrame(std::move(fighterFrames_));
+    }
 }
 
 // ----------------------------------------------------------------------------

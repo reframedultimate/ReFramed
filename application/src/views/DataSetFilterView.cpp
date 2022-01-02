@@ -13,7 +13,7 @@
 #include "rfcommon/DataSetFilterChain.hpp"
 #include "rfcommon/DataSet.hpp"
 #include "rfcommon/DataSetFilter.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 

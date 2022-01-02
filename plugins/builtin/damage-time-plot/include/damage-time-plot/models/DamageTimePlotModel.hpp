@@ -51,15 +51,13 @@ private:
 
 private:
     void onRunningGameSessionPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
-    void onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
 
     void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override;
     void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winnerIdx) override;
-    void onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
-    void onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
+    void onRunningSessionNewUniqueFrame() override;
+    void onRunningSessionNewFrame() override;
 
 private:
     rfcommon::Reference<rfcommon::Session> session_;

@@ -1,7 +1,7 @@
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "xy-positions-plot/views/XYPositionsPlotView.hpp"
 #include "xy-positions-plot/listeners/XYPositionsPlotListener.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/SavedGameSession.hpp"
@@ -114,7 +114,7 @@ void XYPositionsPlotModel::onRunningGameSessionPlayerNameChanged(int player, con
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state)
+void XYPositionsPlotModel::onRunningSessionNewUniquePlayerState(int player, const rfcommon::FighterFrame& state)
 {
     dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotNewValue, player, state.posx(), state.posy());
 }
@@ -124,6 +124,6 @@ void XYPositionsPlotModel::onRunningGameSessionSetNumberChanged(rfcommon::SetNum
 void XYPositionsPlotModel::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) { (void)number; }
 void XYPositionsPlotModel::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
 void XYPositionsPlotModel::onRunningGameSessionWinnerChanged(int winner) { (void)winner; }
-void XYPositionsPlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) { (void)player; (void)state; }
-void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }
-void XYPositionsPlotModel::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) { (void)states; }
+void XYPositionsPlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::FighterFrame& state) { (void)player; (void)state; }
+void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states) { (void)states; }
+void XYPositionsPlotModel::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states) { (void)states; }
