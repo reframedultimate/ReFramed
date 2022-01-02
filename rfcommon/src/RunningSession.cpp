@@ -1,6 +1,6 @@
 #include "rfcommon/RunningSession.hpp"
 #include "rfcommon/SessionListener.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 
 
 namespace rfcommon {

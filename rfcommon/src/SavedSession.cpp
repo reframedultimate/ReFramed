@@ -1,6 +1,6 @@
 #include "rfcommon/SavedGameSession.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/StreamBuffer.hpp"
 #include "rfcommon/Types.hpp"
 #include "rfcommon/time.h"

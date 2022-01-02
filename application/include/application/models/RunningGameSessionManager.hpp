@@ -5,7 +5,7 @@
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/PlayerState.hpp"  // MOC requires this because of smart pointers
+#include "rfcommon/FighterFrame.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/RunningGameSession.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/SessionListener.hpp"
@@ -86,10 +86,8 @@ private:
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
 
-    void onRunningSessionNewUniquePlayerState(int player, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewPlayerState(int player, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
-    void onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
+    void onRunningSessionNewUniqueFrame() override;
+    void onRunningSessionNewFrame() override;
 
 private:
     Protocol* protocol_;

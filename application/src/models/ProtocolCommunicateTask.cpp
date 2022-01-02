@@ -1,5 +1,5 @@
 #include "application/models/ProtocolCommunicateTask.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/time.h"
@@ -54,7 +54,6 @@ void ProtocolCommunicateTask::run()
     }
 
     rfcommon::SmallVector<uint8_t, 8> entryIDs;
-
     while (true)
     {
         mutex_.lock();
@@ -115,7 +114,7 @@ void ProtocolCommunicateTask::run()
         }
         else if (msg == MappingInfoFighterKinds)
         {
-            rfcommon::FighterID fighterID;
+            rfcommon::FighterID::Type fighterID;
             uint8_t len;
             char name[256];
             static_assert(sizeof(rfcommon::FighterID) == 1);
@@ -132,7 +131,7 @@ void ProtocolCommunicateTask::run()
         }
         else if (msg == MappingInfoFighterStatusKinds)
         {
-            rfcommon::FighterID fighterID;
+            rfcommon::FighterID::Type fighterID;
             uint8_t statusID_l, statusID_h, len;
             char name[256];
             static_assert(sizeof(rfcommon::FighterID) == 1);
@@ -145,7 +144,7 @@ void ProtocolCommunicateTask::run()
 
             static_assert(sizeof(rfcommon::FighterStatus) == 2);
             rfcommon::FighterStatus statusID = (statusID_h << 8)
-                                       | (statusID_l << 0);
+                                             | (statusID_l << 0);
 
             if (mappingInfo == nullptr)
                 continue;
@@ -153,12 +152,12 @@ void ProtocolCommunicateTask::run()
             if (fighterID == 255)
             {
                 mappingInfo->fighterStatus.addBaseEnumName(statusID, name);
-                qDebug() << "base status: " << statusID <<": " << name;
+                qDebug() << "base status: " << statusID.value() <<": " << name;
             }
             else
             {
                 mappingInfo->fighterStatus.addFighterSpecificEnumName(statusID, fighterID, name);
-                qDebug() << "specific status: " << statusID <<": " << name;
+                qDebug() << "specific status: " << statusID.value() <<": " << name;
             }
         }
         else if (msg == MappingInfoStageKinds)
@@ -173,17 +172,17 @@ void ProtocolCommunicateTask::run()
 
             static_assert(sizeof(rfcommon::StageID) == 2);
             rfcommon::StageID stageID = (stageID_h << 8)
-                                | (stageID_l << 0);
+                                      | (stageID_l << 0);
 
             if (mappingInfo == nullptr)
                 continue;
 
             mappingInfo->stageID.add(stageID, name);
-            qDebug() << "stage kind: " << stageID <<": " << name;
+            qDebug() << "stage kind: " << stageID.value() <<": " << name;
         }
         else if (msg == MappingInfoHitStatusKinds)
         {
-            rfcommon::FighterHitStatus status;
+            rfcommon::FighterHitStatus::Type status;
             uint8_t len;
             char name[256];
             static_assert(sizeof(rfcommon::FighterHitStatus) == 1);
@@ -322,7 +321,7 @@ void ProtocolCommunicateTask::run()
 
             if (msg == MatchStart)
             {
-                qDebug() << "Match start: Stage: " << stageID << ", players: " << playerCount;
+                qDebug() << "Match start: Stage: " << stageID.value() << ", players: " << playerCount;
                 emit matchStarted(new rfcommon::RunningGameSession(
                     rfcommon::MappingInfo(*mappingInfo),
                     stageID,

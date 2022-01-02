@@ -3,7 +3,7 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/String.hpp"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 
 namespace rfcommon {
 

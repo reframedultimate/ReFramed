@@ -10,7 +10,7 @@
 #include "rfcommon/DataSetFilter.hpp"
 #include "rfcommon/DataSetFilterListener.hpp"
 #include "rfcommon/DataSetProcessorListener.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 
 namespace rfcommon {

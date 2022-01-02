@@ -53,7 +53,7 @@ signals:
     void playerState(
             quint64 frameTimeStamp,
             quint32 frame,
-            quint8 playerID,
+            quint8 playerIdx,
             float posx,
             float posy,
             float damage,

@@ -1,6 +1,6 @@
 #include "application/Util.hpp"
 #include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/PlayerState.hpp"
+#include "rfcommon/FighterFrame.hpp"
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
@@ -49,21 +49,21 @@ void clearStackedWidget(QStackedWidget* sw)
 // ----------------------------------------------------------------------------
 QString composeFileName(const rfcommon::GameSession* session)
 {
-    QString date = QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs()).toString("yyyy-MM-dd");
+    QString date = QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs().value()).toString("yyyy-MM-dd");
     QStringList playerList;
-    for (int i = 0; i < session->playerCount(); ++i)
+    for (int i = 0; i < session->fighterCount(); ++i)
     {
         const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(
-                    session->playerFighterID(i));
+                    session->fighterID(i));
         if (fighterName)
-            playerList.append((session->playerName(i) + " (" + *fighterName + ")").cStr());
+            playerList.append((session->name(i) + " (" + *fighterName + ")").cStr());
         else
-            playerList.append(session->playerName(i).cStr());
+            playerList.append(session->name(i).cStr());
     }
     QString players = playerList.join(" vs ");
     QString formatDesc = session->format().description().cStr();
-    QString setNumber = QString::number(session->setNumber());
-    QString gameNumber = QString::number(session->gameNumber());
+    QString setNumber = QString::number(session->setNumber().value());
+    QString gameNumber = QString::number(session->gameNumber().value());
 
     if (session->setNumber() == 1)
         return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".rfr";

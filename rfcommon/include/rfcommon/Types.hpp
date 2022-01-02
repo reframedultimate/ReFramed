@@ -175,10 +175,15 @@ public:
 
     GameNumber(Type value) : value_(value) {}
     Type value() const { return value_; }
+    GameNumber& operator+=(int value) { value_ += value; return *this; }
+    GameNumber& operator-=(int value) { value_ -= value; return *this; }
 
 private:
     Type value_;
 };
+
+inline GameNumber operator+(GameNumber lhs, int value) { lhs += value; return lhs; }
+inline GameNumber operator-(GameNumber lhs, int value) { lhs -= value; return lhs; }
 
 // ----------------------------------------------------------------------------
 class SetNumber
@@ -189,9 +194,16 @@ public:
     SetNumber(Type value) : value_(value) {}
     Type value() const { return value_; }
 
+    bool operator==(int value) const { return value_ == value; }
+    SetNumber& operator+=(int value) { value_ += value; return *this; }
+    SetNumber& operator-=(int value) { value_ -= value; return *this; }
+
 private:
     Type value_;
 };
+
+inline SetNumber operator+(SetNumber lhs, int value) { lhs += value; return lhs; }
+inline SetNumber operator-(SetNumber lhs, int value) { lhs -= value; return lhs; }
 
 // ----------------------------------------------------------------------------
 class StageID

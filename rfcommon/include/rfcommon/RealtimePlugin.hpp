@@ -17,6 +17,9 @@ public:
 
     virtual void setSavedGameSession(rfcommon::SavedGameSession* session) = 0;
     virtual void clearSavedGameSession(rfcommon::SavedGameSession* session) = 0;
+
+    /*virtual void onDataSetMatchReplayLoaded(rfcommon::SavedGameSession* session) = 0;
+    virtual void onDataSetTrainingReplayLoaded(rfcommon::SavedTrainingSession* session) = 0;*/
 };
 
 }

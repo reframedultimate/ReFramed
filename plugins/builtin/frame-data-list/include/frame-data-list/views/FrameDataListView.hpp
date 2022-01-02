@@ -37,7 +37,7 @@ private:
     void repopulateHitStatusMappingTable();
 
     void updatePlayerDataTableRowsIfDirty();
-    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::PlayerState& state);
+    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::FighterFrame& state);
 
 private:
     void onFrameDataListSessionSet(rfcommon::Session* session) override;
@@ -51,10 +51,8 @@ private:
     void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) override;
 
     // RunningSession events
-    void onRunningSessionNewUniquePlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewPlayerState(int playerIdx, const rfcommon::PlayerState& state) override;
-    void onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
-    void onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::PlayerState, 8>& states) override;
+    void onRunningSessionNewUniqueFrame() override;
+    void onRunningSessionNewFrame() override;
 
 private:
     FrameDataListModel* model_;

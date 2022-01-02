@@ -115,7 +115,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
     clearLayout(ui_->layout_playerInfo);
 
     // Create individual player UIs
-    int count = recording->playerCount();
+    int count = recording->fighterCount();
     names_.resize(count);
     fighterName_.resize(count);
     fighterStatus_.resize(count);
@@ -132,7 +132,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
         fighterStocks_[i] = new QLabel();
 
         names_[i] = new QGroupBox;
-        names_[i]->setTitle(recording->playerName(i).cStr());
+        names_[i]->setTitle(recording->name(i).cStr());
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
@@ -154,7 +154,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
     // Set game info
     const rfcommon::String* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
     ui_->label_stage->setText(stageStr ? stageStr->cStr() : "(Unknown Stage)");
-    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs()).toString());
+    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs().value()).toString());
     ui_->label_timeRemaining->setText("");
 
     // Show active page, if not already
@@ -209,12 +209,13 @@ void RunningGameSessionView::onRunningGameSessionManagerSetNumberChanged(rfcommo
 void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number)
 {
     const QSignalBlocker blocker(ui_->spinBox_gameNumber);
-    ui_->spinBox_gameNumber->setValue(number);
+    ui_->spinBox_gameNumber->setValue(number.value());
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::PlayerState& state)
+void RunningGameSessionView::onRunningGameSessionManagerNewFrame()
 {
+    /* TODO
     if (player >= fighterStatus_.size())
         return;
 
@@ -222,7 +223,7 @@ void RunningGameSessionView::onRunningGameSessionManagerNewPlayerState(int playe
     fighterDamage_[player]->setText(QString::number(state.damage()));
     fighterStocks_[player]->setText(QString::number(state.stocks()));
 
-    ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(state.frame() / 60.0).toString());
+    ui_->label_timeRemaining->setText(QTime(0, 0).addSecs(state.frame() / 60.0).toString());*/
 }
 
 // ----------------------------------------------------------------------------
