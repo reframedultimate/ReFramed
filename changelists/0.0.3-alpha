@@ -1,0 +1,15 @@
+**Enhancements**
+- Error message in ConnectView wraps text now
+- BridgeLab (Calculator)
+  + "Calculate optimal fastall" now works
+  + Added an "enable stickjump" option to explicitly enable frame 4 uairs and fullhop IDJs
+  + Bridge Sections have colors
+  + Added help text when mouse hovers over stuff
+  + Added example bridges, including WIB and Stinky bridges
+
+**Bugfixes**
+- Fixed deadlock when cancelling connection to switch during TCP socket connect()
+- BridgeLab
+  + Landing on platforms is now handled properly in calculator
+  + Bridge detector no longer gets stuck when uair2 fails
+  + Fixed labels not showing up in plot

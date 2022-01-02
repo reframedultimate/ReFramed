@@ -1,0 +1,13 @@
+Enhancements
+- BridgeLab (Calculator)
+  + Massively improved how double jumps and landings are handled.
+  + Added help text to every section.
+  + Added lots of new presets under the "Add Section" dropdown.
+  + Presets dropdown menu in Generic Rep and Fullhop Rep sections work.
+  + Added nair, fair, dair and skullbash aerials.
+
+Bugfixes
+- BridgeLab (Calculator)
+  + Fixed an issue where pikachu would fall faster than 1.55 when doing a fh uair
+  + Fixed an issue where dj trajectory was wrong
+  + Many small bugfixes
