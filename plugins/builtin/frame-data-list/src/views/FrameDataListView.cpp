@@ -430,7 +430,7 @@ void FrameDataListView::setPlayerDataTableRow(int player, int row, const rfcommo
     QTableWidget* table = playerDataTables_[player];
     table->setItem(row, 0, new QTableWidgetItem(QString::number(state.frame())));
     table->setItem(row, 1, new QTableWidgetItem(QString::number(state.posx()) + ", " + QString::number(state.posy())));
-    table->setItem(row, 2, new QTableWidgetItem(state.facingDirection() ? "Left" : "Right"));
+    table->setItem(row, 2, new QTableWidgetItem(state.facingDirection() ? "Right" : "Left"));
     table->setItem(row, 3, new QTableWidgetItem(QString::number(state.damage())));
     table->setItem(row, 4, new QTableWidgetItem(QString::number(state.hitstun())));
     table->setItem(row, 5, new QTableWidgetItem(QString::number(state.shield())));
