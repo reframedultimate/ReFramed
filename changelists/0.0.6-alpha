@@ -1,0 +1,14 @@
+Enhancements
+- BridgeLab (calculator)
+  + Added fh uair -> nair -> platdrop uair preset
+  + Added platdrop and runoff trajectory data
+  + Implemented platdrop calculator + UI
+
+Bugfixes
+- Knockback formula is now correct. Fixed bug in staleness queue.
+- Fixed "Copy to Clipboard as MATLAB array" in plots
+- BridgeLab (calculator)
+  + When updating the UI from model and "optimal fastfall" is set, the ff spinbox is properly disabled
+- Frame Data List
+  + Fixed "facing direction" property in table
+
