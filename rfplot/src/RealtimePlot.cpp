@@ -295,36 +295,30 @@ void RealtimePlot::copyImageToClipboard()
 }
 
 // ----------------------------------------------------------------------------
-void RealtimePlot::extractCurveData(QVector<QVector<QString> >* container, bool writeTitles)
+void RealtimePlot::extractCurveData(QVector<QVector<QString>>* container, bool writeTitles)
 {
     const QwtPlotItemList& items = itemList(QwtPlotItem::Rtti_PlotCurve);
     for(QwtPlotItemList::const_iterator it = items.begin(); it != items.end(); ++it)
     {
         // Skip if the item doesn't contain QwtPointArrayData
         QwtPlotCurve* curve = static_cast<QwtPlotCurve*>(*it);
-        QwtPointArrayData* samples = dynamic_cast<QwtPointArrayData*>(curve->data());
-            if(!samples)
+        QwtArraySeriesData<QPointF>* series = dynamic_cast<QwtArraySeriesData<QPointF>*>(curve->data());
+            if(!series)
                 continue;
 
         // Write X axis data
         QVector<QString> samplesStrXAxis;
         if(writeTitles)
             samplesStrXAxis.push_back(curve->plot()->title().text() + ": " + curve->title().text() + " (X axis)");
-        const QVector<double>& xData = samples->xData();
-        for(QVector<double>::const_iterator sample = xData.begin(); sample != xData.end(); ++sample)
-        {
-            samplesStrXAxis.push_back(QString::number(*sample));
-        }
+        for(const auto& p : series->samples())
+            samplesStrXAxis.push_back(QString::number(p.x(), 'g', 17));
 
         // Write Y axis data
         QVector<QString> samplesStrYAxis;
         if(writeTitles)
             samplesStrYAxis.push_back(curve->plot()->title().text() + ": " + curve->title().text() + " (Y axis)");
-        const QVector<double>& yData = samples->yData();
-        for(QVector<double>::const_iterator sample = yData.begin(); sample != yData.end(); ++sample)
-        {
-            samplesStrYAxis.push_back(QString::number(*sample));
-        }
+        for(const auto& p : series->samples())
+            samplesStrYAxis.push_back(QString::number(p.y(), 'g', 17));
 
         container->push_back(samplesStrXAxis);
         container->push_back(samplesStrYAxis);
