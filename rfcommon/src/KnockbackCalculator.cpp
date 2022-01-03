@@ -42,10 +42,13 @@ double KnockbackCalculator::addMove(const Move& move)
 
     const double staleness = stalenessOf(move.id);
     const double shorthop = move.isShorthop ? 0.85 : 1.0;
-    percent_ += move.dmg * shorthop * staleness * mul1v1_;
+    const double dmgDealt = move.dmg * shorthop * staleness * mul1v1_;
+    const double dmgDealt_KB = move.dmg * shorthop * staleness;
+    const double percent_KB = percent_ + dmgDealt_KB;
+    percent_ += dmgDealt;
 
-    double knockback = percent_ / 10.0;
-    knockback += percent_ * (move.dmg + 0.3 * move.dmg * staleness) / 20.0;  // XXX: This is wrong but I can't figure out a correct formula
+    double knockback = percent_KB / 10.0;
+    knockback += percent_KB * move.dmg * (1.0 - (1.0 - staleness) * 0.3) / 20.0;
     knockback *= 200.0 / (weight_+100.0) * 1.4;
     knockback += 18;
     knockback *= move.kbg / 100.0;
