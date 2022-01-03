@@ -72,7 +72,7 @@ bool KnockbackCalculator::isInQueue(int id)
 // ----------------------------------------------------------------------------
 void KnockbackCalculator::addToQueue(int id)
 {
-    for (int i = 1; i != 9; ++i)
+    for (int i = 8; i > 0; --i)
         staleQueue_[i] = staleQueue_[i-1];
     staleQueue_[0] = id;
 }
