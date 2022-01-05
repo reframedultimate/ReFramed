@@ -184,8 +184,8 @@ void DataSetFilterView::moveFilterWidgetInLayout(DataSetFilterWidget* widget, in
     {
         if (filterWidgetsLayout_->itemAt(i)->widget() == widget)
         {
-            filterWidgetsLayout_->takeAt(i);
-            filterWidgetsLayout_->insertWidget(layoutIndex, widget);
+            QLayoutItem* item = filterWidgetsLayout_->takeAt(i);
+            filterWidgetsLayout_->insertItem(layoutIndex, item);
             return;
         }
     }

@@ -52,7 +52,12 @@ qt5_add_resources (APPLICATION_RESOURCES_GEN
 qt5_add_translation (APPLICATION_QM_FILES
     "")
 
-add_executable (application WIN32
+set (APPLICATION_WIN32_EXE "WIN32")
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set (APPLICATION_WIN32_EXE "")
+endif ()
+
+add_executable (application ${APPLICATION_WIN32_EXE}
     ${APPLICATION_SOURCES_MOC}
     ${APPLICATION_FORMS_MOC}
     ${APPLICATION_RESOURCES_GEN}
