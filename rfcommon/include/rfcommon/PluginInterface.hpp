@@ -33,7 +33,7 @@ struct RFPluginInterface
 {
     uint32_t version;
     RFPluginFactory* factories;
-    int (*start)(uint32_t version);
+    int (*start)(uint32_t version, const char** error);
     void (*stop)(void);
 };
 

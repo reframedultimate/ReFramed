@@ -26,7 +26,7 @@ static RFPluginFactory factories[] = {
     {nullptr}
 };
 
-static int start(uint32_t version)
+static int start(uint32_t version, const char** error)
 {
     return 0;
 }

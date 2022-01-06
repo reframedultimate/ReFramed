@@ -1,3 +1,4 @@
+#include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/RunningGameSession.hpp"
@@ -41,6 +42,7 @@ PluginManager::~PluginManager()
 bool PluginManager::loadPlugin(const QString& fileName)
 {
     RFPluginInterface* i;
+    const char* pluginError = nullptr;
     qDebug() << "Loading " << fileName;
     rfcommon_dynlib* dl = rfcommon_dynlib_open(fileName.toStdString().c_str());
     if (dl == nullptr)
@@ -55,9 +57,11 @@ bool PluginManager::loadPlugin(const QString& fileName)
         qDebug() << "Failed to lookup symbol 'plugin_interface' in " << fileName;
         goto init_plugin_failed;
     }
-    if (i->start(0x000001) != 0)
+    if (i->start(APP_VERSION, &pluginError) != 0)
     {
         qDebug() << "Call to start() failed in " << fileName;
+        if (pluginError)
+            qDebug() << pluginError;
         goto init_plugin_failed;
     }
 
