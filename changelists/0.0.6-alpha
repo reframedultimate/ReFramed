@@ -1,14 +1,22 @@
 Enhancements
-- BridgeLab (calculator)
+- Added plugin version check in start() callback
+- BridgeLab
+  + Added fsmash ground move
   + Added fh uair -> nair -> platdrop uair preset
   + Added platdrop and runoff trajectory data
-  + Implemented platdrop calculator + UI
+  + Implemented platdrop and runoff calculators + UI
+  + Added sync feature between sections
+  + Mouse scrollwheel can now be used on section widgets to change values
+  + Added "goals" editor for bridges (initial version, doesn't do anything yet)
+  + Merged Calculator + Live plugins into a single plugin
 
 Bugfixes
+- Fixed crash in DataSetFilterView when moving widgets around
 - Knockback formula is now correct. Fixed bug in staleness queue.
 - Fixed "Copy to Clipboard as MATLAB array" in plots
-- BridgeLab (calculator)
+- BridgeLab
   + When updating the UI from model and "optimal fastfall" is set, the ff spinbox is properly disabled
+  + Optimal fastfall is updated when neighbouring sections update
+  + Fixed crash caused by re-arranging sections
 - Frame Data List
   + Fixed "facing direction" property in table
-
