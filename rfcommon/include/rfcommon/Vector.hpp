@@ -554,11 +554,18 @@ public:
         return this->back();
     }
 
-    void erase(Iterator it)
+    Iterator erase(Iterator it)
     {
+        return this->begin() + erase(this->indexOf(it));
+    }
+
+    S erase(S pos)
+    {
+        Iterator it = this->begin() + pos;
         it->~T();
         this->relocateElementsTo(it, it + 1, this->end());
         this->count_--;
+        return pos;
     }
 
     void reserve(S count)
