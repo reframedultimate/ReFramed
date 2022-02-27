@@ -20,7 +20,7 @@ project ("ReFramed"
     LANGUAGES)
 
 # Sets the version string for all ReFramed related subprojects (not thirdparty)
-set (REFRAMED_VERSION "0.0.6")
+set (REFRAMED_VERSION "0.0.7")
 set (REFRAMED_VERSION_RC "alpha")
 
 # Configure build and install directory structures
