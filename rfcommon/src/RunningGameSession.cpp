@@ -248,52 +248,22 @@ void RunningGameSession::setFormat(const SetFormat& format)
 // ----------------------------------------------------------------------------
 void RunningGameSession::addPlayerState(int playerIdx, PlayerState&& state)
 {
-    // If this is the first state we receive just store it. Need at least 1
-    // past state to determine if the game started yet
-    if (playerStates_[playerIdx].count() == 0)
-    {
-        playerStates_[playerIdx].push(std::move(state));
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, playerStates_[playerIdx][0]);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, playerStates_[playerIdx][0]);
-        return;
-    }
-
-    // Only add a new state if the previous one was different
-    if (playerStates_[playerIdx].back() != state)
-    {
-        playerStates_[playerIdx].push(state);
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniquePlayerState, playerIdx, state);
-
-        // Winner might have changed
-        int winner = findWinner();
-        if (currentWinner_ != winner)
-        {
-            currentWinner_ = winner;
-            dispatcher.dispatch(&SessionListener::onRunningGameSessionWinnerChanged, currentWinner_);
-        }
-    }
-
-    // The UI still cares about every frame
-    dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, state);
-
-    // Reached end of frame
+    // Detect if this is the end of frame and whether this will be a new unique frame
     if (playerIdx == playerCount() - 1)
     {
-        rfcommon::SmallVector<PlayerState, 8> states;
-        for (int i = 0; i != playerCount(); ++i)
+        if (frameUniqueBits_ && (playerStates_[playerIdx].count() == 0 || playerStates_[playerIdx].back() != state))
         {
-            if (playerStateCount(i) < 1)
-                return;
-
-            states.push(playerStateAt(i, playerStateCount(i) - 1));
+            // Winner might have changed
+            int winner = findWinner();
+            if (currentWinner_ != winner)
+            {
+                currentWinner_ = winner;
+                dispatcher.dispatch(&SessionListener::onRunningGameSessionWinnerChanged, currentWinner_);
+            }
         }
-
-        if (frameUniqueBits_)
-            dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, states);
-        frameUniqueBits_ = 0;
-
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame, states);
     }
+
+    RunningSession::addPlayerState(playerIdx, std::move(state));
 }
 
 }

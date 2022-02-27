@@ -148,7 +148,7 @@ void tcp_socket_shutdown(union tcp_socket* sock)
 {
 #if defined(WIN32)
     SOCKET sockfd = (SOCKET)(uintptr_t)sock->handle;
-    shutdown(sockfd, SD_RECEIVE);
+    shutdown(sockfd, SD_BOTH);
 #else
     int fd = (int)(uintptr_t)sock->handle;
     shutdown(fd, SHUT_RD);

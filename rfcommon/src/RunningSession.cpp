@@ -34,7 +34,7 @@ void RunningSession::addPlayerState(int playerIdx, PlayerState&& state)
         frameUniqueBits_ |= 1;
     }
 
-    // The UI still cares about every frame
+    // The UI still cares about every state
     dispatcher.dispatch(&SessionListener::onRunningSessionNewPlayerState, playerIdx, state);
 
     // Reached end of frame
