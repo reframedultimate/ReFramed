@@ -76,7 +76,6 @@ add_library (rfcommon SHARED
     "src/DataSetFilter_Stage.cpp"
     "src/DataSetFilterChain.cpp"
     "src/DataSetProcessor.cpp"
-    "src/DecisionGraph.cpp"
     "src/FighterIDMapping.cpp"
     "src/FighterStatusMapping.cpp"
     "src/GameSession.cpp"

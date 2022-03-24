@@ -2,23 +2,24 @@
 #include "frame-data-list/models/FrameDataListModel.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
-static rfcommon::Plugin* createModel(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
     return new FrameDataListModel(factory);
 }
 
-static void destroyModel(rfcommon::Plugin* model)
+static void destroyPlugin(rfcommon::Plugin* model)
 {
     delete model;
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::REALTIME,
-    {"Frame Data List",
-     "misc",
-     "TheComet",
-     "TheComet#5387, @TheComet93",
-     "View the data of each frame"}},
+    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
+         "Frame Data List",
+         "misc",
+         "TheComet",
+         "TheComet#5387, @TheComet93",
+         "View the data of each frame"
+     }},
 
     {nullptr}
 };
