@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rfcommon/Reference.hpp"
 #include "rfcommon/DataSetFilter.hpp"  // required by MOC
+#include "rfcommon/Reference.hpp"
 #include <QWidget>
 
 class QToolButton;
