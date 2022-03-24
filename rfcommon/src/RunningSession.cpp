@@ -1,6 +1,5 @@
 #include "rfcommon/RunningSession.hpp"
 #include "rfcommon/SessionListener.hpp"
-#include "rfcommon/FighterFrame.hpp"
 
 
 namespace rfcommon {
@@ -21,20 +20,25 @@ RunningSession::RunningSession(
 }
 
 // ----------------------------------------------------------------------------
-void RunningSession::addFrame(SmallVector<FighterFrame, 2>&& frame)
+void RunningSession::addFrame(Frame&& frame)
 {
+    // Sanity checks
+#ifndef NDEBUG
+    for (int i = 1; i < frame.fighterCount(); ++i)
+    {
+        assert(frame.fighter(0).framesLeft() == frame.fighter(i).framesLeft());
+        assert(frame.fighter(0).frameNumber() == frame.fighter(i).frameNumber());
+    }
+#endif
+
     frames_.push(std::move(frame));
 
     // If any fighter state is different from the previous one, notify
-    for (int i = 0; i != frames_.count(); ++i)
-        if (frames_[i].count() < 2 || frames_[i].back(1) != frames_[i].back(2))
-        {
-            dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame);
-            break;
-        }
+    if (frames_.count() < 2 || frames_.back(1).hasSameDataAs(frames_.back(2)))
+        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, frames_.count() - 1, frames_.back());
 
     // The UI cares about every frame
-    dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame);
+    dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame, frames_.count() - 1, frames_.back());
 }
 
 }

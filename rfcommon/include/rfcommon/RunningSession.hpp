@@ -5,6 +5,8 @@
 
 namespace rfcommon {
 
+class Frame;
+
 class RFCOMMON_PUBLIC_API RunningSession : virtual public Session
 {
 protected:
@@ -17,7 +19,7 @@ protected:
     );
 
 public:
-    virtual void addFrame(SmallVector<FighterFrame, 2>&& frame);
+    virtual void addFrame(Frame&& frame);
 };
 
 }

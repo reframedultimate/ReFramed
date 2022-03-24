@@ -1,7 +1,7 @@
 #include "application/Util.hpp"
 #include "application/listeners/RunningGameSessionManagerListener.hpp"
+#include "application/models/ReplayManager.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
 #include "rfcommon/tcp_socket.h"
 #include <QDateTime>
 
@@ -110,7 +110,7 @@ bool RunningGameSessionManager::isSessionRunning() const
 // ----------------------------------------------------------------------------
 void RunningGameSessionManager::findUniqueGameAndSetNumbers(rfcommon::RunningGameSession* session)
 {
-    const QDir& dir = savedSessionManager_->defaultRecordingSourceDirectory();
+    const QDir& dir = savedSessionManager_->defaultGameSessionSourceDirectory();
     while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(session))))
     {
         switch (format_.type())
@@ -298,11 +298,11 @@ void RunningGameSessionManager::onProtocolMatchEnded(rfcommon::RunningGameSessio
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerMatchEnded, match);
 
-    // Save recording
-    QFileInfo fileInfo(
-        savedSessionManager_->defaultRecordingSourceDirectory(),
-        composeFileName(match)
-    );
+    // Save as replay
+    QDir gamesDir = savedSessionManager_->defaultGameSessionSourceDirectory();
+    if (gamesDir.exists() == false)
+        gamesDir.mkpath(".");
+    QFileInfo fileInfo(gamesDir, composeFileName(match));
     if (match->save(fileInfo.absoluteFilePath().toStdString().c_str()))
     {
         // Add the new recording to the "All" recording group
@@ -375,14 +375,14 @@ void RunningGameSessionManager::onRunningGameSessionFormatChanged(const rfcommon
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewUniqueFrame()
+void RunningGameSessionManager::onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewFrame()
+void RunningGameSessionManager::onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame)
 {
-    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewFrame);
+    dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewFrame, frameIdx, frame);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SavedGameSessionGroupView</class>
- <widget class="QWidget" name="SavedGameSessionGroupView">
+ <class>ReplayGroupView</class>
+ <widget class="QWidget" name="ReplayGroupView">
   <property name="geometry">
    <rect>
     <x>0</x>

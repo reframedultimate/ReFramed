@@ -16,18 +16,11 @@ public:
     ~DamageTimePlotView();
 
 private:
-    void clearUI();
-
-private:
-    void onDamageTimePlotSessionSet(rfcommon::Session* session) override;
-    void onDamageTimePlotSessionCleared(rfcommon::Session* session) override;
-    void onDamageTimePlotNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
-    void onDamageTimePlotNewValue(int playerIdx, rfcommon::Frame frame, float damage) override;
+    void onDamageTimePlotStartNew() override;
+    void onDamageTimePlotDataChanged() override;
+    void onDamageTimePlotNameChanged(int fighterIdx) override;
 
 private:
     DamageTimePlotModel* model_;
-    rfcommon::SmallVector<QwtPlotCurve*, 8> curves_;
-    rfcommon::SmallVector<uint32_t, 8> prevFrames_;
-    rfcommon::SmallVector<float, 8> prevDamageValues_;
-    float largestTimeSeen_ = 0.0;
+    rfcommon::SmallVector<QwtPlotCurve*, 2> curves_;
 };

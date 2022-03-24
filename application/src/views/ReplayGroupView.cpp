@@ -1,10 +1,9 @@
-#include "application/ui_SavedGameSessionGroupView.h"
-#include "application/views/SavedGameSessionGroupView.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
-#include "application/views/SavedGameSessionListWidget.hpp"
+#include "application/ui_ReplayGroupView.h"
+#include "application/views/ReplayGroupView.hpp"
+#include "application/models/ReplayManager.hpp"
+#include "application/models/ReplayGroup.hpp"
+#include "application/views/ReplayListWidget.hpp"
 #include "application/views/SessionView.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 
 #include <QListWidget>
@@ -91,7 +90,7 @@ ReplayGroupView::ReplayGroupView(
         PluginManager* pluginManager,
         QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::SavedGameSessionGroupView)
+    , ui_(new Ui::ReplayGroupView)
     , replayManager_(replayManager)
     , savedGameSessionListWidget_(new SavedGameSessionListWidget)
     /*, filterCompleter_(new RecordingNameCompleter)*/
@@ -116,6 +115,9 @@ ReplayGroupView::ReplayGroupView(
             this, &ReplayGroupView::onFiltersTextChanged);
     connect(shortcut, &QShortcut::activated,
             this, &ReplayGroupView::onDeleteKeyPressed);
+
+    // TODO just for testing
+    setSavedGameSessionGroup(replayManager_->allReplayGroup());
 }
 
 // ----------------------------------------------------------------------------
@@ -148,7 +150,11 @@ void ReplayGroupView::clearSavedGameSessionGroup(ReplayGroup* group)
     assert(currentGroup_ == group && group != nullptr);
 
     if (currentSession_)
-        sessionView_->clearSavedGameSession(currentSession_);
+    {
+        rfcommon::SavedGameSession* savedMatch = dynamic_cast<rfcommon::SavedGameSession*>(currentSession_.get());
+        if (savedMatch)
+            sessionView_->clearSavedGameSession(savedMatch);
+    }
     currentSession_.drop();
 
     currentGroup_->dispatcher.removeListener(this);
@@ -169,11 +175,19 @@ void ReplayGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidget
         if (savedGameSessionListWidget_->itemMatchesSavedGameSessionFileName(current, fileName))
         {
             if (currentSession_)
-                sessionView_->clearSavedGameSession(currentSession_);
+            {
+                rfcommon::SavedGameSession* savedMatch = dynamic_cast<rfcommon::SavedGameSession*>(currentSession_.get());
+                if (savedMatch)
+                    sessionView_->clearSavedGameSession(savedMatch);
+            }
 
-            currentSession_ = rfcommon::SavedGameSession::load(fileName.absoluteFilePath().toStdString().c_str());
+            currentSession_ = rfcommon::SavedSession::load(fileName.absoluteFilePath().toStdString().c_str());
             if (currentSession_)
-                sessionView_->setSavedGameSession(currentSession_);
+            {
+                rfcommon::SavedGameSession* savedMatch = dynamic_cast<rfcommon::SavedGameSession*>(currentSession_.get());
+                if (savedMatch)
+                    sessionView_->setSavedGameSession(savedMatch);
+            }
 
             break;
         }

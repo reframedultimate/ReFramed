@@ -1,5 +1,4 @@
 #include "rfcommon/TrainingSession.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/time.h"
 
 namespace rfcommon {

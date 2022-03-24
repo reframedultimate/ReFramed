@@ -2,7 +2,7 @@
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
 #include "rfcommon/SavedGameSession.hpp"
-#include "rfcommon/FighterFrame.hpp"
+#include "rfcommon/Frame.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include <QMenu>
@@ -93,14 +93,14 @@ void XYPositionsPlotView::onXYPositionsPlotSessionSet(rfcommon::Session* session
         const QList<QAction*>& actions = curveTypeActionGroup_->actions();
         curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
         curve->setData(data);
-        curve->setTitle(session->playerName(player).cStr());
+        curve->setTitle(session->name(player).cStr());
         curve->setStyle(actions[0]->isChecked() ? QwtPlotCurve::Dots : QwtPlotCurve::Lines);
         curve->attach(this);
         curves_.push_back(curve);
 
-        for (int i = 0; i < session->playerStateCount(player); ++i)
+        for (int i = 0; i < session->frameCount(); ++i)
         {
-            const auto& state = session->playerStateAt(player, i);
+            const auto& state = session->state(i, player);
             data->append(QPointF(state.posx(), state.posy()));
         }
     }
@@ -127,7 +127,7 @@ void XYPositionsPlotView::prependContextMenuActions(QMenu* menu)
 
     for (int i = 0; i != session->fighterCount(); ++i)
     {
-        QAction* a = menu->addAction(session->playerName(i).cStr());
+        QAction* a = menu->addAction(session->name(i).cStr());
         a->setCheckable(true);
         a->setChecked(curves_[i]->isVisible());
         connect(a, &QAction::triggered, [=](bool checked) {
@@ -144,10 +144,14 @@ void XYPositionsPlotView::onXYPositionsPlotNameChanged(int playerIdx, const rfco
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotView::onXYPositionsPlotNewValue(int playerIdx, float posx, float posy)
+void XYPositionsPlotView::onXYPositionsPlotNewValue(const rfcommon::SmallVector<float, 8>& posx, const rfcommon::SmallVector<float, 8>& posy)
 {
-    CurveData* data = static_cast<CurveData*>(curves_[playerIdx]->data());
-    data->append(QPointF(posx, posy));
+    for (int playerIdx = 0; playerIdx != posx.count(); ++playerIdx)
+    {
+        CurveData* data = static_cast<CurveData*>(curves_[playerIdx]->data());
+        data->append(QPointF(posx[playerIdx], posy[playerIdx]));
+    }
+
     conditionalAutoScale();
 }
 

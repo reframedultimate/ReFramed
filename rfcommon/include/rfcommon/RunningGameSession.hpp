@@ -22,10 +22,10 @@ public:
     void setSetNumber(SetNumber number);
     void setFormat(const SetFormat& format);
 
-    void addFrame(SmallVector<FighterFrame, 2>&& frame) override;
+    void addFrame(Frame&& frame) override;
 
     int winner() const override
-        { assert(currentWinner_ != -1); return currentWinner_; }
+        { return currentWinner_; }
 
 private:
     int currentWinner_ = -1;

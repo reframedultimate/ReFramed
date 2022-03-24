@@ -1,5 +1,4 @@
 #include "rfcommon/RunningTrainingSession.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SessionListener.hpp"
 
 namespace rfcommon {

@@ -7,7 +7,7 @@
 
 namespace rfcommon {
 
-class FighterFrame;
+class Frame;
 
 class SessionListener
 {
@@ -20,8 +20,8 @@ public:
     virtual void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) = 0;
 
     // RunningSession events
-    virtual void onRunningSessionNewUniqueFrame() = 0;
-    virtual void onRunningSessionNewFrame() = 0;
+    virtual void onRunningSessionNewUniqueFrame(int frameIdx, const Frame& frame) = 0;
+    virtual void onRunningSessionNewFrame(int frameIdx, const Frame& frame) = 0;
 };
 
 }

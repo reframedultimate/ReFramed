@@ -1,5 +1,4 @@
 #include "rfcommon/SavedGameSession.hpp"
-#include "rfcommon/FighterFrame.hpp"
 
 namespace rfcommon {
 

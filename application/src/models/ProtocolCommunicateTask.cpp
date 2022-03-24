@@ -1,5 +1,5 @@
 #include "application/models/ProtocolCommunicateTask.hpp"
-#include "rfcommon/FighterFrame.hpp"
+#include "rfcommon/FighterState.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/time.h"
@@ -235,8 +235,8 @@ void ProtocolCommunicateTask::run()
             static_assert(sizeof(rfcommon::StageID) == 2);
             rfcommon::StageID stageID = (stageH << 8) | (stageL << 0);
 
-            rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs({playerFighterID, cpuFighterID});
-            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags({"Player 1", "CPU"});
+            rfcommon::SmallVector<rfcommon::FighterID, 2> fighterIDs({playerFighterID, cpuFighterID});
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 2> tags({"Player 1", "CPU"});
 
             // With training mode we always assume there are 2 fighters
             // with entry IDs 0 and 1
@@ -292,9 +292,9 @@ void ProtocolCommunicateTask::run()
             static_assert(sizeof(rfcommon::StageID) == 2);
             rfcommon::StageID stageID = (stageH << 8) | (stageL << 0);
 
-            rfcommon::SmallVector<rfcommon::FighterID, 8> fighterIDs(playerCount);
-            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> tags(playerCount);
-            rfcommon::SmallVector<rfcommon::SmallString<15>, 8> names(playerCount);
+            rfcommon::SmallVector<rfcommon::FighterID, 2> fighterIDs(playerCount);
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 2> tags(playerCount);
+            rfcommon::SmallVector<rfcommon::SmallString<15>, 2> names(playerCount);
 
             entryIDs.resize(playerCount);
             if (tcp_socket_read_exact(&socket_, entryIDs.data(), playerCount) != playerCount)
@@ -332,7 +332,7 @@ void ProtocolCommunicateTask::run()
             }
             else
             {
-                qDebug() << "Match resumed: Stage: " << stageID << ", players: " << playerCount;
+                qDebug() << "Match resumed: Stage: " << stageID.value() << ", players: " << playerCount;
                 emit matchResumed(new rfcommon::RunningGameSession(
                     rfcommon::MappingInfo(*mappingInfo),
                     stageID,
@@ -442,6 +442,7 @@ void ProtocolCommunicateTask::run()
                            | ((quint64)motion4 << 0);
             bool attack_connected = !!(flags & 0x01);
             bool facing_direction = !!(flags & 0x02);
+            bool opponent_in_hitlag = !!(flags & 0x04);
 
             /*
             qDebug() << "PlayerState: " << frameTimeStamp
@@ -462,7 +463,21 @@ void ProtocolCommunicateTask::run()
             for (int i = 0; i != entryIDs.count(); ++i)
                 if (entryIDs[i] == entryID)
                 {
-                    emit playerState(frameTimeStamp, frame, i, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, attack_connected, facing_direction);
+                    emit fighterState(
+                                frameTimeStamp,
+                                frame,
+                                i,
+                                posx, posy,
+                                damage,
+                                hitstun,
+                                shield,
+                                status,
+                                motion,
+                                hit_status,
+                                stocks,
+                                attack_connected,
+                                facing_direction,
+                                opponent_in_hitlag);
                     break;
                 }
 #undef frame0

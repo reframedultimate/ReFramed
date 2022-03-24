@@ -51,7 +51,7 @@ public:
     bool operator<(FighterStatus other) const { return value_ < other.value_; }
 
 private:
-    friend class FighterFrame;
+    friend class FighterState;
     FighterStatus() {}
 
 private:
@@ -80,7 +80,7 @@ public:
     bool operator!=(FighterHitStatus other) const { return value_ != other.value_; }
 
 private:
-    friend class FighterFrame;
+    friend class FighterState;
     friend class SmallVector<FighterHitStatus, 6>;
     FighterHitStatus() {}
 
@@ -107,7 +107,7 @@ public:
     bool operator<(FighterMotion other) const { return value_ < other.value_; }
 
 private:
-    friend class FighterFrame;
+    friend class FighterState;
     FighterMotion() {}
 
 private:
@@ -121,22 +121,25 @@ public:
     typedef uint8_t Type;
 
     FighterFlags(Type value) : value_(value) {}
-    FighterFlags(bool attackConnected, bool facingDirection)
+    FighterFlags(bool attackConnected, bool facingDirection, bool opponentInHitlag)
         : value_(
               (static_cast<Type>(attackConnected) << 0)
-            | (static_cast<Type>(facingDirection) << 1))
+            | (static_cast<Type>(facingDirection) << 1)
+            | (static_cast<Type>(opponentInHitlag) << 2)
+          )
     {}
 
     Type value() const { return value_; }
-    bool attackConnected() const { return !!(value_ & 0); }
-    bool facingDirection() const { return !!(value_ & 1); }
+    bool attackConnected() const { return !!(value_ & 1); }
+    bool facingDirection() const { return !!(value_ & 2); }
+    bool opponentIntHitlag() const { return !!(value_ & 4); }
 
     bool operator==(FighterFlags other) const { return value_ == other.value_; }
     bool operator!=(FighterFlags other) const { return value_ != other.value_; }
     bool operator<(FighterFlags other) const { return value_ < other.value_; }
 
 private:
-    friend class FighterFrame;
+    friend class FighterState;
     FighterFlags() {}
 
 private:
@@ -160,7 +163,7 @@ public:
     bool operator>=(FighterStocks other) const { return value_ >= other.value_; }
 
 private:
-    friend class FighterFrame;
+    friend class FighterState;
     FighterStocks() {}
 
 private:
@@ -228,64 +231,95 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-class Frame
+class FrameNumber
 {
 public:
     typedef uint32_t Type;
 
-    Frame(Type value) : value_(value) {}
+    FrameNumber(Type value) : value_(value) {}
     Type value() const { return value_; }
+    double secondsPassed() const { return static_cast<double>(value_) / 60.0; }
+
+    bool operator==(FrameNumber other) const { return value_ == other.value_; }
+    bool operator!=(FrameNumber other) const { return value_ != other.value_; }
 
 private:
-    friend class FighterFrame;
-    Frame() {}
+    friend class FighterState;
+    FrameNumber() {}
 
 private:
     Type value_;
 };
 
 // ----------------------------------------------------------------------------
-class DeltaTimeMS
+class FramesLeft
 {
 public:
-    typedef uint64_t Type;
+    typedef uint32_t Type;
 
-    DeltaTimeMS(Type value) : value_(value) {}
+    FramesLeft(Type value) : value_(value) {}
     Type value() const { return value_; }
+    double secondsLeft() const { return static_cast<double>(value_) / 60.0; }
+
+    bool operator==(FramesLeft rhs) const { return value_ == rhs.value_; }
+    bool operator!=(FramesLeft rhs) const { return value_ != rhs.value_; }
+
+private:
+    friend class FighterState;
+    FramesLeft() {}
 
 private:
     Type value_;
 };
 
 // ----------------------------------------------------------------------------
-class TimeStampMS
+class DeltaTime
 {
 public:
     typedef uint64_t Type;
 
-    TimeStampMS(Type value) : value_(value) {}
+    static DeltaTime fromMillis(Type value) { DeltaTime dt; dt.value_ = value; return dt; }
+
+    DeltaTime(Type value) : value_(value) {}
+    Type millis() const { return value_; }
+
+private:
+    DeltaTime() {}
+
+private:
+    Type value_;
+};
+
+// ----------------------------------------------------------------------------
+class TimeStamp
+{
+public:
+    typedef uint64_t Type;
+
+    static TimeStamp fromMillis(Type value) { TimeStamp ts; ts.value_ = value; return ts; }
+
     std::string toStdString() const { return std::to_string(value_); }
-    Type value() const { return value_; }
+    Type millis() const { return value_; }
 
-    bool operator==(TimeStampMS rhs) const { return value_ == rhs.value_; }
-    bool operator!=(TimeStampMS rhs) const { return value_ != rhs.value_; }
-    bool operator< (TimeStampMS rhs) const { return value_ <  rhs.value_; }
-    bool operator<=(TimeStampMS rhs) const { return value_ <= rhs.value_; }
-    bool operator> (TimeStampMS rhs) const { return value_ >  rhs.value_; }
-    bool operator>=(TimeStampMS rhs) const { return value_ >= rhs.value_; }
-    TimeStampMS& operator+=(DeltaTimeMS rhs) { value_ += rhs.value(); return *this; }
-    TimeStampMS& operator-=(DeltaTimeMS rhs) { value_ -= rhs.value(); return *this; }
+    bool operator==(TimeStamp rhs) const { return value_ == rhs.value_; }
+    bool operator!=(TimeStamp rhs) const { return value_ != rhs.value_; }
+    bool operator< (TimeStamp rhs) const { return value_ <  rhs.value_; }
+    bool operator<=(TimeStamp rhs) const { return value_ <= rhs.value_; }
+    bool operator> (TimeStamp rhs) const { return value_ >  rhs.value_; }
+    bool operator>=(TimeStamp rhs) const { return value_ >= rhs.value_; }
+    TimeStamp& operator+=(DeltaTime rhs) { value_ += rhs.millis(); return *this; }
+    TimeStamp& operator-=(DeltaTime rhs) { value_ -= rhs.millis(); return *this; }
 
 private:
-    friend class FighterFrame;
-    TimeStampMS() {}
+    friend class FighterState;
+    TimeStamp() {}
 
 private:
     Type value_;
 };
 
-inline TimeStampMS operator+(TimeStampMS lhs, DeltaTimeMS rhs) { lhs += rhs; return lhs; }
-inline TimeStampMS operator-(TimeStampMS lhs, DeltaTimeMS rhs) { lhs -= rhs; return lhs; }
-inline DeltaTimeMS operator-(TimeStampMS lhs, TimeStampMS rhs) { return lhs.value() - rhs.value(); }
+inline TimeStamp operator+(TimeStamp lhs, DeltaTime rhs) { lhs += rhs; return lhs; }
+inline TimeStamp operator-(TimeStamp lhs, DeltaTime rhs) { lhs -= rhs; return lhs; }
+inline DeltaTime operator-(TimeStamp lhs, TimeStamp rhs) { return DeltaTime::fromMillis(lhs.millis() - rhs.millis()); }
 
 }

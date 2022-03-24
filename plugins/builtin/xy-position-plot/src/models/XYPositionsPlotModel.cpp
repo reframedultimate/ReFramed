@@ -1,7 +1,7 @@
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "xy-positions-plot/views/XYPositionsPlotView.hpp"
 #include "xy-positions-plot/listeners/XYPositionsPlotListener.hpp"
-#include "rfcommon/FighterFrame.hpp"
+#include "rfcommon/Frame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/SavedGameSession.hpp"
@@ -58,12 +58,6 @@ void XYPositionsPlotModel::clearSavedGameSession(rfcommon::SavedGameSession* ses
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
-void XYPositionsPlotModel::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) { (void)errormsg; (void)ipAddress; (void)port; }
-void XYPositionsPlotModel::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
-void XYPositionsPlotModel::onProtocolDisconnectedFromServer() {}
-
-// ----------------------------------------------------------------------------
 void XYPositionsPlotModel::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training)
 {
     setSession(training);
@@ -114,16 +108,14 @@ void XYPositionsPlotModel::onRunningGameSessionPlayerNameChanged(int player, con
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onRunningSessionNewUniquePlayerState(int player, const rfcommon::FighterFrame& state)
+void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame)
 {
-    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotNewValue, player, state.posx(), state.posy());
+    rfcommon::SmallVector<float, 8> posx;
+    rfcommon::SmallVector<float, 8> posy;
+    for (const auto& state : frame)
+    {
+        posx.push(state.posx());
+        posy.push(state.posy());
+    }
+    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotNewValue, posx, posy);
 }
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) { (void)number; }
-void XYPositionsPlotModel::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) { (void)number; }
-void XYPositionsPlotModel::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
-void XYPositionsPlotModel::onRunningGameSessionWinnerChanged(int winner) { (void)winner; }
-void XYPositionsPlotModel::onRunningSessionNewPlayerState(int player, const rfcommon::FighterFrame& state) { (void)player; (void)state; }
-void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states) { (void)states; }
-void XYPositionsPlotModel::onRunningSessionNewFrame(const rfcommon::SmallVector<rfcommon::FighterFrame, 8>& states) { (void)states; }

@@ -26,7 +26,7 @@ private:
     void onXYPositionsPlotSessionSet(rfcommon::Session* session) override;
     void onXYPositionsPlotSessionCleared(rfcommon::Session* session) override;
     void onXYPositionsPlotNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
-    void onXYPositionsPlotNewValue(int playerIdx, float posx, float posy) override;
+    void onXYPositionsPlotNewValue(const rfcommon::SmallVector<float, 8>& posx, const rfcommon::SmallVector<float, 8>& posy) override;
 
 protected:
     void prependContextMenuActions(QMenu* menu) override;

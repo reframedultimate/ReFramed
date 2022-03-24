@@ -5,6 +5,8 @@
 #define RFCOMMON_SWAP_ENDIAN_32 ${RFCOMMON_SWAP_ENDIAN_32}
 #define RFCOMMON_SWAP_ENDIAN_64 ${RFCOMMON_SWAP_ENDIAN_64}
 
+#include <cstdint>
+
 namespace rfcommon {
 
 namespace detail {

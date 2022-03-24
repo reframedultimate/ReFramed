@@ -92,7 +92,6 @@ DataSet* DataSetFilterChain::apply(const DataSet* ds)
     if (out == nullptr)
     {
         out = new DataSet;
-        out->mergeDataFrom(ds);
     }
 
     return out;

@@ -13,6 +13,10 @@ namespace Ui {
     class FrameDataListView;
 }
 
+namespace rfcommon {
+    class FighterState;
+}
+
 class FrameDataListView : public QWidget
                         , public FrameDataListListener
                         , public rfcommon::SessionListener
@@ -37,7 +41,7 @@ private:
     void repopulateHitStatusMappingTable();
 
     void updatePlayerDataTableRowsIfDirty();
-    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::FighterFrame& state);
+    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::FighterState& frame);
 
 private:
     void onFrameDataListSessionSet(rfcommon::Session* session) override;
@@ -51,8 +55,8 @@ private:
     void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) override;
 
     // RunningSession events
-    void onRunningSessionNewUniqueFrame() override;
-    void onRunningSessionNewFrame() override;
+    void onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
 
 private:
     FrameDataListModel* model_;

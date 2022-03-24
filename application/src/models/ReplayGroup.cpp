@@ -1,6 +1,6 @@
 #include "application/Util.hpp"
-#include "application/listeners/SavedGameSessionGroupListener.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
+#include "application/listeners/ReplayGroupListener.hpp"
+#include "application/models/ReplayGroup.hpp"
 
 #include <QDebug>
 

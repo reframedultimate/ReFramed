@@ -1,4 +1,4 @@
-#include "application/views/SavedGameSessionListWidget.hpp"
+#include "application/views/ReplayListWidget.hpp"
 
 #include <QFileInfo>
 #include <QMimeData>

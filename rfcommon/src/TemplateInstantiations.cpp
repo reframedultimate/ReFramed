@@ -6,11 +6,10 @@
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 
-#include "rfcommon/DataPoint.hpp"
 #include "rfcommon/DataSetFilter.hpp"
 #include "rfcommon/DataSetFilterListener.hpp"
 #include "rfcommon/DataSetProcessorListener.hpp"
-#include "rfcommon/FighterFrame.hpp"
+#include "rfcommon/FighterState.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 
 namespace rfcommon {
@@ -23,6 +22,7 @@ template class ListenerDispatcher<DataSetProcessorListener>;
 template class ListenerDispatcher<SessionListener>;
 template class Reference<DataSetFilter>;
 template class Reference<GameSession>;
+template class Reference<SavedSession>;
 template class Reference<SavedGameSession>;
 template class SmallLinearMap<FighterHitStatus, String, 6>;
 template class SmallLinearMap<StageID, String, 10>;
@@ -37,10 +37,8 @@ template class SmallVector<SmallString<15>, 2>;
 template class SmallVector<StageID, 10>;
 template class SmallVector<String, 6>;
 template class SmallVector<String, 10>;
-template class SmallVector<Vector<FighterFrame>, 2>;
+template class SmallVector<Vector<FighterState>, 2>;
 template class Vector<uint32_t>;
-template class Vector<DataPoint>;
-template class Vector<FighterFrame>;
 template class Vector<char>;
 
 }

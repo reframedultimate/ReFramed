@@ -50,7 +50,7 @@ signals:
     void matchStarted(rfcommon::RunningGameSession* match);
     void matchResumed(rfcommon::RunningGameSession* match);
     void matchEnded();
-    void playerState(
+    void fighterState(
             quint64 frameTimeStamp,
             quint32 frame,
             quint8 playerIdx,
@@ -64,7 +64,8 @@ signals:
             quint8 hit_status,
             quint8 stocks,
             bool attack_connected,
-            bool facing_direction);
+            bool facing_direction,
+            bool opponent_in_hitlag);
 
 private:
     void run() override;
