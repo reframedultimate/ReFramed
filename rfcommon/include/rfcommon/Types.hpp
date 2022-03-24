@@ -132,7 +132,7 @@ public:
     Type value() const { return value_; }
     bool attackConnected() const { return !!(value_ & 1); }
     bool facingDirection() const { return !!(value_ & 2); }
-    bool opponentIntHitlag() const { return !!(value_ & 4); }
+    bool opponentInHitlag() const { return !!(value_ & 4); }
 
     bool operator==(FighterFlags other) const { return value_ == other.value_; }
     bool operator!=(FighterFlags other) const { return value_ != other.value_; }

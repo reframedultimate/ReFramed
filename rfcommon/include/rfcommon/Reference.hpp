@@ -148,13 +148,4 @@ private:
     T* ptr_;
 };
 
-// The following ensures that any clients that use rfcommon::Reference will import
-// the explicit template instantiations from librfcommon instead of instantiating
-// new versions, causing multiple definition linker errors.
-class GameSession;
-class DataSetFilter;
-
-extern template class RFCOMMON_TEMPLATE_API Reference<GameSession>;
-extern template class RFCOMMON_TEMPLATE_API Reference<DataSetFilter>;
-
 }

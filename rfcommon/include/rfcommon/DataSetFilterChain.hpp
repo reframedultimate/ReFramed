@@ -10,9 +10,6 @@ class DataSet;
 class DataSetFilter;
 class DataSetFilterChainData;
 
-extern template class RFCOMMON_TEMPLATE_API Reference<DataSetFilter>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<Reference<DataSetFilter>, 8>;
-
 class RFCOMMON_PUBLIC_API DataSetFilterChain
 {
 public:
