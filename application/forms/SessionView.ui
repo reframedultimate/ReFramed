@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_data">
       <attribute name="title">
@@ -32,6 +32,11 @@
      <widget class="QWidget" name="tab_xy_positions">
       <attribute name="title">
        <string>Positions</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_decision_graph">
+      <attribute name="title">
+       <string>Decision Graph</string>
       </attribute>
      </widget>
     </widget>

@@ -19,6 +19,7 @@ SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
     damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
     xyPositionsPlugin_ = pluginManager_->createRealtimeModel("XY Positions Plot");
     frameDataListPlugin_ = pluginManager_->createRealtimeModel("Frame Data List");
+    decisionGraphPlugin_ = pluginManager_->createRealtimeModel("Decision Graph");
 
     if (damageTimePlugin_)
         damageTimePlot_ = damageTimePlugin_->createView();
@@ -26,6 +27,8 @@ SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
         xyPositionPlot_ = xyPositionsPlugin_->createView();
     if (frameDataListPlugin_)
         frameDataListView_ = frameDataListPlugin_->createView();
+    if (decisionGraphPlugin_)
+        decisionGraphView_ = decisionGraphPlugin_->createView();
 
     if (frameDataListView_)
     {
@@ -55,11 +58,24 @@ void SessionView::addPlotsToUI()
         layout->addWidget(xyPositionPlot_);
         ui_->tab_xy_positions->setLayout(layout);
     }
+
+    if (decisionGraphView_)
+    {
+        QVBoxLayout* layout = new QVBoxLayout;
+        layout->addWidget(decisionGraphView_);
+        ui_->tab_decision_graph->setLayout(layout);
+    }
 }
 
 // ----------------------------------------------------------------------------
 SessionView::~SessionView()
 {
+    if (decisionGraphView_)
+    {
+        decisionGraphView_->setParent(nullptr);
+        decisionGraphPlugin_->destroyView(decisionGraphView_);
+    }
+
     if (xyPositionPlot_)
     {
         xyPositionPlot_->setParent(nullptr);
@@ -78,6 +94,8 @@ SessionView::~SessionView()
         frameDataListPlugin_->destroyView(frameDataListView_);
     }
 
+    if (decisionGraphPlugin_)
+        pluginManager_->destroyModel(decisionGraphPlugin_);
     if (xyPositionsPlugin_)
         pluginManager_->destroyModel(xyPositionsPlugin_);
     if (damageTimePlugin_)
@@ -103,6 +121,8 @@ void SessionView::setSavedGameSession(rfcommon::SavedGameSession* session)
         xyPositionsPlugin_->setSavedGameSession(session);
     if (frameDataListPlugin_)
         frameDataListPlugin_->setSavedGameSession(session);
+    if (decisionGraphPlugin_)
+        decisionGraphPlugin_->setSavedGameSession(session);
 }
 
 // ----------------------------------------------------------------------------
@@ -114,6 +134,8 @@ void SessionView::clearSavedGameSession(rfcommon::SavedGameSession* session)
         xyPositionsPlugin_->clearSavedGameSession(session);
     if (frameDataListPlugin_)
         frameDataListPlugin_->clearSavedGameSession(session);
+    if (decisionGraphPlugin_)
+        decisionGraphPlugin_->clearSavedGameSession(session);
 }
 
 }

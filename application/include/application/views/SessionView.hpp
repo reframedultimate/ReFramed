@@ -43,6 +43,8 @@ private:
     QWidget* xyPositionPlot_ = nullptr;
     rfcommon::RealtimePlugin* frameDataListPlugin_ = nullptr;
     QWidget* frameDataListView_ = nullptr;
+    rfcommon::RealtimePlugin* decisionGraphPlugin_ = nullptr;
+    QWidget* decisionGraphView_ = nullptr;
 };
 
 }
