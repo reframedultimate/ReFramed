@@ -18,8 +18,8 @@ static RFPluginFactory factories[] = {
         "misc",
         "TheComet",
         "TheComet#5387, @TheComet93",
-        "Plots each player's damage over time"}
-    },
+        "Plots each player's damage over time"
+    }},
 
     {nullptr}
 };

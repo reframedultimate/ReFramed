@@ -5,23 +5,24 @@
 
 #include <QWidget>
 
-static rfcommon::Plugin* createModel(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
     return new HitAnalyzer(factory);
 }
 
-static void destroyModel(rfcommon::Plugin* model)
+static void destroyPlugin(rfcommon::Plugin* model)
 {
     delete model;
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::ANALYZER,
-    {"Hit Analysis",
-     "misc",
-     "TheComet",
-     "TheComet#5387, @TheComet93",
-     "Finds all instances where you got hit"}},
+    {createPlugin, destroyPlugin, RFPluginType::ANALYZER, {
+         "Hit Analysis",
+         "misc",
+         "TheComet",
+         "TheComet#5387, @TheComet93",
+         "Finds all instances where you got hit"
+     }},
 
     {nullptr}
 };

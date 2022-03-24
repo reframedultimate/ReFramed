@@ -5,22 +5,23 @@
 
 #include <QWidget>
 
-static rfcommon::Plugin* createModel(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
     return new VideoPlayer(factory);
 }
-static void destroyModel(rfcommon::Plugin* model)
+static void destroyPlugin(rfcommon::Plugin* model)
 {
     delete model;
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::VISUALIZER,
-    {"Video Player",
-     "misc",
-     "TheComet",
-     "TheComet#5387, @TheComet93",
-     "A video player"}},
+    {createPlugin, destroyPlugin, RFPluginType::VISUALIZER, {
+         "Video Player",
+         "misc",
+         "TheComet",
+         "TheComet#5387, @TheComet93",
+         "A video player"
+     }},
 
     {nullptr}
 };
