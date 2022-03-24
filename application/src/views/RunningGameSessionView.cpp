@@ -110,12 +110,12 @@ void RunningGameSessionView::onRunningGameSessionManagerDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
 {
     clearLayout(ui_->layout_playerInfo);
 
     // Create individual player UIs
-    int count = recording->fighterCount();
+    int count = session->fighterCount();
     names_.resize(count);
     fighterName_.resize(count);
     fighterStatus_.resize(count);
@@ -124,7 +124,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
     for (int i = 0; i != count; ++i)
     {
         fighterName_[i] = new QLabel();
-        const rfcommon::String* fighterNameStr = recording->mappingInfo().fighterID.map(recording->playerFighterID(i));
+        const rfcommon::String* fighterNameStr = session->mappingInfo().fighterID.map(session->fighterID(i));
         fighterName_[i]->setText(fighterNameStr ? fighterNameStr->cStr() : "(Unknown Fighter)");
 
         fighterStatus_[i] = new QLabel();
@@ -132,7 +132,7 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
         fighterStocks_[i] = new QLabel();
 
         names_[i] = new QGroupBox;
-        names_[i]->setTitle(recording->name(i).cStr());
+        names_[i]->setTitle(session->name(i).cStr());
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
@@ -152,9 +152,12 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
     }
 
     // Set game info
-    const rfcommon::String* stageStr = recording->mappingInfo().stageID.map(recording->stageID());
+    const rfcommon::String* stageStr = session->mappingInfo().stageID.map(session->stageID());
+    const uint64_t stamp = session->frameCount() > 0 ?
+                session->firstFrame().fighter(0).timeStamp().millis() :
+                QDateTime::currentMSecsSinceEpoch();
     ui_->label_stage->setText(stageStr ? stageStr->cStr() : "(Unknown Stage)");
-    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(recording->timeStampStartedMs().value()).toString());
+    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(stamp).toString());
     ui_->label_timeRemaining->setText("");
 
     // Show active page, if not already
@@ -162,9 +165,9 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* recording)
+void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
 {
-    (void)recording;
+    (void)session;
 }
 
 // ----------------------------------------------------------------------------
@@ -213,7 +216,7 @@ void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(rfcomm
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerNewFrame()
+void RunningGameSessionView::onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame)
 {
     /* TODO
     if (player >= fighterStatus_.size())

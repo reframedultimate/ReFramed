@@ -7,16 +7,15 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/RefCounted.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/Frame.hpp"
 
 namespace rfcommon {
 
-class FighterFrame;
+class FighterState;
 class SessionListener;
 
 extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 2>;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 2>;
-extern template class RFCOMMON_TEMPLATE_API Vector<FighterFrame>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<FighterFrame>, 2>;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<SessionListener*, 4>;
 extern template class RFCOMMON_TEMPLATE_API ListenerDispatcher<SessionListener>;
 
@@ -43,7 +42,7 @@ public:
      * go up to 8.
      */
     int fighterCount() const
-        { return tags_.count(); }
+        { return fighterIDs_.count(); }
 
     /*!
      * \brief Gets the tag used by the player. This is the string that appears
@@ -69,7 +68,8 @@ public:
      * MappingInfo structure.
      * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
      */
-    FighterID fighterID(int fighterIdx) const;
+    FighterID fighterID(int fighterIdx) const
+        { return fighterIDs_[fighterIdx]; }
 
     /*!
      * \brief Gets the stage ID being played on. The ID can be used to look up
@@ -79,16 +79,16 @@ public:
         { return stageID_; }
 
     int frameCount() const
-        { return frames_[0].count(); }
+        { return frames_.count(); }
 
-    const FighterFrame& frame(int fighterIdx, int frameIdx) const
-        { assert(fighterIdx < fighterCount() - 1); assert(frameIdx < frameCount() - 1); return frames_[fighterIdx][frameIdx]; }
+    const Frame& firstFrame() const
+        { assert(frameCount() > 0); return frames_.front(); }
 
-    const FighterFrame& firstFrame(int fighterIdx) const
-        { assert(frameCount() > 0); return frames_[fighterIdx][0]; }
+    const Frame& lastFrame() const
+        { assert(frameCount() > 0); return frames_.back(); }
 
-    const FighterFrame& lastFrame(int fighterIdx) const
-        { assert(frameCount() > 0); return frames_[fighterIdx][frames_[fighterIdx].count() - 1]; }
+    const FighterState& state(int frameIdx, int fighterIdx) const
+        { assert(fighterIdx < fighterCount()); assert(frameIdx < frameCount()); return frames_[frameIdx].fighter(fighterIdx); }
 
     virtual int winner() const = 0;
 
@@ -104,7 +104,7 @@ public:
      * received (may not be the first frame of training mode depending on when
      * the user connected).
      */
-    TimeStampMS timeStampStartedMs() const;
+    //TimeStampMS timeStampStartedMs() const;
 
     /*!
      * \brief Gets the absolute time of when the last timestamp was received in
@@ -117,10 +117,10 @@ public:
      * In the case of a saved session, this will be the timestamp of the last
      * frame received.
      */
-    TimeStampMS timeStampEndedMs() const;
+    //TimeStampMS timeStampEndedMs() const;
 
-    DeltaTimeMS lengthMs() const
-        { return timeStampStartedMs() - timeStampEndedMs(); }
+    /*DeltaTimeMS lengthMs() const
+        { return timeStampStartedMs() - timeStampEndedMs(); }*/
 
     ListenerDispatcher<SessionListener> dispatcher;
 
@@ -132,7 +132,7 @@ protected:
     StageID stageID_;
     SmallVector<FighterID, 2> fighterIDs_;
     SmallVector<SmallString<15>, 2> tags_;
-    SmallVector<Vector<FighterFrame>, 2> frames_;
+    Vector<Frame> frames_;
 };
 
 }

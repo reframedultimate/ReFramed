@@ -7,13 +7,12 @@
 #include "application/views/DataSetFilterWidget_Player.hpp"
 #include "application/views/DataSetFilterWidget_PlayerCount.hpp"
 #include "application/views/DataSetFilterWidget_Stage.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
+#include "application/models/ReplayManager.hpp"
+#include "application/models/ReplayGroup.hpp"
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "rfcommon/DataSetFilterChain.hpp"
 #include "rfcommon/DataSet.hpp"
 #include "rfcommon/DataSetFilter.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 
@@ -199,7 +198,7 @@ void DataSetFilterView::reprocessInputDataSet()
     if (dataSetFiltersDirty_ == false)
         return;
 
-    outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
+    /*outputDataSet_ = dataSetFilterChain_->apply(inputDataSetMerged_.get());
 
     std::unordered_set<rfcommon::SavedGameSession*> uniqueSessions;
     for (const rfcommon::DataPoint* p = outputDataSet_->dataPointsBegin(); p != outputDataSet_->dataPointsEnd(); ++p)
@@ -212,7 +211,7 @@ void DataSetFilterView::reprocessInputDataSet()
 
     ui_->label_outputInfo->setText(QString("Found %1 data points in %2 recordings")
                                        .arg(outputDataSet_->dataPointCount())
-                                       .arg(uniqueSessions.size()));
+                                       .arg(uniqueSessions.size()));*/
 
     dataSetFiltersDirty_ = false;
 }
@@ -270,9 +269,9 @@ void DataSetFilterView::removeGroupFromInputDataSet(ReplayGroup* group)
 {
     inputDataSets_.erase(group);
 
-    inputDataSetMerged_->clear();
+    /*inputDataSetMerged_->clear();
     for (const auto& [group, dataSet] : inputDataSets_)
-        inputDataSetMerged_->mergeDataFrom(dataSet);
+        inputDataSetMerged_->mergeDataFrom(dataSet);*/
 
     dirtyDataSetFilters();
 }
@@ -330,8 +329,8 @@ void DataSetFilterView::onReplayManagerGroupRemoved(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, rfcommon::DataSet* dataSet)
 {
-    inputDataSets_.emplace(group, dataSet);
-    inputDataSetMerged_->mergeDataFrom(dataSet);
+    /*inputDataSets_.emplace(group, dataSet);
+    inputDataSetMerged_->mergeDataFrom(dataSet);*/
 
     dirtyDataSetFilters();
 }

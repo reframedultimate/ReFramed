@@ -1,11 +1,12 @@
-#include "rfcommon/FighterFrame.hpp"
+#include "rfcommon/FighterState.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-FighterFrame::FighterFrame(
-        TimeStampMS timeStampMs,
-        Frame frame,
+FighterState::FighterState(
+        TimeStamp timeStampMs,
+        FrameNumber frameNumber,
+        FramesLeft framesLeft,
         float posx, float posy,
         float damage,
         float hitstun,
@@ -15,9 +16,10 @@ FighterFrame::FighterFrame(
         FighterHitStatus hit_status,
         FighterStocks stocks,
         FighterFlags flags)
-    : timeStampMs_(timeStampMs)
+    : timeStamp_(timeStampMs)
     , motion_(motion)
-    , frame_(frame)
+    , frameNumber_(frameNumber)
+    , framesLeft_(framesLeft)
     , posx_(posx)
     , posy_(posy)
     , damage_(damage)

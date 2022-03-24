@@ -1,11 +1,11 @@
 #pragma once
 
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/FighterFrame.hpp"  // MOC requires this because of smart pointers
+#include "rfcommon/Frame.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/RunningGameSession.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/SessionListener.hpp"
@@ -86,8 +86,8 @@ private:
     void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
     void onRunningGameSessionWinnerChanged(int winner) override;
 
-    void onRunningSessionNewUniqueFrame() override;
-    void onRunningSessionNewFrame() override;
+    void onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame) override;
 
 private:
     Protocol* protocol_;

@@ -1,4 +1,3 @@
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/RunningGameSession.hpp"
 #include "rfcommon/SessionListener.hpp"
 #include "rfcommon/StreamBuffer.hpp"
@@ -54,7 +53,7 @@ void RunningGameSession::setFormat(const SetFormat& format)
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSession::addFrame(SmallVector<FighterFrame, 2>&& frame)
+void RunningGameSession::addFrame(Frame&& frame)
 {
     RunningSession::addFrame(std::move(frame));
 

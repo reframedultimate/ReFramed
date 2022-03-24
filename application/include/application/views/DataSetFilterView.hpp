@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QWidget>
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
-#include "application/listeners/SavedGameSessionGroupListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
+#include "application/listeners/ReplayGroupListener.hpp"
 #include "application/listeners/DataSetBackgroundLoaderListener.hpp"
 #include "rfcommon/DataSetFilterListener.hpp"
 #include "rfcommon/Reference.hpp"

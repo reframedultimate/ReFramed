@@ -36,10 +36,10 @@ private:
     void clearSavedGameSession(rfcommon::SavedGameSession* session) override;
 
 private:
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolDisconnectedFromServer() override;
+    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
+    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolDisconnectedFromServer() override {}
 
     void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) override;
     void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) override;
@@ -52,12 +52,12 @@ private:
 private:
     void onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
 
-    void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override;
-    void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
-    void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
-    void onRunningGameSessionWinnerChanged(int winner) override;
-    void onRunningSessionNewUniqueFrame() override;
-    void onRunningSessionNewFrame() override;
+    void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override {}
+    void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override {}
+    void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override {}
+    void onRunningGameSessionWinnerChanged(int winner) override {}
+    void onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
 
 private:
     rfcommon::Reference<rfcommon::Session> session_;

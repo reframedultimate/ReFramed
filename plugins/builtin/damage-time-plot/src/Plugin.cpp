@@ -1,24 +1,25 @@
 #include "damage-time-plot/PluginConfig.hpp"
-#include "damage-time-plot/models/DamageTimePlotModel.hpp"
+#include "damage-time-plot/DamageTimePlotPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
-static rfcommon::Plugin* createModel(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
-    return new DamageTimePlotModel(factory);
+    return new DamageTimePlotPlugin(factory);
 }
 
-static void destroyModel(rfcommon::Plugin* model)
+static void destroyPlugin(rfcommon::Plugin* plugin)
 {
-    delete model;
+    delete plugin;
 }
 
 static RFPluginFactory factories[] = {
-    {createModel, destroyModel, RFPluginType::REALTIME,
-    {"Damage vs Time Plot",
-    "misc",
-    "TheComet",
-    "TheComet#5387, @TheComet93",
-    "Plots each player's damage over time"}},
+    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
+        "Damage vs Time Plot",
+        "misc",
+        "TheComet",
+        "TheComet#5387, @TheComet93",
+        "Plots each player's damage over time"}
+    },
 
     {nullptr}
 };

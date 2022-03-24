@@ -1,6 +1,5 @@
 #include "application/Util.hpp"
 #include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
@@ -49,7 +48,10 @@ void clearStackedWidget(QStackedWidget* sw)
 // ----------------------------------------------------------------------------
 QString composeFileName(const rfcommon::GameSession* session)
 {
-    QString date = QDateTime::fromMSecsSinceEpoch(session->timeStampStartedMs().value()).toString("yyyy-MM-dd");
+    const uint64_t stamp = session->frameCount() > 0 ?
+                session->firstFrame().fighter(0).timeStamp().millis() :
+                QDateTime::currentMSecsSinceEpoch();
+    QString date = QDateTime::fromMSecsSinceEpoch(stamp).toString("yyyy-MM-dd");
     QStringList playerList;
     for (int i = 0; i < session->fighterCount(); ++i)
     {

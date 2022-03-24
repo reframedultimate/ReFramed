@@ -8,14 +8,6 @@ namespace rfcommon {
 DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    out->reserve(dataSet->dataPointCount());
-    for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
-    {
-        const FighterFrame& state = p->state();
-        if (state.timeStampMs() >= startTime_ && state.timeStampMs() <= endTime_)
-            out->addDataPointToEnd(*p);
-    }
-
     return out;
 }
 
@@ -23,14 +15,6 @@ DataSet* DataSetFilter_Date::apply(const DataSet* dataSet)
 DataSet* DataSetFilter_Date::applyInverse(const DataSet* dataSet)
 {
     DataSet* out = new DataSet;
-    out->reserve(dataSet->dataPointCount());
-    for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
-    {
-        const FighterFrame& state = p->state();
-        if (state.timeStampMs() < startTime_ || state.timeStampMs() > endTime_)
-            out->addDataPointToEnd(*p);
-    }
-
     return out;
 }
 

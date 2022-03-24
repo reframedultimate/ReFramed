@@ -1,5 +1,5 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
+#include "application/models/ReplayGroup.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 #include <QRunnable>
 #include <QThreadPool>
@@ -175,7 +175,7 @@ void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, rfcommon::DataSet*
 
     // Some sanity checks. There was a case where recordings had 0 player states
 #ifndef NDEBUG
-    assert(ds->dataPointCount() > 0);
+    assert(/*ds->dataPointCount() > 0*/ false);
 #endif
 
     // Discard any data sets that are from cancelled tasks
@@ -238,7 +238,7 @@ void DataSetBackgroundLoader::run()
                 if (it == pendingDataSets.end())
                     it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new rfcommon::DataSet, item.group});
 
-                it->value().dataSet->addSessionNoSort(item.session);
+                //it->value().dataSet->addSessionNoSort(item.session);
             }
 
             if (completeDataSets)
@@ -246,7 +246,7 @@ void DataSetBackgroundLoader::run()
                 for (auto it : pendingDataSets)
                 {
                     printf("%d: sorting\n", it->key());
-                    it->value().dataSet->sort();
+                    //it->value().dataSet->sort();
                     emit _dataSetLoaded(it->key(), it->value().dataSet.detach(), it->value().group);
                 }
                 pendingDataSets.clear();

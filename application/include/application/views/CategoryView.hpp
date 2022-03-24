@@ -2,7 +2,7 @@
 
 #include "application/listeners/CategoryListener.hpp"
 #include "application/listeners/RunningGameSessionManagerListener.hpp"
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
 #include "application/listeners/TrainingModeListener.hpp"
 #include "application/Util.hpp"
 #include <QHash>
@@ -68,11 +68,11 @@ private:
     void onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session) override;
     void onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session) override;
 
+    void onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
     void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override { (void)name; }
     void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override { (void)number; }
     void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override { (void)number; }
     void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerNewPlayerState(int player, const rfcommon::FighterFrame& state) override { (void)player; (void)state; }
     void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:

@@ -1,6 +1,5 @@
 #include "rfcommon/DataSetFilter_PlayerCount.hpp"
 #include "rfcommon/DataSet.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "rfcommon/SavedGameSession.hpp"
 
 namespace rfcommon {

@@ -1,42 +1,41 @@
 #include "damage-time-plot/views/DamageTimePlotView.hpp"
 #include "damage-time-plot/models/DamageTimePlotModel.hpp"
 #include "rfplot/ColorPalette.hpp"
-#include "rfcommon/Session.hpp"
-#include "rfcommon/FighterFrame.hpp"
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
+#include "qwt_scale_engine.h"
 
 namespace {
 
-class CurveData : public QwtArraySeriesData<QPointF>
+class DamageTimePlotCurveDataView : public QwtSeriesData<QPointF>
 {
 public:
+    DamageTimePlotCurveDataView(DamageTimePlotModel* model, int fighterIdx)
+        : model_(model)
+        , fighterIdx_(fighterIdx)
+    {
+        updateBoundingRect();
+    }
+
+    size_t size() const override
+        { return model_->dataCount(fighterIdx_); }
+
+    QPointF sample(size_t i) const override
+        { return QPointF(model_->secondsLeft(fighterIdx_, i), model_->damage(fighterIdx_, i)); }
+
     QRectF boundingRect() const override
     {
-        if (d_boundingRect.width() < 0.0)
-            d_boundingRect = qwtBoundingRect(*this);
-
         return d_boundingRect;
     }
 
-    inline void append(const QPointF& point)
+    inline void updateBoundingRect()
     {
-        d_samples += point;
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
+        d_boundingRect = qwtBoundingRect(*this);
     }
 
-    inline void setSample(int idx, const QPointF& point)
-    {
-        d_samples[idx] = point;
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
-    }
-
-    void clear()
-    {
-        d_samples.clear();
-        d_samples.squeeze();
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
-    }
+private:
+    const DamageTimePlotModel* model_;
+    const int fighterIdx_;
 };
 
 class TimeScaleDraw : public QwtScaleDraw
@@ -48,7 +47,6 @@ public:
     }
 
 private:
-    QTime baseTime_;
 };
 
 }
@@ -60,9 +58,9 @@ DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* pare
 {
     setTitle("Damage over Time");
     setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
+    axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Inverted, true);
 
-    if (model_->session())
-        onDamageTimePlotSessionSet(model_->session());
+    DamageTimePlotView::onDamageTimePlotStartNew();
 
     model_->dispatcher.addListener(this);
 }
@@ -74,108 +72,38 @@ DamageTimePlotView::~DamageTimePlotView()
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotView::clearUI()
+void DamageTimePlotView::onDamageTimePlotStartNew()
 {
     for (auto& curve : curves_)
         delete curve;
     curves_.clear();
-    prevFrames_.clear();
-    prevDamageValues_.clear();
-    largestTimeSeen_ = 0.0;
-}
 
-// ----------------------------------------------------------------------------
-static void appendDataPoint(CurveData* data, float frame, float damage, float* largestTimeSeen)
-{
-    float time = static_cast<float>(frame) / 60.0;
-    if (time > *largestTimeSeen)
+    for (int fighterIdx = 0; fighterIdx != model_->fighterCount(); ++fighterIdx)
     {
-        *largestTimeSeen = time;
-        float lastLargestSeen = 0.0;
-        for (int i = 0; i < (int)data->size(); ++i)
-        {
-            float contender = data->sample(i).x();
-            if (lastLargestSeen < contender)
-                lastLargestSeen = contender;
-        }
-        for (int i = 0; i < (int)data->size(); ++i)
-        {
-            QPointF current = data->sample(i);
-            data->setSample(i, QPointF(current.x() - lastLargestSeen + *largestTimeSeen, current.y()));
-        }
-    }
-
-    data->append(QPointF(*largestTimeSeen - time, damage));
-}
-
-// ----------------------------------------------------------------------------
-void DamageTimePlotView::onDamageTimePlotSessionSet(rfcommon::Session* session)
-{
-    clearUI();
-
-    for (int player = 0; player != model_->session()->fighterCount(); ++player)
-    {
-        CurveData* data = new CurveData;
+        DamageTimePlotCurveDataView* data = new DamageTimePlotCurveDataView(model_, fighterIdx);
         QwtPlotCurve* curve = new QwtPlotCurve;
-        curve->setPen(QPen(rfplot::ColorPalette::getColor(player), 2.0));
+        curve->setPen(QPen(rfplot::ColorPalette::getColor(fighterIdx), 2.0));
         curve->setData(data);
-        curve->setTitle(model_->session()->playerName(player).cStr());
+        curve->setTitle(model_->name(fighterIdx).cStr());
         curve->attach(this);
         curves_.push(curve);
-
-        prevFrames_.push(0);
-        prevDamageValues_.push(0.0);
-        for (int i = 0; i < model_->session()->playerStateCount(player); ++i)
-        {
-            const auto& state = model_->session()->playerStateAt(player, i);
-
-            if (i == 0 || i == model_->session()->playerStateCount(player) - 1)
-            {
-                prevDamageValues_[player] = state.damage();
-                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
-            }
-            else if (state.damage() != prevDamageValues_[player])
-            {
-                appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
-                appendDataPoint(data, state.frame(), state.damage(), &largestTimeSeen_);
-                prevDamageValues_[player] = state.damage();
-            }
-            prevFrames_[player] = state.frame();
-        }
     }
 
     forceAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotView::onDamageTimePlotSessionCleared(rfcommon::Session* session)
+void DamageTimePlotView::onDamageTimePlotDataChanged()
 {
-    (void)session;
-}
+    for (auto& curve : curves_)
+        static_cast<DamageTimePlotCurveDataView*>(curve->data())->updateBoundingRect();
 
-// ----------------------------------------------------------------------------
-void DamageTimePlotView::onDamageTimePlotNameChanged(int player, const rfcommon::SmallString<15>& name)
-{
-    curves_[player]->setTitle(name.cStr());
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotView::onDamageTimePlotNewValue(int player, rfcommon::Frame frame, float damage)
+void DamageTimePlotView::onDamageTimePlotNameChanged(int fighterIdx)
 {
-    CurveData* data = static_cast<CurveData*>(curves_[player]->data());
-
-    if (prevFrames_[player] == 0)
-    {
-        appendDataPoint(data, frame, damage, &largestTimeSeen_);
-    }
-    else if (damage != prevDamageValues_[player])
-    {
-        appendDataPoint(data, prevFrames_[player], prevDamageValues_[player], &largestTimeSeen_);
-        appendDataPoint(data, frame, damage, &largestTimeSeen_);
-        prevDamageValues_[player] = damage;
-    }
-    prevFrames_[player] = frame;
-
+    curves_[fighterIdx]->setTitle(model_->name(fighterIdx).cStr());
     conditionalAutoScale();
 }

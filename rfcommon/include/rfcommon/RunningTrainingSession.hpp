@@ -16,6 +16,9 @@ public:
             SmallVector<SmallString<15>, 2>&& tags
     );
 
+    const SmallString<15>& name(int fighterIdx) const override
+        { return tag(fighterIdx); }
+
     int winner() const override
         { return -1; }
 };

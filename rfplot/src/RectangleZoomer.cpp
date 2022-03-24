@@ -3,6 +3,7 @@
 #include <qwt_plot.h>
 #include <qwt_picker_machine.h>
 #include <qwt_scale_div.h>
+#include <qwt_scale_engine.h>
 
 namespace rfplot {
 
@@ -32,7 +33,11 @@ void RectangleZoomer::doZoom(const QPointF& origin, const QPointF& current)
     double bottom = std::min(origin.y(), current.y());
     double top = std::max(origin.y(), current.y());
 
-    plot()->setAxisScale(xAxis(), left, right);
+    if (plot()->axisScaleEngine(xAxis())->testAttribute(QwtScaleEngine::Inverted))
+        plot()->setAxisScale(xAxis(), right, left);
+    else
+        plot()->setAxisScale(xAxis(), left, right);
+
     plot()->setAxisScale(yAxis(), bottom, top);
     plot()->replot();
 }

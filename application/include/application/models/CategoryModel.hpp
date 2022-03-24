@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
 #include "application/listeners/TrainingModeListener.hpp"
 #include "application/models/CategoryType.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"

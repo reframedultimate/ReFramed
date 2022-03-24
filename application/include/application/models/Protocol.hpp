@@ -2,9 +2,9 @@
 
 #include "rfcommon/tcp_socket.h"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/FighterFrame.hpp"  // Required by moc_Protocol.cpp
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/FighterState.hpp"
 #include <memory>
 #include <QObject>
 
@@ -77,7 +77,7 @@ private slots:
     void onMatchStarted(rfcommon::RunningGameSession* match);
     void onMatchResumed(rfcommon::RunningGameSession* match);
     void onMatchEnded();
-    void onPlayerState(
+    void onFighterState(
             quint64 frameTimeStamp,
             quint32 frame,
             quint8 playerIdx,
@@ -91,7 +91,8 @@ private slots:
             quint8 hit_status,
             quint8 stocks,
             bool attack_connected,
-            bool facing_direction);
+            bool facing_direction,
+            bool opponent_in_hitlag);
 
 private:
     void endSessionIfNecessary();
@@ -99,7 +100,7 @@ private:
 private:
     std::unique_ptr<ProtocolConnectTask> connectTask_;
     std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
-    rfcommon::SmallVector<rfcommon::FighterFrame, 2> fighterFrames_;
+    rfcommon::SmallVector<rfcommon::SmallVector<rfcommon::FighterState, 2>, 2> stateBuffer_;
     rfcommon::Reference<rfcommon::RunningSession> session_;
     bool trainingEndedProxyWasCalled_ = false;
 };

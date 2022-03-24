@@ -1,7 +1,7 @@
 #pragma once
 
-#include "application/listeners/SavedGameSessionGroupListener.hpp"
-#include "application/models/SavedGameSessionGroup.hpp"
+#include "application/listeners/ReplayGroupListener.hpp"
+#include "application/models/ReplayGroup.hpp"
 #include "application/models/ConfigAccessor.hpp"
 #include "application/Util.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
@@ -27,9 +27,12 @@ public:
      * The main window has some logic that forces the user to set a default
      * location before anything else can happen.
      */
-    QDir defaultRecordingSourceDirectory() const;
+    QDir defaultReplaySourceDirectory() const;
 
-    void setDefaultRecordingSourceDirectory(const QDir& path);
+    QDir defaultGameSessionSourceDirectory() const;
+    QDir defaultTrainingSessionSourceDirectory() const;
+
+    void setDefaultReplaySourceDirectory(const QDir& path);
 
     bool addReplaySource(const QString& name, const QDir& path);
     bool changeReplaySourceName(const QString& oldName, const QString& newName);
@@ -76,7 +79,7 @@ public:
     rfcommon::ListenerDispatcher<ReplayManagerListener> dispatcher;
 
 private:
-    void scanForRecordings();
+    void scanForReplays();
 
     void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& name) override;
     void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& name) override;

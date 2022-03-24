@@ -1,7 +1,7 @@
 #pragma once
 
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
-#include "application/listeners/SavedGameSessionGroupListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
+#include "application/listeners/ReplayGroupListener.hpp"
 #include "rfcommon/Reference.hpp"
 #include <QWidget>
 
@@ -9,12 +9,12 @@ class QListWidgetItem;
 class QStringListModel;
 
 namespace Ui {
-    class SavedGameSessionGroupView;
+    class ReplayGroupView;
 }
 
 namespace rfcommon {
-    class SavedGameSession;
-    extern template class RFCOMMON_TEMPLATE_API Reference<SavedGameSession>;
+    class SavedSession;
+    extern template class RFCOMMON_TEMPLATE_API Reference<SavedSession>;
 }
 
 namespace rfapp {
@@ -74,10 +74,10 @@ private:
     void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile) override;
 
 private:
-    Ui::SavedGameSessionGroupView* ui_;
+    Ui::ReplayGroupView* ui_;
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
-    rfcommon::Reference<rfcommon::SavedGameSession> currentSession_;
+    rfcommon::Reference<rfcommon::SavedSession> currentSession_;
     SavedGameSessionListWidget* savedGameSessionListWidget_;
     SavedGameSessionNameCompleter* filterCompleter_;
     SessionView* sessionView_;

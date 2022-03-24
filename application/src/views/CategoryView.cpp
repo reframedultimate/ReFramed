@@ -2,7 +2,7 @@
 #include "application/models/CategoryModel.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
+#include "application/models/ReplayManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 
 #include <QMenu>

@@ -12,6 +12,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
     SOURCES
         "src/models/DamageTimePlotModel.cpp"
         "src/views/DamageTimePlotView.cpp"
+        "src/DamageTimePlotPlugin.cpp"
         "src/Plugin.cpp"
     INCLUDE_DIRECTORIES
         "include")

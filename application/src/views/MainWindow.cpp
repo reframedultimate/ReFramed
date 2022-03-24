@@ -3,8 +3,8 @@
 #include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
+#include "application/models/ReplayManager.hpp"
 #include "application/models/RunningGameSessionManager.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 #include "application/ui_MainWindow.h"
 #include "application/views/RunningGameSessionView.hpp"
@@ -13,7 +13,7 @@
 #include "application/views/ConnectView.hpp"
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
-#include "application/views/SavedGameSessionGroupView.hpp"
+#include "application/views/ReplayGroupView.hpp"
 #include "application/views/SessionView.hpp"
 #include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
@@ -214,31 +214,49 @@ void MainWindow::negotiateDefaultRecordingLocation()
         );
     };
 
-    QFileInfo pathInfo(replayManager_->defaultRecordingSourceDirectory().path());
-    if (!pathInfo.exists())
+    QDir replayDir = replayManager_->defaultReplaySourceDirectory();
+    QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
+    QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
+    if (!gamesDir.exists() || !trainingDir.exists())
     {
         int option = QMessageBox::warning(
             this,
-            "Default directory for recordings not found",
-            QString("The directory for saving recordings was not found or has not been configured yet.\n"
+            "Default directory for replays not found",
+            QString("The directory for saving replays was not found or has not been configured yet.\n"
                     "Would you like to create the directory now?\n\n") +
-                    pathInfo.filePath(),
+                    replayDir.path(),
             QMessageBox::Yes | QMessageBox::Open
         );
 
         if (option == QMessageBox::Open)
         {
-            pathInfo = askForDir(pathInfo.filePath());
-            if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+            QFileInfo dirInfo = askForDir(replayDir.path());
+            if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
+            {
+                replayManager_->setDefaultReplaySourceDirectory(dirInfo.filePath());
+                QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
+                QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
+
+                if (gamesDir.exists() == false)
+                    gamesDir.mkpath(".");
+                if (trainingDir.exists() == false)
+                    trainingDir.mkpath(".");
+            }
             else
                 close();
         }
         else
         {
-            if (QDir().mkdir(pathInfo.filePath()))
+            if (replayDir.mkpath("."))
             {
-                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                replayManager_->setDefaultReplaySourceDirectory(replayDir);
+                QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
+                QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
+
+                if (gamesDir.exists() == false)
+                    gamesDir.mkpath(".");
+                if (trainingDir.exists() == false)
+                    trainingDir.mkpath(".");
             }
             else
             {
@@ -246,48 +264,33 @@ void MainWindow::negotiateDefaultRecordingLocation()
                     this,
                     "Failed to create directory",
                     QString("Could not create the directory:\n") +
-                            pathInfo.filePath() +
+                            replayDir.path() +
                             "\n\nWould you like to choose a directory?",
                     QMessageBox::Yes | QMessageBox::No
                 );
 
                 if (option == QMessageBox::Yes)
                 {
-                    pathInfo = askForDir(pathInfo.filePath());
-                    if (!pathInfo.exists() || !pathInfo.isDir() || !pathInfo.isWritable())
-                        close();
+                    QFileInfo dirInfo = askForDir(replayDir.path());
+                    if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
+                    {
+                        replayManager_->setDefaultReplaySourceDirectory(dirInfo.filePath());
+                        QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
+                        QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
+
+                        if (gamesDir.exists() == false)
+                            gamesDir.mkpath(".");
+                        if (trainingDir.exists() == false)
+                            trainingDir.mkpath(".");
+                    }
                     else
-                        replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
+                        close();
                 }
                 else
                 {
                     close();
                 }
             }
-        }
-    }
-
-    if (!pathInfo.isDir() || !pathInfo.isWritable())
-    {
-        int option = QMessageBox::warning(
-            this,
-            "Default directory for recordings not writable",
-            QString("The directory for saving recordings is either not a directory or not writable.\n"
-                    "Would you like to choose another directory?"),
-            QMessageBox::Yes | QMessageBox::No
-        );
-
-        if (option == QMessageBox::Yes)
-        {
-            pathInfo = askForDir(pathInfo.filePath());
-            if (pathInfo.exists() && pathInfo.isDir() && pathInfo.isWritable())
-                replayManager_->setDefaultRecordingSourceDirectory(pathInfo.filePath());
-            else
-                close();
-        }
-        else
-        {
-            close();
         }
     }
 }

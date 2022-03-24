@@ -5,7 +5,7 @@
 
 namespace rfcommon {
     class RunningGameSession;
-    class FighterFrame;
+    class Frame;
     class SetFormat;
 }
 
@@ -16,7 +16,7 @@ class RunningGameSessionManagerListener
 public:
     // We re-propagate all RunningGameSession SessionListener events because
     // RunningGameSessionManager allows you to change these properties even when there is no running session
-    virtual void onRunningGameSessionManagerNewFrame() = 0;
+    virtual void onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame) = 0;
     virtual void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) = 0;
     virtual void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) = 0;
     virtual void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) = 0;

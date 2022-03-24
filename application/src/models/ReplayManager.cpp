@@ -1,6 +1,6 @@
 #include "application/Util.hpp"
-#include "application/models/SavedGameSessionManager.hpp"
-#include "application/listeners/SavedGameSessionManagerListener.hpp"
+#include "application/listeners/ReplayManagerListener.hpp"
+#include "application/models/ReplayManager.hpp"
 
 #include <QStandardPaths>
 #include <QJsonObject>
@@ -12,42 +12,57 @@ ReplayManager::ReplayManager(Config* config)
     : ConfigAccessor(config)
 {
     QJsonObject& cfg = getConfig();
-    if (cfg["SavedGameSessionManager"].isNull())
-        cfg["SavedGameSessionManager"] = QJsonObject();
-    auto cfgRecMgr = cfg["SavedGameSessionManager"].toObject();
-    if (cfgRecMgr["defaultrecordingdir"].isNull())
-        cfgRecMgr["defaultrecordingdir"] = QDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation)).canonicalPath();
-    cfg["SavedGameSessionManager"] = cfgRecMgr;
+    if (cfg["replaymanager"].isNull())
+        cfg["replaymanager"] = QJsonObject();
+    auto cfgReplayManager = cfg["replaymanager"].toObject();
+    if (cfgReplayManager["defaultreplaypath"].isNull())
+    {
+        QDir defaultReplayPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/replays";
+        cfgReplayManager["defaultreplaypath"] = QDir(defaultReplayPath).absolutePath();
+    }
+    cfg["replaymanager"] = cfgReplayManager;
     saveConfig();
 
     // Default location is always at index 0
-    replayDirectories_.insert("Default", defaultRecordingSourceDirectory());
+    replayDirectories_.insert("Default", defaultReplaySourceDirectory());
 
     // The "all" recording group can't be changed or deleted and contains all
     // accessible recordings
     groups_.emplace("All", std::make_unique<ReplayGroup>("All"));
 
-    scanForRecordings();
+    scanForReplays();
 }
 
 // ----------------------------------------------------------------------------
-QDir ReplayManager::defaultRecordingSourceDirectory() const
+QDir ReplayManager::defaultReplaySourceDirectory() const
 {
-    return getConfig()["SavedGameSessionManager"].toObject()["defaultrecordingdir"].toString();
+    return getConfig()["replaymanager"].toObject()["defaultreplaypath"].toString();
 }
 
 // ----------------------------------------------------------------------------
-void ReplayManager::setDefaultRecordingSourceDirectory(const QDir& path)
+QDir ReplayManager::defaultGameSessionSourceDirectory() const
 {
-    QString canonicalPath = path.canonicalPath();
+    QDir dir = defaultReplaySourceDirectory();
+    return dir.absolutePath() + "/games";
+}
 
+// ----------------------------------------------------------------------------
+QDir ReplayManager::defaultTrainingSessionSourceDirectory() const
+{
+    QDir dir = defaultReplaySourceDirectory();
+    return dir.absolutePath() + "/training";
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
+{
     QJsonObject& cfg = getConfig();
-    QJsonObject cfgRecMgr = cfg["SavedGameSessionManager"].toObject();
-    cfgRecMgr["defaultrecordingdir"] = canonicalPath;
-    cfg = cfgRecMgr;
+    QJsonObject cfgReplayManager = cfg["replaymanager"].toObject();
+    cfgReplayManager["defaultreplaypath"] = path.absolutePath();
+    cfg["replaymanager"] = cfgReplayManager;
     saveConfig();
 
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultReplaySaveLocationChanged, QDir(canonicalPath));
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultReplaySaveLocationChanged, path);
 }
 
 // ----------------------------------------------------------------------------
@@ -317,13 +332,19 @@ QDir ReplayManager::videoSourcePath(int idx) const
 }
 
 // ----------------------------------------------------------------------------
-void ReplayManager::scanForRecordings()
+void ReplayManager::scanForReplays()
 {
     ReplayGroup* allGroup = allReplayGroup();
     allGroup->removeAllFiles();
-    for (const auto& recdir : replayDirectories_)
-        for (const auto& file : recdir.entryList({"*.rfr", "*.RFR"}, QDir::Files))
-            allGroup->addFile(QFileInfo(recdir, file));
+    for (const auto& replayDir : replayDirectories_)
+    {
+        QDir matchDir = replayDir.path() + "/games";
+        QDir trainingDir = replayDir.path() + "/training";
+        for (const auto& file : matchDir.entryList({"*.rfr"}, QDir::Files))
+            allGroup->addFile(QFileInfo(matchDir, file));
+        for (const auto& file : trainingDir.entryList({"*.rfr"}, QDir::Files))
+            allGroup->addFile(QFileInfo(matchDir, file));
+    }
 }
 
 // ----------------------------------------------------------------------------

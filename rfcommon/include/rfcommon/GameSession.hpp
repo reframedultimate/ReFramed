@@ -8,11 +8,10 @@
 
 namespace rfcommon {
 
-class FighterFrame;
+class FighterState;
 
 extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 8>;
 extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 8>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<Vector<FighterFrame>, 8>;
 
 class RFCOMMON_PUBLIC_API GameSession : virtual public Session
 {

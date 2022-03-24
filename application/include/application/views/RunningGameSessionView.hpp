@@ -53,7 +53,7 @@ private:
     void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override;
     void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override;
     void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override;
-    void onRunningGameSessionManagerNewFrame() override;
+    void onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame) override;
     void onRunningGameSessionManagerWinnerChanged(int winner) override;
 
 private:
