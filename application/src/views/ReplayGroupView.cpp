@@ -13,8 +13,6 @@
 #include <QKeySequence>
 #include <QShortcut>
 
-#include <QDebug>
-
 namespace rfapp {
 
 class SavedGameSessionNameCompleter : public QCompleter
