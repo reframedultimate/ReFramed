@@ -134,21 +134,6 @@ class HashMap : private HashMapAlloc
     }
 
 public:
-    class KeyValueRef
-    {
-    public:
-        KeyValueRef(K& key, V& value) : key_(key), value_(value) {}
-
-        K& key() { return key_; }
-        V& value() { return value_; }
-
-        KeyValueRef* operator->() { return this; }
-
-    private:
-        K& key_;
-        V& value_;
-    };
-
     class ConstKeyValueRef
     {
     public:
@@ -162,6 +147,24 @@ public:
     private:
         const K& key_;
         const V& value_;
+    };
+
+    class KeyValueRef
+    {
+    public:
+        KeyValueRef(K& key, V& value) : key_(key), value_(value) {}
+
+        K& key() { return key_; }
+        V& value() { return value_; }
+        const K& key() const { return key_; }
+        const V& value() const { return value_; }
+
+        KeyValueRef* operator->() { return this; }
+        const ConstKeyValueRef* operator->() const { return this; }
+
+    private:
+        K& key_;
+        V& value_;
     };
 
     class Iterator
