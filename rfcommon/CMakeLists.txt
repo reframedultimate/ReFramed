@@ -79,7 +79,7 @@ add_library (rfcommon SHARED
     "src/FighterIDMapping.cpp"
     "src/FighterStatusMapping.cpp"
     "src/GameSession.cpp"
-    "src/hash40.c"
+    "src/hash40.cpp"
     "src/HashMap.cpp"
     "src/HitStatusMapping.cpp"
     "src/HitstunCalculator.cpp"
