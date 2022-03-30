@@ -189,6 +189,18 @@ public:
             return KeyValueRef(keys_[pos_], values_[pos_]);
         }
 
+        ConstKeyValueRef operator*() const
+        {
+            assert(pos_ != table_.count());
+            return ConstKeyValueRef(keys_[pos_], values_[pos_]);
+        }
+
+        ConstKeyValueRef operator->() const
+        {
+            assert(pos_ != table_.count());
+            return ConstKeyValueRef(keys_[pos_], values_[pos_]);
+        }
+
         Iterator& operator++()
         {
             while (pos_ != table_.count())
