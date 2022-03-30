@@ -26,12 +26,13 @@ set (REFRAMED_VERSION_RC "alpha")
 # Configure build and install directory structures
 set (REFRAMED_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set (REFRAMED_BUILD_LIBDIR "${REFRAMED_BUILD_BINDIR}/lib")
+set (REFRAMED_BUILD_DATADIR "${REFRAMED_BUILD_BINDIR}/share/reframed/data")
 set (REFRAMED_BUILD_PLUGINDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugins")
 
 set (REFRAMED_INSTALL_BINDIR ".")
 set (REFRAMED_INSTALL_LIBDIR "lib")
 set (REFRAMED_INSTALL_INCLUDEDIR "include")
-set (REFRAMED_INSTALL_DATADIR "share/reframed")
+set (REFRAMED_INSTALL_DATADIR "share/reframed/data")
 set (REFRAMED_INSTALL_PLUGINDIR "share/reframed/plugins")
 set (REFRAMED_INSTALL_CMAKEDIR "share/reframed/cmake")
 
