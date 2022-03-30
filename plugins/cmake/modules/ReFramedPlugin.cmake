@@ -79,3 +79,4 @@ macro (reframed_add_plugin PLUGIN)
             RUNTIME DESTINATION "${REFRAMED_INSTALL_PLUGINDIR}")
     endif ()
 endmacro ()
+

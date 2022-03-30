@@ -17,3 +17,4 @@ set (REFRAMED_INSTALL_PLUGINDIR "share/reframed/plugins")
 set (REFRAMED_INSTALL_CMAKEDIR "share/reframed/cmake")
 
 set (REFRAMED_PLUGIN_TEMPLATE_PATH "${PACKAGE_PREFIX_DIR}/share/reframed/cmake/templates")
+
