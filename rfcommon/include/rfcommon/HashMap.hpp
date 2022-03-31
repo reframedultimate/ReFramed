@@ -74,6 +74,15 @@ struct HashMapHasher<uint32_t, uint32_t>
 };
 
 template <>
+struct HashMapHasher<uint64_t, uint32_t>
+{
+    typedef uint32_t HashType;
+    HashType operator()(uint64_t value) const {
+        return hash32_jenkins_oaat(&value, 8);
+    }
+};
+
+template <>
 struct HashMapHasher<int, uint32_t>
 {
     typedef uint32_t HashType;
@@ -82,12 +91,12 @@ struct HashMapHasher<int, uint32_t>
     }
 };
 
-template <>
-struct HashMapHasher<String, uint32_t>
+template <int N>
+struct HashMapHasher<SmallString<N>, uint32_t>
 {
     typedef uint32_t HashType;
-    uint32_t operator()(const String& s) const {
-        return hash32_jenkins_oaat(s.data(), s.length());
+    uint32_t operator()(const SmallString<N>& s) const {
+        return hash32_jenkins_oaat(s.data(), s.count());
     }
 };
 
