@@ -2,6 +2,8 @@
 #include "rfcommon/init.h"
 #include <QApplication>
 #include <QStyleFactory>
+#include <QCursor>
+#include <QScreen>
 #include <iostream>
 
 int processOptions(int argc, char** argv)
@@ -39,12 +41,23 @@ int main(int argc, char** argv)
     QApplication::setStyle("fusion");
 #endif
     QApplication app(argc, argv);
-    rfapp::MainWindow mainWindow;
+    rfapp::MainWindow mainWindow;    
+    
+    // Make the main window as large as possible when not maximized
+    QScreen* screen = QApplication::screenAt(QCursor::pos());
+    if (screen == nullptr)
+        screen = QApplication::primaryScreen();
+    QRect screenRect = screen->geometry();
+    int width = screenRect.width() * 3 / 4;
+    int height = screenRect.height() * 3 / 4;
+    int x = (screenRect.width() - width) / 2 + screenRect.x();
+    int y = (screenRect.height() - height) / 2 + screenRect.y();
+    mainWindow.setGeometry(x, y, width, height);
 
     if (rfcommon_init() != 0)
         goto init_rfcommon_library_failed;
 
-    mainWindow.show();
+    mainWindow.showMaximized();
     result = app.exec();
 
     rfcommon_deinit();

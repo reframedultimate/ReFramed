@@ -101,6 +101,7 @@ public:
     uint8_t upper() const { return (value_ >> 32) & 0xFF; }
     uint32_t lower() const { return value_ & 0xFFFFFFFF; }
     Type value() const { return value_; }
+    std::string toStdString() const { return std::to_string(value_); }
 
     bool operator==(FighterMotion other) const { return value_ == other.value_; }
     bool operator!=(FighterMotion other) const { return value_ != other.value_; }

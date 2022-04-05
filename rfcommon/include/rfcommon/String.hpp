@@ -75,6 +75,16 @@ public:
         return *this;
     }
 
+    SmallString& operator+=(const char* rhs)
+    {
+        const S len = std::strlen(rhs);
+        this->count_--;  // string length without null
+        this->ensureCapacity(this->count_ + len + 1, this->count_, len + 1);
+        std::strcpy(this->begin_ + this->count_, rhs);
+        this->count_ += len + 1;
+        return *this;
+    }
+
     template <int N2, typename S2>
     friend inline bool operator==(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs)
     {
@@ -90,6 +100,11 @@ public:
     friend inline bool operator==(const SmallString<N, S>& lhs, const char* rhs)
     {
         return strcmp(lhs.begin_, rhs) == 0;
+    }
+
+    friend inline bool operator!=(const SmallString<N, S>& lhs, const char* rhs)
+    {
+        return !operator==(lhs, rhs);
     }
 };
 

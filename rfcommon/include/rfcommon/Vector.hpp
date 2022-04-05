@@ -275,6 +275,19 @@ public:
         return this->back();
     }
 
+    template <int N2, typename S2>
+    void push(const SmallVector<T, N2, S2>& other)
+    {
+        insertCopy(this->count_, other.begin(), other.end());
+    }
+
+    template <int N2, typename S2>
+    void push(SmallVector<T, N2, S2>&& other)
+    {
+        insertMove(this->count_, other.begin(), other.end());
+        other.clear();
+    }
+
     void pop()
     {
         if (this->count_ == 0)
@@ -547,6 +560,17 @@ public:
     {
         insert(this->count_, std::move(value));
         return &this->back();
+    }
+
+    void push(const Vector& other)
+    {
+        insertCopy(this->count_, other.begin(), other.end());
+    }
+
+    void push(Vector&& other)
+    {
+        insertMove(this->count_, other.begin(), other.end());
+        other.clear();
     }
 
     void pop()
