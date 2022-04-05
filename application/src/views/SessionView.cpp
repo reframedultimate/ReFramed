@@ -16,9 +16,9 @@ SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
 {
     ui_->setupUi(this);
 
-    damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
-    xyPositionsPlugin_ = pluginManager_->createRealtimeModel("XY Positions Plot");
-    frameDataListPlugin_ = pluginManager_->createRealtimeModel("Frame Data List");
+    //damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
+    // = pluginManager_->createRealtimeModel("XY Positions Plot");
+    //frameDataListPlugin_ = pluginManager_->createRealtimeModel("Frame Data List");
     decisionGraphPlugin_ = pluginManager_->createRealtimeModel("Decision Graph");
 
     if (damageTimePlugin_)
