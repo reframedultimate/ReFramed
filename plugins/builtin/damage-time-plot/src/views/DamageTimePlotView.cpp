@@ -4,6 +4,8 @@
 #include "qwt_plot_curve.h"
 #include "qwt_date_scale_draw.h"
 #include "qwt_scale_engine.h"
+#include "qwt_text.h"
+#include <QPen>
 
 namespace {
 
@@ -25,12 +27,12 @@ public:
 
     QRectF boundingRect() const override
     {
-        return d_boundingRect;
+        return cachedBoundingRect;
     }
 
     inline void updateBoundingRect()
     {
-        d_boundingRect = qwtBoundingRect(*this);
+        cachedBoundingRect = qwtBoundingRect(*this);
     }
 
 private:

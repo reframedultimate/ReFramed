@@ -45,7 +45,7 @@ set (ZLIB_PIC ON CACHE INTERNAL "")
 set (INSTALL_GTEST OFF CACHE INTERNAL "")
 set (gtest_force_shared_crt ON CACHE INTERNAL "")
 
-add_subdirectory ("thirdparty/qwt-6.1.6")
+add_subdirectory ("thirdparty/qwt-6.2.0")
 #add_subdirectory ("thirdparty/googletest-1.10.0")
 add_subdirectory ("thirdparty/json")
 add_subdirectory ("thirdparty/zlib-1.2.11")
