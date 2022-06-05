@@ -4,6 +4,7 @@
 #include "rfplot/RectangleZoomer.hpp"
 #include "rfplot/AutoScaler.hpp"
 
+#include <qwt_text.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_renderer.h>
@@ -18,6 +19,7 @@
 #include <QMenu>
 #include <QClipboard>
 #include <QApplication>
+#include <QPainter>
 
 
 namespace rfplot {

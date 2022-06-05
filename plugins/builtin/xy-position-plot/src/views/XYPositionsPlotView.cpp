@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QSignalMapper>
+#include <QPen>
 
 namespace {
 
@@ -16,29 +17,29 @@ class CurveData : public QwtArraySeriesData<QPointF>
 public:
     QRectF boundingRect() const override
     {
-        if (d_boundingRect.width() < 0.0)
-            d_boundingRect = qwtBoundingRect(*this);
+        if (cachedBoundingRect.width() < 0.0)
+            cachedBoundingRect = qwtBoundingRect(*this);
 
-        return d_boundingRect;
+        return cachedBoundingRect;
     }
 
     inline void append(const QPointF& point)
     {
-        d_samples += point;
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
+        m_samples += point;
+        cachedBoundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
     }
 
     inline void setSample(int idx, const QPointF& point)
     {
-        d_samples[idx] = point;
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
+        m_samples[idx] = point;
+        cachedBoundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
     }
 
     void clear()
     {
-        d_samples.clear();
-        d_samples.squeeze();
-        d_boundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
+        m_samples.clear();
+        m_samples.squeeze();
+        cachedBoundingRect = QRectF(0.0, 0.0, -1.0, -1.0);
     }
 };
 
