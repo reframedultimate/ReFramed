@@ -27,7 +27,7 @@ public:
 
     virtual Type type() const = 0;
 
-    bool save(const String& fileName);
+    bool save(FILE* fp);
 
     /*!
      * \brief Gets the number of fighters in this session. Usually 2, but can
@@ -152,7 +152,8 @@ public:
      * \note If training mode, this will always be the same as the tag.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& name(int playerIdx) const override;
+    const SmallString<15>& name(int playerIdx) const override
+        { return names_[playerIdx]; }
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -170,6 +171,9 @@ public:
      * \brief Gets the format of the set, @see Recording::Format
      */
     SetFormat setFormat() const;
+
+private:
+    SmallVector<SmallString<15>, 2> names_;
 };
 
 class RFCOMMON_PUBLIC_API TrainingSessionMetaData : public SessionMetaData
@@ -179,6 +183,12 @@ public:
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags);
+
+    Type type() const override
+        { return TRAINING; }
+
+    const SmallString<15>& name(int playerIdx) const override
+        { return tag(playerIdx); }
 
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;
