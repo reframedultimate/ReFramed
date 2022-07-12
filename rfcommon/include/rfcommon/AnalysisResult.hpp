@@ -16,7 +16,7 @@ public:
     void addDataSet(const String& name, DataSet* dataSet);
 
 private:
-    HashMap<String, Reference<DataSet>> dataSets_;
+    //HashMap<String, Reference<DataSet>> dataSets_;
 };
 
 }

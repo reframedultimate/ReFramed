@@ -10,8 +10,6 @@ RunningTrainingSession::RunningTrainingSession(
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<SmallString<15>, 2>&& tags)
     : Session(std::move(mapping), stageID, std::move(fighterIDs), std::move(tags))
-    , RunningSession()
-    , TrainingSession()
 {
 }
 

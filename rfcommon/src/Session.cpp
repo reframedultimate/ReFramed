@@ -200,7 +200,7 @@ bool Session::save(const String& fileName)
             sizeof(uint8_t);  // flags
     const int frameSize = fighterStateSize * fighterCount();
 
-    MemoryBuffer frameData(5 + frameSize * frameCount());
+    StreamBuffer frameData(5 + frameSize * frameCount());
     frameData.writeLU32(frames_.count());
     frameData.writeU8(fighterCount());
     for (const auto& frame : frames_)
@@ -225,7 +225,7 @@ bool Session::save(const String& fileName)
     }
     assert(frameData.bytesWritten() == 5 + frameSize * frameCount());
 
-    MemoryBuffer compressedFrameData(compressBound(frameData.bytesWritten()) + 6);
+    StreamBuffer compressedFrameData(compressBound(frameData.bytesWritten()) + 6);
     compressedFrameData.writeU8(1);  // Major version
     compressedFrameData.writeU8(5);  // Minor version
     compressedFrameData.writeLU32(frameData.bytesWritten());  // Decompressed size

@@ -7,10 +7,6 @@
 
 namespace rfcommon {
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterHitStatus, 6>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<String, 6>;
-extern template class RFCOMMON_TEMPLATE_API SmallLinearMap<FighterHitStatus, String, 6>;
-
 class RFCOMMON_PUBLIC_API HitStatusMapping
 {
 public:

@@ -8,6 +8,9 @@ namespace rfcommon {
 
 class RFCOMMON_PUBLIC_API TrainingSession : virtual public Session
 {
+protected:
+    TrainingSession();
+
 public:
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;

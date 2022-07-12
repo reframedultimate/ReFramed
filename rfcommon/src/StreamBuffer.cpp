@@ -6,21 +6,21 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-MemoryBuffer::MemoryBuffer(int bytes)
+StreamBuffer::StreamBuffer(int bytes)
     : buffer_(bytes)
     , writePtr_(buffer_.data())
     , readPtr_(buffer_.data())
 {}
 
 // ----------------------------------------------------------------------------
-MemoryBuffer::MemoryBuffer(const void* data, int len)
+StreamBuffer::StreamBuffer(const void* data, int len)
     : buffer_(static_cast<const unsigned char*>(data), len)
     , writePtr_(buffer_.data() + len)
     , readPtr_(buffer_.data())
 {}
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::write(const void* data, int len)
+StreamBuffer& StreamBuffer::write(const void* data, int len)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + len <= end);
@@ -30,7 +30,7 @@ MemoryBuffer& MemoryBuffer::write(const void* data, int len)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeU8(uint8_t value)
+StreamBuffer& StreamBuffer::writeU8(uint8_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 1 <= end);
@@ -40,7 +40,7 @@ MemoryBuffer& MemoryBuffer::writeU8(uint8_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeLU16(uint16_t value)
+StreamBuffer& StreamBuffer::writeLU16(uint16_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 2 <= end);
@@ -51,7 +51,7 @@ MemoryBuffer& MemoryBuffer::writeLU16(uint16_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeLU32(uint32_t value)
+StreamBuffer& StreamBuffer::writeLU32(uint32_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
@@ -62,7 +62,7 @@ MemoryBuffer& MemoryBuffer::writeLU32(uint32_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeLU64(uint64_t value)
+StreamBuffer& StreamBuffer::writeLU64(uint64_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
@@ -73,7 +73,7 @@ MemoryBuffer& MemoryBuffer::writeLU64(uint64_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeLF32(float value)
+StreamBuffer& StreamBuffer::writeLF32(float value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
@@ -84,7 +84,7 @@ MemoryBuffer& MemoryBuffer::writeLF32(float value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeLF64(double value)
+StreamBuffer& StreamBuffer::writeLF64(double value)
 {
 
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
@@ -96,7 +96,7 @@ MemoryBuffer& MemoryBuffer::writeLF64(double value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeBU16(uint16_t value)
+StreamBuffer& StreamBuffer::writeBU16(uint16_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 2 <= end);
@@ -107,7 +107,7 @@ MemoryBuffer& MemoryBuffer::writeBU16(uint16_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeBU32(uint32_t value)
+StreamBuffer& StreamBuffer::writeBU32(uint32_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
@@ -118,7 +118,7 @@ MemoryBuffer& MemoryBuffer::writeBU32(uint32_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeBU64(uint64_t value)
+StreamBuffer& StreamBuffer::writeBU64(uint64_t value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
@@ -129,7 +129,7 @@ MemoryBuffer& MemoryBuffer::writeBU64(uint64_t value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeBF32(float value)
+StreamBuffer& StreamBuffer::writeBF32(float value)
 {
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
@@ -140,7 +140,7 @@ MemoryBuffer& MemoryBuffer::writeBF32(float value)
 }
 
 // ----------------------------------------------------------------------------
-MemoryBuffer& MemoryBuffer::writeBF64(double value)
+StreamBuffer& StreamBuffer::writeBF64(double value)
 {
 
     unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
@@ -152,7 +152,7 @@ MemoryBuffer& MemoryBuffer::writeBF64(double value)
 }
 
 // ----------------------------------------------------------------------------
-uint8_t MemoryBuffer::readU8(int* error)
+uint8_t StreamBuffer::readU8(int* error)
 {
     if (readPtr_ + 1 > writePtr_)
     {
@@ -166,7 +166,7 @@ uint8_t MemoryBuffer::readU8(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint16_t MemoryBuffer::readLU16(int* error)
+uint16_t StreamBuffer::readLU16(int* error)
 {
     if (readPtr_ + 2 > writePtr_)
     {
@@ -180,7 +180,7 @@ uint16_t MemoryBuffer::readLU16(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MemoryBuffer::readLU32(int* error)
+uint32_t StreamBuffer::readLU32(int* error)
 {
     if (readPtr_ + 4 > writePtr_)
     {
@@ -194,7 +194,7 @@ uint32_t MemoryBuffer::readLU32(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint64_t MemoryBuffer::readLU64(int* error)
+uint64_t StreamBuffer::readLU64(int* error)
 {
     if (readPtr_ + 8 > writePtr_)
     {
@@ -208,7 +208,7 @@ uint64_t MemoryBuffer::readLU64(int* error)
 }
 
 // ----------------------------------------------------------------------------
-float MemoryBuffer::readLF32(int* error)
+float StreamBuffer::readLF32(int* error)
 {
     if (readPtr_ + 4 > writePtr_)
     {
@@ -223,7 +223,7 @@ float MemoryBuffer::readLF32(int* error)
 }
 
 // ----------------------------------------------------------------------------
-double MemoryBuffer::readLF64(int* error)
+double StreamBuffer::readLF64(int* error)
 {
     if (readPtr_ + 8 > writePtr_)
     {
@@ -238,7 +238,7 @@ double MemoryBuffer::readLF64(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint16_t MemoryBuffer::readBU16(int* error)
+uint16_t StreamBuffer::readBU16(int* error)
 {
     if (readPtr_ + 2 > writePtr_)
     {
@@ -252,7 +252,7 @@ uint16_t MemoryBuffer::readBU16(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MemoryBuffer::readBU32(int* error)
+uint32_t StreamBuffer::readBU32(int* error)
 {
     if (readPtr_ + 4 > writePtr_)
     {
@@ -266,7 +266,7 @@ uint32_t MemoryBuffer::readBU32(int* error)
 }
 
 // ----------------------------------------------------------------------------
-uint64_t MemoryBuffer::readBU64(int* error)
+uint64_t StreamBuffer::readBU64(int* error)
 {
     if (readPtr_ + 8 > writePtr_)
     {
@@ -280,7 +280,7 @@ uint64_t MemoryBuffer::readBU64(int* error)
 }
 
 // ----------------------------------------------------------------------------
-float MemoryBuffer::readBF32(int* error)
+float StreamBuffer::readBF32(int* error)
 {
     if (readPtr_ + 4 > writePtr_)
     {
@@ -295,7 +295,7 @@ float MemoryBuffer::readBF32(int* error)
 }
 
 // ----------------------------------------------------------------------------
-double MemoryBuffer::readBF64(int* error)
+double StreamBuffer::readBF64(int* error)
 {
     if (readPtr_ + 8 > writePtr_)
     {

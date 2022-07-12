@@ -4,6 +4,11 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
+TrainingSession::TrainingSession()
+{
+}
+
+// ----------------------------------------------------------------------------
 FighterID TrainingSession::playerFighterID() const
 {
     return Session::fighterID(0);

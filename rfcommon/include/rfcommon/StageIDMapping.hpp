@@ -7,10 +7,6 @@
 
 namespace rfcommon {
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<StageID, 10>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<String, 10>;
-extern template class RFCOMMON_TEMPLATE_API SmallLinearMap<StageID, String, 10>;
-
 class RFCOMMON_PUBLIC_API StageIDMapping
 {
 public:

@@ -12,9 +12,6 @@ class AnalysisResult;
 class Session;
 class DataSet;
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<DataSetProcessorListener*, 4>;
-extern template class RFCOMMON_TEMPLATE_API ListenerDispatcher<DataSetProcessorListener>;
-
 /*
 class DataSetOut;
 class RFCOMMON_PUBLIC_API DataSetProcessorListener

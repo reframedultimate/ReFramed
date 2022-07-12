@@ -174,7 +174,7 @@ SavedSession::SavedSession()
 SavedSession* SavedSession::load(const String& fileName)
 {
     // Assume we're dealing with a modern format first
-    FILE* fp = fopen(fileName.cStr(), "r");
+    FILE* fp = fopen(fileName.cStr(), "rb");
     if (fp == nullptr)
         return nullptr;
 
@@ -1316,8 +1316,9 @@ SavedSession* SavedSession::loadModern(FILE* fp)
             if (fseek(fp, entry.offset, SEEK_SET) != 0)
                 return nullptr;
 
-            MemoryBuffer compressed(entry.size);
-            if (fread(compressed.get(), 1, entry.size, fp) != (size_t)entry.size)
+            StreamBuffer compressed(entry.size);
+            size_t bytesRead = fread(compressed.get(), 1, entry.size, fp);
+            if (bytesRead != (size_t)entry.size)
                 return nullptr;
             compressed.seekW(entry.size);
 
@@ -1331,7 +1332,7 @@ SavedSession* SavedSession::loadModern(FILE* fp)
                 if (error)
                     return nullptr;
 
-                MemoryBuffer decompressed(decompressedSize);
+                StreamBuffer decompressed(decompressedSize);
                 int result = uncompress(
                         static_cast<uint8_t*>(decompressed.get()), &decompressedSize,
                         static_cast<const uint8_t*>(compressed.get()) + 6, compressed.capacity() - 6);
@@ -1533,7 +1534,7 @@ SavedSession* SavedSession::loadJSON_1_5(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-Vector<Frame> SavedSession::loadFrameData_1_5(MemoryBuffer* data)
+Vector<Frame> SavedSession::loadFrameData_1_5(StreamBuffer* data)
 {
     Vector<Frame> frames;
 
