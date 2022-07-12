@@ -44,6 +44,18 @@ public:
         swap(first.values_, second.values_);
     }
 
+    Iterator insertNew(const K& key, const V& value)
+    {
+        S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
+        if (offset == keys_.count() || keys_[offset] != key)
+        {
+            keys_.insert(offset, key);
+            values_.insert(offset, value);
+        }
+
+        return end();
+    }
+
     Iterator insertOrGet(const K& key, const V& value)
     {
         S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
@@ -56,16 +68,28 @@ public:
         return Iterator(keys_, values_, offset);
     }
 
-    Iterator find(const K& key)
+    Iterator findKey(const K& key)
     {
         auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
         return Iterator(keys_, values_, static_cast<S>(it - keys_.begin()));
     }
 
-    ConstIterator find(const K& key) const
+    ConstIterator findKey(const K& key) const
     {
         auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
         return ConstIterator(keys_, values_, static_cast<S>(it - keys_.begin()));
+    }
+
+    Iterator findValue(const V& value)
+    {
+        auto it = std::lower_bound(values_.begin(), values_.end(), value);
+        return Iterator(keys_, values_, static_cast<S>(it - values_.begin()));
+    }
+
+    ConstIterator findValue(const V& value) const
+    {
+        auto it = std::lower_bound(values_.begin(), values_.end(), value);
+        return ConstIterator(keys_, values_, static_cast<S>(it - values_.begin()));
     }
 
     void clear()

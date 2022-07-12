@@ -1,116 +1,11 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/String.hpp"
+#include "rfcommon/Hashers.hpp"
 #include <limits>
 #include <cassert>
 
 namespace rfcommon {
-
-static inline uint32_t hash32_jenkins_oaat(const void* key, int len)
-{
-    uint32_t hash = 0;
-    for(int i = 0; i != len; ++i)
-    {
-        hash += *(static_cast<const uint8_t*>(key) + i);
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-    hash += (hash << 3);
-    hash ^= (hash >> 1);
-    hash += (hash << 15);
-    return hash;
-}
-
-static inline uint32_t hash32_combine(uint32_t lhs, uint32_t rhs)
-{
-    lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
-    return lhs;
-}
-
-template <typename T, typename H=uint32_t>
-struct HashMapHasher
-{
-    typedef H HashType;
-};
-
-template <>
-struct HashMapHasher<uint8_t, uint32_t>
-{
-    typedef uint32_t HashType;
-    HashType operator()(uint8_t value) const {
-        return hash32_combine(
-            static_cast<uint32_t>(value) << 0,
-            hash32_combine(
-                static_cast<uint32_t>(value) << 8,
-                hash32_combine(
-                    static_cast<uint32_t>(value) << 16,
-                    static_cast<uint32_t>(value) << 24
-                )
-            )
-        );
-    }
-};
-
-template <>
-struct HashMapHasher<uint16_t, uint32_t>
-{
-    typedef uint32_t HashType;
-    HashType operator()(uint16_t value) const {
-        return hash32_combine(
-            static_cast<HashType>(value) << 0,
-            static_cast<HashType>(value) << 16
-        );
-    }
-};
-
-template <>
-struct HashMapHasher<uint32_t, uint32_t>
-{
-    typedef uint32_t HashType;
-    HashType operator()(uint32_t value) const {
-        return hash32_jenkins_oaat(&value, 4);
-    }
-};
-
-template <>
-struct HashMapHasher<uint64_t, uint32_t>
-{
-    typedef uint32_t HashType;
-    HashType operator()(uint64_t value) const {
-        return hash32_jenkins_oaat(&value, 8);
-    }
-};
-
-template <>
-struct HashMapHasher<int, uint32_t>
-{
-    typedef uint32_t HashType;
-    uint32_t operator()(int value) const {
-        return hash32_jenkins_oaat(&value, 4);
-    }
-};
-
-template <int N>
-struct HashMapHasher<SmallString<N>, uint32_t>
-{
-    typedef uint32_t HashType;
-    uint32_t operator()(const SmallString<N>& s) const {
-        return hash32_jenkins_oaat(s.data(), s.count());
-    }
-};
-
-template <typename P>
-struct HashMapHasher<P*, uint32_t>
-{
-    typedef uint32_t HashType;
-    uint32_t operator()(P* p) const {
-        return hash32_combine(
-            static_cast<uint32_t>(reinterpret_cast<size_t>(p) / sizeof(P*)),
-            static_cast<uint32_t>((reinterpret_cast<size_t>(p) / sizeof(P*)) >> 32)
-        );
-    }
-};
 
 class RFCOMMON_PUBLIC_API HashMapAlloc
 {
@@ -121,11 +16,11 @@ public:
     static void deallocate(char* p);
 };
 
-template <typename K, typename V, typename Hasher=HashMapHasher<K>, typename S=int32_t>
+template <typename K, typename V, typename Hasher=Hasher<K>, typename S=int32_t>
 class HashMap : private HashMapAlloc
 {
     using H = typename Hasher::HashType;
-    using TableContainer = Vector<H, S>;
+    using HashTable = Vector<H, S>;
 
     enum SlotState
     {
@@ -179,7 +74,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(Vector<H, S>& table, K* keys, V* values, S offset)
+        Iterator(HashTable& table, K* keys, V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -233,7 +128,7 @@ public:
 
     private:
         friend class HashMap;
-        Vector<H, S>& table_;
+        HashTable& table_;
         K* keys_;
         V* values_;
         S pos_;
@@ -242,7 +137,7 @@ public:
     class ConstIterator
     {
     public:
-        ConstIterator(const Vector<H, S>& table, const K* keys, const V* values, S offset)
+        ConstIterator(const HashTable& table, const K* keys, const V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -284,7 +179,7 @@ public:
 
     private:
         friend class HashMap;
-        const Vector<H, S>& table_;
+        const HashTable& table_;
         const K* keys_;
         const V* values_;
         S pos_;
@@ -525,6 +420,12 @@ public:
         }
 
         return Iterator(table_, keys_, values_, pos);
+    }
+
+    template <typename KK, typename VV>
+    Iterator insertDefaultOrGet(KK&& key)
+    {
+        return insertOrGet(std::move(key), VV());
     }
 
     template <typename KK, typename VV>

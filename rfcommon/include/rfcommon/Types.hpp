@@ -21,19 +21,19 @@ public:
     bool operator!=(FighterID other) const { return value_ != other.value_; }
     bool operator<(FighterID other) const { return value_ < other.value_; }
 
+    struct Hasher {
+        typedef HashMapHasher<Type>::HashType HashType;
+        HashType operator()(FighterID fighterID) const {
+            return HashMapHasher<Type>()(fighterID.value());
+        }
+    };
+
 private:
     friend class SmallVector<FighterID, 2>;
     FighterID() {}
 
 private:
     Type value_;
-};
-
-struct FighterIDHasher {
-    typedef HashMapHasher<FighterID::Type>::HashType HashType;
-    HashType operator()(FighterID fighterID) const {
-        return HashMapHasher<FighterID::Type>()(fighterID.value());
-    }
 };
 
 // ----------------------------------------------------------------------------
@@ -50,19 +50,19 @@ public:
     bool operator!=(FighterStatus other) const { return value_ != other.value_; }
     bool operator<(FighterStatus other) const { return value_ < other.value_; }
 
+    struct Hasher {
+        typedef HashMapHasher<FighterStatus::Type>::HashType HashType;
+        HashType operator()(FighterStatus fighterStatus) const {
+            return HashMapHasher<FighterStatus::Type>()(fighterStatus.value());
+        }
+    };
+
 private:
     friend class FighterState;
     FighterStatus() {}
 
 private:
     Type value_;
-};
-
-struct FighterStatusHasher {
-    typedef HashMapHasher<FighterStatus::Type>::HashType HashType;
-    HashType operator()(FighterStatus fighterStatus) const {
-        return HashMapHasher<FighterStatus::Type>()(fighterStatus.value());
-    }
 };
 
 // ----------------------------------------------------------------------------
