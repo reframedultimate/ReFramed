@@ -7,10 +7,6 @@
 
 namespace rfcommon {
 
-extern template class RFCOMMON_TEMPLATE_API Vector<uint32_t>;
-extern template class RFCOMMON_TEMPLATE_API HashMap<FighterStatus, String>;
-extern template class RFCOMMON_TEMPLATE_API HashMap<FighterID, HashMap<FighterStatus, String>>;
-
 /*!
  * \brief Character animation states are all described with a single u16 integer
  * value. This class stores information for mapping a state value to a name.

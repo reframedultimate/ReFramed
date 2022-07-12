@@ -10,9 +10,6 @@ namespace rfcommon {
 
 class FighterState;
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 8>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 8>;
-
 class RFCOMMON_PUBLIC_API GameSession : virtual public Session
 {
 protected:

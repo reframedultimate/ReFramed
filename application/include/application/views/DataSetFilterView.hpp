@@ -89,8 +89,8 @@ private:
     ReplayManager* savedGameSessionManager_;
     DataSetBackgroundLoader* dataSetBackgroundLoader_;
     std::unique_ptr<rfcommon::DataSetFilterChain> dataSetFilterChain_;
-    std::unique_ptr<rfcommon::DataSet> inputDataSetMerged_;
-    rfcommon::Reference<rfcommon::DataSet> outputDataSet_;
+    /*std::unique_ptr<rfcommon::DataSet> inputDataSetMerged_;
+    rfcommon::Reference<rfcommon::DataSet> outputDataSet_;*/
     std::unordered_map<const ReplayGroup*, rfcommon::Reference<rfcommon::DataSet>> inputDataSets_;
     bool dataSetFiltersDirty_ = true;
 };

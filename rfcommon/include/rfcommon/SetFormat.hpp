@@ -15,8 +15,6 @@
 
 namespace rfcommon {
 
-extern template class RFCOMMON_TEMPLATE_API SmallString<15>;
-
 class RFCOMMON_PUBLIC_API SetFormat
 {
 public:

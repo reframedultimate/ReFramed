@@ -171,7 +171,8 @@ void DataSetBackgroundLoader::cancelAll()
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, rfcommon::DataSet* dataSet, ReplayGroup* group)
 {
-    rfcommon::Reference<rfcommon::DataSet> ds = dataSet;
+    //rfcommon::Reference<rfcommon::DataSet> ds = dataSet;
+    rfcommon::DataSet* ds = dataSet;
 
     // Some sanity checks. There was a case where recordings had 0 player states
 #ifndef NDEBUG

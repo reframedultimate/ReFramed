@@ -6,7 +6,7 @@
 namespace rfcommon {
 
 class SavedGameSession;
-class MemoryBuffer;
+class StreamBuffer;
 
 class RFCOMMON_PUBLIC_API SavedSession : virtual public Session
 {
@@ -27,7 +27,7 @@ private:
 
     static SavedSession* loadModern(FILE* fp);
     static SavedSession* loadJSON_1_5(const void* jptr);
-    static Vector<Frame> loadFrameData_1_5(MemoryBuffer* data);
+    static Vector<Frame> loadFrameData_1_5(StreamBuffer* data);
 
 public:
     int winner() const override

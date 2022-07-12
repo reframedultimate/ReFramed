@@ -39,8 +39,8 @@ DataSetFilterView::DataSetFilterView(ReplayManager* manager, QWidget* parent)
     , savedGameSessionManager_(manager)
     , dataSetBackgroundLoader_(new DataSetBackgroundLoader(this))
     , dataSetFilterChain_(new rfcommon::DataSetFilterChain)
-    , inputDataSetMerged_(new rfcommon::DataSet)
-    , outputDataSet_(new rfcommon::DataSet)
+    /*, inputDataSetMerged_(new rfcommon::DataSet)
+    , outputDataSet_(new rfcommon::DataSet)*/
 {
     ui_->setupUi(this);
 

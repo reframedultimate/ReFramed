@@ -14,11 +14,6 @@ namespace rfcommon {
 class FighterState;
 class SessionListener;
 
-extern template class RFCOMMON_TEMPLATE_API SmallVector<FighterID, 2>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<SmallString<15>, 2>;
-extern template class RFCOMMON_TEMPLATE_API SmallVector<SessionListener*, 4>;
-extern template class RFCOMMON_TEMPLATE_API ListenerDispatcher<SessionListener>;
-
 class RFCOMMON_PUBLIC_API Session : public RefCounted
 {
 public:
@@ -80,6 +75,9 @@ public:
 
     int frameCount() const
         { return frames_.count(); }
+
+    const Frame& frame(int frameIdx) const
+        { return frames_[frameIdx]; }
 
     const Frame& firstFrame() const
         { assert(frameCount() > 0); return frames_.front(); }
