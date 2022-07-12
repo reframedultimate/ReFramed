@@ -1265,11 +1265,11 @@ SavedSession* SavedSession::loadModern(FILE* fp)
         uint32_t offset;
         uint32_t size;
     };
-    SmallVector<Entry, 2> entryTable;
 
+    // Read entry table
+    SmallVector<Entry, 4> entryTable;
     if (fread(&numEntries, 1, 1, fp) != 1)
         return nullptr;
-
     for (int i = 0; i != numEntries; ++i)
     {
         Entry entry;
@@ -1289,7 +1289,8 @@ SavedSession* SavedSession::loadModern(FILE* fp)
     Vector<Frame> frameData;
     for (const auto& entry : entryTable)
     {
-        if (memcmp(entry.type, "JSON", 4) == 0)
+        // Load session metadata
+        if (memcmp(entry.type, "META", 4) == 0)
         {
             if (fseek(fp, entry.offset, SEEK_SET) != 0)
                 return nullptr;
@@ -1311,6 +1312,7 @@ SavedSession* SavedSession::loadModern(FILE* fp)
                 return nullptr;
             }
         }
+        // Load frame data
         else if (memcmp(entry.type, "FDAT", 4) == 0)
         {
             if (fseek(fp, entry.offset, SEEK_SET) != 0)
@@ -1348,6 +1350,11 @@ SavedSession* SavedSession::loadModern(FILE* fp)
                 // unsupported version
                 return nullptr;
             }
+        }
+        // Load session mapping info, also known as "local" mapping info
+        else if (memcmp(entry.type, "MINF", 4) == 0)
+        {
+
         }
         else
         {
