@@ -10,50 +10,24 @@ namespace rfcommon {
 class RFCOMMON_PUBLIC_API SessionMetaData : public RefCounted
 {
 public:
+    enum Type
+    {
+        GAME,
+        TRAINING
+    };
+
+protected:
     SessionMetaData(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags);
 
-    SessionMetaData(
-            StageID stageID,
-            SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
-            SmallVector<SmallString<15>, 2>&& names,
-            GameNumber gameNumber=1,
-            SetNumber setNumber=1,
-            SetFormat setFormat=SetFormat::FRIENDLIES);
-
+public:
     virtual ~SessionMetaData();
 
+    virtual Type type() const = 0;
+
     bool save(const String& fileName);
-
-    /*!
-     * \brief Gets the name of the player. By default this will be the same as
-     * the tag, but many players like to create tags that are shorter or a
-     * variation of their real name. This string is their real name.
-     * Unlike tags, there is also no character limit to a player's name.
-     * \note If training mode, this will always be the same as the tag.
-     * \param fighterIdx Which player to get
-     */
-    const SmallString<15>& name(int playerIdx) const override;
-
-    /*!
-     * \brief Gets the current game number. Starts at 1 and counts upwards as
-     * sets progress.
-     */
-    GameNumber gameNumber() const;
-
-    /*!
-     * \brief Gets the set number. Usually 1. This number is used to disambiguate
-     * sets where the same two players play the same characters on the same day.
-     */
-    SetNumber setNumber() const;
-
-    /*!
-     * \brief Gets the format of the set, @see Recording::Format
-     */
-    SetFormat format() const;
 
     /*!
      * \brief Gets the number of fighters in this session. Usually 2, but can
@@ -96,22 +70,14 @@ public:
     StageID stageID() const
         { return stageID_; }
 
-    int frameCount() const
-        { return frames_.count(); }
-
-    const Frame& frame(int frameIdx) const
-        { return frames_[frameIdx]; }
-
-    const Frame& firstFrame() const
-        { assert(frameCount() > 0); return frames_.front(); }
-
-    const Frame& lastFrame() const
-        { assert(frameCount() > 0); return frames_.back(); }
-
-    const FighterState& state(int frameIdx, int fighterIdx) const
-        { assert(fighterIdx < fighterCount()); assert(frameIdx < frameCount()); return frames_[frameIdx].fighter(fighterIdx); }
-
-    virtual int winner() const = 0;
+    /*!
+     * \brief Gets the index of the player who won the game, or is currently in
+     * the lead in the case of an on-going session.
+     * \note If there is no winner, for example, if this is a training session,
+     * or if the session has no frames, then -1 is returned.
+     * \return Returns the player index. Can return -1 if no winner exists.
+     */
+    int winner() const;
 
     /*!
      * \brief Gets the absolute time of when the session started in unix time
@@ -124,8 +90,12 @@ public:
      * In the case of a training session, this marks the first frame that was
      * received (may not be the first frame of training mode depending on when
      * the user connected).
+     *
+     * If no frames were received yet, then this will return "0", which is the
+     * timestamp for Jan 1 1970.
      */
-    //TimeStampMS timeStampStartedMs() const;
+    TimeStampMS timeStampStartedMs() const
+        { return timeStarted_; }
 
     /*!
      * \brief Gets the absolute time of when the last timestamp was received in
@@ -133,29 +103,85 @@ public:
      * second or so depending on latency.
      *
      * In the case of a running session, this will be the timestamp of the most
-     * current frame received.
+     * recent frame received.
      *
      * In the case of a saved session, this will be the timestamp of the last
      * frame received.
+     *
+     * If no frames were received yet, then this will return "0", which is the
+     * timestamp for Jan 1 1970.
      */
-    //TimeStampMS timeStampEndedMs() const;
+    TimeStampMS timeStampEndedMs() const
+        { return timeEnded_; }
 
-    /*DeltaTimeMS lengthMs() const
-        { return timeStampStartedMs() - timeStampEndedMs(); }*/
-
-    ListenerDispatcher<SessionListener> dispatcher;
+    /*!
+     * \brief Returns the length of the session. This is equivalent to
+     * timeStampEndedMs() - timeStampStartedMs().
+     */
+    DeltaTimeMS lengthMs() const
+        { return timeStampStartedMs() - timeStampEndedMs(); }
 
 protected:
-    int findWinner() const;
-
-protected:
-    StageID stageID_;
+    TimeStampMS timeStarted_;
+    TimeStampMS timeEnded_;
     SmallVector<FighterID, 2> fighterIDs_;
     SmallVector<SmallString<15>, 2> tags_;
-    SmallVector<SmallString<15>, 2> playerNames_;
-    GameNumber gameNumber_;
-    SetNumber setNumber_;
-    SetFormat format_;
+    StageID stageID_;
+};
+
+class RFCOMMON_PUBLIC_API GameSessionMetaData : public SessionMetaData
+{
+public:
+    GameSessionMetaData(
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<SmallString<15>, 2>&& names,
+            GameNumber gameNumber=1,
+            SetNumber setNumber=1,
+            SetFormat setFormat=SetFormat::FRIENDLIES);
+
+    Type type() const override
+        { return GAME; }
+
+    /*!
+     * \brief Gets the name of the player. By default this will be the same as
+     * the tag, but many players like to create tags that are shorter or a
+     * variation of their real name. This string is their real name.
+     * Unlike tags, there is also no character limit to a player's name.
+     * \note If training mode, this will always be the same as the tag.
+     * \param fighterIdx Which player to get
+     */
+    const SmallString<15>& name(int playerIdx) const override;
+
+    /*!
+     * \brief Gets the current game number. Starts at 1 and counts upwards as
+     * sets progress.
+     */
+    GameNumber gameNumber() const;
+
+    /*!
+     * \brief Gets the set number. Usually 1. This number is used to disambiguate
+     * sets where the same two players play the same characters on the same day.
+     */
+    SetNumber setNumber() const;
+
+    /*!
+     * \brief Gets the format of the set, @see Recording::Format
+     */
+    SetFormat setFormat() const;
+};
+
+class RFCOMMON_PUBLIC_API TrainingSessionMetaData : public SessionMetaData
+{
+public:
+    TrainingSessionMetaData(
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags);
+
+    FighterID playerFighterID() const;
+    FighterID cpuFighterID() const;
 };
 
 }
