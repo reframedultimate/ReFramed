@@ -34,7 +34,7 @@ CategoryView::CategoryView(
     , replaySourcesItem_(new QTreeWidgetItem({"Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_SOURCES)))
     , videoSourcesItem_(new QTreeWidgetItem({"Video Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
     , sessionItem_(new QTreeWidgetItem({"Session"}, static_cast<int>(CategoryType::TOP_LEVEL_SESSION)))
-    , trainingModeItem_(new QTreeWidgetItem({"Training Mode"}, static_cast<int>(CategoryType::TOP_LEVEL_TRAINING_MODE)))
+    , trainingModeItem_(new QTreeWidgetItem({"Plugins"}, static_cast<int>(CategoryType::TOP_LEVEL_TRAINING_MODE)))
 {
     setHeaderHidden(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
