@@ -254,7 +254,7 @@ void FrameDataListView::repopulateGameInfoTable()
     {
         const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(session->playerFighterID(i));
         ui_->tableWidget_gameInfo->setItem(6+i, 0, new QTableWidgetItem(session->playerName(i).cStr()));
-        ui_->tableWidget_gameInfo->setItem(6+i, 1, new QTableWidgetItem(fighterName ? fighterName->cStr() : "(Unknown fighter)"));
+        ui_->tableWidget_gameInfo->setItem(6+i, 1, new QTableWidgetItem(QString::number(session->playerFighterID(i)) + " (" + (fighterName ? fighterName->cStr() : "unknown fighter") + ")"));
     }
 
     ui_->tableWidget_gameInfo->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
