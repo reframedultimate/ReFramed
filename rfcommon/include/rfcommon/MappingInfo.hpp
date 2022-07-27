@@ -45,6 +45,13 @@ public:
         uint8_t matchFlags;
     };
 
+    String toLabel(FighterMotion);
+    const char* toLabel(FighterMotion motion, const char* fallback);
+    String toUserLabel(FighterMotion motion);
+    const char* toUserLabel(FighterMotion motion, const char* fallback);
+    FighterMotion fromLabel(const char* label);
+    SmallVector<FighterMotion, 4> fromUserLabel(const char* userLabel, FighterID fighterID);
+
 private:
     Vector<Entry> entries_;
 };
@@ -52,6 +59,7 @@ private:
 class RFCOMMON_PUBLIC_API MappingInfo
 {
 public:
+    MappingInfoMotion motion;
 };
 
 }
