@@ -14,7 +14,7 @@ namespace rfcommon {
 using nlohmann::json;
 
 // ----------------------------------------------------------------------------
-static std::string decompressGZFile(const String& fileName)
+static std::string decompressGZFile(const char* fileName)
 {
     unsigned char header;
     std::string out;
@@ -1909,6 +1909,14 @@ void Session::addFrame(Frame&& frame)
     {
         metaData_.setWinner(findWinner());
     }
+}
+
+// ----------------------------------------------------------------------------
+void Session::onFrameDataNewUniqueFrame(int frameIdx, const SmallVector<FighterState, 4>& frame)
+{
+    // Winner might have changed
+    if (metaData_->type() == SessionMetaData::GAME)
+        metaData_->setWinner(findWinner());
 }
 
 // ----------------------------------------------------------------------------
