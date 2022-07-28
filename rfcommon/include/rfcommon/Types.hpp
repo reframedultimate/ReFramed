@@ -318,30 +318,30 @@ class TimeStamp
 public:
     typedef uint64_t Type;
 
-    static TimeStamp fromMillis(Type value) { TimeStamp ts; ts.value_ = value; return ts; }
+    static TimeStamp fromMillisSinceEpoch(Type value) { TimeStamp ts; ts.millisSinceEpoch_ = value; return ts; }
 
-    std::string valueToStdString() const { return std::to_string(value_); }
-    Type millis() const { return value_; }
+    std::string valueToStdString() const { return std::to_string(millisSinceEpoch_); }
+    Type millisSinceEpoch() const { return millisSinceEpoch_; }
 
-    bool operator==(TimeStamp rhs) const { return value_ == rhs.value_; }
-    bool operator!=(TimeStamp rhs) const { return value_ != rhs.value_; }
-    bool operator< (TimeStamp rhs) const { return value_ <  rhs.value_; }
-    bool operator<=(TimeStamp rhs) const { return value_ <= rhs.value_; }
-    bool operator> (TimeStamp rhs) const { return value_ >  rhs.value_; }
-    bool operator>=(TimeStamp rhs) const { return value_ >= rhs.value_; }
-    TimeStamp& operator+=(DeltaTime rhs) { value_ += rhs.millis(); return *this; }
-    TimeStamp& operator-=(DeltaTime rhs) { value_ -= rhs.millis(); return *this; }
+    bool operator==(TimeStamp rhs) const { return millisSinceEpoch_ == rhs.millisSinceEpoch_; }
+    bool operator!=(TimeStamp rhs) const { return millisSinceEpoch_ != rhs.millisSinceEpoch_; }
+    bool operator< (TimeStamp rhs) const { return millisSinceEpoch_ <  rhs.millisSinceEpoch_; }
+    bool operator<=(TimeStamp rhs) const { return millisSinceEpoch_ <= rhs.millisSinceEpoch_; }
+    bool operator> (TimeStamp rhs) const { return millisSinceEpoch_ >  rhs.millisSinceEpoch_; }
+    bool operator>=(TimeStamp rhs) const { return millisSinceEpoch_ >= rhs.millisSinceEpoch_; }
+    TimeStamp& operator+=(DeltaTime rhs) { millisSinceEpoch_ += rhs.millis(); return *this; }
+    TimeStamp& operator-=(DeltaTime rhs) { millisSinceEpoch_ -= rhs.millis(); return *this; }
 
 private:
     friend class FighterState;
     TimeStamp() {}
 
 private:
-    Type value_;
+    Type millisSinceEpoch_;
 };
 
 inline TimeStamp operator+(TimeStamp lhs, DeltaTime rhs) { lhs += rhs; return lhs; }
 inline TimeStamp operator-(TimeStamp lhs, DeltaTime rhs) { lhs -= rhs; return lhs; }
-inline DeltaTime operator-(TimeStamp lhs, TimeStamp rhs) { return DeltaTime::fromMillis(lhs.millis() - rhs.millis()); }
+inline DeltaTime operator-(TimeStamp lhs, TimeStamp rhs) { return DeltaTime::fromMillis(lhs.millisSinceEpoch() - rhs.millisSinceEpoch()); }
 
 }

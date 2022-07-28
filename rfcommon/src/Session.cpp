@@ -1,6 +1,10 @@
 #include "rfcommon/Session.hpp"
+#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/StreamBuffer.hpp"
 #include "rfcommon/Endian.hpp"
+#include "rfcommon/Types.hpp"
+#include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
 #include "zlib.h"
@@ -10,27 +14,27 @@ namespace rfcommon {
 
 using nlohmann::json;
 
-static Session* loadLegacy_1_0(
+static bool loadLegacy_1_0(
         const json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static Session* loadLegacy_1_1(
+static bool loadLegacy_1_1(
         const json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static Session* loadLegacy_1_2(
+static bool loadLegacy_1_2(
         const json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static Session* loadLegacy_1_3(
+static bool loadLegacy_1_3(
         const json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static Session* loadLegacy_1_4(
+static bool loadLegacy_1_4(
         const json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
@@ -192,8 +196,12 @@ static std::string readUncompressedFile(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::load(const char* fileName)
+Session* Session::load(const char* fileName, MappingInfo* globalMappingInfo)
 {
+    Reference<SessionMetaData> metaData;
+    Reference<MappingInfo> mappingInfo;
+    Reference<FrameData> frameData;
+
     // Assume we're dealing with a modern format first
     FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
@@ -208,9 +216,12 @@ Session* Session::load(const char* fileName)
     }
     if (memcmp(magic, "RFR1", 4) == 0)
     {
-        Session* session = loadModern(fp);
+        bool success = loadModern(fp, &metaData, &mappingInfo, &frameData);
         fclose(fp);
-        return session;
+
+        if (success)
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
+        return nullptr;
     }
 
     // Legacy format was compressed json
@@ -231,52 +242,51 @@ Session* Session::load(const char* fileName)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    Session* session;
     std::string version = j["version"];
     if (version == "1.4")
     {
-        if ((session = loadLegacy_1_4(j)) != nullptr)
-            return session;
+        if (loadLegacy_1_4(j, &metaData, &mappingInfo, &frameData))
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
     }
     else if (version == "1.3")
     {
-        if ((session = loadLegacy_1_3(j)) != nullptr)
-            return session;
+        if (loadLegacy_1_3(j, &metaData, &mappingInfo, &frameData))
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
     }
     else if (version == "1.2")
     {
-        if ((session = loadLegacy_1_2(j)) != nullptr)
-            return session;
+        if (loadLegacy_1_2(j, &metaData, &mappingInfo, &frameData))
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
     }
     else if (version == "1.1")
     {
-        if ((session = loadLegacy_1_1(j)) != nullptr)
-            return session;
+        if (loadLegacy_1_1(j, &metaData, &mappingInfo, &frameData))
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
     }
     else if (version == "1.0")
     {
-        if ((session = loadLegacy_1_0(j)) != nullptr)
-            return session;
+        if (loadLegacy_1_0(j, &metaData, &mappingInfo, &frameData))
+            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
     }
 
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
-static Session* loadLegacy_1_0(
+static bool loadLegacy_1_0(
         const json& jptr,
-        Reference<SessionMetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData)
+        Reference<SessionMetaData>* metaDataOut,
+        Reference<MappingInfo>* mappingInfoOut,
+        Reference<FrameData>* frameDataOut)
 {
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
-        return nullptr;
+        return false;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
-        return nullptr;
+        return false;
     if (j.contains("playerinfo") == false || j["playerinfo"].is_array() == false)
-        return nullptr;
+        return false;
     if (j.contains("playerstates") == false || j["playerstates"].is_string() == false)
-        return nullptr;
+        return false;
 
     const json jsonMappingInfo = j["mappinginfo"];
     const json jsonGameInfo = j["gameinfo"];
@@ -289,6 +299,7 @@ static Session* loadLegacy_1_0(
     if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
         return nullptr;
 
+    Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
         std::size_t pos;
@@ -298,7 +309,7 @@ static Session* loadLegacy_1_0(
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jsonMappingInfo["stageid"].items())
@@ -310,7 +321,7 @@ static Session* loadLegacy_1_0(
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo.stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
     }
 
     // skip loading status mappings, it was broken in 1.0
@@ -340,22 +351,21 @@ static Session* loadLegacy_1_0(
     if (jsonGameInfo.contains("stageid") == false || jsonGameInfo["stageid"].is_number() == false)
         return nullptr;
 
-    /*std::unique_ptr<SavedGameSession> session(new SavedGameSession(
-        std::move(mappingInfo),
+    Reference<SessionMetaData> metaData(new GameSessionMetaData(
         jsonGameInfo["stageid"].get<StageID::Type>(),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         jsonGameInfo["number"].get<GameNumber::Type>(),
         1, // SetFormat did not exist in 1.0 yet
-        SetFormat(jsonGameInfo["format"].get<std::string>().c_str())
-    ));
+        SetFormat(jsonGameInfo["format"].get<std::string>().c_str())));
 
-    const TimeStampMS firstFrameTimeStampMs = time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str());
+    const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+        time_qt_to_milli_seconds_since_epoch(jsonGameInfo["date"].get<std::string>().c_str()));
 
     std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    for (int i = 0; i < session->fighterCount(); ++i)
+    for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
         const FramesLeft::Type stateCount = stream.readBU32(&error);
@@ -373,7 +383,7 @@ static Session* loadLegacy_1_0(
             const FighterStatus status = stream.readBU16(&error);
             const float damage = static_cast<float>(stream.readBF64(&error));
             const FighterStocks stocks = stream.readU8(&error);
-            const FighterFlags flags(false, false);
+            const FighterFlags flags(false, false, false);
 
             if (error)
                 return nullptr;
@@ -390,9 +400,9 @@ static Session* loadLegacy_1_0(
                 // based on the timestamp of when the recording started and how many
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
-                const TimeStampMS frameTimeStamp =  firstFrameTimeStampMs +
-                        DeltaTimeMS(frameCounter * 1000.0 / 60.0);
-                session->frames_[i].emplace(frameTimeStamp, frameCounter, framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
+                const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
+                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
+                frameData->frames_[i].emplace(frameTimeStamp, frameCounter, framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
             }
         }
     }
@@ -409,7 +419,7 @@ static Session* loadLegacy_1_0(
     // Cache winner
     session->winner_ = session->findWinner();
 
-    return session.release();*/
+    return true;
 }
 
 // ----------------------------------------------------------------------------

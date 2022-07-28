@@ -5,6 +5,7 @@
 #include "rfcommon/Types.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/HashMap.hpp"
+#include "rfcommon/LinearMap.hpp"
 
 namespace rfcommon {
 
@@ -142,8 +143,7 @@ public:
      * requesting the mapping info. This is used to determine if our local
      * copy is outdated or not. Gets saved along with the rest of the data.
      */
-    uint32_t checksum() const
-        { return checksum_; }
+    uint32_t checksum() const;
 
     MappingInfoMotion motion;
     MappingInfoStatus status;

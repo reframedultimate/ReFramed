@@ -12,8 +12,10 @@ class FrameData;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
+    Session(SessionMetaData* metaData, MappingInfo* mappingInfo, MappingInfo* globalMappingInfo, FrameData* frameData);
+
 public:
-    static Session* load(const char* fileName);
+    static Session* load(const char* fileName, MappingInfo* globalMappingInfo);
     bool save(const char* fileName);
 
     /*!
@@ -21,6 +23,8 @@ public:
      * strings.
      */
     MappingInfo* mappingInfo() const;
+
+    MappingInfo* globalMappingInfo() const;
 
     SessionMetaData* metaData() const;
 
@@ -30,11 +34,12 @@ private:
     int findWinner() const;
 
 private:
-    virtual void onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame);
-    virtual void onFrameDataNewFrame(int frameIdx, const Frame& frame);
+    void onFrameDataNewUniqueFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) override;
 
 private:
     Reference<MappingInfo> mappingInfo_;
+    Reference<MappingInfo> globalMappingInfo_;
     Reference<SessionMetaData> metaData_;
     Reference<FrameData> frameData_;
 };
