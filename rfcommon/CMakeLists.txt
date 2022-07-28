@@ -76,7 +76,6 @@ add_library (rfcommon SHARED
     "src/DataSetFilter_Stage.cpp"
     "src/DataSetFilterChain.cpp"
     "src/DataSetProcessor.cpp"
-    "src/EnumStrings.cpp"
     "src/FrameData.cpp"
     "src/hash40.cpp"
     "src/Hash40Strings.cpp"

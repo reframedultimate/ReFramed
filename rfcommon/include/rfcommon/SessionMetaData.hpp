@@ -27,7 +27,8 @@ public:
 
     virtual Type type() const = 0;
 
-    bool save(FILE* fp);
+    static SessionMetaData* load(FILE* fp, uint32_t size);
+    uint32_t save(FILE* fp) const;
 
     /*!
      * \brief Gets the number of fighters in this session. Usually 2, but can

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <cassert>
-#include "rfcommon/HashMap.hpp"
+#include "rfcommon/Hashers.hpp"
 
 namespace rfcommon {
 
@@ -13,18 +13,21 @@ class FighterID
 public:
     typedef uint8_t Type;
 
+    static FighterID makeInvalid() { return FighterID(Type(-1)); }
+
     FighterID(Type value) : value_(value) {}
-    std::string toStdString() const { return std::to_string(value_); }
+    std::string valueToStdString() const { return std::to_string(value_); }
     Type value() const { return value_; }
+    bool isValid() const { return value_ != Type(-1); }
 
     bool operator==(FighterID other) const { return value_ == other.value_; }
     bool operator!=(FighterID other) const { return value_ != other.value_; }
     bool operator<(FighterID other) const { return value_ < other.value_; }
 
     struct Hasher {
-        typedef HashMapHasher<Type>::HashType HashType;
+        typedef rfcommon::Hasher<Type>::HashType HashType;
         HashType operator()(FighterID fighterID) const {
-            return HashMapHasher<Type>()(fighterID.value());
+            return rfcommon::Hasher<Type>()(fighterID.value());
         }
     };
 
@@ -42,18 +45,21 @@ class FighterStatus
 public:
     typedef uint16_t Type;
 
+    static FighterStatus makeInvalid() { return FighterStatus(Type(-1)); }
+
     FighterStatus(Type value) : value_(value) {}
-    std::string toStdString() const { return std::to_string(value_); }
+    std::string valueToStdString() const { return std::to_string(value_); }
     Type value() const { return value_; }
+    bool isValid() const { return value_ != Type(-1); }
 
     bool operator==(FighterStatus other) const { return value_ == other.value_; }
     bool operator!=(FighterStatus other) const { return value_ != other.value_; }
     bool operator<(FighterStatus other) const { return value_ < other.value_; }
 
     struct Hasher {
-        typedef HashMapHasher<FighterStatus::Type>::HashType HashType;
+        typedef rfcommon::Hasher<Type>::HashType HashType;
         HashType operator()(FighterStatus fighterStatus) const {
-            return HashMapHasher<FighterStatus::Type>()(fighterStatus.value());
+            return rfcommon::Hasher<Type>()(fighterStatus.value());
         }
     };
 
@@ -94,6 +100,8 @@ class FighterMotion
 public:
     typedef uint64_t Type;
 
+    static FighterMotion makeInvalid() { return FighterMotion(0); }
+
     FighterMotion(Type value) : value_(value) {}
     FighterMotion(uint8_t upper, uint32_t lower)
         : value_((static_cast<Type>(upper) << 32) | lower) {}
@@ -101,11 +109,21 @@ public:
     uint8_t upper() const { return (value_ >> 32) & 0xFF; }
     uint32_t lower() const { return value_ & 0xFFFFFFFF; }
     Type value() const { return value_; }
-    std::string toStdString() const { return std::to_string(value_); }
+    std::string valueToStdString() const { return std::to_string(value_); }
+    bool isValid() const { return value_ != 0; }
 
     bool operator==(FighterMotion other) const { return value_ == other.value_; }
     bool operator!=(FighterMotion other) const { return value_ != other.value_; }
     bool operator<(FighterMotion other) const { return value_ < other.value_; }
+
+    // The motion value is already a hash value, but it's a 40-bit hash
+    // value. Our hashmap needs a 32-bit value.
+    struct Hasher {
+        typedef uint32_t HashType;
+        HashType operator()(FighterStatus fighterStatus) const {
+            return hash32_combine(lower(), upper());
+        }
+    };
 
 private:
     friend class FighterState;
@@ -215,9 +233,12 @@ class StageID
 public:
     typedef uint16_t Type;
 
+    static StageID makeInvalid() { return StageID(Type(-1)); }
+
     StageID(Type value) : value_(value) {}
-    std::string toStdString() const { return std::to_string(value_); }
+    std::string valueToStdString() const { return std::to_string(value_); }
     Type value() const { return value_; }
+    bool isValid() const { return value_ != Type(-1); }
 
     bool operator==(StageID other) const { return value_ == other.value_; }
     bool operator!=(StageID other) const { return value_ != other.value_; }
@@ -299,7 +320,7 @@ public:
 
     static TimeStamp fromMillis(Type value) { TimeStamp ts; ts.value_ = value; return ts; }
 
-    std::string toStdString() const { return std::to_string(value_); }
+    std::string valueToStdString() const { return std::to_string(value_); }
     Type millis() const { return value_; }
 
     bool operator==(TimeStamp rhs) const { return value_ == rhs.value_; }

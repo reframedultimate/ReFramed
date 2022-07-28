@@ -13,9 +13,6 @@ class FrameData;
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
 public:
-    Session();
-    ~Session();
-
     static Session* load(const char* fileName);
     bool save(const char* fileName);
 

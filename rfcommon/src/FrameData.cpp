@@ -15,6 +15,18 @@ FrameData::~FrameData()
 {}
 
 // ----------------------------------------------------------------------------
+static FrameData* FrameData::load(FILE* fp, uint32_t size)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+uint32_t FrameData::save(FILE* fp) const
+{
+
+}
+
+// ----------------------------------------------------------------------------
 int FrameData::fighterCount() const
 {
     return fighters_.count();

@@ -1,7 +1,4 @@
 #include "rfcommon/Session.hpp"
-#include "rfcommon/GameSession.hpp"
-#include "rfcommon/TrainingSession.hpp"
-#include "rfcommon/SessionListener.hpp"
 #include "rfcommon/StreamBuffer.hpp"
 #include "rfcommon/Endian.hpp"
 #include "nlohmann/json.hpp"
@@ -13,6 +10,37 @@ namespace rfcommon {
 
 using nlohmann::json;
 
+static Session* loadLegacy_1_0(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+static Session* loadLegacy_1_1(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+static Session* loadLegacy_1_2(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+static Session* loadLegacy_1_3(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+static Session* loadLegacy_1_4(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+static bool loadModern(
+        FILE* fp,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData);
+
 // ----------------------------------------------------------------------------
 static std::string decompressGZFile(const char* fileName)
 {
@@ -21,14 +49,14 @@ static std::string decompressGZFile(const char* fileName)
     gzFile f;
     FILE* fp;
 
-    fp = fopen(fileName.cStr(), "rb");
+    fp = fopen(fileName, "rb");
     if (fp == nullptr)
         goto fopen_failed;
 
     fread(&header, 1, 1, fp); if (header != 0x1f) goto header_error;
     fread(&header, 1, 1, fp); if (header != 0x8b) goto header_error;
 
-    f = gzopen(fileName.cStr(), "rb");
+    f = gzopen(fileName, "rb");
     if (f == nullptr)
         goto gzopen_failed;
 
@@ -70,11 +98,11 @@ static std::string decompressGZFile(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-static std::string decompressQtZFile(const String& fileName)
+static std::string decompressQtZFile(const char* fileName)
 {
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName.cStr(), "rb");
+    FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
         return "";
 
@@ -137,11 +165,11 @@ init_stream_failed :
 }
 
 // ----------------------------------------------------------------------------
-static std::string readUncompressedFile(const String& fileName)
+static std::string readUncompressedFile(const char* fileName)
 {
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName.cStr(), "rb");
+    FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
         goto open_failed;
 
@@ -164,15 +192,10 @@ static std::string readUncompressedFile(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession::SavedSession()
-{
-}
-
-// ----------------------------------------------------------------------------
-SavedSession* SavedSession::load(const String& fileName)
+Session* Session::load(const char* fileName)
 {
     // Assume we're dealing with a modern format first
-    FILE* fp = fopen(fileName.cStr(), "rb");
+    FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
         return nullptr;
 
@@ -185,7 +208,7 @@ SavedSession* SavedSession::load(const String& fileName)
     }
     if (memcmp(magic, "RFR1", 4) == 0)
     {
-        SavedSession* session = loadModern(fp);
+        Session* session = loadModern(fp);
         fclose(fp);
         return session;
     }
@@ -208,31 +231,31 @@ SavedSession* SavedSession::load(const String& fileName)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    SavedSession* session;
+    Session* session;
     std::string version = j["version"];
     if (version == "1.4")
     {
-        if ((session = loadLegacy_1_4(static_cast<const void*>(&j))) != nullptr)
+        if ((session = loadLegacy_1_4(j)) != nullptr)
             return session;
     }
     else if (version == "1.3")
     {
-        if ((session = loadLegacy_1_3(static_cast<const void*>(&j))) != nullptr)
+        if ((session = loadLegacy_1_3(j)) != nullptr)
             return session;
     }
     else if (version == "1.2")
     {
-        if ((session = loadLegacy_1_2(static_cast<const void*>(&j))) != nullptr)
+        if ((session = loadLegacy_1_2(j)) != nullptr)
             return session;
     }
     else if (version == "1.1")
     {
-        if ((session = loadLegacy_1_1(static_cast<const void*>(&j))) != nullptr)
+        if ((session = loadLegacy_1_1(j)) != nullptr)
             return session;
     }
     else if (version == "1.0")
     {
-        if ((session = loadLegacy_1_0(static_cast<const void*>(&j))) != nullptr)
+        if ((session = loadLegacy_1_0(j)) != nullptr)
             return session;
     }
 
@@ -240,9 +263,12 @@ SavedSession* SavedSession::load(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadLegacy_1_0(const void* jptr)
+static Session* loadLegacy_1_0(
+        const json& jptr,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData)
 {
-    const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
@@ -262,8 +288,6 @@ SavedSession* SavedSession::loadLegacy_1_0(const void* jptr)
         return nullptr;
     if (jsonMappingInfo.contains("stageid") == false || jsonMappingInfo["stageid"].is_object() == false)
         return nullptr;
-
-    MappingInfo mappingInfo(0);
 
     for (const auto& [key, value] : jsonMappingInfo["fighterid"].items())
     {
@@ -389,9 +413,8 @@ SavedSession* SavedSession::loadLegacy_1_0(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadLegacy_1_1(const void* jptr)
+static Session* loadLegacy_1_1(const json& j)
 {
-    const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
@@ -583,9 +606,8 @@ SavedSession* SavedSession::loadLegacy_1_1(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadLegacy_1_2(const void* jptr)
+static Session* loadLegacy_1_2(const json& j)
 {
-    const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
@@ -793,9 +815,8 @@ SavedSession* SavedSession::loadLegacy_1_2(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadLegacy_1_3(const void* jptr)
+static Session* loadLegacy_1_3(const json& j)
 {
-    const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
@@ -1023,9 +1044,8 @@ SavedSession* SavedSession::loadLegacy_1_3(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadLegacy_1_4(const void* jptr)
+static Session* loadLegacy_1_4(const json& j)
 {
-    const json& j = *static_cast<const json*>(jptr);
     if (j.contains("mappinginfo") == false || j["mappinginfo"].is_object() == false)
         return nullptr;
     if (j.contains("gameinfo") == false || j["gameinfo"].is_object() == false)
@@ -1254,7 +1274,11 @@ SavedSession* SavedSession::loadLegacy_1_4(const void* jptr)
 }
 
 // ----------------------------------------------------------------------------
-SavedSession* SavedSession::loadModern(FILE* fp)
+static bool loadModern(
+        FILE* fp,
+        Reference<SessionMetaData>* metaData,
+        Reference<MappingInfo>* mappingInfo,
+        Reference<FrameData>* frameData)
 {
     uint8_t numEntries;
     struct Entry
@@ -1267,108 +1291,53 @@ SavedSession* SavedSession::loadModern(FILE* fp)
     // Read entry table
     SmallVector<Entry, 4> entryTable;
     if (fread(&numEntries, 1, 1, fp) != 1)
-        return nullptr;
+        return false;
     for (int i = 0; i != numEntries; ++i)
     {
         Entry entry;
         if (fread(entry.type, 1, 4, fp) != 4)
-            return nullptr;
+            return false;
         if (fread(&entry.offset, 1, 4, fp) != 4)
-            return nullptr;
+            return false;
         if (fread(&entry.size, 1, 4, fp) != 4)
-            return nullptr;
+            return false;
 
         entry.offset = fromLittleEndian32(entry.offset);
         entry.size = fromLittleEndian32(entry.size);
         entryTable.push(entry);
     }
 
-    std::unique_ptr<SavedSession> session;
-    Vector<Frame> frameData;
     for (const auto& entry : entryTable)
     {
         // Load session metadata
         if (memcmp(entry.type, "META", 4) == 0)
         {
             if (fseek(fp, entry.offset, SEEK_SET) != 0)
-                return nullptr;
+                return false;
 
-            Vector<char> jsonBlob(entry.size);
-            if (fread(jsonBlob.data(), 1, entry.size, fp) != (size_t)entry.size)
-                return nullptr;
-            json j = json::parse(jsonBlob.begin(), jsonBlob.end(), nullptr, false);
-
-            if (j["version"] == "1.5")
-            {
-                session.reset(loadJSON_1_5(static_cast<const void*>(&j)));
-                if (session.get() == nullptr)
-                    return nullptr;
-            }
-            else
-            {
-                // unsupported version
-                return nullptr;
-            }
+            *metaData = SessionMetaData::load(fp, entry.size);
+            if (metaData->isNull())
+                return false;
         }
         // Load frame data
         else if (memcmp(entry.type, "FDAT", 4) == 0)
         {
             if (fseek(fp, entry.offset, SEEK_SET) != 0)
-                return nullptr;
+                return false;
 
-            StreamBuffer compressed(entry.size);
-            size_t bytesRead = fread(compressed.get(), 1, entry.size, fp);
-            if (bytesRead != (size_t)entry.size)
-                return nullptr;
-            compressed.seekW(entry.size);
-
-            int error = 0;
-            const uint8_t major = compressed.readU8(&error);  if (error) return nullptr;
-            const uint8_t minor = compressed.readU8(&error);  if (error) return nullptr;
-
-            if (major == 1 && minor == 5)
-            {
-                uLongf decompressedSize = compressed.readLU32(&error);
-                if (error)
-                    return nullptr;
-
-                StreamBuffer decompressed(decompressedSize);
-                int result = uncompress(
-                        static_cast<uint8_t*>(decompressed.get()), &decompressedSize,
-                        static_cast<const uint8_t*>(compressed.get()) + 6, compressed.capacity() - 6);
-                if (result != Z_OK)
-                    return nullptr;
-                if (decompressedSize != (uLongf)decompressed.capacity())
-                    return nullptr;
-                decompressed.seekW(decompressedSize);
-                frameData = loadFrameData_1_5(&decompressed);
-            }
-            else
-            {
-                // unsupported version
-                return nullptr;
-            }
+            *frameData = FrameData::load(fp, entry.size);
+            if (frameData->isNull())
+                return false;
         }
         // Load session mapping info, also known as "local" mapping info
         else if (memcmp(entry.type, "MINF", 4) == 0)
         {
-
-        }
-        else
-        {
-            // Unsupported binary blob, ignore
+            if (fseek(fp, entry.offset, SEEK_SET) != 0)
+                return false;
         }
     }
 
-    if (session.get())
-    {
-        session->frames_ = std::move(frameData);
-
-        // Cache winner
-        session->winner_ = session->findWinner();
-    }
-
-    return session.release();
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -1616,7 +1585,7 @@ Session::~Session()
 }
 
 // ----------------------------------------------------------------------------
-bool Session::save(const String& fileName)
+bool Session::save(const char* fileName)
 {
     if (frameCount() == 0)
         return false;
@@ -1881,34 +1850,6 @@ bool Session::save(const String& fileName)
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
     return false;
-}
-
-// ----------------------------------------------------------------------------
-void Session::addFrame(Frame&& frame)
-{
-    // Sanity checks
-#ifndef NDEBUG
-    for (int i = 1; i < frame.fighterCount(); ++i)
-    {
-        assert(frame.fighter(0).framesLeft() == frame.fighter(i).framesLeft());
-        assert(frame.fighter(0).frameNumber() == frame.fighter(i).frameNumber());
-    }
-#endif
-
-    frames_.push(std::move(frame));
-
-    // If any fighter state is different from the previous one, notify
-    if (frames_.count() < 2 || frames_.back(1).hasSameDataAs(frames_.back(2)))
-        dispatcher.dispatch(&SessionListener::onRunningSessionNewUniqueFrame, frames_.count() - 1, frames_.back());
-
-    // The UI cares about every frame
-    dispatcher.dispatch(&SessionListener::onRunningSessionNewFrame, frames_.count() - 1, frames_.back());
-
-    // Winner might have changed
-    if (metaData_.type() == SessionMetaData::GAME)
-    {
-        metaData_.setWinner(findWinner());
-    }
 }
 
 // ----------------------------------------------------------------------------
