@@ -1,7 +1,6 @@
 #include "ui_HitAnalyzer.h"
 #include "hit-analysis/HitAnalyzer.hpp"
 #include "rfcommon/DataSet.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 
 // ----------------------------------------------------------------------------
 HitAnalyzer::HitAnalyzer(RFPluginFactory* factory, QWidget *parent)

@@ -4,7 +4,6 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/DataSet.hpp"  // required by MOC
-#include "rfcommon/SavedGameSession.hpp"  // required by MOC, required by explicit template instantiation of Reference<Recording>
 #include <QThread>
 #include <QMutex>
 #include <QObject>

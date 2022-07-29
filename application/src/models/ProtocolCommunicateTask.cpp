@@ -1,7 +1,5 @@
 #include "application/models/ProtocolCommunicateTask.hpp"
 #include "rfcommon/FighterState.hpp"
-#include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/time.h"
 #include "rfcommon/MappingInfo.hpp"
 #include <QDebug>

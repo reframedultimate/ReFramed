@@ -1,8 +1,6 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/AnalyzerPlugin.hpp"

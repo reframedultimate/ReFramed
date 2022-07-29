@@ -42,6 +42,6 @@ void clearLayout(QLayout* layout);
  */
 void clearStackedWidget(QStackedWidget* sw);
 
-QString composeFileName(const rfcommon::GameSession* session);
+QString composeFileName(const rfcommon::Session* session);
 
 }

@@ -20,7 +20,7 @@ template <typename K, typename V, typename Hasher=Hasher<K>, typename S=int32_t>
 class HashMap : private HashMapAlloc
 {
     using H = typename Hasher::HashType;
-    using HashTable = Vector<H, S>;
+    using TableContainer = Vector<H, S>;
 
     enum SlotState
     {
@@ -74,7 +74,7 @@ public:
     class Iterator
     {
     public:
-        Iterator(HashTable& table, K* keys, V* values, S offset)
+        Iterator(TableContainer& table, K* keys, V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -128,7 +128,7 @@ public:
 
     private:
         friend class HashMap;
-        HashTable& table_;
+        TableContainer& table_;
         K* keys_;
         V* values_;
         S pos_;
@@ -137,7 +137,7 @@ public:
     class ConstIterator
     {
     public:
-        ConstIterator(const HashTable& table, const K* keys, const V* values, S offset)
+        ConstIterator(const TableContainer& table, const K* keys, const V* values, S offset)
             : table_(table)
             , keys_(keys)
             , values_(values)
@@ -179,7 +179,7 @@ public:
 
     private:
         friend class HashMap;
-        const HashTable& table_;
+        const TableContainer& table_;
         const K* keys_;
         const V* values_;
         S pos_;

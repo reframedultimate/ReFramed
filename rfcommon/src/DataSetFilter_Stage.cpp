@@ -1,6 +1,5 @@
 #include "rfcommon/DataSetFilter_Stage.hpp"
 #include "rfcommon/DataSet.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 
 namespace rfcommon {
 

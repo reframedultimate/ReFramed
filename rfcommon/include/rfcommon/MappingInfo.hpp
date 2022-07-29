@@ -9,6 +9,9 @@
 
 namespace rfcommon {
 
+class FrameData;
+class SessionMetaData;
+
 #define USER_LABEL_CATEGORIES_LIST \
     X(MOVEMENT, "Movement") \
     X(GROUND_ATTACKS, "Ground Attacks") \
@@ -31,9 +34,11 @@ enum class UserLabelCategory {
 class RFCOMMON_PUBLIC_API MappingInfoHitStatus
 {
 public:
-    const char* hitStatusString(FighterHitStatus status) const;
-    const FighterHitStatus* hitStatus(const char* name) const;
-    void addHitStatus(FighterHitStatus status, const char* name);
+    const char* toEnumName(FighterHitStatus status, const char* fallback=nullptr) const;
+    FighterHitStatus toID(const char* name) const;
+    void add(FighterHitStatus status, const char* name);
+
+    const SmallLinearMap<FighterHitStatus, String, 6>& map() const;
 
 private:
     SmallLinearMap<FighterHitStatus, String, 6> hitStatusMap_;
@@ -42,9 +47,12 @@ private:
 class RFCOMMON_PUBLIC_API MappingInfoStageID
 {
 public:
-    const char* stageName(StageID stageID) const;
-    const StageID* stage(const char* name) const;
-    void addStage(StageID stageID, const char* name);
+    const char* toReadableName(StageID stageID, const char* fallback=nullptr) const;
+    const StageID toID(const char* name) const;
+
+    void add(StageID stageID, const char* name);
+
+    const SmallLinearMap<StageID, String, 10>& map() const;
 
 private:
     SmallLinearMap<StageID, String, 10> stageMap_;
@@ -53,9 +61,11 @@ private:
 class RFCOMMON_PUBLIC_API MappingInfoFighterID
 {
 public:
-    const char* fighterName(FighterID fighterID) const;
-    const FighterID* fighterID(const char* name) const;
-    void addFighter(FighterID fighterID, const char* name);
+    const char* toName(FighterID fighterID, const char* fallback=nullptr) const;
+    const FighterID* toID(const char* name) const;
+    void add(FighterID fighterID, const char* name);
+
+    const HashMap<FighterID, String, FighterID::Hasher>& map() const;
 
 private:
     HashMap<FighterID, String, FighterID::Hasher> fighterNameMap_;
@@ -83,18 +93,19 @@ public:
     FighterID toFighterID(const char* enumName);
 
     //const char* statusString(FighterStatus status) const;
-    const char* statusString(FighterStatus status, FighterID fighterID) const;
-    const FighterStatus* status(const char* name) const;
+    const char* toEnumName(FighterStatus status, FighterID fighterID, const char* fallback=nullptr) const;
+    FighterStatus toStatusID(const char* name) const;
 
-    void addBaseStatus(FighterStatus status, const char* name);
-    void addSpecificStatus(FighterStatus status, FighterID fighterID, const char* name);
+    void addBaseEnumName(FighterStatus status, const char* name);
+    void addFighterSpecificEnumName(FighterStatus status, FighterID fighterID, const char* name);
+
+    const HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher>& baseMap() const;
+    const HashMap<FighterID, HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher>, FighterID::Hasher>& specificMap() const;
 
 private:
-    HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher> statusMap;
-    HashMap<SmallString<31>, FighterStatus> enumNameMap;
-    HashMap<FighterStatus, String, FighterStatus::Hasher> statusStringMap_;
-    HashMap<FighterID, HashMap<FighterStatus, String, FighterStatus::Hasher>, FighterID::Hasher> statusStringSpecificMap_;
-    HashMap<String, FighterStatus> statusMap_;
+    HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher> statusMap_;
+    HashMap<SmallString<31>, FighterStatus> enumNameMap_;
+    HashMap<FighterID, HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher>, FighterID::Hasher> specificEnumNameMap_;
 };
 
 class RFCOMMON_PUBLIC_API MappingInfoMotion
@@ -137,6 +148,7 @@ public:
 
     static MappingInfo* load(FILE* fp, uint32_t size);
     uint32_t save(FILE* fp) const;
+    uint32_t saveFiltered(FILE* fp, const SessionMetaData* metaData, const FrameData* frameData) const;
 
     /*!
      * \brief This is the checksum value we received from the server when
@@ -147,6 +159,7 @@ public:
 
     MappingInfoMotion motion;
     MappingInfoStatus status;
+    MappingInfoHitStatus hitStatus;
     MappingInfoStageID stageID;
     MappingInfoFighterID fighterID;
 

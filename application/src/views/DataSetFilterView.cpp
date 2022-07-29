@@ -14,7 +14,6 @@
 #include "rfcommon/DataSet.hpp"
 #include "rfcommon/DataSetFilter.hpp"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 
 #include <QMenu>
 #include <QListWidgetItem>

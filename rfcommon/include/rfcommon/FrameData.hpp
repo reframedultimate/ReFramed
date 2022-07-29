@@ -4,6 +4,7 @@
 #include "rfcommon/RefCounted.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/Vector.hpp"
+#include <cstdio>
 
 namespace rfcommon {
 
@@ -13,6 +14,7 @@ class FighterState;
 class RFCOMMON_PUBLIC_API FrameData : public RefCounted
 {
 public:
+    FrameData(SmallVector<Vector<FighterState>, 2>&& fighterFrames);
     FrameData(int fighterCount);
     ~FrameData();
 

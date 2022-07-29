@@ -1,5 +1,7 @@
 #include "application/Util.hpp"
-#include "rfcommon/RunningGameSession.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
@@ -46,31 +48,45 @@ void clearStackedWidget(QStackedWidget* sw)
 }
 
 // ----------------------------------------------------------------------------
-QString composeFileName(const rfcommon::GameSession* session)
+QString composeFileName(const rfcommon::Session* session)
 {
-    const uint64_t stamp = session->frameCount() > 0 ?
-                session->firstFrame().fighter(0).timeStamp().millis() :
-                QDateTime::currentMSecsSinceEpoch();
+    using namespace rfcommon;
+    const SessionMetaData* meta = session->metaData();
+    const MappingInfo* map = session->mappingInfo();
+
+    const uint64_t stamp = meta->timeStampStarted().millisSinceEpoch();
     QString date = QDateTime::fromMSecsSinceEpoch(stamp).toString("yyyy-MM-dd");
+
     QStringList playerList;
-    for (int i = 0; i < session->fighterCount(); ++i)
+    for (int i = 0; i < meta->fighterCount(); ++i)
     {
-        const rfcommon::String* fighterName = session->mappingInfo().fighterID.map(
-                    session->fighterID(i));
+        const char* fighterName = map->fighterID.toName(meta->fighterID(i));
         if (fighterName)
-            playerList.append((session->name(i) + " (" + *fighterName + ")").cStr());
+            playerList.append((meta->name(i) + " (" + fighterName + ")").cStr());
         else
-            playerList.append(session->name(i).cStr());
+            playerList.append(meta->name(i).cStr());
     }
     QString players = playerList.join(" vs ");
-    QString formatDesc = session->format().description().cStr();
-    QString setNumber = QString::number(session->setNumber().value());
-    QString gameNumber = QString::number(session->gameNumber().value());
 
-    if (session->setNumber() == 1)
-        return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".rfr";
+    if (meta->type() == SessionMetaData::GAME)
+    {
+        const GameSessionMetaData* gameMeta = static_cast<const GameSessionMetaData*>(meta);
+        QString formatDesc = gameMeta->setFormat().description().cStr();
+        QString setNumber = QString::number(gameMeta->setNumber().value());
+        QString gameNumber = QString::number(gameMeta->gameNumber().value());
 
-    return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".rfr";
+        if (gameMeta->setNumber() == 1)
+            return date + " - " + formatDesc + " - " + players + " Game " + gameNumber + ".rfr";
+        return date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber + ".rfr";
+    }
+    else
+    {
+        assert(meta->type() == SessionMetaData::TRAINING);
+        const TrainingSessionMetaData* trainingMeta = static_cast<const TrainingSessionMetaData*>(meta);
+        QString sessionNumber = QString::number(trainingMeta->sessionNumber().value());
+
+        return date + " - Training - " + players + " Session " + sessionNumber + ".rfr";
+    }
 }
 
 }

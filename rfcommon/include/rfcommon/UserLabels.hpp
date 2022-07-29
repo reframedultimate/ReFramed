@@ -46,16 +46,8 @@ public:
     };
 
 private:
-    struct FighterMotionHasher
-    {
-        typedef uint32_t HashType;
-        HashType operator()(FighterMotion motion) const {
-            return HashMapHasher<FighterMotion::Type, HashType>()(motion.value());
-        }
-    };
-
     Vector<Entry> entries_;
-    HashMap<FighterMotion, int, FighterMotionHasher> motionMap_;
+    HashMap<FighterMotion, int, FighterMotion::Hasher> motionMap_;
     HashMap<String, SmallVector<int, 4>> userMap_;
 };
 
@@ -65,7 +57,7 @@ public:
     bool loadJSON(const char* fileName);
 
     const FighterUserLabels& fighter(FighterID fighterID) const
-        { assert(fighterID.value() < fighters_.count(); return fighters_[fighterID.value()]; }
+        { assert(fighterID.value() < fighters_.count()); return fighters_[fighterID.value()]; }
 
 private:
     Vector<FighterUserLabels> fighters_;

@@ -1,9 +1,18 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FighterState.hpp"
+#include "rfcommon/StreamBuffer.hpp"
 #include <cassert>
+#include "zlib.h"
 
 namespace rfcommon {
+
+static FrameData* load_1_5(StreamBuffer* data);
+
+// ----------------------------------------------------------------------------
+FrameData::FrameData(SmallVector<Vector<FighterState>, 2>&& fighterFrames)
+    : fighters_(std::move(fighterFrames))
+{}
 
 // ----------------------------------------------------------------------------
 FrameData::FrameData(int fighterCount)
@@ -15,15 +24,140 @@ FrameData::~FrameData()
 {}
 
 // ----------------------------------------------------------------------------
-static FrameData* FrameData::load(FILE* fp, uint32_t size)
+FrameData* FrameData::load(FILE* fp, uint32_t size)
 {
+    StreamBuffer compressed(size);
+    size_t bytesRead = fread(compressed.writeToPtr(size), 1, size, fp);
+    if (bytesRead != (size_t)size)
+        return nullptr;
 
+    int error = 0;
+    const uint8_t major = compressed.readU8(&error); if (error) return nullptr;
+    const uint8_t minor = compressed.readU8(&error); if (error) return nullptr;
+
+    if (major == 1 && minor == 5)
+    {
+        uLongf decompressedSize = compressed.readLU32(&error);
+        if (error)
+            return nullptr;
+
+        StreamBuffer buffer(decompressedSize);
+        int result = uncompress(
+                static_cast<uint8_t*>(buffer.writeToPtr(decompressedSize)), &decompressedSize,
+                static_cast<const uint8_t*>(compressed.get()) + 6, compressed.capacity() - 6);
+        if (result != Z_OK)
+            return nullptr;
+        if (decompressedSize != (uLongf)buffer.capacity())
+            return nullptr;
+        return load_1_5(&buffer);
+    }
+}
+FrameData* load_1_5(StreamBuffer* data)
+{
+    int error = 0;
+    FramesLeft::Type frameCount = data->readLU32(&error);
+    int fighterCount = data->readU8(&error);
+    if (error)
+        return nullptr;
+
+    SmallVector<Vector<FighterState>, 2> frames(fighterCount);
+    for (int fighter = 0; fighter != fighterCount; ++fighter)
+        for (FramesLeft::Type frame = 0; frame < frameCount; ++frame)
+        {
+            const TimeStamp timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
+            const FramesLeft framesLeft(data->readLU32(&error));
+            const float posx = data->readLF32(&error);
+            const float posy = data->readLF32(&error);
+            const float damage = data->readLF32(&error);
+            const float hitstun = data->readLF32(&error);
+            const float shield = data->readLF32(&error);
+            const FighterStatus status(data->readLU16(&error));
+            const uint32_t motion_l = data->readLU32(&error);
+            const uint8_t motion_h = data->readU8(&error);
+            const FighterMotion motion(motion_h, motion_l);
+            const FighterHitStatus hitStatus = data->readU8(&error);
+            const FighterStocks stocks = data->readU8(&error);
+            const uint8_t flags = data->readU8(&error);
+
+            if (error)
+                return nullptr;
+
+            frames[fighter].emplace(
+                timeStamp,
+                FrameNumber(frame),
+                framesLeft,
+                posx,
+                posy,
+                damage,
+                hitstun,
+                shield,
+                status,
+                motion,
+                hitStatus,
+                stocks,
+                flags);
+        }
+
+    return new FrameData(std::move(frames));
 }
 
 // ----------------------------------------------------------------------------
 uint32_t FrameData::save(FILE* fp) const
 {
+    const int fighterStateSize =
+            sizeof(TimeStamp::Type) +
+            sizeof(FramesLeft::Type) +
+            sizeof(fighters_[0][0].posx()) +
+            sizeof(fighters_[0][0].posy()) +
+            sizeof(fighters_[0][0].damage()) +
+            sizeof(fighters_[0][0].hitstun()) +
+            sizeof(fighters_[0][0].shield()) +
+            sizeof(FighterStatus::Type) +
+            5 + // motion is a hash40 (40 bits)
+            sizeof(FighterHitStatus::Type) +
+            sizeof(FighterStocks::Type) +
+            sizeof(FighterFlags::Type);
+    const int frameSize = fighterStateSize * fighterCount();
 
+    StreamBuffer buffer(5 + frameSize * frameCount());
+    buffer.writeLU32(frameCount());
+    buffer.writeU8(fighterCount());
+    for (const auto& fighter : fighters_)
+        for (const auto& frame : fighter)
+        {
+            buffer
+                .writeLU64(frame.timeStamp().millisSinceEpoch())
+                .writeLU32(frame.framesLeft().value())
+                .writeLF32(frame.posx())
+                .writeLF32(frame.posy())
+                .writeLF32(frame.damage())
+                .writeLF32(frame.hitstun())
+                .writeLF32(frame.shield())
+                .writeLU16(frame.status().value())
+                .writeLU32(frame.motion().lower())
+                .writeU8(frame.motion().upper())
+                .writeU8(frame.hitStatus().value())
+                .writeU8(frame.stocks().value())
+                .writeU8(frame.flags().value());
+        }
+    assert(buffer.bytesWritten() == 5 + frameSize * frameCount());
+
+    uLongf compressedSize = compressBound(buffer.bytesWritten());
+    StreamBuffer compressed(compressedSize + 6);
+    compressed.writeU8(1);  // Major version
+    compressed.writeU8(5);  // Minor version
+    compressed.writeLU32(buffer.bytesWritten());  // Decompressed size
+    if (compress2(
+            static_cast<uint8_t*>(compressed.writeToPtr(compressedSize)), &compressedSize,
+            static_cast<const uint8_t*>(buffer.get()), buffer.bytesWritten(), 9) != Z_OK)
+    {
+        return 0;
+    }
+
+    if (fwrite(compressed.get(), 1, compressed.bytesWritten(), fp) != compressed.bytesWritten())
+        return 0;
+
+    return compressed.bytesWritten();
 }
 
 // ----------------------------------------------------------------------------

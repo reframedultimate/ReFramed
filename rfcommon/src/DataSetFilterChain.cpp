@@ -1,7 +1,6 @@
 #include "rfcommon/DataSetFilterChain.hpp"
 #include "rfcommon/DataSetFilter.hpp"
 #include "rfcommon/DataSet.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 #include <algorithm>
 
 namespace rfcommon {

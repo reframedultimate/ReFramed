@@ -22,17 +22,24 @@ StreamBuffer::StreamBuffer(const void* data, int len)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::write(const void* data, int len)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
-    assert(writePtr_ + len <= end);
-    std::memcpy(writePtr_, data, len);
-    writePtr_ += len;
+    std::memcpy(writeToPtr(len), data, len);
     return *this;
+}
+
+// ----------------------------------------------------------------------------
+void* StreamBuffer::writeToPtr(int bytes)
+{
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
+    assert(writePtr_ + bytes <= end);
+    void* begin = writePtr_;
+    writePtr_ += bytes;
+    return begin;
 }
 
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeU8(uint8_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 1 <= end);
     std::memcpy(writePtr_, &value, 1);
     writePtr_ += 1;
@@ -42,7 +49,7 @@ StreamBuffer& StreamBuffer::writeU8(uint8_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeLU16(uint16_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 2 <= end);
     uint16_t le = toLittleEndian16(value);
     std::memcpy(writePtr_, &le, 2);
@@ -53,7 +60,7 @@ StreamBuffer& StreamBuffer::writeLU16(uint16_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeLU32(uint32_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
     uint32_t le = toLittleEndian32(value);
     std::memcpy(writePtr_, &le, 4);
@@ -64,7 +71,7 @@ StreamBuffer& StreamBuffer::writeLU32(uint32_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeLU64(uint64_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
     uint64_t le = toLittleEndian64(value);
     std::memcpy(writePtr_, &le, 8);
@@ -75,7 +82,7 @@ StreamBuffer& StreamBuffer::writeLU64(uint64_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeLF32(float value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
     uint32_t le = toLittleEndian32(*reinterpret_cast<uint32_t*>(&value));
     std::memcpy(writePtr_, &le, 4);
@@ -87,7 +94,7 @@ StreamBuffer& StreamBuffer::writeLF32(float value)
 StreamBuffer& StreamBuffer::writeLF64(double value)
 {
 
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
     uint64_t le = toLittleEndian64(*reinterpret_cast<uint64_t*>(&value));
     std::memcpy(writePtr_, &le, 8);
@@ -98,7 +105,7 @@ StreamBuffer& StreamBuffer::writeLF64(double value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeBU16(uint16_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 2 <= end);
     uint16_t le = toBigEndian16(value);
     std::memcpy(writePtr_, &le, 2);
@@ -109,7 +116,7 @@ StreamBuffer& StreamBuffer::writeBU16(uint16_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeBU32(uint32_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
     uint32_t le = toBigEndian32(value);
     std::memcpy(writePtr_, &le, 4);
@@ -120,7 +127,7 @@ StreamBuffer& StreamBuffer::writeBU32(uint32_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeBU64(uint64_t value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
     uint64_t le = toBigEndian64(value);
     std::memcpy(writePtr_, &le, 8);
@@ -131,7 +138,7 @@ StreamBuffer& StreamBuffer::writeBU64(uint64_t value)
 // ----------------------------------------------------------------------------
 StreamBuffer& StreamBuffer::writeBF32(float value)
 {
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 4 <= end);
     uint32_t le = toBigEndian32(*reinterpret_cast<uint32_t*>(&value));
     std::memcpy(writePtr_, &le, 4);
@@ -143,12 +150,18 @@ StreamBuffer& StreamBuffer::writeBF32(float value)
 StreamBuffer& StreamBuffer::writeBF64(double value)
 {
 
-    unsigned char* end = static_cast<unsigned char*>(get()) + capacity();
+    const unsigned char* end = static_cast<const unsigned char*>(get()) + capacity();
     assert(writePtr_ + 8 <= end);
     uint64_t le = toBigEndian64(*reinterpret_cast<uint64_t*>(&value));
     std::memcpy(writePtr_, &le, 8);
     writePtr_ += 8;
     return *this;
+}
+
+// ----------------------------------------------------------------------------
+void StreamBuffer::seekW(int offset)
+{
+    writePtr_ = buffer_.data() + offset;
 }
 
 // ----------------------------------------------------------------------------

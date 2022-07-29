@@ -14,6 +14,16 @@ public:
 
     StreamBuffer& write(const void* data, int len);
 
+    /*!
+     * \brief Use this to obtain a block of memory to write to directly.
+     *
+     * Advances the internal write pointer by the specified number of
+     * bytes and returns a pointer to the beginning of that block of memory.
+     * You can call this multiple times, as long as the combined number of
+     * bytes doesn't exceed the total size of the stream buffer.
+     */
+    void* writeToPtr(int bytes);
+
     StreamBuffer& writeU8(uint8_t value);
 
     StreamBuffer& writeLU16(uint16_t value);
@@ -28,8 +38,7 @@ public:
     StreamBuffer& writeBF32(float value);
     StreamBuffer& writeBF64(double value);
 
-    void seekW(int offset)
-        { writePtr_ = buffer_.data() + offset; }
+    void seekW(int offset);
 
     uint8_t readU8(int* error);
 
@@ -45,7 +54,6 @@ public:
     float readBF32(int* error);
     double readBF64(int* error);
 
-    void* get() { return buffer_.data(); }
     const void* get() const { return buffer_.data(); }
     int capacity() const { return buffer_.count(); }
     int bytesWritten() const { return static_cast<unsigned char*>(writePtr_) - buffer_.data(); }

@@ -3,7 +3,6 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/DataSetProcessorListener.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/SessionListener.hpp"
 #include "rfcommon/Reference.hpp"
 
 namespace rfcommon {

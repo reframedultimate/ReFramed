@@ -345,7 +345,7 @@ void RunningGameSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void RunningGameSessionManager::onSessionMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     if (activeSession_->fighterCount() == 2)
     {
@@ -357,30 +357,31 @@ void RunningGameSessionManager::onRunningGameSessionPlayerNameChanged(int player
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number)
+void RunningGameSessionManager::onSessionMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number)
+void RunningGameSessionManager::onSessionMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format)
+void RunningGameSessionManager::onSessionMetaDataFormatChanged(const rfcommon::SetFormat& format)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame)
+void RunningGameSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
 {
+    (void)frameIdx; (void)frame);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionManager::onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame)
+void RunningGameSessionManager::onFrameDataNewFrame(int frameIdx, const Frame& frame)
 {
     dispatcher.dispatch(&RunningGameSessionManagerListener::onRunningGameSessionManagerNewFrame, frameIdx, frame);
 }

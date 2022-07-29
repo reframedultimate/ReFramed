@@ -4,8 +4,11 @@
 #include "rfcommon/Types.hpp"
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/RefCounted.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 
 namespace rfcommon {
+
+class SessionMetaDataListener;
 
 class RFCOMMON_PUBLIC_API SessionMetaData : public RefCounted
 {
@@ -72,15 +75,6 @@ public:
         { return stageID_; }
 
     /*!
-     * \brief Gets the index of the player who won the game, or is currently in
-     * the lead in the case of an on-going session.
-     * \note If there is no winner, for example, if this is a training session,
-     * or if the session has no frames, then -1 is returned.
-     * \return Returns the player index. Can return -1 if no winner exists.
-     */
-    int winner() const;
-
-    /*!
      * \brief Gets the absolute time of when the session started in unix time
      * (milli-seconds since Jan 1 1970). May be slightly off by 1 second or so
      * depending on latency.
@@ -92,10 +86,12 @@ public:
      * received (may not be the first frame of training mode depending on when
      * the user connected).
      *
-     * If no frames were received yet, then this will return "0", which is the
-     * timestamp for Jan 1 1970.
+     * @note If no frames were received yet, then TimeStamp::isValid() will be
+     * false. If you really depend on a valid timestamp then you will need
+     * to register as a listener to be notified when a valid timestamp is
+     * received.
      */
-    TimeStampMS timeStampStartedMs() const
+    TimeStamp timeStampStarted() const
         { return timeStarted_; }
 
     /*!
@@ -109,22 +105,26 @@ public:
      * In the case of a saved session, this will be the timestamp of the last
      * frame received.
      *
-     * If no frames were received yet, then this will return "0", which is the
-     * timestamp for Jan 1 1970.
+     * @note If no frames were received yet, then TimeStamp::isValid() will be
+     * false. If you really depend on a valid timestamp then you will need
+     * to register as a listener to be notified when a valid timestamp is
+     * received.
      */
-    TimeStampMS timeStampEndedMs() const
+    TimeStamp timeStampEnded() const
         { return timeEnded_; }
 
     /*!
      * \brief Returns the length of the session. This is equivalent to
-     * timeStampEndedMs() - timeStampStartedMs().
+     * timeStampEnded() - timeStampStarted().
      */
-    DeltaTimeMS lengthMs() const
-        { return timeStampStartedMs() - timeStampEndedMs(); }
+    DeltaTime length() const
+        { return timeStarted_ - timeEnded_; }
+
+    ListenerDispatcher<SessionMetaDataListener> dispatcher;
 
 protected:
-    TimeStampMS timeStarted_;
-    TimeStampMS timeEnded_;
+    TimeStamp timeStarted_;
+    TimeStamp timeEnded_;
     SmallVector<FighterID, 2> fighterIDs_;
     SmallVector<SmallString<15>, 2> tags_;
     StageID stageID_;
@@ -173,8 +173,23 @@ public:
      */
     SetFormat setFormat() const;
 
+    /*!
+     * \brief Gets the index of the player who won the game, or is currently in
+     * the lead in the case of an on-going session.
+     * \note If there is no winner, for example, if this is a training session,
+     * or if the session has no frames, then -1 is returned.
+     * \return Returns the player index. Can return -1 if no winner exists.
+     */
+    int winner() const;
+
+    void setWinner(int fighterIdx);
+
 private:
     SmallVector<SmallString<15>, 2> names_;
+    GameNumber gameNumber_;
+    SetNumber setNumber_;
+    SetFormat setFormat_;
+    int winner_;
 };
 
 class RFCOMMON_PUBLIC_API TrainingSessionMetaData : public SessionMetaData
@@ -193,6 +208,11 @@ public:
 
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;
+
+    GameNumber sessionNumber() const;
+
+private:
+    GameNumber sessionNumber_;
 };
 
 }

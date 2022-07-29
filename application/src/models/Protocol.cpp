@@ -1,8 +1,6 @@
 #include "application/models/Protocol.hpp"
 #include "application/models/ProtocolCommunicateTask.hpp"
 #include "application/models/ProtocolConnectTask.hpp"
-#include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/RunningTrainingSession.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include <QTimer>
 
@@ -256,7 +254,7 @@ void Protocol::onFighterState(
         return;
 
     stateBuffer_[fighterIdx].emplace(
-            rfcommon::TimeStamp::fromMillis(frameTimeStamp),
+            rfcommon::TimeStamp::fromMillisSinceEpoch(frameTimeStamp),
             0,  // We change the frame number later
             rfcommon::FramesLeft(frame),
             posx, posy,

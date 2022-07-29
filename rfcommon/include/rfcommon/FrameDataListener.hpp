@@ -8,8 +8,9 @@ namespace rfcommon {
 class FrameDataListener
 {
 public:
-    virtual void onFrameDataNewUniqueFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) = 0;
-    virtual void onFrameDataNewFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) = 0;
+    using Frame = SmallVector<FighterState, 4>;
+    virtual void onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame) = 0;
+    virtual void onFrameDataNewFrame(int frameIdx, const Frame& frame) = 0;
 };
 
 }

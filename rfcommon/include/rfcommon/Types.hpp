@@ -120,8 +120,8 @@ public:
     // value. Our hashmap needs a 32-bit value.
     struct Hasher {
         typedef uint32_t HashType;
-        HashType operator()(FighterStatus fighterStatus) const {
-            return hash32_combine(lower(), upper());
+        HashType operator()(FighterMotion motion) const {
+            return hash32_combine(motion.lower(), motion.upper());
         }
     };
 
@@ -322,6 +322,8 @@ public:
 
     std::string valueToStdString() const { return std::to_string(millisSinceEpoch_); }
     Type millisSinceEpoch() const { return millisSinceEpoch_; }
+
+    bool isValid() const { return millisSinceEpoch_ != 0; }
 
     bool operator==(TimeStamp rhs) const { return millisSinceEpoch_ == rhs.millisSinceEpoch_; }
     bool operator!=(TimeStamp rhs) const { return millisSinceEpoch_ != rhs.millisSinceEpoch_; }
