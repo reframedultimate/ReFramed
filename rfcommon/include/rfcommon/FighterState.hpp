@@ -1,11 +1,15 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/Types.hpp"
-#include "rfcommon/Vector.hpp"
-#include <cstdint>
-#include <vector>
-#include <cassert>
+#include "rfcommon/FighterFlags.hpp"
+#include "rfcommon/FighterHitStatus.hpp"
+#include "rfcommon/FighterID.hpp"
+#include "rfcommon/FighterMotion.hpp"
+#include "rfcommon/FighterStatus.hpp"
+#include "rfcommon/FighterStocks.hpp"
+#include "rfcommon/FrameNumber.hpp"
+#include "rfcommon/FramesLeft.hpp"
+#include "rfcommon/TimeStamp.hpp"
 
 namespace rfcommon {
 
@@ -26,26 +30,12 @@ public:
             float shield,
             FighterStatus status,
             FighterMotion motion,
-            FighterHitStatus hit_status,
+            FighterHitStatus hitStatus,
             FighterStocks stocks,
             FighterFlags flags);
+    ~FighterState();
 
-    FighterState withNewFrameNumber(FrameNumber number)
-    {
-        return FighterState(
-                    timeStamp_,
-                    number,
-                    framesLeft_,
-                    posx_, posy_,
-                    damage_,
-                    hitstun_,
-                    shield_,
-                    status_,
-                    motion_,
-                    hitStatus_,
-                    stocks_,
-                    flags_);
-    }
+    FighterState withNewFrameNumber(FrameNumber number);
 
     TimeStamp timeStamp() const { return timeStamp_; }
     FrameNumber frameNumber() const { return frameNumber_; }
@@ -61,23 +51,7 @@ public:
     FighterStocks stocks() const { return stocks_; }
     FighterFlags flags() const { return flags_; }
 
-    bool hasSameDataAs(const FighterState& other) const
-    {
-        // Time stamp is allowed to be different
-        if (motion() != other.motion()) return false;
-        // Frame number is allowed to be different
-        // Frames left is allowed to be different
-        if (posx() != other.posx()) return false;
-        if (posy() != other.posy()) return false;
-        if (damage() != other.damage()) return false;
-        if (hitstun() != other.hitstun()) return false;
-        if (shield() != other.shield()) return false;
-        if (status() != other.status()) return false;
-        if (hitStatus() != other.hitStatus()) return false;
-        if (stocks() != other.stocks()) return false;
-        if (flags() != other.flags()) return false;
-        return true;
-    }
+    bool hasSameDataAs(const FighterState& other) const;
 
 private:
     TimeStamp timeStamp_;         // u64

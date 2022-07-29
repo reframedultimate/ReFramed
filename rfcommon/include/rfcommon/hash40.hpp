@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/Types.hpp"
+#include "rfcommon/FighterMotion.hpp"
 
 namespace rfcommon {
 

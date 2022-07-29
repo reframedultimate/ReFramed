@@ -7,7 +7,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 StreamBuffer::StreamBuffer(int bytes)
-    : buffer_(bytes)
+    : buffer_(Vector<unsigned char>::makeResized(bytes))
     , writePtr_(buffer_.data())
     , readPtr_(buffer_.data())
 {}

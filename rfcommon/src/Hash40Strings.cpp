@@ -55,8 +55,8 @@ bool Hash40Strings::loadCSV(const char* fileName)
         *delim = '\0';
 
         int error = 0;
-        rfcommon::FighterMotion::Type motionValue = hexStringToValue(line, &error);
-        if (motionValue == 0)
+        const auto motion = FighterMotion::fromValue(hexStringToValue(line, &error));
+        if (motion.value() == 0)
         {
             if (error)
                 fprintf(stderr, "Failed to parse \"%s\" into hex value\n", line);
@@ -65,7 +65,7 @@ bool Hash40Strings::loadCSV(const char* fileName)
             continue;
         }
 
-        auto motionMapResult = entries_.insertNew(motionValue, labelStr);
+        auto motionMapResult = entries_.insertIfNew(motion, labelStr);
         if (motionMapResult == entries_.end())
         {
             fprintf(stderr, "Duplicate motion value: %s\n", line);
@@ -75,45 +75,6 @@ bool Hash40Strings::loadCSV(const char* fileName)
     fclose(fp);
 
     fprintf(stderr, "Loaded %d motion labels\n", entries_.count());
-
-    /*
-    insertUser("nair", "attack_air_n");
-    insertUser("nair", "landing_air_n");
-    insertUser("uair", "attack_air_hi");
-    insertUser("uair", "landing_air_hi");
-    insertUser("bair", "attack_air_b");
-    insertUser("bair", "landing_air_b");
-    insertUser("dair", "attack_air_lw");
-    insertUser("dair", "landing_air_lw");
-    insertUser("dair", "attack_air_lw_hit");
-    insertUser("fair", "attack_air_f");
-    insertUser("fair", "landing_air_f");
-    insertUser("grab", "catch");
-    insertUser("utilt", "attack_hi3");
-    insertUser("dtilt", "attack_lw3");
-    insertUser("shield", "guard_on");
-    insertUser("dash", "dash");
-    insertUser("dash", "turn_dash");
-    insertUser("walk", "walk_slow");
-    insertUser("walk", "walk_middle");
-    insertUser("usmash", "attack_hi4");
-    insertUser("usmash", "attack_hi4_hold");
-    insertUser("turnaround", "turn");
-    insertUser("dthrow", "throw_lw");
-
-    insertUser("qa1", "special_air_hi_start");
-    insertUser("qa1", "special_air_hi1");
-    insertUser("qa1", "special_air_hi_end");
-    insertUser("qa2", "special_air_hi2");
-
-    insertUser("qa", "special_air_hi_start");
-    insertUser("qa", "special_air_hi1");
-    insertUser("qa", "special_air_hi_end");
-    insertUser("qa", "special_air_hi2");
-
-    insertUser("thunder", "special_air_lw");
-    insertUser("thunder", "special_air_lw_hit");
-    insertUser("bluethunder", "special_air_lw_hit");*/
 
     return true;
 }
@@ -130,7 +91,7 @@ const char* Hash40Strings::stringOf(FighterMotion motion) const
 // ----------------------------------------------------------------------------
 FighterMotion Hash40Strings::motionOf(const char* str) const
 {
-    FighterMotion motion = hash40(str);
+    const FighterMotion motion = hash40(str);
 #ifndef NDEBUG
     if (entries_.find(motion) == entries_.end())
         fprintf(stderr, "Motion string \"%s\" was not found in the table. Returning the hash40 value anyway...\n", str);

@@ -8,10 +8,14 @@ using nlohmann::json;
 static SessionMetaData* load_1_5(const json& j);
 
 // ----------------------------------------------------------------------------
+SessionMetaData::~SessionMetaData()
+{}
+
+// ----------------------------------------------------------------------------
 SessionMetaData* SessionMetaData::load(FILE* fp, uint32_t size)
 {
     // Load json into memory
-    Vector<char> jsonBlob(size);
+    auto jsonBlob = Vector<char>::makeResized(size);
     if (fread(jsonBlob.data(), 1, size, fp) != (size_t)size)
         return nullptr;
 
@@ -40,7 +44,7 @@ static SessionMetaData* load_1_5(const json& j)
         const json jName = info["name"];
         const json jFighterID = info["fighterid"];
 
-        fighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        fighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         tags.emplace(jTag.get<std::string>().c_str());
         names.emplace(jName.get<std::string>().c_str());
     }
@@ -49,18 +53,18 @@ static SessionMetaData* load_1_5(const json& j)
     if (type == "game")
     {
         return new GameSessionMetaData(
-                jGameInfo["stageid"].get<StageID::Type>(),
+                StageID::fromValue(jGameInfo["stageid"].get<StageID::Type>()),
                 std::move(fighterIDs),
                 std::move(tags),
                 std::move(names),
-                jGameInfo["number"].get<GameNumber::Type>(),
-                jGameInfo["set"].get<SetNumber::Type>(),
+                GameNumber::fromValue(jGameInfo["number"].get<GameNumber::Type>()),
+                SetNumber::fromValue(jGameInfo["set"].get<SetNumber::Type>()),
                 SetFormat(jGameInfo["format"].get<std::string>().c_str()));
     }
     if (type == "training")
     {
         return new TrainingSessionMetaData(
-                jGameInfo["stageid"].get<StageID::Type>(),
+                StageID::fromValue(jGameInfo["stageid"].get<StageID::Type>()),
                 std::move(fighterIDs),
                 std::move(tags));
     }

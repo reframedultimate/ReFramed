@@ -51,6 +51,9 @@ FrameData* FrameData::load(FILE* fp, uint32_t size)
             return nullptr;
         return load_1_5(&buffer);
     }
+
+    // Unsupported version
+    return nullptr;
 }
 FrameData* load_1_5(StreamBuffer* data)
 {
@@ -64,27 +67,27 @@ FrameData* load_1_5(StreamBuffer* data)
     for (int fighter = 0; fighter != fighterCount; ++fighter)
         for (FramesLeft::Type frame = 0; frame < frameCount; ++frame)
         {
-            const TimeStamp timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
-            const FramesLeft framesLeft(data->readLU32(&error));
+            const auto timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
+            const auto framesLeft = FramesLeft::fromValue(data->readLU32(&error));
             const float posx = data->readLF32(&error);
             const float posy = data->readLF32(&error);
             const float damage = data->readLF32(&error);
             const float hitstun = data->readLF32(&error);
             const float shield = data->readLF32(&error);
-            const FighterStatus status(data->readLU16(&error));
+            const auto status = FighterStatus::fromValue(data->readLU16(&error));
             const uint32_t motion_l = data->readLU32(&error);
             const uint8_t motion_h = data->readU8(&error);
-            const FighterMotion motion(motion_h, motion_l);
-            const FighterHitStatus hitStatus = data->readU8(&error);
-            const FighterStocks stocks = data->readU8(&error);
-            const uint8_t flags = data->readU8(&error);
+            const auto motion = FighterMotion::fromParts(motion_h, motion_l);
+            const auto hitStatus = FighterHitStatus::fromValue(data->readU8(&error));
+            const auto stocks = FighterStocks::fromValue(data->readU8(&error));
+            const auto flags = FighterFlags::fromValue(data->readU8(&error));
 
             if (error)
                 return nullptr;
 
             frames[fighter].emplace(
                 timeStamp,
-                FrameNumber(frame),
+                FrameNumber::fromValue(frame),
                 framesLeft,
                 posx,
                 posy,

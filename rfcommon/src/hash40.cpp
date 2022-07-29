@@ -7,13 +7,15 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 FighterMotion hash40(const void* buf, uintptr_t len)
 {
-    return (uint64_t)crc32_buf(buf, len, 0) | ((uint64_t)len << 32);
+    return FighterMotion::fromParts(
+        len, 
+        crc32_buf(buf, len, 0));
 }
 
 // ----------------------------------------------------------------------------
 FighterMotion hash40(const char* str)
 {
-    return hash40((const void*)str, strlen(str));
+    return hash40(static_cast<const void*>(str), strlen(str));
 }
 
 }

@@ -471,13 +471,6 @@ public:
         insertMove(0, other.begin(), other.end());
     }
 
-    Vector(S resizeCount)
-        : Vector()
-    {
-        reserve(resizeCount);
-        resize(resizeCount);
-    }
-
     Vector(const T* data, S len)
         : VectorBase<T, S>()
     {
@@ -492,6 +485,21 @@ public:
             end->~T();
 
         deallocate(reinterpret_cast<char*>(this->begin_));
+    }
+
+    static Vector makeReserved(S count)
+    {
+        Vector v;
+        v.reserve(count);
+        return v;
+    }
+
+    static Vector makeResized(S count)
+    {
+        Vector v;
+        v.reserve(count);
+        v.resize(count);
+        return v;
     }
 
     Vector& operator=(Vector rhs)

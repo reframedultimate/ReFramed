@@ -34,8 +34,8 @@ public:
     FrameData* frameData() const;
 
 private:
-    void onFrameDataNewUniqueFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) override;
-    void onFrameDataNewFrame(int frameIdx, const SmallVector<FighterState, 4>& frame) override;
+    void onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const Frame& frame) override;
 
 private:
     Reference<MappingInfo> mappingInfo_;

@@ -5,6 +5,7 @@
 #include "nlohmann/json.hpp"
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 namespace rfcommon {
 
@@ -25,7 +26,7 @@ MappingInfo::~MappingInfo()
 MappingInfo* MappingInfo::load(FILE* fp, uint32_t size)
 {
     // Load json into memory
-    Vector<char> jsonBlob(size);
+    auto jsonBlob = Vector<char>::makeResized(size);
     if (fread(jsonBlob.data(), 1, size, fp) != (size_t)size)
         return nullptr;
 
@@ -60,7 +61,7 @@ static MappingInfo* load_1_5(const json& j)
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
-        FighterStatus status(std::stoul(key, &pos));
+        const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_array() == false)
@@ -74,14 +75,14 @@ static MappingInfo* load_1_5(const json& j)
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo->status.addBaseEnumName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
     }
 
     const json jFighterSpecificStatusMapping = jFighterStatuses["specific"];
     for (const auto& [fighter, jsonSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(fighter, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return nullptr;
         if (jsonSpecificMapping.is_object() == false)
@@ -89,7 +90,7 @@ static MappingInfo* load_1_5(const json& j)
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status(std::stoul(key, &pos));
+            const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
             if (value.is_array() == false)
@@ -103,38 +104,38 @@ static MappingInfo* load_1_5(const json& j)
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo->status.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
         }
     }
 
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID(std::stoul(key, &pos));
+        const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
             return nullptr;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jHitStatuses.items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID(std::stoul(key, &pos));
+        const auto hitStatusID = FighterHitStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
         if (value.is_string() == false)
@@ -150,28 +151,22 @@ static MappingInfo* load_1_5(const json& j)
 uint32_t MappingInfo::save(FILE* fp) const
 {
     json fighterBaseStatusMapping;
-    const auto& baseEnumNames = status.baseMap();
-    for (const auto& it : baseEnumNames)
-    {
-        const FighterStatus& status = it->key();
-        const SmallString<31>& enumName = it->value();
-        fighterBaseStatusMapping[status.valueToStdString()] = enumName.cStr();
-    }
+    const auto baseNames = status.baseNames();
+    const auto baseStatuses = status.baseStatuses();
+    for (int i = 0; i != baseNames.count(); ++i)
+        fighterBaseStatusMapping[std::to_string(baseStatuses[i].value())] = baseNames[i].cStr();
 
     json fighterSpecificStatusMapping;
-    const auto& specificEnumNames = status.specificMap();
-    for (const auto& fighter : specificEnumNames)
+    for (const auto& fighterID : status.fighterIDs())
     {
         json specificMapping = json::object();
-        for (const auto& it : fighter->value())
-        {
-            const FighterStatus& status = it->key();
-            const SmallString<31>& enumName = it->value();
-            specificMapping[status.valueToStdString()] = enumName.cStr();
-        }
+        const auto specificNames = status.specificNames(fighterID);
+        const auto specificStatuses = status.specificStatuses(fighterID);
+        for (int i = 0; i != specificNames.count(); ++i)
+            specificMapping[std::to_string(specificStatuses[i].value())] = specificNames[i].cStr();
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[fighter->key().valueToStdString()] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(fighterID.value())] = specificMapping;
     }
 
     json fighterStatusMapping = {
@@ -180,19 +175,22 @@ uint32_t MappingInfo::save(FILE* fp) const
     };
 
     json fighterIDMapping;
-    const auto& fighterIDMap = fighterID.map();
-    for (const auto& it : fighterIDMap)
-        fighterIDMapping[it->key().valueToStdString()] = it->value().cStr();
+    const auto fighterNames = fighter.names();
+    const auto fighterIDs = fighter.IDs();
+    for (int i = 0; i != fighterIDs.count(); ++i)
+        fighterIDMapping[std::to_string(fighterIDs[i].value())] = fighterNames[i].cStr();
 
     json stageIDMapping;
-    const auto& stageIDMap = stageID.map();
-    for (const auto& it : stageIDMap)
-        stageIDMapping[it->key().valueToStdString()] = it->value().cStr();
+    const auto stageNames = stage.names();
+    const auto stageIDs = stage.IDs();
+    for (int i = 0; i != stageIDs.count(); ++i)
+        stageIDMapping[std::to_string(stageIDs[i].value())] = stageNames[i].cStr();
 
     json hitStatusMapping;
-    const auto& hitStatusMap = hitStatus.map();
-    for (const auto& it : hitStatusMap)
-        hitStatusMapping[it.key().toStdString()] = it.value().cStr();
+    const auto hitStatusNames = hitStatus.names();
+    const auto hitStatuses = hitStatus.statuses();
+    for (int i = 0; i != hitStatuses.count(); ++i)
+        hitStatusMapping[std::to_string(hitStatuses[i].value())] = hitStatusNames[i].cStr();
 
     json j = {
         {"version", "1.5"},
@@ -233,60 +231,59 @@ uint32_t MappingInfo::saveFiltered(FILE* fp, const SessionMetaData* metaData, co
 
     // Create sets of the IDs that were used in game so we don't end up saving
     // every ID
-    std::unordered_set<FighterStatus, FighterStatusHasherStd> usedStatuses;
+    std::vector<std::unordered_set<FighterStatus, FighterStatusHasherStd>> usedStatuses;
     std::unordered_set<FighterHitStatus, FighterHitStatusHasherStd> usedHitStatuses;
     for (int fighter = 0; fighter != frameData->fighterCount(); ++fighter)
+    {
+        std::unordered_set<FighterStatus, FighterStatusHasherStd> usedFighterStatuses;
         for (int frame = 0; frame != frameData->frameCount(); ++frame)
         {
             const FighterState& state = frameData->stateAt(frame, fighter);
-            usedStatuses.insert(state.status());
+            usedFighterStatuses.insert(state.status());
             usedHitStatuses.insert(state.hitStatus());
         }
+        usedStatuses.push_back(std::move(usedFighterStatuses));
+    }
     std::unordered_set<FighterID, FighterIDHasherStd> usedFighterIDs;
     for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
         usedFighterIDs.insert(metaData->fighterID(fighter));
 
+    auto statusUsedByAnyone = [&usedStatuses](FighterStatus status) -> bool {
+        for (const auto& usedFighterStatuses : usedStatuses)
+            if (usedFighterStatuses.find(status) != usedFighterStatuses.end())
+                return true;
+        return false;
+    };
+
     json fighterBaseStatusMapping;
-    const auto& baseEnumNames = status.baseMap();
-    for (const auto& it : baseEnumNames)
+    const auto baseNames = status.baseNames();
+    const auto baseStatuses = status.baseStatuses();
+    for (int i = 0; i != baseStatuses.count(); ++i)
     {
         // Skip saving enums that aren't actually used in the set of player states
-        if (usedStatuses.find(it->key()) == usedStatuses.end())
+        if (statusUsedByAnyone(baseStatuses[i]) == false)
             continue;
 
-        /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
-        const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
-
-        const FighterStatus& status = it->key();
-        const SmallString<31>& enumName = it->value();
-        fighterBaseStatusMapping[status.valueToStdString()] = enumName.cStr();
+        fighterBaseStatusMapping[std::to_string(baseStatuses[i].value())] = baseNames[i].cStr();
     }
 
     json fighterSpecificStatusMapping;
-    const auto& specificEnumNames = status.specificMap();
-    for (const auto& fighter : specificEnumNames)
+    for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
     {
-        // Skip saving enums for fighters that aren't being used
-        if (usedFighterIDs.find(fighter->key()) == usedFighterIDs.end())
-            continue;
-
         json specificMapping = json::object();
-        for (const auto& it : fighter->value())
+        const auto specificNames = status.specificNames(metaData->fighterID(fighter));
+        const auto specificStatuses = status.specificStatuses(metaData->fighterID(fighter));
+        for (int i = 0; i != specificStatuses.count(); ++i)
         {
             // Skip saving enums that aren't actually used in the set of player states
-            if (usedStatuses.find(it->key()) == usedStatuses.end())
+            if (usedStatuses[fighter].find(specificStatuses[i]) == usedStatuses[fighter].end())
                 continue;
 
-            /*const QString* shortName = mappingInfo_.fighterStatus.mapToShortName(it.key());
-            const QString* customName = mappingInfo_.fighterStatus.mapToCustom(it.key());*/
-
-            const FighterStatus& status = it->key();
-            const SmallString<31>& enumName = it->value();
-            specificMapping[status.valueToStdString()] = enumName.cStr();
+            specificMapping[std::to_string(specificStatuses[i].value())] = specificNames[i].cStr();
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[fighter->key().valueToStdString()] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(metaData->fighterID(fighter).value())] = specificMapping;
     }
 
     json fighterStatusMapping = {
@@ -295,22 +292,23 @@ uint32_t MappingInfo::saveFiltered(FILE* fp, const SessionMetaData* metaData, co
     };
 
     json fighterIDMapping;
-    const auto& fighterIDMap = fighterID.map();
-    for (const auto& it : fighterIDMap)
-        if (usedFighterIDs.find(it->key()) != usedFighterIDs.end())
-            fighterIDMapping[it->key().valueToStdString()] = it->value().cStr();
+    const auto fighterNames = fighter.names();
+    const auto fighterIDs = fighter.IDs();
+    for (int i = 0; i != fighterIDs.count(); ++i)
+        if (usedFighterIDs.find(fighterIDs[i]) != usedFighterIDs.end())
+            fighterIDMapping[std::to_string(fighterIDs[i].value())] = fighterNames[i].cStr();
 
-    json stageIDMapping;
-    const auto& stageIDMap = stageID.map();
-    for (const auto& it : stageIDMap)
-        if (it->key() == metaData->stageID())  // Only care about saving the stage that was played on
-            stageIDMapping[it->key().valueToStdString()] = it->value().cStr();
+    // Only care about saving the stage that was played on
+    json stageIDMapping = {
+        {std::to_string(metaData->stageID().value()), stage.toName(metaData->stageID())}
+    };
 
     json hitStatusMapping;
-    const auto& hitStatusMap = hitStatus.map();
-    for (const auto& it : hitStatusMap)
-        if (usedHitStatuses.find(it.key()) != usedHitStatuses.end())
-            hitStatusMapping[it.key().toStdString()] = it.value().cStr();
+    const auto hitStatusNames = hitStatus.names();
+    const auto hitStatuses = hitStatus.statuses();
+    for (int i = 0; i != hitStatuses.count(); ++i)
+        if (usedHitStatuses.find(hitStatuses[i]) != usedHitStatuses.end())
+            hitStatusMapping[std::to_string(hitStatuses[i].value())] = hitStatusNames[i].cStr();
 
     json j = {
         {"version", "1.5"},

@@ -230,7 +230,7 @@ public:
     {}
 
     HashMap(S initialTableSize)
-        : table_(nextPowerOf2(initialTableSize))
+        : table_(TableContainer::makeResized(nextPowerOf2(initialTableSize)))
         , keys_(nullptr)
         , values_(nullptr)
         , count_(0)
@@ -283,7 +283,7 @@ public:
 
     void rehash()
     {
-        Vector<H, S> newTable(table_.count());
+        auto newTable = Vector<H, S>::makeResized(table_.count());
 
         for (S oldPos = 0; oldPos != table_.count(); ++oldPos)
         {
@@ -376,11 +376,56 @@ private:
 public:
     /*!
      * \brief If the key does not exist, inserts the key/value pair and returns
-     * an interator to the new insertion. If the key does exist, returns end()
+     * an interator to the new insertion. If the key exists, returns end()
      * and nothing is inserted.
      */
     template <typename KK, typename VV>
-    Iterator insertNew(KK&& key, VV&& value)
+    Iterator insertIfNew(KK&& key, VV&& value)
+    {
+        if (table_.count() == 0)
+            resize(128);
+        else if (count_ * 100 / table_.count() >= 70)
+            resize(table_.count() * 2);
+
+        H hash;
+        S pos;
+        if (findFreeInsertSlot(key, hash, pos) == false)
+            return end();
+
+        table_[pos] = hash;
+        construct(keys_ + pos, std::forward<KK&&>(key));
+        construct(values_ + pos, std::forward<VV&&>(value));
+        count_++;
+        return Iterator(table_, keys_, values_, pos);
+    }
+
+    /*!
+     * \brief Inserts the key-value pair if the key exists, overwriting
+     * the existing key and value. Returns end() if the key did not
+     * exist, returns an iterator to the updated pair if it did exist.
+     */
+    template <typename KK, typename VV>
+    Iterator insertIfExists(KK&& key, VV&& value)
+    {
+        H hash;
+        S pos;
+        if (findFreeInsertSlot(key, hash, pos))
+            return end();
+
+        keys_[pos].~K();
+        values_[pos].~V();
+        construct(keys_ + pos, std::forward<KK&&>(key));
+        construct(values_ + pos, std::forward<VV&&>(value));
+        return Iterator(table_, keys_, values_, pos);
+    }
+
+    /*!
+     * \brief Inserts the key-value pair, regardless of whether it already
+     * existed or not. Returns an iterator to the updated (or newly inserted)
+     * key-value pair.
+     */
+    template <typename KK, typename VV>
+    Iterator insertAlways(KK&& key, VV&& value)
     {
         if (table_.count() == 0)
             resize(128);
@@ -395,12 +440,22 @@ public:
             construct(keys_ + pos, std::forward<KK&&>(key));
             construct(values_ + pos, std::forward<VV&&>(value));
             count_++;
-            return Iterator(table_, keys_, values_, pos);
+        }
+        else
+        {
+            keys_[pos].~K();
+            values_[pos].~V();
+            construct(keys_ + pos, std::forward<KK&&>(key));
+            construct(values_ + pos, std::forward<VV&&>(value));
         }
 
-        return end();
+        return Iterator(table_, keys_, values_, pos);
     }
 
+    /*!
+     * \brief Inserts the key-value pair, but only if it didn't exist yet.
+     * Returns
+     */
     template <typename KK, typename VV>
     Iterator insertOrGet(KK&& key, VV&& value)
     {
@@ -426,26 +481,6 @@ public:
     Iterator insertDefaultOrGet(KK&& key)
     {
         return insertOrGet(std::move(key), VV());
-    }
-
-    template <typename KK, typename VV>
-    Iterator insertReplace(KK&& key, VV&& value)
-    {
-        if (table_.count() == 0)
-            resize(128);
-        else if (count_ * 100 / table_.count() >= 70)
-            resize(table_.count() * 2);
-
-        H hash;
-        S pos;
-        if (findFreeInsertSlot(key, hash, pos))
-            return end();
-
-        table_[pos] = hash;
-        construct(keys_ + pos, std::forward<KK&&>(key));
-        construct(values_ + pos, std::forward<VV&&>(value));
-        count_++;
-        return Iterator(table_, keys_, values_, pos);
     }
 
     template <typename K1, typename K2>

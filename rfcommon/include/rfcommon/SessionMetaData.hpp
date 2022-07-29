@@ -1,10 +1,15 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/Types.hpp"
-#include "rfcommon/SetFormat.hpp"
-#include "rfcommon/RefCounted.hpp"
+#include "rfcommon/FighterID.hpp"
+#include "rfcommon/GameNumber.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/RefCounted.hpp"
+#include "rfcommon/StageID.hpp"
+#include "rfcommon/SetFormat.hpp"
+#include "rfcommon/SetNumber.hpp"
+#include "rfcommon/TimeStamp.hpp"
+#include <cstdio>
 
 namespace rfcommon {
 
@@ -138,8 +143,8 @@ public:
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags,
             SmallVector<SmallString<15>, 2>&& names,
-            GameNumber gameNumber=1,
-            SetNumber setNumber=1,
+            GameNumber gameNumber=GameNumber::fromValue(1),
+            SetNumber setNumber=SetNumber::fromValue(1),
             SetFormat setFormat=SetFormat::FRIENDLIES);
 
     Type type() const override

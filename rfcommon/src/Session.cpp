@@ -1,11 +1,10 @@
+#include "rfcommon/Endian.hpp"
+#include "rfcommon/FrameData.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/SessionMetaData.hpp"
-#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/StreamBuffer.hpp"
-#include "rfcommon/Endian.hpp"
-#include "rfcommon/Types.hpp"
 #include "rfcommon/time.h"
-#include "rfcommon/FrameData.hpp"
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
 #include "zlib.h"
@@ -299,25 +298,25 @@ static bool loadLegacy_1_0(
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID(std::stoul(key, &pos));
+        auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     // skip loading status mappings, it was broken in 1.0
@@ -330,7 +329,7 @@ static bool loadLegacy_1_0(
         const json jFighterID = info["fighterid"];
         const json jTag = info["tag"];
 
-        playerFighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jTag.get<std::string>().c_str());  // "name" property didn't exist in 1.0
     }
@@ -347,15 +346,15 @@ static bool loadLegacy_1_0(
     const json jStageID = jGameInfo["stageid"];
 
     Reference<SessionMetaData> metaData(new GameSessionMetaData(
-        jStageID.get<StageID::Type>(),
+        StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jGameNumber.get<GameNumber::Type>(),
-        1, // SetNumber did not exist in 1.0 yet
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
+        SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
         SetFormat(jSetFormat.get<std::string>().c_str())));
 
-    const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
@@ -375,11 +374,11 @@ static bool loadLegacy_1_0(
         FramesLeft::Type frameCounter = 0;
         for (FramesLeft::Type f = 0; f < stateCount; ++f)
         {
-            const FramesLeft framesLeft = stream.readBU32(&error);
-            const FighterStatus status = stream.readBU16(&error);
+            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
+            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
             const float damage = static_cast<float>(stream.readBF64(&error));
-            const FighterStocks stocks = stream.readU8(&error);
-            const FighterFlags flags(false, false, false);
+            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
+            const auto flags = FighterFlags::fromFlags(false, false, false);
 
             if (error)
                 return false;
@@ -398,7 +397,7 @@ static bool loadLegacy_1_0(
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, frameCounter, framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
+                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
             }
         }
     }
@@ -453,7 +452,7 @@ static bool loadLegacy_1_1(
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
-        FighterStatus status(std::stoul(key, &pos));
+        auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_array() == false)
@@ -464,12 +463,12 @@ static bool loadLegacy_1_1(
         if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
             return false;
 
-        mappingInfo->status.addBaseEnumName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(fighter, &pos));
+        auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return false;
         if (jSpecificMapping.is_object() == false)
@@ -477,7 +476,7 @@ static bool loadLegacy_1_1(
 
         for (const auto& [key, value] : jSpecificMapping.items())
         {
-            FighterStatus status(std::stoul(key, &pos));
+            auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return false;
             if (value.is_array() == false)
@@ -488,32 +487,32 @@ static bool loadLegacy_1_1(
             if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
                 return false;
 
-            mappingInfo->status.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
         }
     }
 
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID = static_cast<StageID>(std::stoul(key, &pos));
+        auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
@@ -524,7 +523,7 @@ static bool loadLegacy_1_1(
         const json jFighterID = info["fighterid"];
         const json jTag = info["tag"];
 
-        playerFighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jTag.get<std::string>().c_str());  // "name" property didn't exist in 1.1
     }
@@ -541,15 +540,15 @@ static bool loadLegacy_1_1(
     const json jStageID = jGameInfo["stageid"];
 
     Reference<SessionMetaData> metaData(new GameSessionMetaData(
-        jStageID.get<StageID::Type>(),
+        StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jGameNumber.get<GameNumber::Type>(),
-        1, // SetNumber did not exist in 1.0 yet
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
+        SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
         SetFormat(jSetFormat.get<std::string>().c_str())));
 
-    const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
@@ -569,11 +568,11 @@ static bool loadLegacy_1_1(
         FramesLeft::Type frameCounter = 0;
         for (FramesLeft::Type f = 0; f < stateCount; ++f)
         {
-            const FramesLeft framesLeft = stream.readBU32(&error);
-            const FighterStatus status = stream.readBU16(&error);
+            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
+            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
             const float damage = static_cast<float>(stream.readBF64(&error));
-            const FighterStocks stocks = stream.readU8(&error);
-            const FighterFlags flags(false, false, false);
+            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
+            const auto flags = FighterFlags::fromFlags(false, false, false);
 
             if (error)
                 return false;
@@ -591,8 +590,8 @@ static bool loadLegacy_1_1(
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, frameCounter, framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, 0, 0, stocks, flags);
+                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
+                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
             }
         }
     }
@@ -647,7 +646,7 @@ static bool loadLegacy_1_2(
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
-        FighterStatus status(std::stoul(key, &pos));
+        const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_array() == false)
@@ -661,12 +660,12 @@ static bool loadLegacy_1_2(
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo->status.addBaseEnumName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(fighter, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return false;
         if (jSpecificMapping.is_object() == false)
@@ -674,7 +673,7 @@ static bool loadLegacy_1_2(
 
         for (const auto& [key, value] : jSpecificMapping.items())
         {
-            FighterStatus status(std::stoul(key, &pos));
+            const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return false;
             if (value.is_array() == false)
@@ -688,32 +687,32 @@ static bool loadLegacy_1_2(
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo->status.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
         }
     }
 
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID(std::stoul(key, &pos));
+        const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
@@ -725,7 +724,7 @@ static bool loadLegacy_1_2(
         const json jTag = info["tag"];
         const json jName = info["name"];
 
-        playerFighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
     }
@@ -743,12 +742,12 @@ static bool loadLegacy_1_2(
     const json jSetNumber = jGameInfo["set"];
 
     Reference<SessionMetaData> metaData(new GameSessionMetaData(
-        jStageID.get<StageID::Type>(),
+        StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jGameNumber.get<GameNumber::Type>(),
-        jSetNumber.get<SetNumber::Type>(),
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
+        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
         SetFormat(jSetFormat.get<std::string>().c_str())));
 
     const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -771,17 +770,17 @@ static bool loadLegacy_1_2(
         FramesLeft::Type frameCounter = 0;
         for (FramesLeft::Type f = 0; f < stateCount; ++f)
         {
-            const FramesLeft framesLeft = stream.readBU32(&error);
+            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const float posx = static_cast<float>(stream.readBF64(&error));
             const float posy = static_cast<float>(stream.readBF64(&error));
             const float damage = static_cast<float>(stream.readBF64(&error));
             const float hitstun = static_cast<float>(stream.readBF64(&error));
             const float shield = static_cast<float>(stream.readBF64(&error));
-            const FighterStatus status = stream.readBU16(&error);
-            const FighterMotion motion = stream.readBU64(&error);
-            const FighterHitStatus hit_status = stream.readU8(&error);
-            const FighterStocks stocks = stream.readU8(&error);
-            const FighterFlags flags = stream.readU8(&error);
+            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
+            const auto motion = FighterMotion::fromValue(stream.readBU64(&error));
+            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
+            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
+            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
 
             if (error)
                 return false;
@@ -799,8 +798,8 @@ static bool loadLegacy_1_2(
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, frameCounter, framesLeft, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
+                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
             }
         }
     }
@@ -856,7 +855,7 @@ static bool loadLegacy_1_3(
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
-        FighterStatus status(std::stoul(key, &pos));
+        const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_array() == false)
@@ -870,12 +869,12 @@ static bool loadLegacy_1_3(
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo->status.addBaseEnumName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(fighter, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return false;
         if (jSpecificMapping.is_object() == false)
@@ -883,7 +882,7 @@ static bool loadLegacy_1_3(
 
         for (const auto& [key, value] : jSpecificMapping.items())
         {
-            FighterStatus status(std::stoul(key, &pos));
+            const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return false;
             if (value.is_array() == false)
@@ -897,38 +896,38 @@ static bool loadLegacy_1_3(
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo->status.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
         }
     }
 
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID(std::stoul(key, &pos));
+        const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jHitStatuses.items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID(std::stoul(key, &pos));
+        const auto hitStatusID = FighterHitStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
@@ -946,7 +945,7 @@ static bool loadLegacy_1_3(
         const json jTag = info["tag"];
         const json jName = info["name"];
 
-        playerFighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
     }
@@ -965,17 +964,17 @@ static bool loadLegacy_1_3(
     const json jWinner = jGameInfo["winner"];
 
     Reference<SessionMetaData> metaData(new GameSessionMetaData(
-        jStageID.get<StageID::Type>(),
+        StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jGameNumber.get<GameNumber::Type>(),
-        jSetNumber.get<SetNumber::Type>(),
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
+        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
         SetFormat(jSetFormat.get<std::string>().c_str())));
 
     static_cast<GameSessionMetaData*>(metaData.get())->setWinner(jWinner.get<int>());
 
-    const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
@@ -995,26 +994,24 @@ static bool loadLegacy_1_3(
         FramesLeft::Type frameCounter = 0;
         for (FramesLeft::Type f = 0; f < stateCount; ++f)
         {
-            const FramesLeft framesLeft = stream.readLU32(&error);
+            const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
             const float posy = stream.readLF32(&error);
             const float damage = stream.readLF32(&error);
             const float hitstun = stream.readLF32(&error);
             const float shield = stream.readLF32(&error);
-            const FighterStatus status = stream.readLU16(&error);
+            const auto status = FighterStatus::fromValue(stream.readLU16(&error));
             const uint32_t motion_l = stream.readLU32(&error);
             const uint8_t motion_h = stream.readU8(&error);
-            const FighterHitStatus hit_status = stream.readU8(&error);
-            const FighterStocks stocks = stream.readU8(&error);
-            const uint8_t flags = stream.readU8(&error);
+            const auto motion = FighterMotion::fromParts(motion_h, motion_l);
+            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
+            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
+            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
 
             if (error)
                 return false;
             if (framesLeft.value() == 0)
                 return false;
-
-            const FighterMotion motion = static_cast<uint64_t>(motion_l)
-                                       | (static_cast<uint64_t>(motion_h) << 32);
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
@@ -1027,8 +1024,8 @@ static bool loadLegacy_1_3(
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, frameCounter, framesLeft, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
+                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
             }
         }
     }
@@ -1086,7 +1083,7 @@ static bool loadLegacy_1_4(
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
-        FighterStatus status(std::stoul(key, &pos));
+        const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_array() == false)
@@ -1100,12 +1097,12 @@ static bool loadLegacy_1_4(
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
 
-        mappingInfo->status.addBaseEnumName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
     }
     for (const auto& [fighter, jsonSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(fighter, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
             return false;
         if (jsonSpecificMapping.is_object() == false)
@@ -1113,7 +1110,7 @@ static bool loadLegacy_1_4(
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
-            FighterStatus status(std::stoul(key, &pos));
+            const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return false;
             if (value.is_array() == false)
@@ -1127,38 +1124,38 @@ static bool loadLegacy_1_4(
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
 
-            mappingInfo->status.addFighterSpecificEnumName(status, fighterID, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
         }
     }
 
     for (const auto& [key, value] : jFighterIDs.items())
     {
         std::size_t pos;
-        FighterID fighterID(std::stoul(key, &pos));
+        const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->fighterID.add(fighterID, value.get<std::string>().c_str());
+        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jStageIDs.items())
     {
         std::size_t pos;
-        StageID stageID(std::stoul(key, &pos));
+        const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
             return false;
 
-        mappingInfo->stageID.add(stageID, value.get<std::string>().c_str());
+        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
 
     for (const auto& [key, value] : jHitStatuses.items())
     {
         std::size_t pos;
-        FighterHitStatus hitStatusID(std::stoul(key, &pos));
+        const auto hitStatusID = FighterHitStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return false;
         if (value.is_string() == false)
@@ -1176,7 +1173,7 @@ static bool loadLegacy_1_4(
         const json jTag = info["tag"];
         const json jName = info["name"];
 
-        playerFighterIDs.emplace(jFighterID.get<FighterID::Type>());
+        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
     }
@@ -1196,12 +1193,12 @@ static bool loadLegacy_1_4(
     const json jWinner = jGameInfo["winner"];
 
     Reference<SessionMetaData> metaData(new GameSessionMetaData(
-        jStageID.get<StageID::Type>(),
+        StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
-        jGameNumber.get<GameNumber::Type>(),
-        jSetNumber.get<SetNumber::Type>(),
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
+        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
         SetFormat(jSetFormat.get<std::string>().c_str())));
 
     static_cast<GameSessionMetaData*>(metaData.get())->setWinner(jWinner.get<int>());
@@ -1223,27 +1220,25 @@ static bool loadLegacy_1_4(
         FramesLeft::Type frameCounter = 0;
         for (FramesLeft::Type f = 0; f < stateCount; ++f)
         {
-            const TimeStamp frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64(&error));
-            const FramesLeft framesLeft = stream.readLU32(&error);
+            const auto frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64(&error));
+            const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
             const float posy = stream.readLF32(&error);
             const float damage = stream.readLF32(&error);
             const float hitstun = stream.readLF32(&error);
             const float shield = stream.readLF32(&error);
-            const FighterStatus status = stream.readLU16(&error);
+            const auto status = FighterStatus::fromValue(stream.readLU16(&error));
             const uint32_t motion_l = stream.readLU32(&error);
             const uint8_t motion_h = stream.readU8(&error);
-            const FighterHitStatus hit_status = stream.readU8(&error);
-            const FighterStocks stocks = stream.readU8(&error);
-            const uint8_t flags = stream.readU8(&error);
+            const auto motion = FighterMotion::fromParts(motion_h, motion_l);
+            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
+            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
+            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
 
             if (error)
                 return false;
             if (framesLeft.value() == 0)
                 return false;
-
-            const FighterMotion motion = static_cast<uint64_t>(motion_l)
-                                       | (static_cast<uint64_t>(motion_h) << 32);
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
@@ -1252,8 +1247,8 @@ static bool loadLegacy_1_4(
             for (; frameCounter < framesLeft.value(); ++frameCounter)
             {
                 const TimeStamp actualTimeStamp = frameTimeStamp +
-                        DeltaTime((framesLeft.value() - frameCounter - 1) * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, frameCounter, framesLeft, posx, posy, damage, hitstun, shield, status, motion, hit_status, stocks, flags);
+                        DeltaTime::fromMillis((framesLeft.value() - frameCounter - 1) * 1000.0 / 60.0);
+                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
             }
         }
     }
@@ -1462,13 +1457,19 @@ bool Session::save(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-void Session::onFrameDataNewUniqueFrame(int frameIdx, const SmallVector<FighterState, 4>& frame)
+void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
 {
     (void)frameIdx;
 
     // Winner might have changed
     if (metaData_->type() == SessionMetaData::GAME)
         static_cast<GameSessionMetaData*>(metaData_.get())->setWinner(findWinner(frame));
+}
+
+// ----------------------------------------------------------------------------
+void Session::onFrameDataNewFrame(int frameIdx, const Frame& frame)
+{
+    (void)frameIdx; (void)frame;
 }
 
 // ----------------------------------------------------------------------------

@@ -82,14 +82,20 @@ public:
 
     Iterator findValue(const V& value)
     {
-        auto it = std::lower_bound(values_.begin(), values_.end(), value);
-        return Iterator(keys_, values_, static_cast<S>(it - values_.begin()));
+        S i = 0;
+        for (; i != values_.count(); ++i)
+            if (values_[i] == value)
+                break;
+        return Iterator(keys_, values_, i);
     }
 
     ConstIterator findValue(const V& value) const
     {
-        auto it = std::lower_bound(values_.begin(), values_.end(), value);
-        return ConstIterator(keys_, values_, static_cast<S>(it - values_.begin()));
+        S i = 0;
+        for (; i != values_.count(); ++i)
+            if (values_[i] == value)
+                break;
+        return ConstIterator(keys_, values_, i);
     }
 
     void clear()

@@ -3,7 +3,9 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/HashMap.hpp"
-#include "rfcommon/Types.hpp"
+#include "rfcommon/FighterID.hpp"
+#include "rfcommon/FighterMotion.hpp"
+#include "rfcommon/FighterStatus.hpp"
 #include <cassert>
 
 #define RFCOMMON_USER_LABEL_CATEGORIES_LIST \
