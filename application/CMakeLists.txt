@@ -9,11 +9,12 @@ configure_file ("cmake/templates/config.hpp.in" "include/application/config.hpp"
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (APPLICATION_SOURCES_MOC
+    "include/application/models/ActiveGameSessionManager.hpp"
     "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolConnectTask.hpp"
     "include/application/models/ProtocolCommunicateTask.hpp"
-    "include/application/models/RunningGameSessionManager.hpp"
+    "include/application/views/ActiveGameSessionView.hpp"
     "include/application/views/AnalysisView.hpp"
     "include/application/views/CategoryView.hpp"
     "include/application/views/ConnectView.hpp"
@@ -28,11 +29,11 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/MainWindow.hpp"
     "include/application/views/ReplayListWidget.hpp"
     "include/application/views/ReplayGroupView.hpp"
-    "include/application/views/RunningGameSessionView.hpp"
     "include/application/views/SessionView.hpp"
     "include/application/views/TrainingModeView.hpp"
     "include/application/views/VisualizerView.hpp")
 qt5_wrap_ui (APPLICATION_FORMS_MOC
+    "forms/ActiveGameSessionView.ui"
     "forms/AnalysisInputView.ui"
     "forms/ConnectView.ui"
     "forms/DataSetFilterView.ui"
@@ -43,7 +44,6 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/DataSetFilterWidget_PlayerCount.ui"
     "forms/DataSetFilterWidget_Stage.ui"
     "forms/ReplayGroupView.ui"
-    "forms/RunningGameSessionView.ui"
     "forms/SessionView.ui"
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
@@ -66,6 +66,7 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     $<$<PLATFORM_ID:Windows>:res/windows.rc>
     "src/main.cpp"
     "src/Util.cpp"
+    "src/models/ActiveGameSessionManager.cpp"
     "src/models/CategoryModel.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
@@ -74,10 +75,10 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/models/Protocol.cpp"
     "src/models/ProtocolConnectTask.cpp"
     "src/models/ProtocolCommunicateTask.cpp"
-    "src/models/RunningGameSessionManager.cpp"
     "src/models/ReplayGroup.cpp"
     "src/models/ReplayManager.cpp"
     "src/models/TrainingModeModel.cpp"
+    "src/views/ActiveGameSessionView.cpp"
     "src/views/AnalysisView.cpp"
     "src/views/CategoryView.cpp"
     "src/views/ConnectView.cpp"
@@ -91,7 +92,6 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/DataSetFilterWidget_Stage.cpp"
     "src/views/ReplayListWidget.cpp"
     "src/views/ReplayGroupView.cpp"
-    "src/views/RunningGameSessionView.cpp"
     "src/views/SessionView.cpp"
     "src/views/TrainingModeView.cpp"
     "src/views/VisualizerView.cpp"

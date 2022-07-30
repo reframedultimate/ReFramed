@@ -1,3 +1,4 @@
+#include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FighterState.hpp"
@@ -198,7 +199,7 @@ const FighterState& FrameData::lastState(int fighterIdx) const
 }
 
 // ----------------------------------------------------------------------------
-void FrameData::addFrame(SmallVector<FighterState, 4>&& frame)
+void FrameData::addFrame(Frame&& frame)
 {
     // Sanity checks
     assert(frame.count() == fighterCount());

@@ -26,11 +26,59 @@ public:
 
 protected:
     SessionMetaData(
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags);
 
 public:
+    /*!
+     * \brief Constructs a new GameSessionMetaData object from the specified
+     * parameters.
+     *
+     * - SetNumber is set to 1
+     * - GameNumber is set to 1
+     * - SetFormat is set to "Friendlies"
+     * - TimeStarted and TimeEnded are set to the current time
+     */
+    static SessionMetaData* newActiveGameSession(
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<SmallString<15>, 2>&& names);
+
+    /*!
+     * \brief Constructs a new TrainingSessionMetaData object from the specified
+     * parameters.
+     *
+     * - TimeStarted and TimeEnded are set to the current time
+     */
+    static SessionMetaData* newActiveTrainingSession(
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags);
+
+    static SessionMetaData* newSavedGameSession(
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<SmallString<15>, 2>&& names,
+            GameNumber gameNumber,
+            SetNumber setNumber,
+            SetFormat setFormat,
+            int winner);
+
+    static SessionMetaData* newSavedTrainingSession(
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
+            StageID stageID,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<SmallString<15>, 2>&& tags,
+            GameNumber sessionNumber);
+
     virtual ~SessionMetaData();
 
     virtual Type type() const = 0;
@@ -42,16 +90,14 @@ public:
      * \brief Gets the number of fighters in this session. Usually 2, but can
      * go up to 8.
      */
-    int fighterCount() const
-        { return fighterIDs_.count(); }
+    int fighterCount() const;
 
     /*!
      * \brief Gets the tag used by the player. This is the string that appears
      * above the player in-game and is created when the player sets their controls.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& tag(int fighterIdx) const
-        { return tags_[fighterIdx]; }
+    const SmallString<15>& tag(int fighterIdx) const;
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
@@ -69,15 +115,13 @@ public:
      * MappingInfo structure.
      * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
      */
-    FighterID fighterID(int fighterIdx) const
-        { return fighterIDs_[fighterIdx]; }
+    FighterID fighterID(int fighterIdx) const;
 
     /*!
      * \brief Gets the stage ID being played on. The ID can be used to look up
      * the stage name by using the MappingInfo structure.
      */
-    StageID stageID() const
-        { return stageID_; }
+    StageID stageID() const;
 
     /*!
      * \brief Gets the absolute time of when the session started in unix time
@@ -96,8 +140,7 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeStampStarted() const
-        { return timeStarted_; }
+    TimeStamp timeStampStarted() const;
 
     /*!
      * \brief Gets the absolute time of when the last timestamp was received in
@@ -115,15 +158,13 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeStampEnded() const
-        { return timeEnded_; }
+    TimeStamp timeStampEnded() const;
 
     /*!
      * \brief Returns the length of the session. This is equivalent to
      * timeStampEnded() - timeStampStarted().
      */
-    DeltaTime length() const
-        { return timeStarted_ - timeEnded_; }
+    DeltaTime length() const;
 
     ListenerDispatcher<SessionMetaDataListener> dispatcher;
 
@@ -137,18 +178,20 @@ protected:
 
 class RFCOMMON_PUBLIC_API GameSessionMetaData : public SessionMetaData
 {
-public:
     GameSessionMetaData(
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags,
             SmallVector<SmallString<15>, 2>&& names,
-            GameNumber gameNumber=GameNumber::fromValue(1),
-            SetNumber setNumber=SetNumber::fromValue(1),
-            SetFormat setFormat=SetFormat::FRIENDLIES);
+            GameNumber gameNumber,
+            SetNumber setNumber,
+            SetFormat setFormat,
+            int winner);
 
-    Type type() const override
-        { return GAME; }
+public:
+    Type type() const override;
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
@@ -158,8 +201,7 @@ public:
      * \note If training mode, this will always be the same as the tag.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& name(int playerIdx) const override
-        { return names_[playerIdx]; }
+    const SmallString<15>& name(int playerIdx) const override;
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -168,15 +210,40 @@ public:
     GameNumber gameNumber() const;
 
     /*!
+     * \brief Sets the current game number. Should start at 1.
+     */
+    void setGameNumber(GameNumber gameNumber);
+
+    /*!
+     * \brief Resets the game number to 1
+     */
+    void resetGameNumber();
+
+    /*!
      * \brief Gets the set number. Usually 1. This number is used to disambiguate
      * sets where the same two players play the same characters on the same day.
      */
     SetNumber setNumber() const;
 
     /*!
-     * \brief Gets the format of the set, @see Recording::Format
+     * \brief Sets the current set number. Should start at 1.
+     */
+    void setSetNumber(SetNumber setNumber);
+
+    /*!
+     * \brief Resets the current set number to 1.
+     */
+    void resetSetNumber();
+
+    /*!
+     * \brief Gets the format of the set, \see SetFormat
      */
     SetFormat setFormat() const;
+
+    /*!
+     * \brief Sets the format of the set, \see SetFormat
+     */
+    void setSetFormat(SetFormat format);
 
     /*!
      * \brief Gets the index of the player who won the game, or is currently in
@@ -187,9 +254,15 @@ public:
      */
     int winner() const;
 
+    /*!
+     * \brief Set the index of the player who won the game, or is currently in
+     * the lead in the case of an on-going session.// ----------------------------------------------------------------------------
+     */
     void setWinner(int fighterIdx);
 
 private:
+    friend class SessionMetaData;
+
     SmallVector<SmallString<15>, 2> names_;
     GameNumber gameNumber_;
     SetNumber setNumber_;
@@ -199,24 +272,29 @@ private:
 
 class RFCOMMON_PUBLIC_API TrainingSessionMetaData : public SessionMetaData
 {
-public:
     TrainingSessionMetaData(
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags);
+            SmallVector<SmallString<15>, 2>&& tags,
+            GameNumber sessionNumber);
 
-    Type type() const override
-        { return TRAINING; }
+public:
+    Type type() const override;
 
-    const SmallString<15>& name(int playerIdx) const override
-        { return tag(playerIdx); }
+    const SmallString<15>& name(int playerIdx) const override;
 
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;
 
     GameNumber sessionNumber() const;
+    void setSessionNumber(GameNumber sessionNumber);
+    void resetSessionNumber();
 
 private:
+    friend class SessionMetaData;
+
     GameNumber sessionNumber_;
 };
 

@@ -1,4 +1,6 @@
 #include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/SessionMetaDataListener.hpp"
+#include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
 
 namespace rfcommon {
@@ -6,6 +8,89 @@ namespace rfcommon {
 using nlohmann::json;
 
 static SessionMetaData* load_1_5(const json& j);
+
+// ----------------------------------------------------------------------------
+SessionMetaData* SessionMetaData::newActiveGameSession(
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<SmallString<15>, 2>&& names)
+{
+    const auto now = TimeStamp::fromMillisSinceEpoch(
+        time_milli_seconds_since_epoch());
+
+    return new GameSessionMetaData(
+            now, now,
+            stageID,
+            std::move(fighterIDs),
+            std::move(tags),
+            std::move(names),
+            GameNumber::fromValue(1),
+            SetNumber::fromValue(1),
+            SetFormat::FRIENDLIES,
+            -1);
+}
+
+// ----------------------------------------------------------------------------
+SessionMetaData* SessionMetaData::newActiveTrainingSession(
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags)
+{
+    const auto now = TimeStamp::fromMillisSinceEpoch(
+        time_milli_seconds_since_epoch());
+
+    return new TrainingSessionMetaData(
+            now, now,
+            stageID,
+            std::move(fighterIDs),
+            std::move(tags),
+            GameNumber::fromValue(1));
+}
+
+// ----------------------------------------------------------------------------
+SessionMetaData* SessionMetaData::newSavedGameSession(
+        TimeStamp timeStarted,
+        TimeStamp timeEnded,
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<SmallString<15>, 2>&& names,
+        GameNumber gameNumber,
+        SetNumber setNumber,
+        SetFormat setFormat,
+        int winner)
+{
+    return new GameSessionMetaData(
+        timeStarted,
+        timeEnded,
+        stageID,
+        std::move(fighterIDs),
+        std::move(tags),
+        std::move(names),
+        gameNumber,
+        setNumber,
+        setFormat,
+        winner);
+}
+
+// ----------------------------------------------------------------------------
+SessionMetaData* SessionMetaData::newSavedTrainingSession(
+        TimeStamp timeStarted,
+        TimeStamp timeEnded,
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        GameNumber sessionNumber)
+{
+    return new TrainingSessionMetaData(
+        timeStarted,
+        timeEnded,
+        stageID,
+        std::move(fighterIDs),
+        std::move(tags),
+        sessionNumber);
+}
 
 // ----------------------------------------------------------------------------
 SessionMetaData::~SessionMetaData()
@@ -35,6 +120,13 @@ static SessionMetaData* load_1_5(const json& j)
     const json jPlayerInfo = j["playerinfo"];
     const json jGameInfo = j["gameinfo"];
 
+    const auto stageID = StageID::fromValue(
+        jGameInfo["stageid"].get<StageID::Type>());
+    const auto timeStarted = TimeStamp::fromMillisSinceEpoch(
+        jGameInfo["timestampstart"].get<TimeStamp::Type>());
+    const auto timeEnded = TimeStamp::fromMillisSinceEpoch(
+        jGameInfo["timestampend"].get<TimeStamp::Type>());
+
     SmallVector<FighterID, 2> fighterIDs;
     SmallVector<SmallString<15>, 2> tags;
     SmallVector<SmallString<15>, 2> names;
@@ -52,21 +144,27 @@ static SessionMetaData* load_1_5(const json& j)
     const std::string type = j["type"].get<std::string>();
     if (type == "game")
     {
-        return new GameSessionMetaData(
-                StageID::fromValue(jGameInfo["stageid"].get<StageID::Type>()),
+        return SessionMetaData::newSavedGameSession(
+                timeStarted,
+                timeStarted,
+                stageID,
                 std::move(fighterIDs),
                 std::move(tags),
                 std::move(names),
                 GameNumber::fromValue(jGameInfo["number"].get<GameNumber::Type>()),
                 SetNumber::fromValue(jGameInfo["set"].get<SetNumber::Type>()),
-                SetFormat(jGameInfo["format"].get<std::string>().c_str()));
+                SetFormat(jGameInfo["format"].get<std::string>().c_str()),
+                jGameInfo["winner"].get<int>());
     }
     if (type == "training")
     {
-        return new TrainingSessionMetaData(
-                StageID::fromValue(jGameInfo["stageid"].get<StageID::Type>()),
+        return SessionMetaData::newSavedTrainingSession(
+                timeStarted,
+                timeEnded,
+                stageID,
                 std::move(fighterIDs),
-                std::move(tags));
+                std::move(tags),
+                GameNumber::fromValue(jGameInfo["number"].get<GameNumber::Type>()));
     }
 
     return nullptr;
@@ -98,6 +196,12 @@ uint32_t SessionMetaData::save(FILE* fp) const
         jGameInfo["set"] = meta->setNumber().value();
         jGameInfo["winner"] = meta->winner();
     }
+    else
+    {
+        assert(type() == TRAINING);
+        const TrainingSessionMetaData* meta = static_cast<const TrainingSessionMetaData*>(this);
+        jGameInfo["number"] = meta->sessionNumber().value();
+    }
 
     json videoInfo = {
         {"filename", ""},
@@ -118,6 +222,205 @@ uint32_t SessionMetaData::save(FILE* fp) const
         return 0;
 
     return jsonAsString.length();
+}
+
+// ----------------------------------------------------------------------------
+int SessionMetaData::fighterCount() const
+{
+    return fighterIDs_.count();
+}
+
+// ----------------------------------------------------------------------------
+const SmallString<15>& SessionMetaData::tag(int fighterIdx) const
+{
+    return tags_[fighterIdx];
+}
+
+// ----------------------------------------------------------------------------
+FighterID SessionMetaData::fighterID(int fighterIdx) const
+{
+    return fighterIDs_[fighterIdx];
+}
+
+// ----------------------------------------------------------------------------
+StageID SessionMetaData::stageID() const
+{
+    return stageID_;
+}
+
+// ----------------------------------------------------------------------------
+TimeStamp SessionMetaData::timeStampStarted() const
+{
+    return timeStarted_;
+}
+
+// ----------------------------------------------------------------------------
+TimeStamp SessionMetaData::timeStampEnded() const
+{
+    return timeEnded_;
+}
+
+// ----------------------------------------------------------------------------
+DeltaTime SessionMetaData::length() const
+{
+    return timeStarted_ - timeEnded_;
+}
+
+// ----------------------------------------------------------------------------
+GameSessionMetaData::GameSessionMetaData(
+        TimeStamp timeStarted,
+        TimeStamp timeEnded,
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<SmallString<15>, 2>&& names,
+        GameNumber gameNumber,
+        SetNumber setNumber,
+        SetFormat setFormat,
+        int winner)
+    : SessionMetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
+    , names_(std::move(names))
+    , gameNumber_(gameNumber)
+    , setNumber_(setNumber)
+    , setFormat_(setFormat)
+    , winner_(winner)
+{}
+
+// ----------------------------------------------------------------------------
+SessionMetaData::Type GameSessionMetaData::type() const
+{
+    return GAME;
+}
+
+// ----------------------------------------------------------------------------
+const SmallString<15>& GameSessionMetaData::name(int playerIdx) const
+{
+    return names_[playerIdx];
+}
+
+// ----------------------------------------------------------------------------
+GameNumber GameSessionMetaData::gameNumber() const
+{
+    return gameNumber_;
+}
+
+// ----------------------------------------------------------------------------
+void GameSessionMetaData::setGameNumber(GameNumber gameNumber)
+{
+    bool notify = (gameNumber_ != gameNumber);
+    gameNumber_ = gameNumber;
+    if (notify)
+        dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataGameNumberChanged, gameNumber);
+}
+
+// ----------------------------------------------------------------------------
+void GameSessionMetaData::resetGameNumber()
+{
+    setGameNumber(GameNumber::fromValue(1));
+}
+
+// ----------------------------------------------------------------------------
+SetNumber GameSessionMetaData::setNumber() const
+{
+    return setNumber_;
+}
+
+void GameSessionMetaData::setSetNumber(SetNumber setNumber)
+{
+    bool notify = (setNumber_ != setNumber);
+    setNumber_ = setNumber;
+    if (notify)
+        dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataSetNumberChanged, setNumber);
+}
+
+// ----------------------------------------------------------------------------
+void GameSessionMetaData::resetSetNumber()
+{
+    setSetNumber(SetNumber::fromValue(1));
+}
+
+// ----------------------------------------------------------------------------
+SetFormat GameSessionMetaData::setFormat() const
+{
+    return setFormat_;
+}
+
+// ----------------------------------------------------------------------------
+void GameSessionMetaData::setSetFormat(SetFormat format)
+{
+    bool notify = (setFormat_ != format);
+    setFormat_ = format;
+    if (notify)
+        dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataSetFormatChanged, format);
+}
+
+// ----------------------------------------------------------------------------
+int GameSessionMetaData::winner() const
+{
+    return winner_;
+}
+
+// ----------------------------------------------------------------------------
+void GameSessionMetaData::setWinner(int fighterIdx)
+{
+    winner_ = fighterIdx;
+}
+
+// ----------------------------------------------------------------------------
+TrainingSessionMetaData::TrainingSessionMetaData(
+        TimeStamp timeStarted,
+        TimeStamp timeEnded,
+        StageID stageID,
+        SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<SmallString<15>, 2>&& tags,
+        GameNumber sessionNumber)
+    : SessionMetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
+    , sessionNumber_(sessionNumber)
+{}
+
+// ----------------------------------------------------------------------------
+SessionMetaData::Type TrainingSessionMetaData::type() const
+{
+    return TRAINING;
+}
+
+// ----------------------------------------------------------------------------
+const SmallString<15>& TrainingSessionMetaData::name(int playerIdx) const
+{
+    return tag(playerIdx);
+}
+
+// ----------------------------------------------------------------------------
+FighterID TrainingSessionMetaData::playerFighterID() const
+{
+    return fighterID(0);
+}
+
+// ----------------------------------------------------------------------------
+FighterID TrainingSessionMetaData::cpuFighterID() const
+{
+    return fighterID(1);
+}
+
+// ----------------------------------------------------------------------------
+GameNumber TrainingSessionMetaData::sessionNumber() const
+{
+    return sessionNumber_;
+}
+
+// ----------------------------------------------------------------------------
+void TrainingSessionMetaData::setSessionNumber(GameNumber sessionNumber)
+{
+    bool notify = (sessionNumber_ != sessionNumber);
+    sessionNumber_ = sessionNumber;
+    if (notify)
+        dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataSessionNumberChanged, sessionNumber);
+}
+
+// ----------------------------------------------------------------------------
+void TrainingSessionMetaData::resetSessionNumber()
+{
+    setSessionNumber(GameNumber::fromValue(1));
 }
 
 }

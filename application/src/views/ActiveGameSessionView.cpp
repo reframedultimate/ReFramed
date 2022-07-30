@@ -1,9 +1,8 @@
 #include "application/Util.hpp"
-#include "application/ui_RunningGameSessionView.h"
-#include "application/views/RunningGameSessionView.hpp"
+#include "application/ui_ActiveGameSessionView.h"
+#include "application/views/ActiveGameSessionView.hpp"
 #include "application/views/SessionView.hpp"
-#include "application/models/RunningGameSessionManager.hpp"
-#include "rfcommon/RunningGameSession.hpp"
+#include "application/models/ActiveGameSessionManager.hpp"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -11,13 +10,13 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-RunningGameSessionView::RunningGameSessionView(
-        RunningGameSessionManager* runningGameSessionManager,
+ActiveGameSessionView::ActiveGameSessionView(
+        ActiveGameSessionManager* activeGameSessionManager,
         PluginManager* pluginManager,
         QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::RunningGameSessionView)
-    , runningGameSessionManager_(runningGameSessionManager)
+    , ui_(new Ui::ActiveGameSessionView)
+    , runningGameSessionManager_(activeGameSessionManager)
     , sessionView_(new SessionView(pluginManager))
 {
     ui_->setupUi(this);
@@ -27,30 +26,30 @@ RunningGameSessionView::RunningGameSessionView(
     // Initial page should show "disconnected"
     ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
 
-    connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &RunningGameSessionView::onComboBoxFormatIndexChanged);
-    connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditFormatChanged);
-    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &RunningGameSessionView::onSpinBoxGameNumberChanged);
-    connect(ui_->lineEdit_player1, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditP1TextChanged);
-    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &RunningGameSessionView::onLineEditP2TextChanged);
+    connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveGameSessionView::onComboBoxFormatIndexChanged);
+    connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &ActiveGameSessionView::onLineEditFormatChanged);
+    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ActiveGameSessionView::onSpinBoxGameNumberChanged);
+    connect(ui_->lineEdit_player1, &QLineEdit::textChanged, this, &ActiveGameSessionView::onLineEditP1TextChanged);
+    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &ActiveGameSessionView::onLineEditP2TextChanged);
 
     runningGameSessionManager_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-RunningGameSessionView::~RunningGameSessionView()
+ActiveGameSessionView::~ActiveGameSessionView()
 {
     runningGameSessionManager_->dispatcher.removeListener(this);
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::showDamagePlot()
+void ActiveGameSessionView::showDamagePlot()
 {
     sessionView_->showDamagePlot();
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
+void ActiveGameSessionView::onComboBoxFormatIndexChanged(int index)
 {
     if (static_cast<rfcommon::SetFormat::Type>(index) == rfcommon::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setVisible(true);
@@ -63,54 +62,54 @@ void RunningGameSessionView::onComboBoxFormatIndexChanged(int index)
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onLineEditFormatChanged(const QString& formatDesc)
+void ActiveGameSessionView::onLineEditFormatChanged(const QString& formatDesc)
 {
     runningGameSessionManager_->setFormat(rfcommon::SetFormat(rfcommon::SetFormat::OTHER, formatDesc.toStdString().c_str()));
     ui_->comboBox_format->setCurrentIndex(static_cast<int>(rfcommon::SetFormat::OTHER));
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onSpinBoxGameNumberChanged(int value)
+void ActiveGameSessionView::onSpinBoxGameNumberChanged(int value)
 {
     runningGameSessionManager_->setGameNumber(value);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onLineEditP1TextChanged(const QString& name)
+void ActiveGameSessionView::onLineEditP1TextChanged(const QString& name)
 {
     runningGameSessionManager_->setP1Name(name);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onLineEditP2TextChanged(const QString& name)
+void ActiveGameSessionView::onLineEditP2TextChanged(const QString& name)
 {
     runningGameSessionManager_->setP2Name(name);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
+void ActiveGameSessionView::onActiveGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
+void ActiveGameSessionView::onActiveGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
+void ActiveGameSessionView::onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_waiting);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerDisconnectedFromServer()
+void ActiveGameSessionView::onActiveGameSessionManagerDisconnectedFromServer()
 {
     ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
+void ActiveGameSessionView::onActiveGameSessionManagerMatchStarted(rfcommon::ActiveGameSession* session)
 {
     clearLayout(ui_->layout_playerInfo);
 
@@ -165,13 +164,13 @@ void RunningGameSessionView::onRunningGameSessionManagerMatchStarted(rfcommon::R
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
+void ActiveGameSessionView::onActiveGameSessionManagerMatchEnded(rfcommon::ActiveGameSession* session)
 {
     (void)session;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
+void ActiveGameSessionView::onActiveGameSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
 {
     if (names_.size() <= playerIdx)
         return;
@@ -191,7 +190,7 @@ void RunningGameSessionView::onRunningGameSessionManagerPlayerNameChanged(int pl
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format)
+void ActiveGameSessionView::onActiveGameSessionManagerFormatChanged(const rfcommon::SetFormat& format)
 {
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
@@ -203,20 +202,20 @@ void RunningGameSessionView::onRunningGameSessionManagerFormatChanged(const rfco
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number)
+void ActiveGameSessionView::onActiveGameSessionManagerSetNumberChanged(rfcommon::SetNumber number)
 {
     (void)number;
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number)
+void ActiveGameSessionView::onActiveGameSessionManagerGameNumberChanged(rfcommon::GameNumber number)
 {
     const QSignalBlocker blocker(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(number.value());
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame)
+void ActiveGameSessionView::onActiveGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame)
 {
     /* TODO
     if (player >= fighterStatus_.size())
@@ -230,7 +229,7 @@ void RunningGameSessionView::onRunningGameSessionManagerNewFrame(int frameIdx, c
 }
 
 // ----------------------------------------------------------------------------
-void RunningGameSessionView::onRunningGameSessionManagerWinnerChanged(int winner)
+void ActiveGameSessionView::onActiveGameSessionManagerWinnerChanged(int winner)
 {
     for (int i = 0; i != names_.size(); ++i)
     {

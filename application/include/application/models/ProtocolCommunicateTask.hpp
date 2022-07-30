@@ -5,8 +5,7 @@
 #include <QMutex>
 
 namespace rfcommon {
-    class RunningTrainingSession;
-    class RunningGameSession;
+    class Session;
 }
 
 namespace rfapp {
@@ -44,12 +43,12 @@ public:
 
 signals:
     void connectionClosed();
-    void trainingStarted(rfcommon::RunningTrainingSession* training);
-    void trainingResumed(rfcommon::RunningTrainingSession* training);
+    void trainingStarted(rfcommon::Session* training);
+    void trainingResumed(rfcommon::Session* training);
     void trainingEnded();
-    void matchStarted(rfcommon::RunningGameSession* match);
-    void matchResumed(rfcommon::RunningGameSession* match);
-    void matchEnded();
+    void gameStarted(rfcommon::Session* game);
+    void gameResumed(rfcommon::Session* game);
+    void gameEnded();
     void fighterState(
             quint64 frameTimeStamp,
             quint32 frame,

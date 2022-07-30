@@ -46,4 +46,18 @@ String SetFormat::description() const
     return "";
 }
 
+// ----------------------------------------------------------------------------
+bool SetFormat::operator==(const SetFormat& rhs)
+{
+    if (type_ == OTHER)
+        return type_ == rhs.type_ && otherDesc_ == rhs.otherDesc_;
+    return type_ == rhs.type_;
+}
+
+// ----------------------------------------------------------------------------
+bool SetFormat::operator!=(const SetFormat& rhs)
+{
+    return !operator==(rhs);
+}
+
 }

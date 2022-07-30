@@ -10,10 +10,6 @@ class QFileInfo;
 class QLayout;
 class QStackedWidget;
 
-namespace rfcommon {
-    class GameSession;
-}
-
 using qhash_result_t = size_t;
 qhash_result_t qHash(const QDir& c, qhash_result_t seed=0) noexcept;
 qhash_result_t qHash(const QFileInfo& c, qhash_result_t seed=0) noexcept;
@@ -41,7 +37,5 @@ void clearLayout(QLayout* layout);
  * \brief Deletes all widgets in a QStackedWidget
  */
 void clearStackedWidget(QStackedWidget* sw);
-
-QString composeFileName(const rfcommon::Session* session);
 
 }

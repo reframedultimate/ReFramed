@@ -34,6 +34,9 @@ public:
      */
     String description() const;
 
+    bool operator==(const SetFormat& rhs);
+    bool operator!=(const SetFormat& rhs);
+
 private:
     Type type_;
     String otherDesc_;

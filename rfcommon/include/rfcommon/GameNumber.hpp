@@ -15,6 +15,8 @@ public:
     ~GameNumber();
 
     Type value() const;
+    bool operator==(const GameNumber& rhs);
+    bool operator!=(const GameNumber& rhs);
     GameNumber& operator+=(int value);
     GameNumber& operator-=(int value);
 

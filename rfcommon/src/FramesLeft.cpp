@@ -16,26 +16,50 @@ FramesLeft::~FramesLeft()
 
 // ----------------------------------------------------------------------------
 FramesLeft::Type FramesLeft::value() const
-{ 
+{
     return value_;
 }
 
 // ----------------------------------------------------------------------------
 double FramesLeft::secondsLeft() const
-{ 
-    return static_cast<double>(value_) / 60.0; 
+{
+    return static_cast<double>(value_) / 60.0;
 }
 
 // ----------------------------------------------------------------------------
-bool FramesLeft::operator==(FramesLeft rhs) const 
+bool FramesLeft::operator==(FramesLeft rhs) const
 {
     return value_ == rhs.value_;
 }
 
 // ----------------------------------------------------------------------------
 bool FramesLeft::operator!=(FramesLeft rhs) const
-{ 
-    return value_ != rhs.value_; 
+{
+    return value_ != rhs.value_;
+}
+
+// ----------------------------------------------------------------------------
+bool FramesLeft::operator<(FramesLeft rhs) const
+{
+    return value_ < rhs.value_;
+}
+
+// ----------------------------------------------------------------------------
+bool FramesLeft::operator>(FramesLeft rhs) const
+{
+    return value_ > rhs.value_;
+}
+
+// ----------------------------------------------------------------------------
+bool FramesLeft::operator<=(FramesLeft rhs) const
+{
+    return value_ <= rhs.value_;
+}
+
+// ----------------------------------------------------------------------------
+bool FramesLeft::operator>=(FramesLeft rhs) const
+{
+    return value_ >= rhs.value_;
 }
 
 // ----------------------------------------------------------------------------
@@ -44,8 +68,8 @@ FramesLeft::FramesLeft()
 {}
 
 // ----------------------------------------------------------------------------
-FramesLeft::FramesLeft(Type value) 
-    : value_(value) 
+FramesLeft::FramesLeft(Type value)
+    : value_(value)
 {}
 
 }

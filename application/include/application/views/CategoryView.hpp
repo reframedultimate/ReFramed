@@ -1,7 +1,7 @@
 #pragma once
 
 #include "application/listeners/CategoryListener.hpp"
-#include "application/listeners/RunningGameSessionManagerListener.hpp"
+#include "application/listeners/ActiveGameSessionManagerListener.hpp"
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/listeners/TrainingModeListener.hpp"
 #include "application/Util.hpp"
@@ -12,21 +12,21 @@ namespace rfapp {
 
 class CategoryModel;
 class ReplayManager;
-class RunningGameSessionManager;
+class ActiveGameSessionManager;
 class TrainingModeModel;
 
 class CategoryView : public QTreeWidget
                    , public CategoryListener
                    , public ReplayManagerListener
-                   , public RunningGameSessionManagerListener
+                   , public ActiveGameSessionManagerListener
                    , public TrainingModeListener
 {
     Q_OBJECT
 public:
     explicit CategoryView(
             CategoryModel* categoryModel,
-            ReplayManager* savedGameSessionManager,
-            RunningGameSessionManager* runningGameSessionManager,
+            ReplayManager* replayManager,
+            ActiveGameSessionManager* activeGameSessionManager,
             TrainingModeModel* trainingModeModel,
             QWidget* parent=nullptr
         );
@@ -60,20 +60,20 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override;
 
 private:
-    void onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; }
-    void onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; };
-    void onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
-    void onRunningGameSessionManagerDisconnectedFromServer() override;
+    void onActiveGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; }
+    void onActiveGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port) override { (void)ipAddress; (void)port; };
+    void onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port) override;
+    void onActiveGameSessionManagerDisconnectedFromServer() override;
 
-    void onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session) override;
-    void onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session) override;
+    void onActiveGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session) override;
+    void onActiveGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session) override;
 
-    void onRunningGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
+    void onActiveGameSessionManagerNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
     void onRunningGameSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override { (void)name; }
-    void onRunningGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override { (void)number; }
-    void onRunningGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override { (void)number; }
+    void onActiveGameSessionManagerSetNumberChanged(rfcommon::SetNumber number) override { (void)number; }
+    void onActiveGameSessionManagerGameNumberChanged(rfcommon::GameNumber number) override { (void)number; }
     void onRunningGameSessionManagerFormatChanged(const rfcommon::SetFormat& format) override { (void)format; }
-    void onRunningGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
+    void onActiveGameSessionManagerWinnerChanged(int winner) override { (void)winner; }
 
 private:
     void onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin) override;
@@ -85,8 +85,8 @@ private:
 
 private:
     CategoryModel* categoryModel_;
-    ReplayManager* savedGameSessionManager_;
-    RunningGameSessionManager* runningGameSessionManager_;
+    ReplayManager* replayManager_;
+    ActiveGameSessionManager* activeGameSessionManager_;
     TrainingModeModel* trainingModeModel_;
     QTreeWidgetItem* dataSetsItem_;
     QTreeWidgetItem* analysisCategoryItem_;

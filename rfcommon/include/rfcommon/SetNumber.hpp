@@ -16,7 +16,8 @@ public:
 
     Type value() const;
 
-    bool operator==(int value) const;
+    bool operator==(const SetNumber& rhs) const;
+    bool operator!=(const SetNumber& rhs) const;
     SetNumber& operator+=(int value);
     SetNumber& operator-=(int value);
 

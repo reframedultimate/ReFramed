@@ -7,6 +7,7 @@
 #include "rfcommon/MappingInfoHitStatus.hpp"
 #include "rfcommon/MappingInfoStage.hpp"
 #include "rfcommon/MappingInfoFighter.hpp"
+#include <cstdio>
 
 namespace rfcommon {
 

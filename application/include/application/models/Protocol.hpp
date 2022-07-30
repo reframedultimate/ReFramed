@@ -11,9 +11,7 @@
 namespace rfcommon {
     class MappingInfo;
     class ProtocolListener;
-    class RunningSession;
-    class RunningGameSession;
-    class RunningTrainingSession;
+    class Session;
 }
 
 namespace rfapp {
@@ -22,7 +20,7 @@ class ProtocolConnectTask;
 class ProtocolCommunicateTask;
 
 /*!
- * \brief Decodes the incoming stream from the nintendo switch into structures.
+ * \brief Decodes the incoming stream from the Nintendo switch into structures.
  *
  * When initially connecting, the switch will send tables containing information
  * on which enum values map to what names. The switch only sends this information
@@ -58,8 +56,8 @@ public:
     bool isTryingToConnect() const;
     bool isConnected() const;
 
-    rfcommon::RunningSession* runningSession()
-        { return session_; }
+    rfcommon::Session* activeSession()
+        { return activeSession_; }
 
     rfcommon::ListenerDispatcher<rfcommon::ProtocolListener> dispatcher;
 
@@ -69,14 +67,14 @@ private slots:
     void onProtocolDisconnected();
 
     // catch signals from listener thread so we have them in the main thread
-    void onTrainingStartedProxy(rfcommon::RunningTrainingSession* training);
-    void onTrainingStartedActually(rfcommon::RunningTrainingSession* training);
-    void onTrainingResumed(rfcommon::RunningTrainingSession* training);
+    void onTrainingStartedProxy(rfcommon::Session* training);
+    void onTrainingStartedActually(rfcommon::Session* training);
+    void onTrainingResumed(rfcommon::Session* training);
     void onTrainingEndedProxy();
     void onTrainingEndedActually();
-    void onMatchStarted(rfcommon::RunningGameSession* match);
-    void onMatchResumed(rfcommon::RunningGameSession* match);
-    void onMatchEnded();
+    void onGameStarted(rfcommon::Session* match);
+    void onGameResumed(rfcommon::Session* match);
+    void onGameEnded();
     void onFighterState(
             quint64 frameTimeStamp,
             quint32 frame,
@@ -101,7 +99,7 @@ private:
     std::unique_ptr<ProtocolConnectTask> connectTask_;
     std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
     rfcommon::SmallVector<rfcommon::SmallVector<rfcommon::FighterState, 2>, 2> stateBuffer_;
-    rfcommon::Reference<rfcommon::RunningSession> session_;
+    rfcommon::Reference<rfcommon::Session> activeSession_;
     bool trainingEndedProxyWasCalled_ = false;
 };
 

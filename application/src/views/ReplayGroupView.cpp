@@ -4,7 +4,6 @@
 #include "application/models/ReplayGroup.hpp"
 #include "application/views/ReplayListWidget.hpp"
 #include "application/views/SessionView.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>

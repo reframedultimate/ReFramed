@@ -1,5 +1,10 @@
 #include "rfcommon/Endian.hpp"
+#include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/FrameNumber.hpp"
+#include "rfcommon/FramesLeft.hpp"
+#include "rfcommon/FighterFlags.hpp"
+#include "rfcommon/FighterStocks.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/SessionMetaData.hpp"
@@ -414,7 +419,7 @@ static bool loadLegacy_1_0(
     // Cache winner
     if (frameData.count() > 0)
     {
-        SmallVector<FighterState, 4> frame;
+        Frame frame;
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);

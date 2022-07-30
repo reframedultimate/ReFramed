@@ -1,7 +1,11 @@
 #include "application/models/Protocol.hpp"
 #include "application/models/ProtocolCommunicateTask.hpp"
 #include "application/models/ProtocolConnectTask.hpp"
+#include "rfcommon/Frame.hpp"
+#include "rfcommon/FrameData.hpp"
 #include "rfcommon/ProtocolListener.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/SessionMetaData.hpp"
 #include <QTimer>
 
 namespace rfapp {
@@ -73,12 +77,12 @@ void Protocol::onConnectionSuccess(void* socket_handle, const QString& ipAddress
             this, &Protocol::onTrainingResumed);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingEnded,
             this, &Protocol::onTrainingEndedProxy);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::matchStarted,
-            this, &Protocol::onMatchStarted);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::matchResumed,
-            this, &Protocol::onMatchResumed);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::matchEnded,
-            this, &Protocol::onMatchEnded);
+    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameStarted,
+            this, &Protocol::onGameStarted);
+    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameResumed,
+            this, &Protocol::onGameResumed);
+    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameEnded,
+            this, &Protocol::onGameEnded);
     connect(communicateTask_.get(), &ProtocolCommunicateTask::fighterState,
             this, &Protocol::onFighterState);
 
@@ -106,62 +110,62 @@ void Protocol::onProtocolDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedProxy(rfcommon::RunningTrainingSession* training)
+void Protocol::onTrainingStartedProxy(rfcommon::Session* training)
 {
     // If the timer did not reset this in time, it means that a stop and a
     // start event occurred in quick succession. This is how we detect a reset
     // in training mode.
+    //
+    // If there was no training ended event that preceeded this event, then
+    // it simply means this is a normal training started event
     if (trainingEndedProxyWasCalled_)
     {
         trainingEndedProxyWasCalled_ = false;
-
-        rfcommon::RunningTrainingSession* oldTraining =
-                dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get());
-
-        if (oldTraining)
+        if (activeSession_.notNull())
         {
-            rfcommon::Reference<rfcommon::RunningSession> oldSession = session_;
-            session_ = training;
-            dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingReset, oldTraining, training);
+            rfcommon::Reference<rfcommon::Session> oldSession = activeSession_;
+            activeSession_ = training;
+            dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingReset, oldSession, activeSession_);
         }
         else
         {
-            // fallback
+            // Somehow the flag was set and there was no active session? Whatever,
+            // just act like the training started instead of reset
             onTrainingStartedActually(training);
         }
     }
     else
     {
-        // This was a valid start event
+        // This was a normal start event
         onTrainingStartedActually(training);
     }
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedActually(rfcommon::RunningTrainingSession* training)
+void Protocol::onTrainingStartedActually(rfcommon::Session* training)
 {
-    // Handle case where match end is not sent (should never happen but you never know)
+    // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(training->fighterCount());
+    stateBuffer_.resize(training->metaData()->fighterCount());
 
-    session_ = training;
+    activeSession_ = training;
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingStarted, training);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingResumed(rfcommon::RunningTrainingSession* training)
+void Protocol::onTrainingResumed(rfcommon::Session* training)
 {
-    // Handle case where match end is not sent (should never happen but you never know)
+    // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(training->fighterCount());
+    stateBuffer_.resize(training->metaData()->fighterCount());
 
-    session_ = training;
+    activeSession_ = training;
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingResumed, training);
 }
 
@@ -185,35 +189,35 @@ void Protocol::onTrainingEndedActually()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onMatchStarted(rfcommon::RunningGameSession* match)
+void Protocol::onGameStarted(rfcommon::Session* game)
 {
-    // Handle case where match end is not sent (should never happen but you never know)
+    // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(match->fighterCount());
+    stateBuffer_.resize(game->metaData()->fighterCount());
 
-    session_ = match;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchStarted, match);
+    activeSession_ = game;
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameStarted, game);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onMatchResumed(rfcommon::RunningGameSession* match)
+void Protocol::onGameResumed(rfcommon::Session* game)
 {
-    // Handle case where match end is not sent (should never happen but you never know)
+    // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(match->fighterCount());
+    stateBuffer_.resize(game->metaData()->fighterCount());
 
-    session_ = match;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchResumed, match);
+    activeSession_ = game;
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameResumed, game);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onMatchEnded()
+void Protocol::onGameEnded()
 {
     endSessionIfNecessary();
 }
@@ -230,13 +234,13 @@ void Protocol::onFighterState(
         float shield,
         quint16 status,
         quint64 motion,
-        quint8 hit_status,
+        quint8 hitStatus,
         quint8 stocks,
-        bool attack_connected,
-        bool facing_direction,
-        bool opponent_in_hitlag)
+        bool attackConnected,
+        bool facingDirection,
+        bool opponentInHitlag)
 {
-    if (session_.isNull())
+    if (activeSession_.isNull())
         return;
 
     // For whatever reason, fighter states aren't guaranteed to be received
@@ -249,23 +253,23 @@ void Protocol::onFighterState(
     // be arbitrary
 
     // Should never happen but you never know. State buffer should have been
-    // resized to the correct size when a match/training session is started/resumed
+    // resized to the correct size when a game/training session is started/resumed
     if (fighterIdx >= stateBuffer_.count())
         return;
 
     stateBuffer_[fighterIdx].emplace(
             rfcommon::TimeStamp::fromMillisSinceEpoch(frameTimeStamp),
-            0,  // We change the frame number later
-            rfcommon::FramesLeft(frame),
+            rfcommon::FrameNumber::fromValue(0),  // We change the frame number later
+            rfcommon::FramesLeft::fromValue(frame),
             posx, posy,
             damage,
             hitstun,
             shield,
-            rfcommon::FighterStatus(status),
-            rfcommon::FighterMotion(motion),
-            rfcommon::FighterHitStatus(hit_status),
-            rfcommon::FighterStocks(stocks),
-            rfcommon::FighterFlags(attack_connected, facing_direction, opponent_in_hitlag));
+            rfcommon::FighterStatus::fromValue(status),
+            rfcommon::FighterMotion::fromValue(motion),
+            rfcommon::FighterHitStatus::fromValue(hitStatus),
+            rfcommon::FighterStocks::fromValue(stocks),
+            rfcommon::FighterFlags::fromFlags(attackConnected, facingDirection, opponentInHitlag));
 
     const auto haveAtLeast = [this](int value) -> bool
     {
@@ -289,35 +293,43 @@ void Protocol::onFighterState(
     // If we've collected enough states to assemble a frame, and they all have
     // the same "frames left" value (and we're also not in training mode, where
     // "frames left" will equal 0), then add the frame to the session.
-    if (framesLeftMatch() && stateBuffer_[0][0].framesLeft() != 0)
+    if (framesLeftMatch())
     {
-        rfcommon::SmallVector<rfcommon::FighterState, 2> frame;
-        for (auto& states : stateBuffer_)
-            frame.push(states.take(0).withNewFrameNumber(session_->frameCount()));
-        session_->addFrame(std::move(frame));
+        if (stateBuffer_[0][0].framesLeft().value() != 0)
+        {
+            rfcommon::Frame frame;
+            const int frameCount = activeSession_->frameData()->frameCount();
+            const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
+            for (auto& states : stateBuffer_)
+                frame.push(states.take(0).withNewFrameNumber(frameNumber));
+            activeSession_->frameData()->addFrame(std::move(frame));
 
-        return;
-    }
+            return;
+        }
 
-    // If it is training mode, then only add frames once we know we're synced.
-    // This will be the case when the session object has more than 0 frames.
-    if (framesLeftMatch() && session_->frameCount() > 0)
-    {
-        rfcommon::SmallVector<rfcommon::FighterState, 2> frame;
-        for (auto& states : stateBuffer_)
-            frame.push(states.take(0).withNewFrameNumber(session_->frameCount()));
-        session_->addFrame(std::move(frame));
+        // The above check failed so it must mean this is training mode. Only
+        // add frames once we know we're synced. This will be the case when the
+        // session object has more than 0 frames.
+        if (activeSession_->frameData()->frameCount() > 0)
+        {
+            rfcommon::Frame frame;
+            const int frameCount = activeSession_->frameData()->frameCount();
+            const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
+            for (auto& states : stateBuffer_)
+                frame.push(states.take(0).withNewFrameNumber(frameNumber));
+            activeSession_->frameData()->addFrame(std::move(frame));
 
-        return;
+            return;
+        }
     }
 
     // Try to figure out which state needs to be removed in order to sync up
     // based on the "frames left" value of each state. This only works if we're
     // not in training mode. We need at least 2 frames worth of states to
     // make this decision.
-    if (haveAtLeast(2) && stateBuffer_[0][0].framesLeft() != 0)
+    if (haveAtLeast(2) && stateBuffer_[0][0].framesLeft().value() != 0)
     {
-        const auto findHighestFramesLeftValue = [this]() -> int
+        const auto findHighestFramesLeftValue = [this]() -> rfcommon::FramesLeft::Type
         {
             rfcommon::FramesLeft::Type framesLeft = stateBuffer_[0][0].framesLeft().value();
             for (int i = 1; i < stateBuffer_.count(); ++i)
@@ -332,7 +344,7 @@ void Protocol::onFighterState(
             {
                 if ([&states, &value]() -> bool {
                     for (const auto& state : states)
-                        if (state.framesLeft() == value)
+                        if (state.framesLeft().value() == value)
                             return true;
                     return false;
                 }() == false)
@@ -348,7 +360,7 @@ void Protocol::onFighterState(
         {
             for (const auto& states : stateBuffer_)
                 for (const auto& state : states)
-                    if (state.framesLeft() == value)
+                    if (state.framesLeft().value() == value)
                         return true;
             return false;
         };
@@ -359,20 +371,26 @@ void Protocol::onFighterState(
 
         for (auto& states : stateBuffer_)
         {
-            while (states.count() > 0 && states[0].framesLeft() != firstValidFramesLeft)
+            while (states.count() > 0 && states[0].framesLeft().value() != firstValidFramesLeft)
                 states.erase(0);
         }
 
         return;
     }
 
-    // In the case of training mode, we really don't care right now
+    // In the case of training mode, we really don't care right now. If you can
+    // think of a way to sync up frames without access to the "frames left"
+    // property, go for it. Keep in mind that the frame counter is not sent
+    // from the Nintendo Switch, but is a value we calculate locally, so it
+    // can't be used for synchronization.
     if (haveAtLeast(2))
     {
-        rfcommon::SmallVector<rfcommon::FighterState, 2> frame;
+        rfcommon::Frame frame;
+        const int frameCount = activeSession_->frameData()->frameCount();
+        const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
         for (auto& states : stateBuffer_)
-            frame.push(states.take(0).withNewFrameNumber(session_->frameCount()));
-        session_->addFrame(std::move(frame));
+            frame.push(states.take(0).withNewFrameNumber(frameNumber));
+        activeSession_->frameData()->addFrame(std::move(frame));
 
         return;
     }
@@ -381,19 +399,20 @@ void Protocol::onFighterState(
 // ----------------------------------------------------------------------------
 void Protocol::endSessionIfNecessary()
 {
-    if (session_.isNull())
+    if (activeSession_.isNull())
         return;
 
-    if (rfcommon::RunningGameSession* match = dynamic_cast<rfcommon::RunningGameSession*>(session_.get()))
+    if (activeSession_->metaData()->type() == rfcommon::SessionMetaData::GAME)
     {
-        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolMatchEnded, match);
+        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameEnded, activeSession_);
     }
-    else if (rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session_.get()))
+    else
     {
-        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, training);
+        assert(activeSession_->metaData()->type() == rfcommon::SessionMetaData::TRAINING);
+        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, activeSession_);
     }
 
-    session_.drop();
+    activeSession_.drop();
 }
 
 }

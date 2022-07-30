@@ -1,7 +1,7 @@
 #include "application/views/CategoryView.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/CategoryModel.hpp"
-#include "application/models/RunningGameSessionManager.hpp"
+#include "application/models/ActiveGameSessionManager.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 
@@ -19,14 +19,14 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 CategoryView::CategoryView(
         CategoryModel* categoryModel,
-        ReplayManager* savedGameSessionManager,
-        RunningGameSessionManager* runningGameSessionManager,
+        ReplayManager* replayManager,
+        ActiveGameSessionManager* activeGameSessionManager,
         TrainingModeModel* trainingModeModel,
         QWidget* parent)
     : QTreeWidget(parent)
     , categoryModel_(categoryModel)
-    , savedGameSessionManager_(savedGameSessionManager)
-    , runningGameSessionManager_(runningGameSessionManager)
+    , replayManager_(replayManager)
+    , activeGameSessionManager_(activeGameSessionManager)
     , trainingModeModel_(trainingModeModel)
     , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
     , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
@@ -52,23 +52,23 @@ CategoryView::CategoryView(
     replayGroupsItem_->setFlags(replayGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
     // If the session is not active, disable that top level item
-    sessionItem_->setDisabled(!runningGameSessionManager_->isSessionRunning());
+    sessionItem_->setDisabled(!activeGameSessionManager_->isSessionRunning());
 
     // Populate various children based on the data available in the model
-    for (int i = 0; i != savedGameSessionManager_->replayGroupsCount(); ++i)
-        onReplayManagerGroupAdded(savedGameSessionManager_->replayGroup(i));
-    for (int i = 0; i != savedGameSessionManager_->replaySourcesCount(); ++i)
-        onReplayManagerReplaySourceAdded(savedGameSessionManager_->replaySourceName(i), savedGameSessionManager_->replaySourcePath(i));
-    for (int i = 0; i != savedGameSessionManager_->videoSourcesCount(); ++i)
-        onReplayManagerVideoSourceAdded(savedGameSessionManager_->videoSourceName(i), savedGameSessionManager_->videoSourcePath(i));
+    for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
+        onReplayManagerGroupAdded(replayManager_->replayGroup(i));
+    for (int i = 0; i != replayManager_->replaySourcesCount(); ++i)
+        onReplayManagerReplaySourceAdded(replayManager_->replaySourceName(i), replayManager_->replaySourcePath(i));
+    for (int i = 0; i != replayManager_->videoSourcesCount(); ++i)
+        onReplayManagerVideoSourceAdded(replayManager_->videoSourceName(i), replayManager_->videoSourcePath(i));
 
     replayGroupsItem_->setExpanded(true);
     replaySourcesItem_->setExpanded(true);
     videoSourcesItem_->setExpanded(true);
 
     categoryModel_->dispatcher.addListener(this);
-    savedGameSessionManager_->dispatcher.addListener(this);
-    runningGameSessionManager_->dispatcher.addListener(this);
+    replayManager_->dispatcher.addListener(this);
+    activeGameSessionManager_->dispatcher.addListener(this);
     trainingModeModel_->dispatcher.addListener(this);
 
     connect(this, &QTreeWidget::customContextMenuRequested,
@@ -83,8 +83,8 @@ CategoryView::CategoryView(
 CategoryView::~CategoryView()
 {
     trainingModeModel_->dispatcher.removeListener(this);
-    runningGameSessionManager_->dispatcher.removeListener(this);
-    savedGameSessionManager_->dispatcher.removeListener(this);
+    activeGameSessionManager_->dispatcher.removeListener(this);
+    replayManager_->dispatcher.removeListener(this);
     categoryModel_->dispatcher.removeListener(this);
 }
 
@@ -118,9 +118,9 @@ void CategoryView::dragMoveEvent(QDragMoveEvent* event)
 
         case CategoryType::ITEM_REPLAY_GROUP: {
             // Don't allow dropping on the all group
-            ReplayGroup* group = savedGameSessionManager_->replayGroup(targetItem->text(0));
+            ReplayGroup* group = replayManager_->replayGroup(targetItem->text(0));
             assert(group);
-            if (group == savedGameSessionManager_->allReplayGroup())
+            if (group == replayManager_->allReplayGroup())
             {
                 event->ignore();
                 return;
@@ -149,15 +149,15 @@ void CategoryView::dropEvent(QDropEvent* event)
     switch (static_cast<CategoryType>(targetItem->type()))
     {
         case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
-            group = savedGameSessionManager_->addReplayGroup(savedGameSessionManager_->findFreeGroupName("Group"));
+            group = replayManager_->addReplayGroup(replayManager_->findFreeGroupName("Group"));
             [[fallthrough]];
         case CategoryType::ITEM_REPLAY_GROUP:
-            group = group ? group : savedGameSessionManager_->replayGroup(targetItem->text(0));
+            group = group ? group : replayManager_->replayGroup(targetItem->text(0));
         {
             assert(group);
 
             // Don't allow dropping on the all group
-            if (group == savedGameSessionManager_->allReplayGroup())
+            if (group == replayManager_->allReplayGroup())
             {
                 event->ignore();
                 return;
@@ -197,16 +197,16 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
             QAction* result = menu.exec(mapToGlobal(pos));
 
             if (result == newGroupAction)
-                savedGameSessionManager_->addReplayGroup(savedGameSessionManager_->findFreeGroupName("Group"));
+                replayManager_->addReplayGroup(replayManager_->findFreeGroupName("Group"));
             else if (result == newDataSetAction) {}
         } break;
 
         case CategoryType::ITEM_REPLAY_GROUP: {
-            ReplayGroup* group = savedGameSessionManager_->replayGroup(item->text(0));
+            ReplayGroup* group = replayManager_->replayGroup(item->text(0));
             if (group == nullptr)
                 return;
 
-            if (group != savedGameSessionManager_->allReplayGroup())
+            if (group != replayManager_->allReplayGroup())
             {
                 QMenu menu(this);
                 QAction* newGroupAction = menu.addAction("New group");
@@ -221,8 +221,8 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
                 QAction* result = menu.exec(mapToGlobal(pos));
                 if (result == newGroupAction)
                 {
-                    savedGameSessionManager_->addReplayGroup(
-                            savedGameSessionManager_->findFreeGroupName("Group"));
+                    replayManager_->addReplayGroup(
+                            replayManager_->findFreeGroupName("Group"));
                 }
                 else if (result == renameGroupAction)
                 {
@@ -230,12 +230,12 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
                 }
                 else if (result == duplicateGroupAction)
                 {
-                    savedGameSessionManager_->duplicateReplayGroup(group,
-                            savedGameSessionManager_->findFreeGroupName(group->name()));
+                    replayManager_->duplicateReplayGroup(group,
+                            replayManager_->findFreeGroupName(group->name()));
                 }
                 else if (result == deleteGroupAction)
                 {
-                    savedGameSessionManager_->removeReplayGroup(group);
+                    replayManager_->removeReplayGroup(group);
                 }
                 else if (result == clearRecordingsAction)
                 {
@@ -254,13 +254,13 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
                 QAction* result = menu.exec(mapToGlobal(pos));
                 if (result == newGroupAction)
                 {
-                    savedGameSessionManager_->addReplayGroup(
-                            savedGameSessionManager_->findFreeGroupName("Group"));
+                    replayManager_->addReplayGroup(
+                            replayManager_->findFreeGroupName("Group"));
                 }
                 else if (result == duplicateGroupAction)
                 {
-                    savedGameSessionManager_->duplicateReplayGroup(group,
-                            savedGameSessionManager_->findFreeGroupName(group->name()));
+                    replayManager_->duplicateReplayGroup(group,
+                            replayManager_->findFreeGroupName(group->name()));
                 }
                 else if (result == newDataSetAction) {}
             }
@@ -308,11 +308,11 @@ void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
             int idx = 1;
             auto it = oldGroupNames_.find(item);
             const QString& oldName = it.value();
-            ReplayGroup* group = savedGameSessionManager_->replayGroup(oldName);
+            ReplayGroup* group = replayManager_->replayGroup(oldName);
             QString newName = item->text(column);
             while (true)
             {
-                if (savedGameSessionManager_->renameReplayGroup(group, newName))
+                if (replayManager_->renameReplayGroup(group, newName))
                     break;
                 newName = item->text(column) + QString(" %1").arg(idx);
                 idx++;
@@ -408,7 +408,7 @@ void CategoryView::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& p
 void CategoryView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
     QTreeWidgetItem* item = new QTreeWidgetItem({group->name()}, static_cast<int>(CategoryType::ITEM_REPLAY_GROUP));
-    const ReplayGroup* allGroup = savedGameSessionManager_->allReplayGroup();
+    const ReplayGroup* allGroup = replayManager_->allReplayGroup();
 
     // All groups that are not in the "All" group are editable
     if (group != allGroup)
@@ -549,25 +549,25 @@ void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
+void CategoryView::onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
     sessionItem_->setDisabled(false);
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerDisconnectedFromServer()
+void CategoryView::onActiveGameSessionManagerDisconnectedFromServer()
 {
     sessionItem_->setDisabled(true);
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
+void CategoryView::onActiveGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onRunningGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
+void CategoryView::onActiveGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
 {
 
 }

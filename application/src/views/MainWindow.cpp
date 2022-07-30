@@ -4,10 +4,10 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/models/RunningGameSessionManager.hpp"
+#include "application/models/ActiveGameSessionManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 #include "application/ui_MainWindow.h"
-#include "application/views/RunningGameSessionView.hpp"
+#include "application/views/ActiveGameSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
@@ -36,12 +36,12 @@ MainWindow::MainWindow(QWidget* parent)
     , protocol_(new Protocol)
     , pluginManager_(new PluginManager(protocol_.get()))
     , replayManager_(new ReplayManager(config_.get()))
-    , runningGameSessionManager_(new RunningGameSessionManager(protocol_.get(), replayManager_.get()))
+    , runningGameSessionManager_(new ActiveGameSessionManager(protocol_.get(), replayManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
     , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
     , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get()))
-    , runningGameSessionView_(new RunningGameSessionView(runningGameSessionManager_.get(), pluginManager_.get()))
+    , runningGameSessionView_(new ActiveGameSessionView(runningGameSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -114,23 +114,23 @@ void MainWindow::setStateDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onActiveGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onActiveGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
 {
     setStateConnected();
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onRunningGameSessionManagerDisconnectedFromServer()
+void MainWindow::onActiveGameSessionManagerDisconnectedFromServer()
 {
     setStateDisconnected();
 }

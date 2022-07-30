@@ -14,7 +14,7 @@
 
 namespace rfcommon {
     class DataSet;
-    class GameSession;
+    class Session;
 }
 
 namespace rfapp {
@@ -33,7 +33,7 @@ public:
     };
 
     struct InData {
-        rfcommon::Reference<rfcommon::SavedGameSession> session;
+        rfcommon::Reference<rfcommon::Session> session;
         ReplayGroup* group;
         uint32_t taskID;
     };

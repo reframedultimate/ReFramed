@@ -1,6 +1,5 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "application/models/ReplayGroup.hpp"
-#include "rfcommon/SavedGameSession.hpp"
 #include <QRunnable>
 #include <QThreadPool>
 

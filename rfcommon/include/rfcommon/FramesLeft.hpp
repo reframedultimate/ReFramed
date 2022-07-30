@@ -19,6 +19,10 @@ public:
 
     bool operator==(FramesLeft rhs) const;
     bool operator!=(FramesLeft rhs) const;
+    bool operator<(FramesLeft rhs) const;
+    bool operator>(FramesLeft rhs) const;
+    bool operator<=(FramesLeft rhs) const;
+    bool operator>=(FramesLeft rhs) const;
 
 private:
     FramesLeft();
