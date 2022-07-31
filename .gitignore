@@ -2,8 +2,9 @@
 /build*
 /dist*
 
-# Generated files
+# IDE files
 /CMakeLists.txt.user
+*.kdev4
 
 # Temporary files
 *.swp
