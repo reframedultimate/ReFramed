@@ -1,12 +1,13 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/PluginInterface.hpp"
-#include "application/models/Protocol.hpp"
 #include "rfcommon/AnalyzerPlugin.hpp"
-#include "rfcommon/VisualizerPlugin.hpp"
+#include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/RealtimePlugin.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/SessionMetaData.hpp"
 #include "rfcommon/StandalonePlugin.hpp"
+#include "rfcommon/VisualizerPlugin.hpp"
 #include "rfcommon/dynlib.h"
 #include <cassert>
 #include <QDebug>
@@ -148,6 +149,8 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
         return nullptr;
 
     rfcommon::Plugin* model = factory->createModel(factory);
+    if (model == nullptr)
+        return nullptr;
 
     rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
     if (realtime)
@@ -157,16 +160,19 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
 
         // It's possible the plugin was created during an active session. Some plugins
         // might be interested in hookin in to the middle of a match/training mode session
-        rfcommon::RunningSession* session = protocol_->runningSession();
-        if (session != nullptr)
+        if (rfcommon::Session* session = protocol_->activeSession())
         {
-            if (rfcommon::RunningGameSession* match = dynamic_cast<rfcommon::RunningGameSession*>(session))
+            rfcommon::SessionMetaData* meta = session->tryGetMetaData();
+            assert(meta);
+
+            switch (meta->type())
             {
-                realtime->onProtocolMatchResumed(match);
-            }
-            else if (rfcommon::RunningTrainingSession* training = dynamic_cast<rfcommon::RunningTrainingSession*>(session))
-            {
-                realtime->onProtocolTrainingResumed(training);
+                case rfcommon::SessionMetaData::GAME:
+                    realtime->onProtocolGameResumed(protocol_->activeSession());
+                    break;
+                case rfcommon::SessionMetaData::TRAINING:
+                    realtime->onProtocolTrainingResumed(protocol_->activeSession());
+                    break;
             }
         }
     }

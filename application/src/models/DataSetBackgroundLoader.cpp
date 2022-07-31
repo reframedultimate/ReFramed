@@ -1,5 +1,8 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "application/models/ReplayGroup.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/LinearMap.hpp"
 #include <QRunnable>
 #include <QThreadPool>
 
@@ -24,7 +27,7 @@ public:
     }
 
 signals:
-    void recordingLoaded(rfcommon::SavedGameSession* session);
+    void recordingLoaded(rfcommon::Session* session);
 
 private:
     void run() override
@@ -37,20 +40,19 @@ private:
 
             auto item = in_->dequeue();
             mutex_->unlock();
-                rfcommon::Reference<rfcommon::SavedSession> session = rfcommon::SavedSession::load(item.recordingFile.absoluteFilePath().toStdString().c_str());
+                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(
+                    item.recordingFile.absoluteFilePath().toStdString().c_str(),
+                    rfcommon::Session::META_DATA);
             mutex_->lock();
 
             if (session)
             {
                 // We currently don't support loading training mode sessions, only game sessions
-                if (rfcommon::SavedGameSession* gameSession = dynamic_cast<rfcommon::SavedGameSession*>(session.get()))
+                if (session->tryGetMetaData()->type() == rfcommon::SessionMetaData::GAME)
                 {
-                    out_->enqueue({gameSession, item.group, item.taskID});
+                    out_->enqueue({session, item.group, item.taskID});
                     session.detach();
                 }
-#ifndef NDEBUG
-                assert(session->frameCount() > 0);
-#endif
             }
             else
             {
@@ -234,7 +236,7 @@ void DataSetBackgroundLoader::run()
             for (const auto& item : items)
             {
                 // Ensure that we've created a target dataset for each task
-                auto it = pendingDataSets.find(item.taskID);
+                auto it = pendingDataSets.findKey(item.taskID);
                 if (it == pendingDataSets.end())
                     it = pendingDataSets.insertOrGet(item.taskID, PendingDataSet{new rfcommon::DataSet, item.group});
 

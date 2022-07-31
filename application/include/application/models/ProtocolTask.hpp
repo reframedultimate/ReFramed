@@ -1,16 +1,16 @@
 #pragma once
 
-#include "rfcommon/tcp_socket.h"
 #include <QThread>
 #include <QMutex>
 
 namespace rfcommon {
-    class Session;
+    class MappingInfo;
+    class SessionMetaData;
 }
 
 namespace rfapp {
 
-class ProtocolCommunicateTask : public QThread
+class ProtocolTask : public QThread
 {
     Q_OBJECT
 
@@ -27,9 +27,9 @@ public:
         MappingInfoHitStatusKinds,
         MappingInfoRequestComplete,
 
-        MatchStart,
-        MatchResume,
-        MatchEnd,
+        GameStart,
+        GameResume,
+        GameEnd,
         TrainingStart,
         TrainingResume,
         TrainingReset,
@@ -38,16 +38,20 @@ public:
         FighterState,
     };
 
-    ProtocolCommunicateTask(tcp_socket socket, QObject* parent=nullptr);
-    ~ProtocolCommunicateTask();
+    ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, QObject* parent=nullptr);
+    ~ProtocolTask();
 
 signals:
+    void connectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
+    void connectionSuccess(const QString& ipAddress, quint16 port);
     void connectionClosed();
-    void trainingStarted(rfcommon::Session* training);
-    void trainingResumed(rfcommon::Session* training);
+
+    void mappingInfoReceived(rfcommon::MappingInfo* mappingInfo);
+    void trainingStarted(rfcommon::SessionMetaData* training);
+    void trainingResumed(rfcommon::SessionMetaData* training);
     void trainingEnded();
-    void gameStarted(rfcommon::Session* game);
-    void gameResumed(rfcommon::Session* game);
+    void gameStarted(rfcommon::SessionMetaData* game);
+    void gameResumed(rfcommon::SessionMetaData* game);
     void gameEnded();
     void fighterState(
             quint64 frameTimeStamp,
@@ -68,10 +72,15 @@ signals:
 
 private:
     void run() override;
+    void* connectAndCheckVersion();
+    bool negotiateMappingInfo(void* tcp_socket_handle);
+    void handleProtocol(void* tcp_socket_handle);
 
 private:
-    tcp_socket socket_;
+    QString ipAddress_;
     QMutex mutex_;
+    bool mappingInfoChecksum_;
+    uint16_t port_;
     bool requestShutdown_;
 };
 

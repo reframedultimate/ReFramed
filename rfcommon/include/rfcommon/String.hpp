@@ -27,17 +27,17 @@ public:
     const char& at(S pos) const { return this->begin_[pos]; }
 
     SmallString()
-        : SmallVector<char, N+1, S>(1)
+        : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(1))
     {
         this->begin_[0] = '\0';
     }
 
     SmallString(S resizeCount)
-        : SmallVector<char, N+1, S>(resizeCount + 1)
+        : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(resizeCount + 1))
     {}
 
     SmallString(const char* data, S len)
-        : SmallVector<char, N+1, S>(len + 1)
+        : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(len + 1))
     {
         std::memcpy(this->begin_, data, len);
         this->begin_[len] = '\0';

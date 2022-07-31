@@ -209,7 +209,7 @@ uint32_t MappingInfo::save(FILE* fp) const
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MappingInfo::saveFiltered(FILE* fp, const SessionMetaData* metaData, const FrameData* frameData) const
+uint32_t MappingInfo::saveNecessary(FILE* fp, const SessionMetaData* metaData, const FrameData* frameData) const
 {
     assert(metaData->fighterCount() == frameData->fighterCount());
 

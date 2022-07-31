@@ -1,7 +1,6 @@
 #include "application/views/CategoryView.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/CategoryModel.hpp"
-#include "application/models/ActiveGameSessionManager.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
 
@@ -20,13 +19,11 @@ namespace rfapp {
 CategoryView::CategoryView(
         CategoryModel* categoryModel,
         ReplayManager* replayManager,
-        ActiveGameSessionManager* activeGameSessionManager,
         TrainingModeModel* trainingModeModel,
         QWidget* parent)
     : QTreeWidget(parent)
     , categoryModel_(categoryModel)
     , replayManager_(replayManager)
-    , activeGameSessionManager_(activeGameSessionManager)
     , trainingModeModel_(trainingModeModel)
     , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
     , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
@@ -51,9 +48,6 @@ CategoryView::CategoryView(
     setAcceptDrops(true);
     replayGroupsItem_->setFlags(replayGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
-    // If the session is not active, disable that top level item
-    sessionItem_->setDisabled(!activeGameSessionManager_->isSessionRunning());
-
     // Populate various children based on the data available in the model
     for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
         onReplayManagerGroupAdded(replayManager_->replayGroup(i));
@@ -68,7 +62,6 @@ CategoryView::CategoryView(
 
     categoryModel_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
-    activeGameSessionManager_->dispatcher.addListener(this);
     trainingModeModel_->dispatcher.addListener(this);
 
     connect(this, &QTreeWidget::customContextMenuRequested,
@@ -83,7 +76,6 @@ CategoryView::CategoryView(
 CategoryView::~CategoryView()
 {
     trainingModeModel_->dispatcher.removeListener(this);
-    activeGameSessionManager_->dispatcher.removeListener(this);
     replayManager_->dispatcher.removeListener(this);
     categoryModel_->dispatcher.removeListener(this);
 }
@@ -545,31 +537,6 @@ void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
             break;
         }
     }
-}
-
-
-// ----------------------------------------------------------------------------
-void CategoryView::onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
-{
-    sessionItem_->setDisabled(false);
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onActiveGameSessionManagerDisconnectedFromServer()
-{
-    sessionItem_->setDisabled(true);
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onActiveGameSessionManagerMatchStarted(rfcommon::RunningGameSession* session)
-{
-
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onActiveGameSessionManagerMatchEnded(rfcommon::RunningGameSession* session)
-{
-
 }
 
 // ----------------------------------------------------------------------------

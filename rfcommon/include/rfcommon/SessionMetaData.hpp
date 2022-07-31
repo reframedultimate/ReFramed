@@ -140,7 +140,9 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeStampStarted() const;
+    TimeStamp timeStarted() const;
+
+    void setTimeStarted(TimeStamp timeStamp);
 
     /*!
      * \brief Gets the absolute time of when the last timestamp was received in
@@ -158,7 +160,9 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeStampEnded() const;
+    TimeStamp timeEnded() const;
+
+    void setTimeEnded(TimeStamp timeStamp);
 
     /*!
      * \brief Returns the length of the session. This is equivalent to
@@ -201,7 +205,9 @@ public:
      * \note If training mode, this will always be the same as the tag.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& name(int playerIdx) const override;
+    const SmallString<15>& name(int fighterIdx) const override;
+
+    void setName(int fighterIdx, const SmallString<15>& name);
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -256,7 +262,7 @@ public:
 
     /*!
      * \brief Set the index of the player who won the game, or is currently in
-     * the lead in the case of an on-going session.// ----------------------------------------------------------------------------
+     * the lead in the case of an on-going session.
      */
     void setWinner(int fighterIdx);
 

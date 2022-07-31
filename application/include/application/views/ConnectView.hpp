@@ -40,13 +40,13 @@ private:
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolDisconnectedFromServer() override {}
 
-    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) override { (void)training; }
-    void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) override { (void)training; }
-    void onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining) override { (void)oldTraining; (void)newTraining; }
-    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training) override { (void)training; }
-    void onProtocolMatchStarted(rfcommon::RunningGameSession* match) override { (void)match; }
-    void onProtocolMatchResumed(rfcommon::RunningGameSession* match) override { (void)match; }
-    void onProtocolMatchEnded(rfcommon::RunningGameSession* match) override { (void)match; }
+    void onProtocolTrainingStarted(rfcommon::Session* training) override { (void)training; }
+    void onProtocolTrainingResumed(rfcommon::Session* training) override { (void)training; }
+    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override { (void)oldTraining; (void)newTraining; }
+    void onProtocolTrainingEnded(rfcommon::Session* training) override { (void)training; }
+    void onProtocolGameStarted(rfcommon::Session* match) override { (void)match; }
+    void onProtocolGameResumed(rfcommon::Session* match) override { (void)match; }
+    void onProtocolGameEnded(rfcommon::Session* match) override { (void)match; }
 
 private:
     Protocol* protocol_;

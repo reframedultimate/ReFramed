@@ -13,33 +13,51 @@ class FrameData;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
-    Session(SessionMetaData* metaData, MappingInfo* mappingInfo, MappingInfo* globalMappingInfo, FrameData* frameData);
+    Session(FILE* fp, MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData);
 
 public:
+    enum LoadFlags
+    {
+        MAPPING_INFO = 0x01,
+        META_DATA = 0x02,
+        FRAME_DATA = 0x04,
+        ALL = 0x07
+    };
+
     ~Session();
 
-    static Session* load(const char* fileName, MappingInfo* globalMappingInfo);
+    static Session* newModernSavedSession(FILE* fp);
+    static Session* newLegacySavedSession(MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData);
+    static Session* newActiveSession(MappingInfo* globalMappingInfo, SessionMetaData* metaData);
+    static Session* load(const char* fileName, uint8_t loadFlags=0);
     bool save(const char* fileName);
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
      * strings.
      */
-    MappingInfo* mappingInfo() const;
+    MappingInfo* tryGetMappingInfo();
 
-    MappingInfo* globalMappingInfo() const;
+    SessionMetaData* tryGetMetaData();
 
-    SessionMetaData* metaData() const;
-
-    FrameData* frameData() const;
+    FrameData* tryGetFrameData();
 
 private:
     void onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame) override;
     void onFrameDataNewFrame(int frameIdx, const Frame& frame) override;
 
 private:
+    struct ContentTableEntry
+    {
+        char type[4];
+        uint32_t offset;
+        uint32_t size;
+    };
+
+    FILE* fp_;
+    SmallVector<ContentTableEntry, 4> contentTable_;
+
     Reference<MappingInfo> mappingInfo_;
-    Reference<MappingInfo> globalMappingInfo_;
     Reference<SessionMetaData> metaData_;
     Reference<FrameData> frameData_;
 };

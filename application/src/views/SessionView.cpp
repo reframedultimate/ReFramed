@@ -113,7 +113,7 @@ void SessionView::showDamagePlot()
 }
 
 // ----------------------------------------------------------------------------
-void SessionView::setSavedGameSession(rfcommon::SavedGameSession* session)
+void SessionView::setSavedGameSession(rfcommon::Session* session)
 {
     if (damageTimePlugin_)
         damageTimePlugin_->setSavedGameSession(session);
@@ -126,7 +126,7 @@ void SessionView::setSavedGameSession(rfcommon::SavedGameSession* session)
 }
 
 // ----------------------------------------------------------------------------
-void SessionView::clearSavedGameSession(rfcommon::SavedGameSession* session)
+void SessionView::clearSavedGameSession(rfcommon::Session* session)
 {
     if (damageTimePlugin_)
         damageTimePlugin_->clearSavedGameSession(session);

@@ -44,11 +44,6 @@ static bool loadLegacy_1_4(
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static bool loadModern(
-        FILE* fp,
-        Reference<SessionMetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData);
 static int findWinner(const SmallVector<FighterState, 4>& frame);
 
 static const char* magic               = "RFR1";
@@ -207,83 +202,6 @@ static std::string readUncompressedFile(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::load(const char* fileName, MappingInfo* globalMappingInfo)
-{
-    Reference<SessionMetaData> metaData;
-    Reference<MappingInfo> mappingInfo;
-    Reference<FrameData> frameData;
-
-    // Assume we're dealing with a modern format first
-    FILE* fp = fopen(fileName, "rb");
-    if (fp == nullptr)
-        return nullptr;
-
-    // If this is a modern file, it will start with "RFR1"
-    char magic[4];
-    if (fread(magic, 1, 4, fp) != 4)
-    {
-        fclose(fp);
-        return nullptr;
-    }
-    if (memcmp(magic, "RFR1", 4) == 0)
-    {
-        bool success = loadModern(fp, &metaData, &mappingInfo, &frameData);
-        fclose(fp);
-
-        if (success)
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-        return nullptr;
-    }
-
-    // Legacy format was compressed json
-    json j;
-    for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
-    {
-        std::string s = readFile(fileName);
-        if (s.length() == 0)
-            continue;
-
-        j = json::parse(std::move(s), nullptr, false);
-        if (j == json::value_t::discarded)
-            return nullptr;
-
-        break;
-    }
-
-    if (j.contains("version") == false || j["version"].is_string() == false)
-        return nullptr;
-
-    std::string version = j["version"];
-    if (version == "1.4")
-    {
-        if (loadLegacy_1_4(j, &metaData, &mappingInfo, &frameData))
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-    }
-    else if (version == "1.3")
-    {
-        if (loadLegacy_1_3(j, &metaData, &mappingInfo, &frameData))
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-    }
-    else if (version == "1.2")
-    {
-        if (loadLegacy_1_2(j, &metaData, &mappingInfo, &frameData))
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-    }
-    else if (version == "1.1")
-    {
-        if (loadLegacy_1_1(j, &metaData, &mappingInfo, &frameData))
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-    }
-    else if (version == "1.0")
-    {
-        if (loadLegacy_1_0(j, &metaData, &mappingInfo, &frameData))
-            return new Session(metaData, mappingInfo, globalMappingInfo, frameData);
-    }
-
-    return nullptr;
-}
-
-// ----------------------------------------------------------------------------
 static bool loadLegacy_1_0(
         const json& j,
         Reference<SessionMetaData>* metaDataOut,
@@ -350,21 +268,24 @@ static bool loadLegacy_1_0(
     const json jGameNumber = jGameInfo["number"];
     const json jStageID = jGameInfo["stageid"];
 
-    Reference<SessionMetaData> metaData(new GameSessionMetaData(
+    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+        TimeStamp::fromMillisSinceEpoch(0),
+        TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat(jSetFormat.get<std::string>().c_str())));
+        SetFormat(jSetFormat.get<std::string>().c_str()),
+        0);
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    SmallVector<Vector<FighterState>, 2> frameData(metaData->fighterCount());
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
@@ -415,6 +336,12 @@ static bool loadLegacy_1_0(
     for (auto& frames : frameData)
         while (frames.count() < highestFrameIdx)
             frames.emplace(frames.back());
+
+    // Calculate start and end times
+    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
+            frameData[0].back().timeStamp() : firstFrameTimeStamp;
+    metaData->setTimeStarted(firstFrameTimeStamp);
+    metaData->setTimeEnded(lastFrameTimeStamp);
 
     // Cache winner
     if (frameData.count() > 0)
@@ -544,21 +471,24 @@ static bool loadLegacy_1_1(
     const json jGameNumber = jGameInfo["number"];
     const json jStageID = jGameInfo["stageid"];
 
-    Reference<SessionMetaData> metaData(new GameSessionMetaData(
+    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+        TimeStamp::fromMillisSinceEpoch(0),
+        TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat(jSetFormat.get<std::string>().c_str())));
+        SetFormat(jSetFormat.get<std::string>().c_str()),
+        0);
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    SmallVector<Vector<FighterState>, 2> frameData(metaData->fighterCount());
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
@@ -609,6 +539,12 @@ static bool loadLegacy_1_1(
     for (auto& frames : frameData)
         while (frames.count() < highestFrameIdx)
             frames.emplace(frames.back());
+
+    // Calculate start and end times
+    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
+            frameData[0].back().timeStamp() : firstFrameTimeStamp;
+    metaData->setTimeStarted(firstFrameTimeStamp);
+    metaData->setTimeEnded(lastFrameTimeStamp);
 
     // Cache winner
     if (frameData.count() > 0)
@@ -746,21 +682,24 @@ static bool loadLegacy_1_2(
     const json jGameNumber = jGameInfo["number"];
     const json jSetNumber = jGameInfo["set"];
 
-    Reference<SessionMetaData> metaData(new GameSessionMetaData(
+    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+        TimeStamp::fromMillisSinceEpoch(0),
+        TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str())));
+        SetFormat(jSetFormat.get<std::string>().c_str()),
+        0);
 
     const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    SmallVector<Vector<FighterState>, 2> frameData(metaData->fighterCount());
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
@@ -817,6 +756,12 @@ static bool loadLegacy_1_2(
     for (auto& frames : frameData)
         while (frames.count() < highestFrameIdx)
             frames.emplace(frames.back());
+
+    // Calculate start and end times
+    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
+            frameData[0].back().timeStamp() : firstFrameTimeStamp;
+    metaData->setTimeStarted(firstFrameTimeStamp);
+    metaData->setTimeEnded(lastFrameTimeStamp);
 
     // Cache winner
     if (frameData.count() > 0)
@@ -968,23 +913,24 @@ static bool loadLegacy_1_3(
     const json jSetNumber = jGameInfo["set"];
     const json jWinner = jGameInfo["winner"];
 
-    Reference<SessionMetaData> metaData(new GameSessionMetaData(
+    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+        TimeStamp::fromMillisSinceEpoch(0),
+        TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str())));
-
-    static_cast<GameSessionMetaData*>(metaData.get())->setWinner(jWinner.get<int>());
+        SetFormat(jSetFormat.get<std::string>().c_str()),
+        jWinner.get<int>());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    SmallVector<Vector<FighterState>, 2> frameData(metaData->fighterCount());
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
@@ -1043,6 +989,12 @@ static bool loadLegacy_1_3(
     for (auto& frames : frameData)
         while (frames.count() < highestFrameIdx)
             frames.emplace(frames.back());
+
+    // Calculate start and end times
+    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
+            frameData[0].back().timeStamp() : firstFrameTimeStamp;
+    metaData->setTimeStarted(firstFrameTimeStamp);
+    metaData->setTimeEnded(lastFrameTimeStamp);
 
     // Winner sanity check
 #ifndef NDEBUG
@@ -1197,20 +1149,26 @@ static bool loadLegacy_1_4(
     const json jSetNumber = jGameInfo["set"];
     const json jWinner = jGameInfo["winner"];
 
-    Reference<SessionMetaData> metaData(new GameSessionMetaData(
+    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+        time_qt_to_milli_seconds_since_epoch(jTimeStampSart.get<std::string>().c_str()));
+    const auto lastFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
+        time_qt_to_milli_seconds_since_epoch(jTimeStampEnd.get<std::string>().c_str()));
+
+    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+        firstFrameTimeStamp,
+        lastFrameTimeStamp,
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str())));
-
-    static_cast<GameSessionMetaData*>(metaData.get())->setWinner(jWinner.get<int>());
+        SetFormat(jSetFormat.get<std::string>().c_str()),
+        jWinner.get<int>());
 
     const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    SmallVector<Vector<FighterState>, 2> frameData(metaData->fighterCount());
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
         int error = 0;
@@ -1287,80 +1245,9 @@ static bool loadLegacy_1_4(
 }
 
 // ----------------------------------------------------------------------------
-static bool loadModern(
-        FILE* fp,
-        Reference<SessionMetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData)
-{
-    uint8_t numEntries;
-    struct Entry
-    {
-        char type[4];
-        uint32_t offset;
-        uint32_t size;
-    };
-
-    // Read entry table
-    SmallVector<Entry, 4> entryTable;
-    if (fread(&numEntries, 1, 1, fp) != 1)
-        return false;
-    for (int i = 0; i != numEntries; ++i)
-    {
-        Entry entry;
-        if (fread(entry.type, 1, 4, fp) != 4)
-            return false;
-        if (fread(&entry.offset, 1, 4, fp) != 4)
-            return false;
-        if (fread(&entry.size, 1, 4, fp) != 4)
-            return false;
-
-        entry.offset = fromLittleEndian32(entry.offset);
-        entry.size = fromLittleEndian32(entry.size);
-        entryTable.push(entry);
-    }
-
-    for (const auto& entry : entryTable)
-    {
-        // Load session mapping info, also known as "local" mapping info
-        if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
-        {
-            if (fseek(fp, entry.offset, SEEK_SET) != 0)
-                return false;
-
-            *mappingInfo = MappingInfo::load(fp, entry.size);
-            if (mappingInfo->isNull())
-                return false;
-        }
-        // Load session metadata
-        else if (memcmp(entry.type, blobTypeMeta, 4) == 0)
-        {
-            if (fseek(fp, entry.offset, SEEK_SET) != 0)
-                return false;
-
-            *metaData = SessionMetaData::load(fp, entry.size);
-            if (metaData->isNull())
-                return false;
-        }
-        // Load frame data
-        else if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
-        {
-            if (fseek(fp, entry.offset, SEEK_SET) != 0)
-                return false;
-
-            *frameData = FrameData::load(fp, entry.size);
-            if (frameData->isNull())
-                return false;
-        }
-    }
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-Session::Session(SessionMetaData* metaData, MappingInfo* mappingInfo, MappingInfo* globalMappingInfo, FrameData* frameData)
-    : mappingInfo_(mappingInfo)
-    , globalMappingInfo_(globalMappingInfo)
+Session::Session(FILE* fp, MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData)
+    : fp_(fp)
+    , mappingInfo_(mappingInfo)
     , metaData_(metaData)
     , frameData_(frameData)
 {
@@ -1369,6 +1256,142 @@ Session::Session(SessionMetaData* metaData, MappingInfo* mappingInfo, MappingInf
 // ----------------------------------------------------------------------------
 Session::~Session()
 {
+    if (fp_)
+        fclose(fp_);
+}
+
+// ----------------------------------------------------------------------------
+Session* Session::newModernSavedSession(FILE* fp)
+{
+    return new Session(
+        fp,
+        nullptr,
+        nullptr,
+        nullptr);
+}
+
+// ----------------------------------------------------------------------------
+Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData)
+{
+    return new Session(
+        nullptr,
+        mappingInfo,
+        metaData,
+        frameData);
+}
+
+// ----------------------------------------------------------------------------
+Session* Session::newActiveSession(MappingInfo* globalMappingInfo, SessionMetaData* metaData)
+{
+    return new Session(
+        nullptr,
+        globalMappingInfo,
+        metaData,
+        new FrameData(metaData->fighterCount()));
+}
+
+// ----------------------------------------------------------------------------
+Session* Session::load(const char* fileName, uint8_t loadFlags)
+{
+    // Assume we're dealing with a modern format first
+    FILE* fp = fopen(fileName, "rb");
+    if (fp == nullptr)
+        return nullptr;
+
+    // If this is a modern file, it will start with "RFR1"
+    char magic[4];
+    if (fread(magic, 1, 4, fp) != 4)
+    {
+        fclose(fp);
+        return nullptr;
+    }
+    if (memcmp(magic, "RFR1", 4) == 0)
+    {
+        Reference<Session> session = newModernSavedSession(fp);
+
+        // Read content table
+        uint8_t numEntries;
+        if (fread(&numEntries, 1, 1, fp) != 1)
+            return nullptr;
+        for (int i = 0; i != numEntries; ++i)
+        {
+            Session::ContentTableEntry entry;
+            if (fread(entry.type, 1, 4, fp) != 4)
+                return nullptr;
+            if (fread(&entry.offset, 1, 4, fp) != 4)
+                return nullptr;
+            if (fread(&entry.size, 1, 4, fp) != 4)
+                return nullptr;
+
+            entry.offset = fromLittleEndian32(entry.offset);
+            entry.size = fromLittleEndian32(entry.size);
+            session->contentTable_.push(entry);
+        }
+
+        if (loadFlags & MAPPING_INFO)
+            if (session->tryGetMappingInfo() == nullptr)
+                return nullptr;
+
+        if (loadFlags & META_DATA)
+            if (session->tryGetMetaData() == nullptr)
+                return nullptr;
+
+        if (loadFlags & FRAME_DATA)
+            if (session->tryGetFrameData() == nullptr)
+                return nullptr;
+
+        return session.detach();
+    }
+
+    // Legacy format was compressed json
+    json j;
+    for (auto readFile : {decompressGZFile, decompressQtZFile, readUncompressedFile})
+    {
+        std::string s = readFile(fileName);
+        if (s.length() == 0)
+            continue;
+
+        j = json::parse(std::move(s), nullptr, false);
+        if (j == json::value_t::discarded)
+            return nullptr;
+
+        break;
+    }
+
+    if (j.contains("version") == false || j["version"].is_string() == false)
+        return nullptr;
+
+    Reference<SessionMetaData> metaData;
+    Reference<MappingInfo> mappingInfo;
+    Reference<FrameData> frameData;
+    std::string version = j["version"];
+    if (version == "1.4")
+    {
+        if (loadLegacy_1_4(j, &metaData, &mappingInfo, &frameData))
+            return new Session(nullptr, mappingInfo, metaData, frameData);
+    }
+    else if (version == "1.3")
+    {
+        if (loadLegacy_1_3(j, &metaData, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metaData, frameData);
+    }
+    else if (version == "1.2")
+    {
+        if (loadLegacy_1_2(j, &metaData, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metaData, frameData);
+    }
+    else if (version == "1.1")
+    {
+        if (loadLegacy_1_1(j, &metaData, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metaData, frameData);
+    }
+    else if (version == "1.0")
+    {
+        if (loadLegacy_1_0(j, &metaData, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metaData, frameData);
+    }
+
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -1417,7 +1440,7 @@ bool Session::save(const char* fileName)
     // Write local mapping info
     memcpy(entries[2].type, blobTypeMappingInfo, 4);
     entries[2].offset = entries[1].offset + entries[1].size;
-    entries[2].size = mappingInfo_->saveFiltered(file, metaData_, frameData_);
+    entries[2].size = mappingInfo_->saveNecessary(file, metaData_, frameData_);
     if (entries[2].size == 0)
         goto write_fail;
 
@@ -1462,12 +1485,84 @@ bool Session::save(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
+MappingInfo* Session::tryGetMappingInfo()
+{
+    if (mappingInfo_.isNull())
+    {
+        assert(fp_ != nullptr);
+        for (const auto& entry : contentTable_)
+            if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
+            {
+                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
+                    return nullptr;
+
+                mappingInfo_ = MappingInfo::load(fp_, entry.size);
+                break;
+            }
+    }
+
+    return mappingInfo_;
+}
+
+// ----------------------------------------------------------------------------
+SessionMetaData* Session::tryGetMetaData()
+{
+    if (metaData_.isNull())
+    {
+        assert(fp_ != nullptr);
+        for (const auto& entry : contentTable_)
+            if (memcmp(entry.type, blobTypeMeta, 4) == 0)
+            {
+                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
+                    return nullptr;
+
+                metaData_ = SessionMetaData::load(fp_, entry.size);
+                break;
+            }
+
+        // Sanity check
+#ifndef NDEBUG
+        if (metaData_.notNull() && frameData_.notNull())
+            assert(metaData_->fighterCount() == frameData_->fighterCount());
+#endif
+    }
+
+    return metaData_;
+}
+
+// ----------------------------------------------------------------------------
+FrameData* Session::tryGetFrameData()
+{
+    if (frameData_.isNull())
+    {
+        assert(fp_ != nullptr);
+        for (const auto& entry : contentTable_)
+            if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
+            {
+                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
+                    return nullptr;
+
+                frameData_ = FrameData::load(fp_, entry.size);
+                break;
+            }
+
+        // Sanity check
+#ifndef NDEBUG
+        if (metaData_.notNull() && frameData_.notNull())
+            assert(metaData_->fighterCount() == frameData_->fighterCount());
+#endif
+    }
+
+    return frameData_;
+}
+
+// ----------------------------------------------------------------------------
 void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
 {
     (void)frameIdx;
 
     // Winner might have changed
-    if (metaData_->type() == SessionMetaData::GAME)
+    if (metaData_ && metaData_->type() == SessionMetaData::GAME)
         static_cast<GameSessionMetaData*>(metaData_.get())->setWinner(findWinner(frame));
 }
 

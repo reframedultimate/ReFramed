@@ -11,13 +11,13 @@
 namespace rfcommon {
     class MappingInfo;
     class ProtocolListener;
+    class SessionMetaData;
     class Session;
 }
 
 namespace rfapp {
 
-class ProtocolConnectTask;
-class ProtocolCommunicateTask;
+class ProtocolTask;
 
 /*!
  * \brief Decodes the incoming stream from the Nintendo switch into structures.
@@ -53,27 +53,24 @@ public:
     void connectToServer(const QString& ipAddress, uint16_t port);
     void disconnectFromServer();
 
-    bool isTryingToConnect() const;
-    bool isConnected() const;
-
-    rfcommon::Session* activeSession()
-        { return activeSession_; }
+    rfcommon::Session* activeSession() const;
 
     rfcommon::ListenerDispatcher<rfcommon::ProtocolListener> dispatcher;
 
 private slots:
-    void onConnectionSuccess(void* socket_handle, const QString& ipAddress, quint16 port);
-    void onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
-    void onProtocolDisconnected();
-
     // catch signals from listener thread so we have them in the main thread
-    void onTrainingStartedProxy(rfcommon::Session* training);
-    void onTrainingStartedActually(rfcommon::Session* training);
-    void onTrainingResumed(rfcommon::Session* training);
+    void onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port);
+    void onConnectionSuccess(const QString& ipAddress, quint16 port);
+    void onConnectionClosed();
+
+    void onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo);
+    void onTrainingStartedProxy(rfcommon::SessionMetaData* trainingMeta);
+    void onTrainingStartedActually(rfcommon::SessionMetaData* trainingMeta);
+    void onTrainingResumed(rfcommon::SessionMetaData* trainingMeta);
     void onTrainingEndedProxy();
     void onTrainingEndedActually();
-    void onGameStarted(rfcommon::Session* match);
-    void onGameResumed(rfcommon::Session* match);
+    void onGameStarted(rfcommon::SessionMetaData* gameMeta);
+    void onGameResumed(rfcommon::SessionMetaData* gameMeta);
     void onGameEnded();
     void onFighterState(
             quint64 frameTimeStamp,
@@ -88,19 +85,21 @@ private slots:
             quint64 motion,
             quint8 hit_status,
             quint8 stocks,
-            bool attack_connected,
-            bool facing_direction,
-            bool opponent_in_hitlag);
+            bool attackConnected,
+            bool facingDirection,
+            bool opponentInHitlag);
 
 private:
     void endSessionIfNecessary();
+    void tryLoadGlobalMappingInfo();
+    void saveGlobalMappingInfo();
 
 private:
-    std::unique_ptr<ProtocolConnectTask> connectTask_;
-    std::unique_ptr<ProtocolCommunicateTask> communicateTask_;
+    rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
+    std::unique_ptr<ProtocolTask> task_;
     rfcommon::SmallVector<rfcommon::SmallVector<rfcommon::FighterState, 2>, 2> stateBuffer_;
     rfcommon::Reference<rfcommon::Session> activeSession_;
-    bool trainingEndedProxyWasCalled_ = false;
+    bool trainingEndedProxyWasCalled_;
 };
 
 }

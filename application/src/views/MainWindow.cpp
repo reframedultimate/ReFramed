@@ -1,13 +1,13 @@
+#include "application/ui_MainWindow.h"
 #include "application/config.hpp"
 #include "application/models/Config.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/models/ActiveGameSessionManager.hpp"
+#include "application/models/ActiveSessionManager.hpp"
 #include "application/models/TrainingModeModel.hpp"
-#include "application/ui_MainWindow.h"
-#include "application/views/ActiveGameSessionView.hpp"
+#include "application/views/ActiveSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
@@ -36,12 +36,12 @@ MainWindow::MainWindow(QWidget* parent)
     , protocol_(new Protocol)
     , pluginManager_(new PluginManager(protocol_.get()))
     , replayManager_(new ReplayManager(config_.get()))
-    , runningGameSessionManager_(new ActiveGameSessionManager(protocol_.get(), replayManager_.get()))
+    , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
     , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
-    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), runningGameSessionManager_.get(), trainingModeModel_.get()))
+    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), trainingModeModel_.get()))
     , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get()))
-    , runningGameSessionView_(new ActiveGameSessionView(runningGameSessionManager_.get(), pluginManager_.get()))
+    , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new VisualizerView(pluginManager_.get()));
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
-    mainView_->addWidget(runningGameSessionView_);
+    mainView_->addWidget(activeSessionView_);
     mainView_->addWidget(new TrainingModeView(trainingModeModel_.get(), categoryModel_.get()));
     setCentralWidget(mainView_);
 
@@ -67,7 +67,6 @@ MainWindow::MainWindow(QWidget* parent)
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
     categoryModel_->dispatcher.addListener(this);
-    runningGameSessionManager_->dispatcher.addListener(this);
 
     connect(ui_->action_connect, &QAction::triggered,
             this, &MainWindow::onConnectActionTriggered);
@@ -84,7 +83,6 @@ MainWindow::MainWindow(QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    runningGameSessionManager_->dispatcher.removeListener(this);
     categoryModel_->dispatcher.removeListener(this);
 
     // This is to fix an issue with listeners. The RunningGameSessionView (child of central widget)
@@ -114,23 +112,23 @@ void MainWindow::setStateDisconnected()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveGameSessionManagerAttemptConnectToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveGameSessionManagerFailedToConnectToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onProtocolFailedToConnectToServer(const char* errorMsg, const char* ipAddress, uint16_t port)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveGameSessionManagerConnectedToServer(const char* ipAddress, uint16_t port)
+void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
     setStateConnected();
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onActiveGameSessionManagerDisconnectedFromServer()
+void MainWindow::onProtocolDisconnectedFromServer()
 {
     setStateDisconnected();
 }

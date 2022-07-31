@@ -13,7 +13,7 @@ namespace Ui {
 }
 
 namespace rfcommon {
-    class SavedSession;
+    class Session;
 }
 
 namespace rfapp {
@@ -21,7 +21,7 @@ namespace rfapp {
 class PluginManager;
 class ReplayManager;
 class ReplayGroup;
-class SavedGameSessionNameCompleter;
+class ReplayNameCompleter;
 class SavedGameSessionListWidget;
 class SessionView;
 
@@ -44,8 +44,8 @@ public slots:
      * changes (files added/removed) the view will automatically update. If
      * the group is deleted the view will clear itself.
      */
-    void setSavedGameSessionGroup(ReplayGroup* group);
-    void clearSavedGameSessionGroup(ReplayGroup* group);
+    void setReplayGroup(ReplayGroup* group);
+    void clearReplayGroup(ReplayGroup* group);
 
 private slots:
     void onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
@@ -76,9 +76,9 @@ private:
     Ui::ReplayGroupView* ui_;
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
-    rfcommon::Reference<rfcommon::SavedSession> currentSession_;
-    SavedGameSessionListWidget* savedGameSessionListWidget_;
-    SavedGameSessionNameCompleter* filterCompleter_;
+    rfcommon::Reference<rfcommon::Session> currentSession_;
+    SavedGameSessionListWidget* replayListWidget_;
+    ReplayNameCompleter* filterCompleter_;
     SessionView* sessionView_;
 };
 

@@ -17,7 +17,7 @@ FrameData::FrameData(SmallVector<Vector<FighterState>, 2>&& fighterFrames)
 
 // ----------------------------------------------------------------------------
 FrameData::FrameData(int fighterCount)
-    : fighters_(fighterCount)
+    : fighters_(SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount))
 {}
 
 // ----------------------------------------------------------------------------
@@ -59,14 +59,14 @@ FrameData* FrameData::load(FILE* fp, uint32_t size)
 FrameData* load_1_5(StreamBuffer* data)
 {
     int error = 0;
-    FramesLeft::Type frameCount = data->readLU32(&error);
+    FrameNumber::Type frameCount = data->readLU32(&error);
     int fighterCount = data->readU8(&error);
     if (error)
         return nullptr;
 
-    SmallVector<Vector<FighterState>, 2> frames(fighterCount);
+    auto frames = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
     for (int fighter = 0; fighter != fighterCount; ++fighter)
-        for (FramesLeft::Type frame = 0; frame < frameCount; ++frame)
+        for (FrameNumber::Type frame = 0; frame < frameCount; ++frame)
         {
             const auto timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
             const auto framesLeft = FramesLeft::fromValue(data->readLU32(&error));
@@ -86,7 +86,7 @@ FrameData* load_1_5(StreamBuffer* data)
             if (error)
                 return nullptr;
 
-            frames[fighter].emplace(
+            frames[fighter].push(FighterState(
                 timeStamp,
                 FrameNumber::fromValue(frame),
                 framesLeft,
@@ -99,7 +99,7 @@ FrameData* load_1_5(StreamBuffer* data)
                 motion,
                 hitStatus,
                 stocks,
-                flags);
+                flags));
         }
 
     return new FrameData(std::move(frames));

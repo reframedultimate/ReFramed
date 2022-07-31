@@ -123,13 +123,6 @@ public:
         swap(*this, other);
     }
 
-    SmallVector(S resizeCount)
-        : SmallVector()
-    {
-        reserve(resizeCount);
-        resize(resizeCount);
-    }
-
     SmallVector(std::initializer_list<T> l)
         : SmallVector()
     {
@@ -144,6 +137,21 @@ public:
 
         if (this->capacity_ > N)
             deallocate(reinterpret_cast<char*>(this->begin_));
+    }
+
+    static SmallVector makeReserved(S count)
+    {
+        SmallVector v;
+        v.reserve(count);
+        return v;
+    }
+
+    static SmallVector makeResized(S count)
+    {
+        SmallVector v;
+        v.reserve(count);
+        v.resize(count);
+        return v;
     }
 
     SmallVector& operator=(SmallVector rhs)

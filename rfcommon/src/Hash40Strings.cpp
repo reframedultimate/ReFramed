@@ -35,7 +35,7 @@ static uint64_t hexStringToValue(const char* hex, int* error)
 // ----------------------------------------------------------------------------
 bool Hash40Strings::loadCSV(const char* fileName)
 {
-    FILE* fp = fopen(fileName, "r");
+    FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
         return false;
 

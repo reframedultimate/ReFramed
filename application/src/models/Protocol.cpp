@@ -1,116 +1,116 @@
 #include "application/models/Protocol.hpp"
-#include "application/models/ProtocolCommunicateTask.hpp"
-#include "application/models/ProtocolConnectTask.hpp"
+#include "application/models/ProtocolTask.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/SessionMetaData.hpp"
 #include <QTimer>
+#include <QStandardPaths>
+#include <QDir>
 
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
 Protocol::Protocol(QObject* parent)
     : QObject(parent)
+    , trainingEndedProxyWasCalled_(false)
 {
+    tryLoadGlobalMappingInfo();
 }
 
 // ----------------------------------------------------------------------------
 Protocol::~Protocol()
 {
+    disconnectFromServer();
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 {
-    communicateTask_.reset();
-    connectTask_.reset(new ProtocolConnectTask(ipAddress, port));
+    const bool requestMappingInfo = globalMappingInfo_.isNull();
+    task_.reset(new ProtocolTask(ipAddress, port, requestMappingInfo));
 
-    QByteArray ba = ipAddress.toLocal8Bit();
+    QByteArray ba = ipAddress.toUtf8();
     const char* ipCstr = ba.data();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolAttemptConnectToServer, ipCstr, port);
 
-    connect(connectTask_.get(), &ProtocolConnectTask::connectionSuccess,
+    connect(task_.get(), &ProtocolTask::connectionSuccess,
             this, &Protocol::onConnectionSuccess);
-    connect(connectTask_.get(), &ProtocolConnectTask::connectionFailure,
+    connect(task_.get(), &ProtocolTask::connectionFailure,
             this, &Protocol::onConnectionFailure);
+    connect(task_.get(), &ProtocolTask::connectionClosed,
+            this, &Protocol::onConnectionClosed);
 
-    connectTask_->start();
+    connect(task_.get(), &ProtocolTask::trainingStarted,
+            this, &Protocol::onTrainingStartedProxy);
+    connect(task_.get(), &ProtocolTask::trainingResumed,
+            this, &Protocol::onTrainingResumed);
+    connect(task_.get(), &ProtocolTask::trainingEnded,
+            this, &Protocol::onTrainingEndedProxy);
+    connect(task_.get(), &ProtocolTask::gameStarted,
+            this, &Protocol::onGameStarted);
+    connect(task_.get(), &ProtocolTask::gameResumed,
+            this, &Protocol::onGameResumed);
+    connect(task_.get(), &ProtocolTask::gameEnded,
+            this, &Protocol::onGameEnded);
+    connect(task_.get(), &ProtocolTask::fighterState,
+            this, &Protocol::onFighterState);
+
+    task_->start();
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::disconnectFromServer()
 {
-    connectTask_.reset();
-    communicateTask_.reset();
+    task_.reset();
 }
 
 // ----------------------------------------------------------------------------
-bool Protocol::isTryingToConnect() const
+rfcommon::Session* Protocol::activeSession() const
 {
-    return connectTask_ != nullptr;
+    return activeSession_;
 }
 
 // ----------------------------------------------------------------------------
-bool Protocol::isConnected() const
+void Protocol::onConnectionSuccess(const QString& ipAddress, quint16 port)
 {
-    return communicateTask_ != nullptr;
-}
-
-// ----------------------------------------------------------------------------
-void Protocol::onConnectionSuccess(void* socket_handle, const QString& ipAddress, quint16 port)
-{
-    connectTask_.reset();
-    QByteArray ba = ipAddress.toLocal8Bit();
+    QByteArray ba = ipAddress.toUtf8();
     const char* ipCstr = ba.data();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolConnectedToServer, ipCstr, port);
-
-    communicateTask_.reset(new ProtocolCommunicateTask(
-                               tcp_socket_from_handle(socket_handle)));
-
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::connectionClosed,
-            this, &Protocol::onProtocolDisconnected);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingStarted,
-            this, &Protocol::onTrainingStartedProxy);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingResumed,
-            this, &Protocol::onTrainingResumed);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::trainingEnded,
-            this, &Protocol::onTrainingEndedProxy);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameStarted,
-            this, &Protocol::onGameStarted);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameResumed,
-            this, &Protocol::onGameResumed);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::gameEnded,
-            this, &Protocol::onGameEnded);
-    connect(communicateTask_.get(), &ProtocolCommunicateTask::fighterState,
-            this, &Protocol::onFighterState);
-
-    communicateTask_->start();
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port)
 {
-    connectTask_.reset();
-    QByteArray ipba = ipAddress.toLocal8Bit();
+    task_.reset();
+
+    QByteArray ipba = ipAddress.toUtf8();
     const char* ipCstr = ipba.data();
-    QByteArray errorba = errormsg.toLocal8Bit();
+    QByteArray errorba = errormsg.toUtf8();
     const char* errorCstr = errorba.data();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolFailedToConnectToServer, errorCstr, ipCstr, port);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onProtocolDisconnected()
+void Protocol::onConnectionClosed()
 {
     endSessionIfNecessary();
 
-    communicateTask_.reset();
+    task_.reset();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolDisconnectedFromServer);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedProxy(rfcommon::Session* training)
+void Protocol::onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo)
+{
+    globalMappingInfo_ = mappingInfo;
+    saveGlobalMappingInfo();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::onTrainingStartedProxy(rfcommon::SessionMetaData* trainingMeta)
 {
     // If the timer did not reset this in time, it means that a stop and a
     // start event occurred in quick succession. This is how we detect a reset
@@ -124,49 +124,49 @@ void Protocol::onTrainingStartedProxy(rfcommon::Session* training)
         if (activeSession_.notNull())
         {
             rfcommon::Reference<rfcommon::Session> oldSession = activeSession_;
-            activeSession_ = training;
+            activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, trainingMeta);
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingReset, oldSession, activeSession_);
         }
         else
         {
             // Somehow the flag was set and there was no active session? Whatever,
             // just act like the training started instead of reset
-            onTrainingStartedActually(training);
+            onTrainingStartedActually(trainingMeta);
         }
     }
     else
     {
         // This was a normal start event
-        onTrainingStartedActually(training);
+        onTrainingStartedActually(trainingMeta);
     }
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedActually(rfcommon::Session* training)
+void Protocol::onTrainingStartedActually(rfcommon::SessionMetaData* trainingMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(training->metaData()->fighterCount());
+    stateBuffer_.resize(trainingMeta->fighterCount());
 
-    activeSession_ = training;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingStarted, training);
+    activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, trainingMeta);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingStarted, activeSession_);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingResumed(rfcommon::Session* training)
+void Protocol::onTrainingResumed(rfcommon::SessionMetaData* trainingMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(training->metaData()->fighterCount());
+    stateBuffer_.resize(trainingMeta->fighterCount());
 
-    activeSession_ = training;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingResumed, training);
+    activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, trainingMeta);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingResumed, activeSession_);
 }
 
 // ----------------------------------------------------------------------------
@@ -189,31 +189,31 @@ void Protocol::onTrainingEndedActually()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameStarted(rfcommon::Session* game)
+void Protocol::onGameStarted(rfcommon::SessionMetaData* gameMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(game->metaData()->fighterCount());
+    stateBuffer_.resize(gameMeta->fighterCount());
 
-    activeSession_ = game;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameStarted, game);
+    activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, gameMeta);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameStarted, activeSession_);
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameResumed(rfcommon::Session* game)
+void Protocol::onGameResumed(rfcommon::SessionMetaData* gameMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
     // Reset state buffer
     stateBuffer_.clearCompact();
-    stateBuffer_.resize(game->metaData()->fighterCount());
+    stateBuffer_.resize(gameMeta->fighterCount());
 
-    activeSession_ = game;
-    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameResumed, game);
+    activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, gameMeta);
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameResumed, activeSession_);
 }
 
 // ----------------------------------------------------------------------------
@@ -242,6 +242,9 @@ void Protocol::onFighterState(
 {
     if (activeSession_.isNull())
         return;
+
+    rfcommon::FrameData* frameData = activeSession_->tryGetFrameData();
+    assert(frameData != nullptr);
 
     // For whatever reason, fighter states aren't guaranteed to be received
     // (read: processed by the game) in a defined order. It has been observed
@@ -298,11 +301,11 @@ void Protocol::onFighterState(
         if (stateBuffer_[0][0].framesLeft().value() != 0)
         {
             rfcommon::Frame frame;
-            const int frameCount = activeSession_->frameData()->frameCount();
+            const int frameCount = frameData->frameCount();
             const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
             for (auto& states : stateBuffer_)
                 frame.push(states.take(0).withNewFrameNumber(frameNumber));
-            activeSession_->frameData()->addFrame(std::move(frame));
+            frameData->addFrame(std::move(frame));
 
             return;
         }
@@ -310,14 +313,14 @@ void Protocol::onFighterState(
         // The above check failed so it must mean this is training mode. Only
         // add frames once we know we're synced. This will be the case when the
         // session object has more than 0 frames.
-        if (activeSession_->frameData()->frameCount() > 0)
+        if (frameData->frameCount() > 0)
         {
             rfcommon::Frame frame;
-            const int frameCount = activeSession_->frameData()->frameCount();
+            const int frameCount = frameData->frameCount();
             const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
             for (auto& states : stateBuffer_)
                 frame.push(states.take(0).withNewFrameNumber(frameNumber));
-            activeSession_->frameData()->addFrame(std::move(frame));
+            frameData->addFrame(std::move(frame));
 
             return;
         }
@@ -386,11 +389,11 @@ void Protocol::onFighterState(
     if (haveAtLeast(2))
     {
         rfcommon::Frame frame;
-        const int frameCount = activeSession_->frameData()->frameCount();
+        const int frameCount = frameData->frameCount();
         const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
         for (auto& states : stateBuffer_)
             frame.push(states.take(0).withNewFrameNumber(frameNumber));
-        activeSession_->frameData()->addFrame(std::move(frame));
+        frameData->addFrame(std::move(frame));
 
         return;
     }
@@ -402,17 +405,59 @@ void Protocol::endSessionIfNecessary()
     if (activeSession_.isNull())
         return;
 
-    if (activeSession_->metaData()->type() == rfcommon::SessionMetaData::GAME)
+    rfcommon::SessionMetaData* meta = activeSession_->tryGetMetaData();
+    assert(meta != nullptr);
+
+    switch (meta->type())
     {
-        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameEnded, activeSession_);
-    }
-    else
-    {
-        assert(activeSession_->metaData()->type() == rfcommon::SessionMetaData::TRAINING);
-        dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, activeSession_);
+        case rfcommon::SessionMetaData::GAME:
+            dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameEnded, activeSession_);
+            break;
+        case rfcommon::SessionMetaData::TRAINING:
+            dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, activeSession_);
+            break;
     }
 
     activeSession_.drop();
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::tryLoadGlobalMappingInfo()
+{
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
+    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
+    FILE* fp = fopen(ba.constData(), "rb");
+    if (fp == nullptr)
+        return;
+
+    if (fseek(fp, 0, SEEK_END) != 0)
+    {
+        fclose(fp);
+        return;
+    }
+
+    uint32_t size = ftell(fp);
+    if (fseek(fp, 0, SEEK_SET) != 0)
+    {
+        fclose(fp);
+        return;
+    }
+
+    globalMappingInfo_ = rfcommon::MappingInfo::load(fp, size);
+    fclose(fp);
+}
+
+// ----------------------------------------------------------------------------
+void Protocol::saveGlobalMappingInfo()
+{
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
+    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
+    FILE* fp = fopen(ba.constData(), "rb");
+    if (fp == nullptr)
+        return;
+
+    globalMappingInfo_->save(fp);
+    fclose(fp);
 }
 
 }

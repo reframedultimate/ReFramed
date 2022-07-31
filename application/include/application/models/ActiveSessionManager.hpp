@@ -7,7 +7,6 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/SessionMetaDataListener.hpp"
-#include "rfcommon/FrameDataListener.hpp"
 #include <QObject>
 #include <QDir>
 #include <vector>
@@ -15,54 +14,55 @@
 namespace rfcommon {
     class Session;
     class GameSessionMetaData;
+    class TrainingSessionMetaData;
 }
 
 namespace rfapp {
 
 class Protocol;
 class Settings;
-class ActiveGameSessionManagerListener;
+class ActiveSessionManagerListener;
 class ReplayManager;
 
 /*!
- * \brief Central class that controls the connection + protocol with the Switch
- * and manages set information and saving recordings to files as they come in.
+ * \brief Central class that manages set information ("set" is the term used
+ * for a set of smash games, e.g. a Bo5 is a set of 3-5 games) and saving
+ * sessions to files as they come in.
  */
-class ActiveGameSessionManager : public QObject
-                               , public ReplayManagerListener
-                               , public rfcommon::ProtocolListener
-                               , public rfcommon::SessionMetaDataListener
-                               , public rfcommon::FrameDataListener
+class ActiveSessionManager : public QObject
+                           , public ReplayManagerListener
+                           , public rfcommon::ProtocolListener
+                           , public rfcommon::SessionMetaDataListener
 {
     Q_OBJECT
 
 public:
-    ActiveGameSessionManager(Protocol* protocol, rfapp::ReplayManager* manager, QObject* parent = nullptr);
-    ~ActiveGameSessionManager();
+    ActiveSessionManager(Protocol* protocol, rfapp::ReplayManager* manager, QObject* parent=nullptr);
+    ~ActiveSessionManager();
 
-    void setFormat(const rfcommon::SetFormat& format);
+    void setSetFormat(const rfcommon::SetFormat& format);
     void setP1Name(const QString& name);
     void setP2Name(const QString& name);
     void setGameNumber(rfcommon::GameNumber number);
+    void setTrainingSessionNumber(rfcommon::GameNumber number);
 
-    bool isSessionRunning() const;
-
-    rfcommon::ListenerDispatcher<ActiveGameSessionManagerListener> dispatcher;
-
-private:
-    void findUniqueGameAndSetNumbers(rfcommon::Session* session);
-    bool shouldStartNewSet(const rfcommon::Session* session);
+    rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolDisconnectedFromServer() override;
+    void findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameSessionMetaData* meta);
+    void findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingSessionMetaData* meta);
+    bool shouldStartNewSet(const rfcommon::GameSessionMetaData* meta);
 
-    void onProtocolTrainingStarted(rfcommon::Session* training) override;
-    void onProtocolTrainingResumed(rfcommon::Session* training) override;
-    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override;
-    void onProtocolTrainingEnded(rfcommon::Session* training) override;
+private:
+    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
+    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolDisconnectedFromServer() override {}
+
+    void onProtocolTrainingStarted(rfcommon::Session* training) override {}
+    void onProtocolTrainingResumed(rfcommon::Session* training) override {}
+    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override {}
+    void onProtocolTrainingEnded(rfcommon::Session* training) override {}
     void onProtocolGameStarted(rfcommon::Session* game) override;
     void onProtocolGameResumed(rfcommon::Session* game) override;
     void onProtocolGameEnded(rfcommon::Session* game) override;
@@ -85,20 +85,23 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
+    void onSessionMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
+    void onSessionMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
+
     void onSessionMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
     void onSessionMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
     void onSessionMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
     void onSessionMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;
     void onSessionMetaDataWinnerChanged(int winner) override;
 
-    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
-    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onSessionMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) override;
 
 private:
     Protocol* protocol_;
-    std::vector<rfcommon::Reference<rfcommon::Session>> pastSessions_;
-    rfcommon::Reference<rfcommon::Session> activeSession_;
     ReplayManager* replayManager_;
+    std::vector<rfcommon::Reference<rfcommon::GameSessionMetaData>> pastGameMetaData_;
+    rfcommon::Reference<rfcommon::SessionMetaData> activeMetaData_;
+    rfcommon::Reference<rfcommon::MappingInfo> activeMappingInfo_;
     QString gameSaveFormat_;
     QString trainingSaveFormat_;
     QString p1Name_;
