@@ -1,10 +1,10 @@
 #include "frame-data-list/PluginConfig.hpp"
-#include "frame-data-list/models/FrameDataListModel.hpp"
+#include "frame-data-list/FrameDataListPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
 static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
-    return new FrameDataListModel(factory);
+    return new FrameDataListPlugin(factory);
 }
 
 static void destroyPlugin(rfcommon::Plugin* model)

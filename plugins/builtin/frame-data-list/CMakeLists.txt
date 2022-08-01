@@ -11,7 +11,9 @@ include (ReFramedPlugin)
 reframed_add_plugin (plugin-${PLUGIN_NAME}
     SOURCES
         "src/models/FrameDataListModel.cpp"
+        "src/models/MetaDataModel.cpp"
         "src/views/FrameDataListView.cpp"
+        "src/FrameDataListPlugin.cpp"
         "src/Plugin.cpp"
     MOC_HEADERS
         "include/${PLUGIN_NAME}/views/FrameDataListView.hpp"

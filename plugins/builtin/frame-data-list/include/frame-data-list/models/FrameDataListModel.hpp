@@ -1,53 +1,37 @@
 #pragma once
 
-#include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/SessionListener.hpp"
 #include "rfcommon/Reference.hpp"
+#include <memory>
 
 namespace rfcommon {
+    class FrameData;
+    class MappingInfo;
     class Session;
+    class SessionMetaData;
 }
 
-class FrameDataListListener;
+class QAbstractTableModel;
 
-class FrameDataListModel : public rfcommon::RealtimePlugin
+class FrameDataListListener;
+class MetaDataModel;
+
+class FrameDataListModel
 {
 public:
-    FrameDataListModel(RFPluginFactory* factory);
+    FrameDataListModel();
     ~FrameDataListModel();
 
-    rfcommon::Session* session() const
-        { return session_; }
+    void setSession(rfcommon::Session* session);
+    void clearSession(rfcommon::Session* session);
+
+    QAbstractTableModel* metaDataModel() const;
 
     rfcommon::ListenerDispatcher<FrameDataListListener> dispatcher;
 
 private:
-    void setSession(rfcommon::Session* session);
-    void clearSession(rfcommon::Session* session);
-
-private:
-    QWidget* createView() override;
-    void destroyView(QWidget* view) override;
-
-private:
-    void setSavedGameSession(rfcommon::SavedGameSession* session) override;
-    void clearSavedGameSession(rfcommon::SavedGameSession* session) override;
-
-private:
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolDisconnectedFromServer() override;
-
-    void onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training) override;
-    void onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training) override;
-    void onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining) override;
-    void onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training) override;
-    void onProtocolMatchStarted(rfcommon::RunningGameSession* match) override;
-    void onProtocolMatchResumed(rfcommon::RunningGameSession* match) override;
-    void onProtocolMatchEnded(rfcommon::RunningGameSession* match) override;
-
-private:
-    rfcommon::Reference<rfcommon::Session> session_;
+    std::unique_ptr<MetaDataModel> metaDataModel_;
+    rfcommon::Reference<rfcommon::MappingInfo> mappingInfo_;
+    rfcommon::Reference<rfcommon::SessionMetaData> metaData_;
+    rfcommon::Reference<rfcommon::FrameData> frameData_;
 };

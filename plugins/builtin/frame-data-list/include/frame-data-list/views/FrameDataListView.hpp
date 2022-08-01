@@ -1,7 +1,6 @@
 #pragma once
 
 #include "frame-data-list/listeners/FrameDataListListener.hpp"
-#include "rfcommon/SessionListener.hpp"
 #include "rfcommon/Vector.hpp"
 #include <QWidget>
 
@@ -19,7 +18,6 @@ namespace rfcommon {
 
 class FrameDataListView : public QWidget
                         , public FrameDataListListener
-                        , public rfcommon::SessionListener
 {
     Q_OBJECT
 
@@ -32,8 +30,7 @@ private slots:
 
 private:
     void clearUI();
-    void repopulateTree();
-    void repopulateGameInfoTable();
+    void repopulateTree(rfcommon::SessionMetaData* meta, rfcommon::FrameData* frameData);
     void repopulateStageMappingTable();
     void repopulateFighterMappingTable();
     void repopulateStatusMappingTable();
@@ -44,24 +41,13 @@ private:
     void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::FighterState& frame);
 
 private:
-    void onFrameDataListSessionSet(rfcommon::Session* session) override;
-    void onFrameDataListSessionCleared(rfcommon::Session* session) override;
-
-private:
-    void onRunningGameSessionPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name) override;
-    void onRunningGameSessionSetNumberChanged(rfcommon::SetNumber number) override;
-    void onRunningGameSessionGameNumberChanged(rfcommon::GameNumber number) override;
-    void onRunningGameSessionFormatChanged(const rfcommon::SetFormat& format) override;
-    void onRunningGameSessionWinnerChanged(int winnerPlayerIdx) override;
-
-    // RunningSession events
-    void onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
-    void onRunningSessionNewFrame(int frameIdx, const rfcommon::Frame& frame) override {}
+    void onNewData(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* meta, rfcommon::FrameData* frames) override;
+    void onDataFinalized(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* meta, rfcommon::FrameData* frames) override;
 
 private:
     FrameDataListModel* model_;
     Ui::FrameDataListView* ui_;
-    QTreeWidgetItem* gameInfoItem_ = nullptr;
+    QTreeWidgetItem* metaDataItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;
     QTreeWidgetItem* baseStatusIDMappingsItem_ = nullptr;
