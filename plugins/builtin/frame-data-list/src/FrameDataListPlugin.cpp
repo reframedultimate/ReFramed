@@ -35,7 +35,7 @@ void FrameDataListPlugin::onGameSessionLoaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void FrameDataListPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
-    model_->clearSession(game);
+    model_->finalizeSession(game);
 }
 
 // ----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ void FrameDataListPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
 // ----------------------------------------------------------------------------
 void FrameDataListPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
 {
-    model_->clearSession(training);
+    model_->finalizeSession(training);
 }
 
 // ----------------------------------------------------------------------------
@@ -72,14 +72,14 @@ void FrameDataListPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 void FrameDataListPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
     // We probably want to clear the existing data in this case
-    model_->clearSession(oldTraining);
+    model_->finalizeSession(oldTraining);
     model_->setSession(newTraining);
 }
 
 // ----------------------------------------------------------------------------
 void FrameDataListPlugin::onProtocolTrainingEnded(rfcommon::Session* training)
 {
-    model_->clearSession(training);
+    model_->finalizeSession(training);
 }
 
 // ----------------------------------------------------------------------------
@@ -97,5 +97,5 @@ void FrameDataListPlugin::onProtocolGameResumed(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void FrameDataListPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
-    model_->clearSession(game);
+    model_->finalizeSession(game);
 }

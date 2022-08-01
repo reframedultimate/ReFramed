@@ -44,7 +44,7 @@
         <item>
          <widget class="QTableView" name="tableView_metaData">
           <attribute name="horizontalHeaderVisible">
-           <bool>false</bool>
+           <bool>true</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
@@ -56,17 +56,10 @@
       <widget class="QWidget" name="page_stageIDs">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QTableWidget" name="tableWidget_stageIDs">
-          <column>
-           <property name="text">
-            <string>Stage ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Name</string>
-           </property>
-          </column>
+         <widget class="QTableView" name="tableView_stageIDs">
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -74,17 +67,10 @@
       <widget class="QWidget" name="page_fighterIDs">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QTableWidget" name="tableWidget_fighterIDs">
-          <column>
-           <property name="text">
-            <string>Fighter ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Name</string>
-           </property>
-          </column>
+         <widget class="QTableView" name="tableView_fighterIDs">
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -92,27 +78,10 @@
       <widget class="QWidget" name="page_baseStatusIDs">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QTableWidget" name="tableWidget_baseStatusIDs">
-          <column>
-           <property name="text">
-            <string>Status ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Enum Name</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Short Name</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Custom Name</string>
-           </property>
-          </column>
+         <widget class="QTableView" name="tableView_baseStatusIDs">
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -120,32 +89,10 @@
       <widget class="QWidget" name="page_specificStatusIDs">
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
-         <widget class="QTableWidget" name="tableWidget_specificStatusIDs">
-          <column>
-           <property name="text">
-            <string>Fighter ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Status ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Enum Name</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Short Name</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Custom Name</string>
-           </property>
-          </column>
+         <widget class="QTableView" name="tableView_specificStatusIDs">
+          <attribute name="verticalHeaderVisible">
+           <bool>true</bool>
+          </attribute>
          </widget>
         </item>
        </layout>
@@ -153,17 +100,10 @@
       <widget class="QWidget" name="page_hitStatusIDs">
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
-         <widget class="QTableWidget" name="tableWidget_hitStatusIDs">
-          <column>
-           <property name="text">
-            <string>Hit Status ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Enum Name</string>
-           </property>
-          </column>
+         <widget class="QTableView" name="tableView_hitStatusIDs">
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
          </widget>
         </item>
        </layout>

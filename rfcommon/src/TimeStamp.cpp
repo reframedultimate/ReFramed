@@ -1,13 +1,18 @@
 #include "rfcommon/TimeStamp.hpp"
+#include <cassert>
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 TimeStamp TimeStamp::fromMillisSinceEpoch(Type value)
-{ 
-    TimeStamp ts;
-    ts.millisSinceEpoch_ = value; 
-    return ts; 
+{
+    return TimeStamp(value);
+}
+
+// ----------------------------------------------------------------------------
+TimeStamp TimeStamp::makeInvalid()
+{
+    return TimeStamp(0);
 }
 
 // ----------------------------------------------------------------------------
@@ -16,64 +21,65 @@ TimeStamp::~TimeStamp()
 
 // ----------------------------------------------------------------------------
 TimeStamp::Type TimeStamp::millisSinceEpoch() const
-{ 
-    return millisSinceEpoch_; 
+{
+    assert(isValid());
+    return millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
 bool TimeStamp::isValid() const
-{ 
+{
     return millisSinceEpoch_ != 0;
 }
 
 // ----------------------------------------------------------------------------
 bool TimeStamp::operator==(TimeStamp rhs) const
 {
-    return millisSinceEpoch_ == rhs.millisSinceEpoch_; 
+    return millisSinceEpoch_ == rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-bool TimeStamp::operator!=(TimeStamp rhs) const 
-{ 
-    return millisSinceEpoch_ != rhs.millisSinceEpoch_; 
+bool TimeStamp::operator!=(TimeStamp rhs) const
+{
+    return millisSinceEpoch_ != rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-bool TimeStamp::operator< (TimeStamp rhs) const 
-{ 
+bool TimeStamp::operator<(TimeStamp rhs) const
+{
     return millisSinceEpoch_ < rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-bool TimeStamp::operator<=(TimeStamp rhs) const 
-{ 
+bool TimeStamp::operator<=(TimeStamp rhs) const
+{
     return millisSinceEpoch_ <= rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-bool TimeStamp::operator> (TimeStamp rhs) const
-{ 
-    return millisSinceEpoch_ > rhs.millisSinceEpoch_; 
+bool TimeStamp::operator>(TimeStamp rhs) const
+{
+    return millisSinceEpoch_ > rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-bool TimeStamp::operator>=(TimeStamp rhs) const 
-{ 
-    return millisSinceEpoch_ >= rhs.millisSinceEpoch_; 
+bool TimeStamp::operator>=(TimeStamp rhs) const
+{
+    return millisSinceEpoch_ >= rhs.millisSinceEpoch_;
 }
 
 // ----------------------------------------------------------------------------
-TimeStamp& TimeStamp::operator+=(DeltaTime rhs) 
-{ 
-    millisSinceEpoch_ += rhs.millis(); 
-    return *this; 
+TimeStamp& TimeStamp::operator+=(DeltaTime rhs)
+{
+    millisSinceEpoch_ += rhs.millis();
+    return *this;
 }
 
 // ----------------------------------------------------------------------------
 TimeStamp& TimeStamp::operator-=(DeltaTime rhs)
 {
-    millisSinceEpoch_ -= rhs.millis(); 
-    return *this; 
+    millisSinceEpoch_ -= rhs.millis();
+    return *this;
 }
 
 // ----------------------------------------------------------------------------
@@ -83,6 +89,7 @@ TimeStamp::TimeStamp()
 
 // ----------------------------------------------------------------------------
 TimeStamp::TimeStamp(Type millisSinceEpoch)
+    : millisSinceEpoch_(millisSinceEpoch)
 {}
 
 }

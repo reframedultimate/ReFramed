@@ -21,19 +21,19 @@ StageID::~StageID()
 // ----------------------------------------------------------------------------
 StageID::Type StageID::value() const
 {
-    return value_; 
+    return value_;
 }
 
 // ----------------------------------------------------------------------------
-bool StageID::isValid() const 
-{ 
+bool StageID::isValid() const
+{
     return value_ != Type(-1);
 }
 
 // ----------------------------------------------------------------------------
 bool StageID::operator==(StageID other) const
-{ 
-    return value_ == other.value_; 
+{
+    return value_ == other.value_;
 }
 
 // ----------------------------------------------------------------------------
@@ -54,8 +54,8 @@ StageID::StageID()
 {}
 
 // ----------------------------------------------------------------------------
-StageID::StageID(Type value) 
-    : value_(value) 
+StageID::StageID(Type value)
+    : value_(value)
 {}
 
 }

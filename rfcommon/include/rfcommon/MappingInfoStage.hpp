@@ -18,6 +18,7 @@ public:
 
     void add(StageID stageID, const char* name);
 
+    int count() const;
     SmallVector<String, 10> names() const;
     SmallVector<StageID, 10> IDs() const;
 

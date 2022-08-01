@@ -1251,6 +1251,8 @@ Session::Session(FILE* fp, MappingInfo* mappingInfo, SessionMetaData* metaData, 
     , metaData_(metaData)
     , frameData_(frameData)
 {
+    if (frameData_.notNull())
+        frameData_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -1258,6 +1260,8 @@ Session::~Session()
 {
     if (fp_)
         fclose(fp_);
+    if (frameData_.notNull())
+        frameData_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -1395,23 +1399,34 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
 }
 
 // ----------------------------------------------------------------------------
+Session::ContentTableEntry::ContentTableEntry()
+{}
+
+// ----------------------------------------------------------------------------
+Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
+    : offset(0)
+    , size(0)
+{
+    assert(strlen(typeStr) == 4);
+    memcpy(type, typeStr, 4);
+}
+
+// ----------------------------------------------------------------------------
 bool Session::save(const char* fileName)
 {
-    if (frameData_->frameCount() == 0)
-        return false;
+    // Any property of Session is allowed to be null, so we first calculate
+    // how many entries we need. We don't know the offsets or sizes yet.
+    contentTable_.clear();
+    if (mappingInfo_.notNull())
+        contentTable_.emplace(blobTypeMappingInfo);
+    if (metaData_.notNull())
+        contentTable_.emplace(blobTypeMeta);
+    if (frameData_.notNull())
+        contentTable_.emplace(blobTypeFrameData);
 
-    const uint8_t numEntries = 3;
-    struct Entry
-    {
-        char type[4];
-        uint32_t offset;
-        uint32_t size;
-    } entries[numEntries];
-
-    const uint32_t magicSize = 4;
-    const uint32_t entryCountSize = 1;
-    const uint32_t entrySize = 12;  // sizeof(Entry)
-    const uint32_t headerSize = magicSize + entryCountSize + entrySize * numEntries;
+    const int headerSize = 5 + 12 * contentTable_.count();
+    uint8_t numEntries = static_cast<uint8_t>(contentTable_.count());
+    int offset = headerSize;
 
     FILE* file;
     file = fopen(fileName, "wb");
@@ -1423,26 +1438,36 @@ bool Session::save(const char* fileName)
     if (fseek(file, headerSize, SEEK_SET) != 0)
         goto write_fail;
 
-    // Write meta data
-    memcpy(entries[0].type, blobTypeMeta, 4);
-    entries[0].offset = headerSize;
-    entries[0].size = metaData_->save(file);
-    if (entries[0].size == 0)
-        goto write_fail;
-
-    // Write frame data
-    memcpy(entries[1].type, blobTypeFrameData, 4);
-    entries[1].offset = entries[0].offset + entries[0].size;
-    entries[1].size = frameData_->save(file);
-    if (entries[1].size == 0)
-        goto write_fail;
-
-    // Write local mapping info
-    memcpy(entries[2].type, blobTypeMappingInfo, 4);
-    entries[2].offset = entries[1].offset + entries[1].size;
-    entries[2].size = mappingInfo_->saveNecessary(file, metaData_, frameData_);
-    if (entries[2].size == 0)
-        goto write_fail;
+    // Write content and update offsets/sizes in content table
+    for (auto& entry : contentTable_)
+    {
+        if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
+        {
+            entry.offset = offset;
+            entry.size = metaData_ && frameData_ ?
+                    mappingInfo_->saveNecessary(file, metaData_, frameData_) :
+                    mappingInfo_->save(file);
+            if (entry.size == 0)
+                goto write_fail;
+            offset += entry.size;
+        }
+        else if (memcmp(entry.type, blobTypeMeta, 4) == 0)
+        {
+            entry.offset = offset;
+            entry.size = metaData_->save(file);
+            if (entry.size == 0)
+                goto write_fail;
+            offset += entry.size;
+        }
+        else if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
+        {
+            entry.offset = offset;
+            entry.size = frameData_->save(file);
+            if (entry.size == 0)
+                goto write_fail;
+            offset += entry.size;
+        }
+    }
 
     // Rewind and write header
     if (fseek(file, 0, SEEK_SET) != 0)
@@ -1455,11 +1480,11 @@ bool Session::save(const char* fileName)
     // Write contents table
     if (fwrite(&numEntries, 1, 1, file) != 1)
         goto write_fail;
-    for (uint8_t i = 0; i != numEntries; ++i)
+    for (const auto& entry : contentTable_)
     {
-        uint32_t offsetLE = toLittleEndian32(entries[i].offset);
-        uint32_t sizeLE = toLittleEndian32(entries[i].size);
-        if (fwrite(entries[i].type, 1, 4, file) != 4)
+        uint32_t offsetLE = toLittleEndian32(entry.offset);
+        uint32_t sizeLE = toLittleEndian32(entry.size);
+        if (fwrite(entry.type, 1, 4, file) != 4)
             goto write_fail;
         if (fwrite(&offsetLE, 1, 4, file) != 4)
             goto write_fail;

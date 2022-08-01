@@ -6,7 +6,7 @@
 
 class FrameDataListModel;
 class QTreeWidgetItem;
-class QTableWidget;
+class QTableView;
 
 namespace Ui {
     class FrameDataListView;
@@ -29,20 +29,13 @@ private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-    void clearUI();
-    void repopulateTree(rfcommon::SessionMetaData* meta, rfcommon::FrameData* frameData);
-    void repopulateStageMappingTable();
-    void repopulateFighterMappingTable();
-    void repopulateStatusMappingTable();
+    void repopulateTree(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* meta, rfcommon::FrameData* frames);
     void repopulatePlayerDataTables();
-    void repopulateHitStatusMappingTable();
-
-    void updatePlayerDataTableRowsIfDirty();
-    void setPlayerDataTableRow(int playerIdx, int row, const rfcommon::FighterState& frame);
 
 private:
     void onNewData(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* meta, rfcommon::FrameData* frames) override;
     void onDataFinalized(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* meta, rfcommon::FrameData* frames) override;
+    void onNewFrame() override;
 
 private:
     FrameDataListModel* model_;
@@ -54,13 +47,5 @@ private:
     QTreeWidgetItem* specificStatusIDMappingsItem_ = nullptr;
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
     rfcommon::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
-    rfcommon::SmallVector<QTableWidget*, 8> playerDataTables_;
-
-    // When a new recording is set, we want to remember which player was selected so the
-    // user doesn't have to keep clicking on the player when browsing recordings
-    int storeCurrentPageIndex_ = 0;
-
-    bool playerDataTableRowsDirty_ = true;
-    uint64_t lastTimePlayerDataTablesUpdated_ = 0;
-    uint64_t playerDataTablesUpdateTime_ = 0;
+    rfcommon::SmallVector<QTableView*, 8> playerDataTables_;
 };

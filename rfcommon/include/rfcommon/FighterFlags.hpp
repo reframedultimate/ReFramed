@@ -17,7 +17,7 @@ public:
 
     Type value() const;
     bool attackConnected() const;
-    bool facingDirection() const;
+    bool facingLeft() const;
     bool opponentInHitlag() const;
 
     bool operator==(FighterFlags other) const;

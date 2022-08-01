@@ -13,19 +13,27 @@ MappingInfoStatus::~MappingInfoStatus()
 // ----------------------------------------------------------------------------
 const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status) const
 {
+    if (const char* name = toName(fighterID, status, nullptr))
+        return name;
+    return "(Unknown Status)";
+}
+
+// ----------------------------------------------------------------------------
+const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status, const char* fallback) const
+{
     const auto baseIt = statusMap_.find(status);
     if (baseIt != statusMap_.end())
         return baseIt->value().cStr();
 
     const auto fighterIt = specificStatusMap_.find(fighterID);
     if (fighterIt == specificStatusMap_.end())
-        return "(Unknown Status)";
+        return fallback;
 
     const auto specificIt = fighterIt->value().find(status);
     if (specificIt != fighterIt->value().end())
         return specificIt->value().cStr();
 
-    return "(Unknown Status)";
+    return fallback;
 }
 
 // ----------------------------------------------------------------------------
@@ -40,6 +48,8 @@ FighterStatus MappingInfoStatus::toStatus(const char* enumName) const
 // ----------------------------------------------------------------------------
 void MappingInfoStatus::addBaseName(FighterStatus status, const char* name)
 {
+    if (status.isValid() == false)
+        return;
     if (statusMap_.insertIfNew(status, name) == statusMap_.end())
         return;
     enumNameMap_.insertAlways(name, status);
@@ -48,6 +58,8 @@ void MappingInfoStatus::addBaseName(FighterStatus status, const char* name)
 // ----------------------------------------------------------------------------
 void MappingInfoStatus::addSpecificName(FighterID fighterID, FighterStatus status, const char* name)
 {
+    if (status.isValid() == false)
+        return;
     auto fighterIt = specificStatusMap_.insertOrGet(fighterID, HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher>());
     fighterIt->value().insertIfNew(status, name);
     enumNameMap_.insertIfNew(name, status);
@@ -84,7 +96,8 @@ Vector<FighterStatus> MappingInfoStatus::baseStatuses() const
 Vector<SmallString<31>> MappingInfoStatus::specificNames(FighterID fighterID) const
 {
     Vector<SmallString<31>> result;
-    for (const auto fighterIt : specificStatusMap_)
+    const auto fighterIt = specificStatusMap_.find(fighterID);
+    if (fighterIt != specificStatusMap_.end())
         for (const auto it : fighterIt->value())
             result.push(it->value());
     return result;
@@ -94,7 +107,8 @@ Vector<SmallString<31>> MappingInfoStatus::specificNames(FighterID fighterID) co
 Vector<FighterStatus> MappingInfoStatus::specificStatuses(FighterID fighterID) const
 {
     Vector<FighterStatus> result;
-    for (const auto fighterIt : specificStatusMap_)
+    const auto fighterIt = specificStatusMap_.find(fighterID);
+    if (fighterIt != specificStatusMap_.end())
         for (const auto it : fighterIt->value())
             result.push(it->key());
     return result;

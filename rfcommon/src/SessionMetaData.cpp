@@ -7,7 +7,7 @@ namespace rfcommon {
 
 using nlohmann::json;
 
-static SessionMetaData* load_1_5(const json& j);
+static SessionMetaData* load_1_5(json& j);
 
 // ----------------------------------------------------------------------------
 SessionMetaData* SessionMetaData::newActiveGameSession(
@@ -130,56 +130,72 @@ SessionMetaData* SessionMetaData::load(FILE* fp, uint32_t size)
     // unsupported version
     return nullptr;
 }
-static SessionMetaData* load_1_5(const json& j)
+static SessionMetaData* load_1_5(json& j)
 {
-    const json jPlayerInfo = j["playerinfo"];
-    const json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jGameInfo = j["gameinfo"];
 
-    const auto stageID = StageID::fromValue(
-        jGameInfo["stageid"].get<StageID::Type>());
-    const auto timeStarted = TimeStamp::fromMillisSinceEpoch(
-        jGameInfo["timestampstart"].get<TimeStamp::Type>());
-    const auto timeEnded = TimeStamp::fromMillisSinceEpoch(
-        jGameInfo["timestampend"].get<TimeStamp::Type>());
+    json jTimeStarted = jGameInfo["timestampstart"];
+    json jTimeEnded = jGameInfo["timestampend"];
+    json jStageID = jGameInfo["stageid"];
+    const auto timeStarted = jTimeStarted.is_number_integer() ?
+        TimeStamp::fromMillisSinceEpoch(jTimeStarted.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
+    const auto timeEnded = jTimeEnded.is_number_integer() ?
+        TimeStamp::fromMillisSinceEpoch(jGameInfo["timestampend"].get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
+    const auto stageID = jStageID.is_number_integer() ?
+        StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
     SmallVector<FighterID, 2> fighterIDs;
     SmallVector<SmallString<15>, 2> tags;
     SmallVector<SmallString<15>, 2> names;
+    int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
-        const json jTag = info["tag"];
-        const json jName = info["name"];
-        const json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
+        json jName = info["name"];
+        json jFighterID = info["fighterid"];
 
-        fighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
-        tags.emplace(jTag.get<std::string>().c_str());
-        names.emplace(jName.get<std::string>().c_str());
+        fighterIDs.push(jFighterID.is_number_integer() ?
+            FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        tags.emplace(jTag.is_string() ?
+            jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+        names.emplace(jName.is_string() ?
+            jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+
+        fighterCount++;
     }
 
-    const std::string type = j["type"].get<std::string>();
+    json jType = j["type"];
+    const std::string type = jType.is_string() ? jType.get<std::string>() : "";
     if (type == "game")
     {
+        json jNumber = jGameInfo["number"];
+        json jSet = jGameInfo["set"];
+        json jFormat = jGameInfo["format"];
+        json jWinner = jGameInfo["winner"];
+        const auto gameNumber = jNumber.is_number_integer() ?
+            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
+        const auto setNumber = jSet.is_number_integer() ?
+            SetNumber::fromValue(jSet.get<SetNumber::Type>()) : SetNumber::fromValue(1);
+        const auto format = jFormat.is_string() ?
+            SetFormat(jFormat.get<std::string>().c_str()) : SetFormat::FRIENDLIES;
+        int winner = jWinner.is_number_unsigned() ?
+            jWinner.get<int>() : -1;
+        if (winner > fighterCount)
+            winner = -1;
+
         return SessionMetaData::newSavedGameSession(
-                timeStarted,
-                timeStarted,
-                stageID,
-                std::move(fighterIDs),
-                std::move(tags),
-                std::move(names),
-                GameNumber::fromValue(jGameInfo["number"].get<GameNumber::Type>()),
-                SetNumber::fromValue(jGameInfo["set"].get<SetNumber::Type>()),
-                SetFormat(jGameInfo["format"].get<std::string>().c_str()),
-                jGameInfo["winner"].get<int>());
+            timeStarted, timeStarted, stageID, std::move(fighterIDs), std::move(tags),
+            std::move(names), gameNumber, setNumber, format, winner);
     }
     if (type == "training")
     {
+        json jNumber = jGameInfo["number"];
+        const auto sessionNumber = jNumber.is_number_integer() ?
+            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
+
         return SessionMetaData::newSavedTrainingSession(
-                timeStarted,
-                timeEnded,
-                stageID,
-                std::move(fighterIDs),
-                std::move(tags),
-                GameNumber::fromValue(jGameInfo["number"].get<GameNumber::Type>()));
+            timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags), sessionNumber);
     }
 
     return nullptr;
@@ -405,7 +421,10 @@ int GameSessionMetaData::winner() const
 // ----------------------------------------------------------------------------
 void GameSessionMetaData::setWinner(int fighterIdx)
 {
+    bool notify = (winner_ != fighterIdx);
     winner_ = fighterIdx;
+    if (notify)
+        dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataWinnerChanged, fighterIdx);
 }
 
 // ----------------------------------------------------------------------------

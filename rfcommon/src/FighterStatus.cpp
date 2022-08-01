@@ -1,4 +1,5 @@
 #include "rfcommon/FighterStatus.hpp"
+#include <cassert>
 
 namespace rfcommon {
 
@@ -9,48 +10,49 @@ FighterStatus FighterStatus::fromValue(Type value)
 }
 
 // ----------------------------------------------------------------------------
-FighterStatus FighterStatus::makeInvalid() 
-{ 
-    return FighterStatus(Type(-1)); 
+FighterStatus FighterStatus::makeInvalid()
+{
+    return FighterStatus(Type(-1));
 }
 
 // ----------------------------------------------------------------------------
 FighterStatus::Type FighterStatus::value() const
-{ 
-    return value_; 
-}
-
-// ----------------------------------------------------------------------------
-bool FighterStatus::isValid() const 
 {
-    return value_ != Type(-1); 
+    assert(isValid());
+    return value_;
+}
+
+// ----------------------------------------------------------------------------
+bool FighterStatus::isValid() const
+{
+    return value_ != Type(-1);
 }
 // ----------------------------------------------------------------------------
 
-bool FighterStatus::operator==(FighterStatus other) const 
+bool FighterStatus::operator==(FighterStatus other) const
 {
     return value_ == other.value_;
 }
 
 // ----------------------------------------------------------------------------
 bool FighterStatus::operator!=(FighterStatus other) const
-{ 
-    return value_ != other.value_; 
-}
-
-// ----------------------------------------------------------------------------
-bool FighterStatus::operator<(FighterStatus other) const 
 {
-    return value_ < other.value_; 
+    return value_ != other.value_;
 }
 
 // ----------------------------------------------------------------------------
-FighterStatus::FighterStatus() 
+bool FighterStatus::operator<(FighterStatus other) const
+{
+    return value_ < other.value_;
+}
+
+// ----------------------------------------------------------------------------
+FighterStatus::FighterStatus()
 {}
 
 // ----------------------------------------------------------------------------
-FighterStatus::FighterStatus(Type value) 
-    : value_(value) 
+FighterStatus::FighterStatus(Type value)
+    : value_(value)
 {}
 
 }

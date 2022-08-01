@@ -31,6 +31,8 @@ FighterHitStatus MappingInfoHitStatus::toID(const char* name) const
 // ----------------------------------------------------------------------------
 void MappingInfoHitStatus::add(FighterHitStatus status, const char* name)
 {
+    if (status.isValid() == false)
+        return;
     map_.insertNew(status, name);
 }
 

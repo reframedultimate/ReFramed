@@ -53,6 +53,9 @@ private:
 private:
     struct ContentTableEntry
     {
+        ContentTableEntry();
+        ContentTableEntry(const char* typeStr);
+
         char type[4];
         uint32_t offset;
         uint32_t size;

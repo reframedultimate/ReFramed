@@ -3,25 +3,38 @@
 #include "rfcommon/SessionMetaData.hpp"
 #include <QDateTime>
 
-#include <QDebug>
+enum RowType
+{
+    TimeStarted,
+    TimeEnded,
+    Format,
+    SetNumber,
+    GameNumber,
+    Stage,
+    Winner,
 
-#define NUM_FIXED_ROWS 7
+    FixedRowCount
+};
+
+// ----------------------------------------------------------------------------
+MetaDataModel::~MetaDataModel()
+{
+    if (meta_)
+        meta_->dispatcher.removeListener(this);
+}
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::SessionMetaData* metaData)
 {
     beginResetModel();
-    map_ = mappingInfo;
-    meta_ = metaData;
-    endResetModel();
-}
+        if (meta_)
+            meta_->dispatcher.removeListener(this);
 
-// ----------------------------------------------------------------------------
-void MetaDataModel::clearMetaData(rfcommon::MappingInfo* map, rfcommon::SessionMetaData* metaData)
-{
-    beginResetModel();
-    map_.drop();
-    meta_.drop();
+        map_ = mappingInfo;
+        meta_ = metaData;
+
+        if (meta_)
+            meta_->dispatcher.addListener(this);
     endResetModel();
 }
 
@@ -29,7 +42,7 @@ void MetaDataModel::clearMetaData(rfcommon::MappingInfo* map, rfcommon::SessionM
 int MetaDataModel::rowCount(const QModelIndex& parent) const
 {
     if (meta_)
-        return NUM_FIXED_ROWS + meta_->fighterCount();
+        return FixedRowCount + meta_->fighterCount();
     return 0;
 }
 
@@ -37,6 +50,18 @@ int MetaDataModel::rowCount(const QModelIndex& parent) const
 int MetaDataModel::columnCount(const QModelIndex& parent) const
 {
     return 2;
+}
+
+// ----------------------------------------------------------------------------
+QVariant MetaDataModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
+    {
+        if (section == 0) return "Key";
+        if (section == 1) return "Value";
+    }
+
+    return QVariant();
 }
 
 // ----------------------------------------------------------------------------
@@ -69,15 +94,17 @@ QVariant MetaDataModel::gameData(const rfcommon::GameSessionMetaData* meta, cons
                     return meta->name(fighterIdx).cStr();
                 };
 
-                if (index.row() == 0) return "Time Started";
-                if (index.row() == 1) return "Time Ended";
-                if (index.row() == 2) return "Format";
-                if (index.row() == 3) return "Set Number";
-                if (index.row() == 4) return "Game Number";
-                if (index.row() == 5) return "Stage ID";
-                if (index.row() == 6) return "Winner";
-
-                return playerName(index.row() - NUM_FIXED_ROWS);
+                switch (index.row())
+                {
+                    case TimeStarted: return "Time Started";
+                    case TimeEnded: return "Time Ended";
+                    case Format: return "Format";
+                    case SetNumber: return "Set Number";
+                    case GameNumber: return "Game Number";
+                    case Stage: return "Stage ID";
+                    case Winner: return "Winner";
+                    default: return playerName(index.row() - FixedRowCount);
+                }
             }
             else if (index.column() == 1)
             {
@@ -102,15 +129,17 @@ QVariant MetaDataModel::gameData(const rfcommon::GameSessionMetaData* meta, cons
                         return QString::number(fighterID.value()) + " (No mapping info)";
                 };
 
-                if (index.row() == 0) return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
-                if (index.row() == 1) return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
-                if (index.row() == 2) return meta->setFormat().description().cStr();
-                if (index.row() == 3) return QString::number(meta->setNumber().value());
-                if (index.row() == 4) return QString::number(meta->gameNumber().value());
-                if (index.row() == 5) return formatStageID(meta->stageID());
-                if (index.row() == 6) return formatWinner(meta->winner());
-
-                return formatPlayer(index.row() - NUM_FIXED_ROWS);
+                switch (index.row())
+                {
+                    case TimeStarted: return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
+                    case TimeEnded: return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
+                    case Format: return meta->setFormat().description().cStr();
+                    case SetNumber: return QString::number(meta->setNumber().value());
+                    case GameNumber: return QString::number(meta->gameNumber().value());
+                    case Stage: return formatStageID(meta->stageID());
+                    case Winner: return formatWinner(meta->winner());
+                    default: return formatPlayer(index.row() - FixedRowCount);
+                }
             }
             break;
 
@@ -139,43 +168,43 @@ QVariant MetaDataModel::trainingData(const rfcommon::TrainingSessionMetaData* me
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
 {
-
+    emit dataChanged(index(TimeStarted, 1), index(TimeStarted, 1));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 {
-
+    emit dataChanged(index(TimeEnded, 1), index(TimeEnded, 1));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::SmallString<15>& name)
 {
-
+    emit dataChanged(index(FixedRowCount + fighterIdx, 0), index(FixedRowCount + fighterIdx, 0));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
-
+    emit dataChanged(index(SetNumber, 1), index(SetNumber, 1));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
-
+    emit dataChanged(index(GameNumber, 1), index(GameNumber, 1));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
-
+    emit dataChanged(index(Format, 1), index(Format, 1));
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onSessionMetaDataWinnerChanged(int winnerPlayerIdx)
 {
-    emit dataChanged(index(5, 0), index(5, 1));
+    emit dataChanged(index(Winner, 1), index(Winner, 1));
 }
 
 // ----------------------------------------------------------------------------

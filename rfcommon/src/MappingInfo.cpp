@@ -54,7 +54,7 @@ static MappingInfo* load_1_5(json& j)
     // the mappingInfo.json file which stores the info we obtained from the
     // Nintendo Switch does. If it doesn't exist we just use 0.
     json jChecksum = j["checksum"];
-    const uint32_t checksum = jChecksum.is_number() ? jChecksum.get<uint32_t>() : 0u;
+    const uint32_t checksum = jChecksum.is_number_unsigned() ? jChecksum.get<uint32_t>() : 0u;
     std::unique_ptr<MappingInfo> mappingInfo(new MappingInfo(checksum));
 
     json jFighterBaseStatusMapping = jFighterStatuses["base"];
@@ -63,9 +63,9 @@ static MappingInfo* load_1_5(json& j)
         std::size_t pos;
         const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return nullptr;
+            continue;
         if (value.is_string() == false)
-            return nullptr;
+            continue;
 
         mappingInfo->status.addBaseName(status, value.get<std::string>().c_str());
     }
@@ -76,17 +76,17 @@ static MappingInfo* load_1_5(json& j)
         std::size_t pos;
         const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
-            return nullptr;
+            continue;
         if (jsonSpecificMapping.is_object() == false)
-            return nullptr;
+            continue;
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
             const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
-                return nullptr;
+                continue;
             if (value.is_string() == false)
-                return nullptr;
+                continue;
 
             mappingInfo->status.addSpecificName(fighterID, status, value.get<std::string>().c_str());
         }
@@ -97,9 +97,9 @@ static MappingInfo* load_1_5(json& j)
         std::size_t pos;
         const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return nullptr;
+            continue;
         if (value.is_string() == false)
-            return nullptr;
+            continue;
 
         mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
@@ -109,9 +109,9 @@ static MappingInfo* load_1_5(json& j)
         std::size_t pos;
         const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return nullptr;
+            continue;
         if (value.is_string() == false)
-            return nullptr;
+            continue;
 
         mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
@@ -121,9 +121,9 @@ static MappingInfo* load_1_5(json& j)
         std::size_t pos;
         const auto hitStatusID = FighterHitStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return nullptr;
+            continue;
         if (value.is_string() == false)
-            return nullptr;
+            continue;
 
         mappingInfo->hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
@@ -222,7 +222,7 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const SessionMetaData* metaData, c
         std::unordered_set<FighterStatus, FighterStatusHasherStd> usedFighterStatuses;
         for (int frame = 0; frame != frameData->frameCount(); ++frame)
         {
-            const FighterState& state = frameData->stateAt(frame, fighter);
+            const FighterState& state = frameData->stateAt(fighter, frame);
             usedFighterStatuses.insert(state.status());
             usedHitStatuses.insert(state.hitStatus());
         }

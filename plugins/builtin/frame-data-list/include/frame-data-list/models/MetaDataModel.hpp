@@ -12,15 +12,17 @@ namespace rfcommon {
 }
 
 class MetaDataModel
-    : public QAbstractTableModel
-    , public rfcommon::SessionMetaDataListener
+        : public QAbstractTableModel
+        , public rfcommon::SessionMetaDataListener
 {
 public:
+    ~MetaDataModel();
+
     void setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::SessionMetaData* metaData);
-    void clearMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::SessionMetaData* metaData);
 
     int rowCount(const QModelIndex& parent=QModelIndex()) const override;
     int columnCount(const QModelIndex& parent=QModelIndex()) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override;
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
 
 private:

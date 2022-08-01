@@ -25,7 +25,7 @@ public:
     int fighterCount() const;
     int frameCount() const;
 
-    const FighterState& stateAt(int frameIdx, int fighterIdx) const;
+    const FighterState& stateAt(int fighterIdx, int frameIdx) const;
 
     const FighterState& firstState(int fighterIdx) const;
 

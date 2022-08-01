@@ -19,9 +19,9 @@ FighterHitStatus::~FighterHitStatus()
 {}
 
 // ----------------------------------------------------------------------------
-FighterHitStatus::Type FighterHitStatus::value() const 
-{ 
-    return value_; 
+FighterHitStatus::Type FighterHitStatus::value() const
+{
+    return value_;
 }
 
 // ----------------------------------------------------------------------------
@@ -31,30 +31,30 @@ bool FighterHitStatus::isValid() const
 }
 
 // ----------------------------------------------------------------------------
-bool FighterHitStatus::operator==(FighterHitStatus other) const 
-{ 
-    return value_ == other.value_; 
+bool FighterHitStatus::operator==(FighterHitStatus other) const
+{
+    return value_ == other.value_;
 }
 
 // ----------------------------------------------------------------------------
 bool FighterHitStatus::operator<(FighterHitStatus other) const
-{ 
-    return value_ < other.value_; 
+{
+    return value_ < other.value_;
 }
 
 // ----------------------------------------------------------------------------
-bool FighterHitStatus::operator!=(FighterHitStatus other) const 
-{ 
-    return value_ != other.value_; 
+bool FighterHitStatus::operator!=(FighterHitStatus other) const
+{
+    return value_ != other.value_;
 }
 
 // ----------------------------------------------------------------------------
-FighterHitStatus::FighterHitStatus() 
+FighterHitStatus::FighterHitStatus()
 {}
 
 // ----------------------------------------------------------------------------
-FighterHitStatus::FighterHitStatus(Type value) 
-    : value_(value) 
+FighterHitStatus::FighterHitStatus(Type value)
+    : value_(value)
 {}
 
 }

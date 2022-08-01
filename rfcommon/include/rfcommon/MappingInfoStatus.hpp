@@ -17,6 +17,7 @@ public:
 
     //const char* statusString(FighterStatus status) const;
     const char* toName(FighterID fighterID, FighterStatus status) const;
+    const char* toName(FighterID fighterID, FighterStatus status, const char* fallback) const;
     FighterStatus toStatus(const char* enumName) const;
 
     void addBaseName(FighterStatus status, const char* name);

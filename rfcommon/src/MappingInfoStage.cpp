@@ -31,7 +31,15 @@ const StageID MappingInfoStage::toID(const char* name) const
 // ----------------------------------------------------------------------------
 void MappingInfoStage::add(StageID stageID, const char* name)
 {
+    if (stageID.isValid() == false)
+        return;
     map_.insertNew(stageID, name);
+}
+
+// ----------------------------------------------------------------------------
+int MappingInfoStage::count() const
+{
+    return map_.count();
 }
 
 // ----------------------------------------------------------------------------

@@ -10,8 +10,14 @@ include (ReFramedPlugin)
 
 reframed_add_plugin (plugin-${PLUGIN_NAME}
     SOURCES
+        "src/models/BaseStatusIDModel.cpp"
+        "src/models/FighterIDModel.cpp"
+        "src/models/FighterStatesModel.cpp"
         "src/models/FrameDataListModel.cpp"
+        "src/models/HitStatusIDModel.cpp"
         "src/models/MetaDataModel.cpp"
+        "src/models/SpecificStatusIDModel.cpp"
+        "src/models/StageIDModel.cpp"
         "src/views/FrameDataListView.cpp"
         "src/FrameDataListPlugin.cpp"
         "src/Plugin.cpp"

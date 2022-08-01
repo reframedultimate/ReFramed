@@ -177,7 +177,7 @@ int FrameData::frameCount() const
 }
 
 // ----------------------------------------------------------------------------
-const FighterState& FrameData::stateAt(int frameIdx, int fighterIdx) const
+const FighterState& FrameData::stateAt(int fighterIdx, int frameIdx) const
 {
     assert(fighterIdx < fighterCount());
     assert(frameIdx < frameCount());
@@ -215,7 +215,7 @@ void FrameData::addFrame(Frame&& frame)
         fighters_[i].push(frame[i]);
 
     // If any fighter state is different from the previous one, notify
-    if (frameCount() < 2 || framesHaveSameData(frameCount() - 1, frameCount() - 2))
+    if (frameCount() < 2 || framesHaveSameData(frameCount() - 1, frameCount() - 2) == false)
         dispatcher.dispatch(&FrameDataListener::onFrameDataNewUniqueFrame, frameCount() - 1, frame);
 
     // The UI cares about every frame
