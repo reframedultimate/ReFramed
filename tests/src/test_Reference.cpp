@@ -1,13 +1,13 @@
 #include "gmock/gmock.h"
-#include "uh/Reference.hpp"
-#include "uh/RefCounted.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/RefCounted.hpp"
 
 #define NAME Reference
 
 using namespace testing;
 
 namespace {
-class Obj : public uh::RefCounted
+class Obj : public rfcommon::RefCounted
 {
 public:
 };
@@ -22,19 +22,19 @@ TEST(NAME, default_refcounted_constructor_has_refcount_0)
 
 TEST(NAME, default_reference_constructor_has_refcount_0)
 {
-    uh::Reference<Obj> ref;
+    rfcommon::Reference<Obj> ref;
     ASSERT_THAT(ref.refs(), Eq(0));
 }
 
 TEST(NAME, construct_from_raw_pointer)
 {
-    uh::Reference<Obj> ref(new Obj);
+    rfcommon::Reference<Obj> ref(new Obj);
     ASSERT_THAT(ref.refs(), Eq(1));
 
     Obj* o = ref.get();
     o->incRef();
     ASSERT_THAT(o->refs(), Eq(2));
-    ref.reset();
+    ref.drop();
     ASSERT_THAT(o->refs(), Eq(1));
     o->decRef();
 }
@@ -44,15 +44,15 @@ TEST(NAME, copy_construct)
     Obj* o = new Obj;
     o->incRef();
 
-    uh::Reference<Obj> ref1(o);
-    uh::Reference<Obj> ref2(ref1);
+    rfcommon::Reference<Obj> ref1(o);
+    rfcommon::Reference<Obj> ref2(ref1);
 
     ASSERT_THAT(ref1.refs(), Eq(3));
     ASSERT_THAT(ref2.refs(), Eq(3));
     ASSERT_THAT(o->refs(), Eq(3));
 
-    ref1.reset();
-    ref2.reset();
+    ref1.drop();
+    ref2.drop();
     ASSERT_THAT(o->refs(), Eq(1));
     o->decRef();
 }
@@ -64,14 +64,14 @@ TEST(NAME, assign_raw_pointer)
     o1->incRef();
     o2->incRef();
 
-    uh::Reference<Obj> ref = o1;
+    rfcommon::Reference<Obj> ref = o1;
     ASSERT_THAT(o1->refs(), Eq(2));
     ASSERT_THAT(o2->refs(), Eq(1));
     ref = o2;
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(2));
 
-    ref.reset();
+    ref.drop();
     ASSERT_THAT(o1->refs(), Eq(1));
 
     o1->decRef();
@@ -85,8 +85,8 @@ TEST(NAME, assign_operator)
     o1->incRef();
     o2->incRef();
 
-    uh::Reference<Obj> ref1 = o1;
-    uh::Reference<Obj> ref2 = o2;
+    rfcommon::Reference<Obj> ref1 = o1;
+    rfcommon::Reference<Obj> ref2 = o2;
     ASSERT_THAT(o1->refs(), Eq(2));
     ASSERT_THAT(o2->refs(), Eq(2));
 
@@ -94,8 +94,8 @@ TEST(NAME, assign_operator)
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(3));
 
-    ref1.reset();
-    ref2.reset();
+    ref1.drop();
+    ref2.drop();
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(1));
 
@@ -110,15 +110,15 @@ TEST(NAME, move_construct)
     o1->incRef();
     o2->incRef();
 
-    uh::Reference<Obj> ref2 = o2;
+    rfcommon::Reference<Obj> ref2 = o2;
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(2));
 
-    uh::Reference<Obj> ref1(std::move(ref2));
+    rfcommon::Reference<Obj> ref1(std::move(ref2));
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(2));
 
-    ref1.reset();
+    ref1.drop();
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(1));
 
@@ -133,8 +133,8 @@ TEST(NAME, move_assign)
     o1->incRef();
     o2->incRef();
 
-    uh::Reference<Obj> ref1 = o1;
-    uh::Reference<Obj> ref2 = o2;
+    rfcommon::Reference<Obj> ref1 = o1;
+    rfcommon::Reference<Obj> ref2 = o2;
     ASSERT_THAT(o1->refs(), Eq(2));
     ASSERT_THAT(o2->refs(), Eq(2));
 
@@ -142,7 +142,7 @@ TEST(NAME, move_assign)
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(2));
 
-    ref1.reset();
+    ref1.drop();
     ASSERT_THAT(o1->refs(), Eq(1));
     ASSERT_THAT(o2->refs(), Eq(1));
 

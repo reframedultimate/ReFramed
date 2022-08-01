@@ -1,10 +1,11 @@
 #include "gmock/gmock.h"
-#include "uh/Vector.hpp"
+#include "rfcommon/Vector.hpp"
+#include "rfcommon/String.hpp"
 
 #define NAME vector
 
 using namespace testing;
-using namespace uh;
+using namespace rfcommon;
 
 namespace {
 #define CONSTRUCTED 5555
@@ -32,7 +33,7 @@ TEST(NAME, default_constructor)
 
 TEST(NAME, construct_with_size)
 {
-    Vector<Obj> v(2);
+    auto v = Vector<Obj>::makeResized(2);
     EXPECT_THAT(v.count(), Eq(2));
     EXPECT_THAT(v[0].x, Eq(CONSTRUCTED));
     EXPECT_THAT(v[1].x, Eq(CONSTRUCTED));

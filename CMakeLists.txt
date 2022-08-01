@@ -46,7 +46,7 @@ set (INSTALL_GTEST OFF CACHE INTERNAL "")
 set (gtest_force_shared_crt ON CACHE INTERNAL "")
 
 add_subdirectory ("thirdparty/qwt-6.2.0")
-#add_subdirectory ("thirdparty/googletest-1.10.0")
+add_subdirectory ("thirdparty/googletest-1.12.1")
 add_subdirectory ("thirdparty/json")
 add_subdirectory ("thirdparty/zlib-1.2.11")
 add_subdirectory ("thirdparty/cpp-base64")
@@ -54,7 +54,7 @@ add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
 add_subdirectory ("plugins")
 add_subdirectory ("application")
-#add_subdirectory ("tests")
+add_subdirectory ("tests")
 
 # set_target_properties (gmock
 #     PROPERTIES

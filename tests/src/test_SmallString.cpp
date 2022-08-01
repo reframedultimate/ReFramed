@@ -1,10 +1,10 @@
 #include "gmock/gmock.h"
-#include "uh/String.hpp"
+#include "rfcommon/String.hpp"
 
 #define NAME small_string
 
 using namespace testing;
-using namespace uh;
+using namespace rfcommon;
 
 TEST(NAME, default_constructor)
 {

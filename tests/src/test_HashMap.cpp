@@ -1,10 +1,10 @@
 #include "gmock/gmock.h"
-#include "uh/HashMap.hpp"
+#include "rfcommon/HashMap.hpp"
 
 #define NAME hash_map
 
 using namespace testing;
-using namespace uh;
+using namespace rfcommon;
 
 static const int KEY1 = 1111;
 static const int KEY2 = 2222;

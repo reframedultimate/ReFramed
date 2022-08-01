@@ -1,10 +1,10 @@
 #include "gmock/gmock.h"
-#include "uh/String.hpp"
+#include "rfcommon/String.hpp"
 
 #define NAME string
 
 using namespace testing;
-using namespace uh;
+using namespace rfcommon;
 
 TEST(NAME, default_constructor)
 {
@@ -56,4 +56,23 @@ TEST(NAME, concat_strings)
     String s = String("this") + " " + String("is") + " a test";
     EXPECT_THAT(s, Eq("this is a test"));
     EXPECT_THAT(s.data()[14], Eq('\0'));
+}
+
+TEST(NAME, move_construct_stringvec)
+{
+    SmallVector<SmallString<15>, 2> sv1;
+    sv1.push("Player 1");
+    sv1.push("Player 2");
+
+    ASSERT_THAT(sv1[0].length(), Eq(8));
+    ASSERT_THAT(sv1[1].length(), Eq(8));
+    ASSERT_THAT(sv1[0].cStr(), StrEq("Player 1"));
+    ASSERT_THAT(sv1[1].cStr(), StrEq("Player 2"));
+
+    SmallVector<SmallString<15>, 2> sv2(std::move(sv1));
+
+    ASSERT_THAT(sv2[0].length(), Eq(8));
+    ASSERT_THAT(sv2[1].length(), Eq(8));
+    ASSERT_THAT(sv2[0].cStr(), StrEq("Player 1"));
+    ASSERT_THAT(sv2[1].cStr(), StrEq("Player 2"));
 }
