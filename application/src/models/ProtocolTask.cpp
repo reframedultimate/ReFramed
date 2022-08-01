@@ -384,7 +384,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
 #define stageL buf[1]
 #define playerCount buf[2]
                 const auto stageID = rfcommon::StageID::fromValue((stageH << 8) | (stageL << 0));
-                auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeReserved(playerCount);
+                auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeResized(playerCount);
                 auto tags = rfcommon::SmallVector<rfcommon::SmallString<15>, 2>::makeReserved(playerCount);
                 auto names = rfcommon::SmallVector<rfcommon::SmallString<15>, 2>::makeReserved(playerCount);
 
@@ -407,8 +407,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                     if (tcp_socket_read_exact(&socket, &len, 1) != 1) goto disconnect;
                     if (tcp_socket_read_exact(&socket, tag, len) != len) goto disconnect;
                     tag[static_cast<int>(len)] = '\0';
-                    tags[i] = tag;
-                    names[i] = tag;
+                    tags.push(tag);
+                    names.push(tag);
                 }
 #undef stageH
 #undef stageL

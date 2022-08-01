@@ -19,8 +19,8 @@ static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::Sessi
     const TimeStamp::Type stampMs = meta->timeStarted().millisSinceEpoch();
     const QString date = QDateTime::fromMSecsSinceEpoch(stampMs).toString("yyyy-MM-dd");
 
-    const char* p1char = map->fighter.toName(meta->fighterID(0), "(unknown fighter)");
-    const char* p2char = map->fighter.toName(meta->fighterID(1), "(unknown fighter)");
+    const char* p1char = map->fighter.toName(meta->fighterID(0));
+    const char* p2char = map->fighter.toName(meta->fighterID(1));
 
     if (meta->type() == SessionMetaData::GAME)
     {
@@ -48,7 +48,7 @@ static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::Sessi
             QStringList playerList;
             for (int i = 0; i < meta->fighterCount(); ++i)
             {
-                const char* fighter = map->fighter.toName(meta->fighterID(i), "(unknown fighter)");
+                const char* fighter = map->fighter.toName(meta->fighterID(i));
                 const char* name = meta->name(i).cStr();
                 playerList.append(QString(name) + " (" + fighter + ")");
             }
@@ -358,6 +358,7 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameResumed(rfcommon::Session* game)
 {
+    ActiveSessionManager::onProtocolGameStarted(game);
 }
 
 // ----------------------------------------------------------------------------

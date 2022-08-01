@@ -11,7 +11,7 @@ namespace rfcommon {
 
 using nlohmann::json;
 
-static MappingInfo* load_1_5(const json& j);
+static MappingInfo* load_1_5(json& j);
 
 // ----------------------------------------------------------------------------
 MappingInfo::MappingInfo(uint32_t checksum)
@@ -43,42 +43,34 @@ MappingInfo* MappingInfo::load(FILE* fp, uint32_t size)
 }
 
 // ----------------------------------------------------------------------------
-static MappingInfo* load_1_5(const json& j)
+static MappingInfo* load_1_5(json& j)
 {
-    const json jFighterStatuses = j["fighterstatus"];
-    const json jFighterIDs = j["fighterid"];
-    const json jStageIDs = j["stageid"];
-    const json jHitStatuses = j["hitstatus"];
+    json jFighterStatuses = j["fighterstatus"];
+    json jFighterIDs = j["fighterid"];
+    json jStageIDs = j["stageid"];
+    json jHitStatuses = j["hitstatus"];
 
     // The checksum is optional. Replay files don't contain a checksum, but
     // the mappingInfo.json file which stores the info we obtained from the
     // Nintendo Switch does. If it doesn't exist we just use 0.
-    const json jChecksum = j["checksum"];
+    json jChecksum = j["checksum"];
     const uint32_t checksum = jChecksum.is_number() ? jChecksum.get<uint32_t>() : 0u;
     std::unique_ptr<MappingInfo> mappingInfo(new MappingInfo(checksum));
 
-    const json jFighterBaseStatusMapping = jFighterStatuses["base"];
+    json jFighterBaseStatusMapping = jFighterStatuses["base"];
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
     {
         std::size_t pos;
         const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
             return nullptr;
-        if (value.is_array() == false)
+        if (value.is_string() == false)
             return nullptr;
 
-        if (value.size() != 3)
-            return nullptr;
-        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-            return nullptr;
-
-        /*QString shortName  = arr[1].get<std::string>();
-        QString customName = arr[2].get<std::string>();*/
-
-        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
+        mappingInfo->status.addBaseName(status, value.get<std::string>().c_str());
     }
 
-    const json jFighterSpecificStatusMapping = jFighterStatuses["specific"];
+    json jFighterSpecificStatusMapping = jFighterStatuses["specific"];
     for (const auto& [fighter, jsonSpecificMapping] : jFighterSpecificStatusMapping.items())
     {
         std::size_t pos;
@@ -93,18 +85,10 @@ static MappingInfo* load_1_5(const json& j)
             const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
                 return nullptr;
-            if (value.is_array() == false)
+            if (value.is_string() == false)
                 return nullptr;
 
-            if (value.size() != 3)
-                return nullptr;
-            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-                return nullptr;
-
-            /*QString shortName  = arr[1].get<std::string>();
-            QString customName = arr[2].get<std::string>();*/
-
-            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
+            mappingInfo->status.addSpecificName(fighterID, status, value.get<std::string>().c_str());
         }
     }
 

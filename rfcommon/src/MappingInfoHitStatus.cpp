@@ -11,12 +11,12 @@ MappingInfoHitStatus::~MappingInfoHitStatus()
 {}
 
 // ----------------------------------------------------------------------------
-const char* MappingInfoHitStatus::toName(FighterHitStatus status, const char* fallback) const
+const char* MappingInfoHitStatus::toName(FighterHitStatus status) const
 {
     const auto it = map_.findKey(status);
     if (it != map_.end())
         return it->value().cStr();
-    return fallback;
+    return "(Unknown Hit Status)";
 }
 
 // ----------------------------------------------------------------------------

@@ -32,6 +32,10 @@ public:
     static Session* load(const char* fileName, uint8_t loadFlags=0);
     bool save(const char* fileName);
 
+    bool existsInContentTable(LoadFlags flag) const;
+
+    void setMappingInfo(MappingInfo* mappingInfo);
+
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
      * strings.

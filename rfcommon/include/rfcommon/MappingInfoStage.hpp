@@ -13,7 +13,7 @@ public:
     MappingInfoStage();
     ~MappingInfoStage();
 
-    const char* toName(StageID stageID, const char* fallback=nullptr) const;
+    const char* toName(StageID stageID) const;
     const StageID toID(const char* name) const;
 
     void add(StageID stageID, const char* name);

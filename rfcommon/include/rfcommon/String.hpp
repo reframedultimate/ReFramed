@@ -41,7 +41,7 @@ public:
     {
         std::memcpy(this->begin_, data, len);
         this->begin_[len] = '\0';
-        this->count_ = len + 1;
+        //this->count_ = len + 1;
     }
 
     SmallString(const char* cStr)

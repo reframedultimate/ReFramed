@@ -79,7 +79,7 @@ private:
 private:
     QString ipAddress_;
     QMutex mutex_;
-    bool mappingInfoChecksum_;
+    uint32_t mappingInfoChecksum_;
     uint16_t port_;
     bool requestShutdown_;
 };

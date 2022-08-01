@@ -101,8 +101,8 @@ SessionMetaData::SessionMetaData(
         SmallVector<SmallString<15>, 2>&& tags)
     : timeStarted_(timeStarted)
     , timeEnded_(timeEnded)
-    , fighterIDs_(fighterIDs)
-    , tags_(tags)
+    , fighterIDs_(std::move(fighterIDs))
+    , tags_(std::move(tags))
     , stageID_(stageID)
 {
 }

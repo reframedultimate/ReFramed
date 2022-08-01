@@ -13,4 +13,10 @@ Plugin::~Plugin()
 {
 }
 
+// ----------------------------------------------------------------------------
+RFPluginFactory* Plugin::factory() const
+{
+    return factory_;
+}
+
 }

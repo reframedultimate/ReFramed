@@ -12,8 +12,8 @@ class RFCOMMON_PUBLIC_API MappingInfoHitStatus
 public:
     MappingInfoHitStatus();
     ~MappingInfoHitStatus();
-    
-    const char* toName(FighterHitStatus status, const char* fallback=nullptr) const;
+
+    const char* toName(FighterHitStatus status) const;
     FighterHitStatus toID(const char* name) const;
 
     void add(FighterHitStatus status, const char* name);

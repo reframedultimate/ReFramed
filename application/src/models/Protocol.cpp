@@ -29,8 +29,8 @@ Protocol::~Protocol()
 // ----------------------------------------------------------------------------
 void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 {
-    const bool requestMappingInfo = globalMappingInfo_.isNull();
-    task_.reset(new ProtocolTask(ipAddress, port, requestMappingInfo));
+    uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
+    task_.reset(new ProtocolTask(ipAddress, port, mappingInfoChecksum));
 
     QByteArray ba = ipAddress.toUtf8();
     const char* ipCstr = ba.data();
@@ -43,6 +43,8 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
     connect(task_.get(), &ProtocolTask::connectionClosed,
             this, &Protocol::onConnectionClosed);
 
+    connect(task_.get(), &ProtocolTask::mappingInfoReceived,
+            this, &Protocol::onMappingInfoReceived);
     connect(task_.get(), &ProtocolTask::trainingStarted,
             this, &Protocol::onTrainingStartedProxy);
     connect(task_.get(), &ProtocolTask::trainingResumed,
@@ -452,7 +454,7 @@ void Protocol::saveGlobalMappingInfo()
 {
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
-    FILE* fp = fopen(ba.constData(), "rb");
+    FILE* fp = fopen(ba.constData(), "wb");
     if (fp == nullptr)
         return;
 

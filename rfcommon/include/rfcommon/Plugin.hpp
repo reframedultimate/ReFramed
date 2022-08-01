@@ -16,8 +16,7 @@ public:
     virtual QWidget* createView() = 0;
     virtual void destroyView(QWidget* view) = 0;
 
-    RFPluginFactory* factory() const
-        { return factory_; }
+    RFPluginFactory* factory() const;
 
 private:
     RFPluginFactory* const factory_;

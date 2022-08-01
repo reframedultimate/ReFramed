@@ -11,12 +11,12 @@ MappingInfoStage::~MappingInfoStage()
 {}
 
 // ----------------------------------------------------------------------------
-const char* MappingInfoStage::toName(StageID stageID, const char* fallback) const 
+const char* MappingInfoStage::toName(StageID stageID) const
 {
     const auto it = map_.findKey(stageID);
     if (it != map_.end())
         return it->value().cStr();
-    return fallback;
+    return "(Unknown Stage)";
 }
 
 // ----------------------------------------------------------------------------

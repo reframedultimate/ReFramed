@@ -20,27 +20,27 @@ namespace rfcommon {
 using nlohmann::json;
 
 static bool loadLegacy_1_0(
-        const json& jptr,
+        json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_1(
-        const json& jptr,
+        json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_2(
-        const json& jptr,
+        json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_3(
-        const json& jptr,
+        json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_4(
-        const json& jptr,
+        json& jptr,
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
@@ -203,19 +203,19 @@ static std::string readUncompressedFile(const char* fileName)
 
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_0(
-        const json& j,
+        json& j,
         Reference<SessionMetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
-    const json jMappingInfo = j["mappinginfo"];
-    const json jGameInfo = j["gameinfo"];
-    const json jPlayerInfo = j["playerinfo"];
-    const json jPlayerStates = j["playerstates"];
+    json jMappingInfo = j["mappinginfo"];
+    json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jPlayerStates = j["playerstates"];
 
-    const json jFighterStatuses = jMappingInfo["fighterstatus"];
-    const json jFighterIDs = jMappingInfo["fighterid"];
-    const json jStageIDs = jMappingInfo["stageid"];
+    json jFighterStatuses = jMappingInfo["fighterstatus"];
+    json jFighterIDs = jMappingInfo["fighterid"];
+    json jStageIDs = jMappingInfo["stageid"];
 
     Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jFighterIDs.items())
@@ -249,8 +249,8 @@ static bool loadLegacy_1_0(
     SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
-        const json jFighterID = info["fighterid"];
-        const json jTag = info["tag"];
+        json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
@@ -263,10 +263,10 @@ static bool loadLegacy_1_0(
     if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
         return false;
 
-    const json jDate = jGameInfo["date"];
-    const json jSetFormat = jGameInfo["format"];
-    const json jGameNumber = jGameInfo["number"];
-    const json jStageID = jGameInfo["stageid"];
+    json jDate = jGameInfo["date"];
+    json jSetFormat = jGameInfo["format"];
+    json jGameNumber = jGameInfo["number"];
+    json jStageID = jGameInfo["stageid"];
 
     Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
@@ -362,23 +362,23 @@ static bool loadLegacy_1_0(
 
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_1(
-        const json& j,
+        json& j,
         Reference<SessionMetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
-    const json jMappingInfo = j["mappinginfo"];
-    const json jGameInfo = j["gameinfo"];
-    const json jPlayerInfo = j["playerinfo"];
-    const json jPlayerStates = j["playerstates"];
+    json jMappingInfo = j["mappinginfo"];
+    json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jPlayerStates = j["playerstates"];
 
-    const json jFighterStatuses = jMappingInfo["fighterstatus"];
-    const json jFighterIDs = jMappingInfo["fighterid"];
-    const json jStageIDs = jMappingInfo["stageid"];
+    json jFighterStatuses = jMappingInfo["fighterstatus"];
+    json jFighterIDs = jMappingInfo["fighterid"];
+    json jStageIDs = jMappingInfo["stageid"];
 
-    const json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    const json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    const json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
+    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
+    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
+    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
 
     Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
@@ -452,8 +452,8 @@ static bool loadLegacy_1_1(
     SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
-        const json jFighterID = info["fighterid"];
-        const json jTag = info["tag"];
+        json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
@@ -466,10 +466,10 @@ static bool loadLegacy_1_1(
     if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
         return false;
 
-    const json jDate = jGameInfo["date"];
-    const json jSetFormat = jGameInfo["format"];
-    const json jGameNumber = jGameInfo["number"];
-    const json jStageID = jGameInfo["stageid"];
+    json jDate = jGameInfo["date"];
+    json jSetFormat = jGameInfo["format"];
+    json jGameNumber = jGameInfo["number"];
+    json jStageID = jGameInfo["stageid"];
 
     Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
@@ -565,23 +565,23 @@ static bool loadLegacy_1_1(
 
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_2(
-        const json& j,
+        json& j,
         Reference<SessionMetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
-    const json jMappingInfo = j["mappinginfo"];
-    const json jGameInfo = j["gameinfo"];
-    const json jPlayerInfo = j["playerinfo"];
-    const json jPlayerStates = j["playerstates"];
+    json jMappingInfo = j["mappinginfo"];
+    json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jPlayerStates = j["playerstates"];
 
-    const json jFighterStatuses = jMappingInfo["fighterstatus"];
-    const json jFighterIDs = jMappingInfo["fighterid"];
-    const json jStageIDs = jMappingInfo["stageid"];
+    json jFighterStatuses = jMappingInfo["fighterstatus"];
+    json jFighterIDs = jMappingInfo["fighterid"];
+    json jStageIDs = jMappingInfo["stageid"];
 
-    const json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    const json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    const json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
+    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
+    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
+    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
 
     Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
@@ -661,9 +661,9 @@ static bool loadLegacy_1_2(
     SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
-        const json jFighterID = info["fighterid"];
-        const json jTag = info["tag"];
-        const json jName = info["name"];
+        json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
+        json jName = info["name"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
@@ -676,11 +676,11 @@ static bool loadLegacy_1_2(
     if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
         return false;
 
-    const json jStageID = jGameInfo["stageid"];
-    const json jDate = jGameInfo["date"];
-    const json jSetFormat = jGameInfo["format"];
-    const json jGameNumber = jGameInfo["number"];
-    const json jSetNumber = jGameInfo["set"];
+    json jStageID = jGameInfo["stageid"];
+    json jDate = jGameInfo["date"];
+    json jSetFormat = jGameInfo["format"];
+    json jGameNumber = jGameInfo["number"];
+    json jSetNumber = jGameInfo["set"];
 
     Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
@@ -782,24 +782,24 @@ static bool loadLegacy_1_2(
 
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_3(
-        const json& j,
+        json& j,
         Reference<SessionMetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
-    const json jMappingInfo = j["mappinginfo"];
-    const json jGameInfo = j["gameinfo"];
-    const json jPlayerInfo = j["playerinfo"];
-    const json jPlayerStates = j["playerstates"];
+    json jMappingInfo = j["mappinginfo"];
+    json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jPlayerStates = j["playerstates"];
 
-    const json jFighterStatuses = jMappingInfo["fighterstatus"];
-    const json jFighterIDs = jMappingInfo["fighterid"];
-    const json jStageIDs = jMappingInfo["stageid"];
-    const json jHitStatuses = jMappingInfo["hitstatus"];
+    json jFighterStatuses = jMappingInfo["fighterstatus"];
+    json jFighterIDs = jMappingInfo["fighterid"];
+    json jStageIDs = jMappingInfo["stageid"];
+    json jHitStatuses = jMappingInfo["hitstatus"];
 
-    const json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    const json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    const json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
+    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
+    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
+    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
 
     Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
@@ -891,9 +891,9 @@ static bool loadLegacy_1_3(
     SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
-        const json jFighterID = info["fighterid"];
-        const json jTag = info["tag"];
-        const json jName = info["name"];
+        json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
+        json jName = info["name"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
@@ -906,12 +906,12 @@ static bool loadLegacy_1_3(
     if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
         return false;
 
-    const json jStageID = jGameInfo["stageid"];
-    const json jDate = jGameInfo["date"];
-    const json jSetFormat = jGameInfo["format"];
-    const json jGameNumber = jGameInfo["number"];
-    const json jSetNumber = jGameInfo["set"];
-    const json jWinner = jGameInfo["winner"];
+    json jStageID = jGameInfo["stageid"];
+    json jDate = jGameInfo["date"];
+    json jSetFormat = jGameInfo["format"];
+    json jGameNumber = jGameInfo["number"];
+    json jSetNumber = jGameInfo["set"];
+    json jWinner = jGameInfo["winner"];
 
     Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
@@ -1017,24 +1017,24 @@ static bool loadLegacy_1_3(
 
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_4(
-        const json& j,
+        json& j,
         Reference<SessionMetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
-    const json jMappingInfo = j["mappinginfo"];
-    const json jGameInfo = j["gameinfo"];
-    const json jPlayerInfo = j["playerinfo"];
-    const json jPlayerStates = j["playerstates"];
+    json jMappingInfo = j["mappinginfo"];
+    json jGameInfo = j["gameinfo"];
+    json jPlayerInfo = j["playerinfo"];
+    json jPlayerStates = j["playerstates"];
 
-    const json jFighterStatuses = jMappingInfo["fighterstatus"];
-    const json jFighterIDs = jMappingInfo["fighterid"];
-    const json jStageIDs = jMappingInfo["stageid"];
-    const json jHitStatuses = jMappingInfo["hitstatus"];
+    json jFighterStatuses = jMappingInfo["fighterstatus"];
+    json jFighterIDs = jMappingInfo["fighterid"];
+    json jStageIDs = jMappingInfo["stageid"];
+    json jHitStatuses = jMappingInfo["hitstatus"];
 
-    const json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    const json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    const json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
+    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
+    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
+    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
 
     Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
     for (const auto& [key, value] : jFighterBaseStatusMapping.items())
@@ -1126,9 +1126,9 @@ static bool loadLegacy_1_4(
     SmallVector<SmallString<15>, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
-        const json jFighterID = info["fighterid"];
-        const json jTag = info["tag"];
-        const json jName = info["name"];
+        json jFighterID = info["fighterid"];
+        json jTag = info["tag"];
+        json jName = info["name"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
@@ -1141,13 +1141,13 @@ static bool loadLegacy_1_4(
     if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
         return false;
 
-    const json jStageID = jGameInfo["stageid"];
-    const json jTimeStampSart = jGameInfo["timestampstart"];
-    const json jTimeStampEnd = jGameInfo["timestampend"];
-    const json jSetFormat = jGameInfo["format"];
-    const json jGameNumber = jGameInfo["number"];
-    const json jSetNumber = jGameInfo["set"];
-    const json jWinner = jGameInfo["winner"];
+    json jStageID = jGameInfo["stageid"];
+    json jTimeStampSart = jGameInfo["timestampstart"];
+    json jTimeStampEnd = jGameInfo["timestampend"];
+    json jSetFormat = jGameInfo["format"];
+    json jGameNumber = jGameInfo["number"];
+    json jSetNumber = jGameInfo["set"];
+    json jWinner = jGameInfo["winner"];
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jTimeStampSart.get<std::string>().c_str()));
@@ -1482,6 +1482,31 @@ bool Session::save(const char* fileName)
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
     return false;
+}
+
+// ----------------------------------------------------------------------------
+bool Session::existsInContentTable(LoadFlags flag) const
+{
+    const char* blobType = [&flag]() -> const char* {
+        switch(flag) {
+            case MAPPING_INFO : return blobTypeMappingInfo;
+            case META_DATA : return blobTypeMeta;
+            case FRAME_DATA : return blobTypeFrameData;
+            default: return "    ";
+        }
+    }();
+
+    for (const auto& entry : contentTable_)
+        if (memcmp(entry.type, blobType, 4) == 0)
+            return true;
+
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+void Session::setMappingInfo(MappingInfo* mappingInfo)
+{
+    mappingInfo_ = mappingInfo;
 }
 
 // ----------------------------------------------------------------------------

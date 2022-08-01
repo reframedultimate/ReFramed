@@ -11,7 +11,7 @@ MappingInfoStatus::~MappingInfoStatus()
 {}
 
 // ----------------------------------------------------------------------------
-const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status, const char* fallback) const
+const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status) const
 {
     const auto baseIt = statusMap_.find(status);
     if (baseIt != statusMap_.end())
@@ -19,13 +19,13 @@ const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status,
 
     const auto fighterIt = specificStatusMap_.find(fighterID);
     if (fighterIt == specificStatusMap_.end())
-        return fallback;
+        return "(Unknown Status)";
 
     const auto specificIt = fighterIt->value().find(status);
     if (specificIt != fighterIt->value().end())
         return specificIt->value().cStr();
 
-    return fallback;
+    return "(Unknown Status)";
 }
 
 // ----------------------------------------------------------------------------
