@@ -51,6 +51,10 @@ void FrameDataListPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
 }
 
 // ----------------------------------------------------------------------------
+void FrameDataListPlugin::onGameSetLoaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
+void FrameDataListPlugin::onGameSetUnloaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
+
+// ----------------------------------------------------------------------------
 void FrameDataListPlugin::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
 void FrameDataListPlugin::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) { (void)errormsg; (void)ipAddress; (void)port; }
 void FrameDataListPlugin::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }

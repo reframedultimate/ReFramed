@@ -26,6 +26,9 @@ private:
     void onTrainingSessionLoaded(rfcommon::Session* training) override;
     void onTrainingSessionUnloaded(rfcommon::Session* training) override;
 
+    void onGameSetLoaded(rfcommon::Session** games, int numGames) override;
+    void onGameSetUnloaded(rfcommon::Session** games, int numGames) override;
+
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
