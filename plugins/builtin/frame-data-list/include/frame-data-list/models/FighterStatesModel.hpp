@@ -24,8 +24,8 @@ public:
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
 
 private:
-    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
-    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
     rfcommon::Reference<rfcommon::FrameData> frameData_;

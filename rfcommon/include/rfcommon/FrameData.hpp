@@ -9,7 +9,7 @@
 namespace rfcommon {
 
 class FighterState;
-class Frame;
+template <int N> class Frame;
 class FrameDataListener;
 
 class RFCOMMON_PUBLIC_API FrameData : public RefCounted
@@ -31,7 +31,7 @@ public:
 
     const FighterState& lastState(int fighterIdx) const;
 
-    void addFrame(Frame&& frame);
+    void addFrame(Frame<4>&& frame);
 
     ListenerDispatcher<FrameDataListener> dispatcher;
 

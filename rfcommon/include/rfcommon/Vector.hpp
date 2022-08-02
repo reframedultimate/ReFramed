@@ -459,7 +459,7 @@ public:
         insertCopy(0, other.begin_, other.end());
     }
 
-    Vector(Vector&& other)
+    Vector(Vector&& other) noexcept
         : Vector()
     {
         swap(*this, other);

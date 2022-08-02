@@ -50,8 +50,8 @@ public:
     rfcommon::ListenerDispatcher<FrameDataListListener> dispatcher;
 
 private:
-    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) override;
-    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame& frame) override;
+    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
     std::unique_ptr<BaseStatusIDModel> baseStatusIDModel_;

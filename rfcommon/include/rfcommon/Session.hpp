@@ -47,8 +47,8 @@ public:
     FrameData* tryGetFrameData();
 
 private:
-    void onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame) override;
-    void onFrameDataNewFrame(int frameIdx, const Frame& frame) override;
+    void onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const Frame<4>& frame) override;
 
 private:
     struct ContentTableEntry

@@ -302,7 +302,7 @@ void Protocol::onFighterState(
     {
         if (stateBuffer_[0][0].framesLeft().value() != 0)
         {
-            rfcommon::Frame frame;
+            rfcommon::Frame<4> frame;
             const int frameCount = frameData->frameCount();
             const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
             for (auto& states : stateBuffer_)
@@ -317,7 +317,7 @@ void Protocol::onFighterState(
         // session object has more than 0 frames.
         if (frameData->frameCount() > 0)
         {
-            rfcommon::Frame frame;
+            rfcommon::Frame<4> frame;
             const int frameCount = frameData->frameCount();
             const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
             for (auto& states : stateBuffer_)
@@ -390,7 +390,7 @@ void Protocol::onFighterState(
     // can't be used for synchronization.
     if (haveAtLeast(2))
     {
-        rfcommon::Frame frame;
+        rfcommon::Frame<4> frame;
         const int frameCount = frameData->frameCount();
         const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
         for (auto& states : stateBuffer_)

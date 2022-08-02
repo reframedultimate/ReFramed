@@ -44,7 +44,7 @@ static bool loadLegacy_1_4(
         Reference<SessionMetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
-static int findWinner(const SmallVector<FighterState, 4>& frame);
+static int findWinner(const Frame<4>& frame);
 
 static const char* magic               = "RFR1";
 static const char* blobTypeMeta        = "META";
@@ -346,7 +346,7 @@ static bool loadLegacy_1_0(
     // Cache winner
     if (frameData.count() > 0)
     {
-        Frame frame;
+        Frame<4> frame;
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
@@ -558,7 +558,7 @@ static bool loadLegacy_1_1(
     // Cache winner
     if (frameData.count() > 0)
     {
-        SmallVector<FighterState, 4> frame;
+        Frame<4> frame;
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
@@ -784,7 +784,7 @@ static bool loadLegacy_1_2(
     // Cache winner
     if (frameData.count() > 0)
     {
-        SmallVector<FighterState, 4> frame;
+        Frame<4> frame;
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
@@ -1027,7 +1027,7 @@ static bool loadLegacy_1_3(
 #ifndef NDEBUG
     if (frameData.count() > 0)
     {
-        SmallVector<FighterState, 4> frame;
+        Frame<4> frame;
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
@@ -1320,7 +1320,7 @@ static bool loadLegacy_1_4(
 #ifndef NDEBUG
     if (frameData.count() > 0)
     {
-        Frame frame;
+        Frame<4> frame;
         for (const auto& states : frameData)
             frame.push(states.back());
         const int winner = findWinner(frame);
@@ -1697,7 +1697,7 @@ FrameData* Session::tryGetFrameData()
 }
 
 // ----------------------------------------------------------------------------
-void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
+void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 {
     (void)frameIdx;
 
@@ -1707,7 +1707,7 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
 }
 
 // ----------------------------------------------------------------------------
-void Session::onFrameDataNewFrame(int frameIdx, const Frame& frame)
+void Session::onFrameDataNewFrame(int frameIdx, const Frame<4>& frame)
 {
     // Update ended timestamp
     auto stamp = frame.back().timeStamp();
@@ -1715,7 +1715,7 @@ void Session::onFrameDataNewFrame(int frameIdx, const Frame& frame)
 }
 
 // ----------------------------------------------------------------------------
-static int findWinner(const SmallVector<FighterState, 4>& frame)
+static int findWinner(const Frame<4>& frame)
 {
     // The winner is the player with most stocks and least damage
     int winneridx = 0;

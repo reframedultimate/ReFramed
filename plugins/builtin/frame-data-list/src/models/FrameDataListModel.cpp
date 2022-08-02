@@ -87,5 +87,5 @@ int FrameDataListModel::fighterStatesModelCount() const { return fighterStatesMo
 QAbstractTableModel* FrameDataListModel::fighterStatesModel(int idx) const { return fighterStatesModels_[idx].get(); }
 
 // ----------------------------------------------------------------------------
-void FrameDataListModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame) {}
-void FrameDataListModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame& frame) { dispatcher.dispatch(&FrameDataListListener::onNewFrame); }
+void FrameDataListModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) {}
+void FrameDataListModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) { dispatcher.dispatch(&FrameDataListListener::onNewFrame); }

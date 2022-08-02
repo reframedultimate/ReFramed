@@ -6,8 +6,8 @@
 
 namespace rfcommon {
 
-class RFCOMMON_PUBLIC_API Frame : public SmallVector<FighterState, 4>
+template <int N>
+class Frame : public SmallVector<FighterState, N>
 {};
 
 }
-

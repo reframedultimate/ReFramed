@@ -6,7 +6,6 @@
 
 namespace rfcommon {
 
-class Frame;
 class SetFormat;
 
 class SessionMetaDataListener

@@ -200,7 +200,7 @@ const FighterState& FrameData::lastState(int fighterIdx) const
 }
 
 // ----------------------------------------------------------------------------
-void FrameData::addFrame(Frame&& frame)
+void FrameData::addFrame(Frame<4>&& frame)
 {
     // Sanity checks
     assert(frame.count() == fighterCount());

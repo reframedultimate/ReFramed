@@ -182,12 +182,12 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatesModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame)
+void FighterStatesModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame& frame)
+void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
     beginInsertRows(QModelIndex(), frameIdx, frameIdx);
     endInsertRows();
