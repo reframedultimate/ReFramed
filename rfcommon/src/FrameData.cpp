@@ -152,11 +152,12 @@ uint32_t FrameData::save(FILE* fp) const
     compressed.writeU8(5);  // Minor version
     compressed.writeLU32(buffer.bytesWritten());  // Decompressed size
     if (compress2(
-            static_cast<uint8_t*>(compressed.writeToPtr(compressedSize)), &compressedSize,
+            static_cast<uint8_t*>(compressed.writeToPtr(0)), &compressedSize,  // Don't advance write pointer until we know the actual compressed size
             static_cast<const uint8_t*>(buffer.get()), buffer.bytesWritten(), 9) != Z_OK)
     {
         return 0;
     }
+    compressed.seekW(compressedSize);  // Move write pointer to the correct location so bytesWritten() is correct
 
     if (fwrite(compressed.get(), 1, compressed.bytesWritten(), fp) != compressed.bytesWritten())
         return 0;
