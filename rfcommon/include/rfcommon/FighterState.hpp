@@ -21,7 +21,7 @@ class RFCOMMON_PUBLIC_API FighterState
 {
 public:
     FighterState(
-            TimeStamp timeStampMs,
+            TimeStamp timeStamp,
             FrameNumber frameNumber,
             FramesLeft framesLeft,
             float posx, float posy,
@@ -35,7 +35,8 @@ public:
             FighterFlags flags);
     ~FighterState();
 
-    FighterState withNewFrameNumber(FrameNumber number);
+    FighterState withNewFrameNumber(FrameNumber number) const;
+    FighterState withNewFrameCounters(TimeStamp timeStamp, FrameNumber number, FramesLeft framesLeft) const;
 
     TimeStamp timeStamp() const { return timeStamp_; }
     FrameNumber frameNumber() const { return frameNumber_; }

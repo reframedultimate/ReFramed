@@ -4,7 +4,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 FighterState::FighterState(
-        TimeStamp timeStampMs,
+        TimeStamp timeStamp,
         FrameNumber frameNumber,
         FramesLeft framesLeft,
         float posx, float posy,
@@ -16,7 +16,7 @@ FighterState::FighterState(
         FighterHitStatus hitStatus,
         FighterStocks stocks,
         FighterFlags flags)
-    : timeStamp_(timeStampMs)
+    : timeStamp_(timeStamp)
     , motion_(motion)
     , frameNumber_(frameNumber)
     , framesLeft_(framesLeft)
@@ -32,12 +32,30 @@ FighterState::FighterState(
 {}
 
 // ----------------------------------------------------------------------------
-FighterState FighterState::withNewFrameNumber(FrameNumber number)
+FighterState FighterState::withNewFrameNumber(FrameNumber number) const
 {
     return FighterState(
         timeStamp_,
         number,
         framesLeft_,
+        posx_, posy_,
+        damage_,
+        hitstun_,
+        shield_,
+        status_,
+        motion_,
+        hitStatus_,
+        stocks_,
+        flags_);
+}
+
+// ----------------------------------------------------------------------------
+FighterState FighterState::withNewFrameCounters(TimeStamp timeStamp, FrameNumber number, FramesLeft framesLeft) const
+{
+    return FighterState(
+        timeStamp,
+        number,
+        framesLeft,
         posx_, posy_,
         damage_,
         hitstun_,

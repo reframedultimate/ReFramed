@@ -22,7 +22,6 @@ TimeStamp::~TimeStamp()
 // ----------------------------------------------------------------------------
 TimeStamp::Type TimeStamp::millisSinceEpoch() const
 {
-    assert(isValid());
     return millisSinceEpoch_;
 }
 

@@ -227,7 +227,7 @@ void Protocol::onGameEnded()
 // ----------------------------------------------------------------------------
 void Protocol::onFighterState(
         quint64 frameTimeStamp,
-        quint32 frame,
+        quint32 framesLeft,
         quint8 fighterIdx,
         float posx,
         float posy,
@@ -265,7 +265,7 @@ void Protocol::onFighterState(
     stateBuffer_[fighterIdx].emplace(
             rfcommon::TimeStamp::fromMillisSinceEpoch(frameTimeStamp),
             rfcommon::FrameNumber::fromValue(0),  // We change the frame number later
-            rfcommon::FramesLeft::fromValue(frame),
+            rfcommon::FramesLeft::fromValue(framesLeft),
             posx, posy,
             damage,
             hitstun,

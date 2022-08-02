@@ -500,8 +500,9 @@ static bool loadLegacy_1_1(
         if (stateCount == 0)
             return false;
 
-        FramesLeft::Type frameCounter = 0;
-        for (FramesLeft::Type f = 0; f < stateCount; ++f)
+        FrameNumber::Type frameCounter = 0;
+        FrameNumber::Type highestFramesLeft = 0;
+        for (FrameNumber::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const auto status = FighterStatus::fromValue(stream.readBU16(&error));
@@ -517,16 +518,24 @@ static bool loadLegacy_1_1(
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
-            // counter
-            for (; frameCounter < framesLeft.value(); ++frameCounter)
+            // counters
+            if (highestFramesLeft < framesLeft.value())
+                highestFramesLeft = framesLeft.value();
+            while (frameCounter <= highestFramesLeft - framesLeft.value())
             {
-                // Version 1.1 did not timestamp each frame so we have to make a guesstimate
+                // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+
+                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto actualTimeStamp = frameTimeStamp -
+                        DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
+                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+                frameCounter++;
             }
         }
     }
@@ -711,8 +720,9 @@ static bool loadLegacy_1_2(
         if (stateCount == 0)
             return false;
 
-        FramesLeft::Type frameCounter = 0;
-        for (FramesLeft::Type f = 0; f < stateCount; ++f)
+        FrameNumber::Type frameCounter = 0;
+        FrameNumber::Type highestFramesLeft = 0;
+        for (FrameNumber::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const float posx = static_cast<float>(stream.readBF64(&error));
@@ -734,16 +744,24 @@ static bool loadLegacy_1_2(
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
-            // counter
-            for (; frameCounter < framesLeft.value(); ++frameCounter)
+            // counters
+            if (highestFramesLeft < framesLeft.value())
+                highestFramesLeft = framesLeft.value();
+            while (frameCounter <= highestFramesLeft - framesLeft.value())
             {
-                // Version 1.2 did not timestamp each frame so we have to make a guesstimate
+                // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
                 // frames passed since. This will not account for game pauses or
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+
+                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto actualTimeStamp = frameTimeStamp -
+                        DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
+                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameCounter++;
             }
         }
     }
@@ -942,8 +960,9 @@ static bool loadLegacy_1_3(
         if (stateCount == 0)
             return false;
 
-        FramesLeft::Type frameCounter = 0;
-        for (FramesLeft::Type f = 0; f < stateCount; ++f)
+        FrameNumber::Type frameCounter = 0;
+        FrameNumber::Type highestFramesLeft = 0;
+        for (FrameNumber::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
@@ -967,8 +986,10 @@ static bool loadLegacy_1_3(
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
-            // counter
-            for (; frameCounter < framesLeft.value(); ++frameCounter)
+            // counters
+            if (highestFramesLeft < framesLeft.value())
+                highestFramesLeft = framesLeft.value();
+            while (frameCounter <= highestFramesLeft - framesLeft.value())
             {
                 // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
@@ -976,7 +997,13 @@ static bool loadLegacy_1_3(
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+
+                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto actualTimeStamp = frameTimeStamp -
+                        DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
+                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameCounter++;
             }
         }
     }
@@ -1042,14 +1069,14 @@ static bool loadLegacy_1_4(
         std::size_t pos;
         const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return false;
+            continue;
         if (value.is_array() == false)
-            return false;
+            continue;
 
         if (value.size() != 3)
-            return false;
+            continue;
         if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-            return false;
+            continue;
 
         /*QString shortName  = arr[1].get<std::string>();
         QString customName = arr[2].get<std::string>();*/
@@ -1061,22 +1088,22 @@ static bool loadLegacy_1_4(
         std::size_t pos;
         const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
         if (pos != fighter.length())
-            return false;
+            continue;
         if (jsonSpecificMapping.is_object() == false)
-            return false;
+            continue;
 
         for (const auto& [key, value] : jsonSpecificMapping.items())
         {
             const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
             if (pos != key.length())
-                return false;
+                continue;
             if (value.is_array() == false)
-                return false;
+                continue;
 
             if (value.size() != 3)
-                return false;
+                continue;
             if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-                return false;
+                continue;
 
             /*QString shortName  = arr[1].get<std::string>();
             QString customName = arr[2].get<std::string>();*/
@@ -1090,9 +1117,9 @@ static bool loadLegacy_1_4(
         std::size_t pos;
         const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return false;
+            continue;
         if (value.is_string() == false)
-            return false;
+            continue;
 
         mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
     }
@@ -1102,9 +1129,9 @@ static bool loadLegacy_1_4(
         std::size_t pos;
         const auto stageID = StageID::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return false;
+            continue;
         if (value.is_string() == false)
-            return false;
+            continue;
 
         mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
     }
@@ -1114,9 +1141,9 @@ static bool loadLegacy_1_4(
         std::size_t pos;
         const auto hitStatusID = FighterHitStatus::fromValue(std::stoul(key, &pos));
         if (pos != key.length())
-            return false;
+            continue;
         if (value.is_string() == false)
-            return false;
+            continue;
 
         mappingInfo->hitStatus.add(hitStatusID, value.get<std::string>().c_str());
     }
@@ -1124,15 +1151,21 @@ static bool loadLegacy_1_4(
     SmallVector<FighterID, 2> playerFighterIDs;
     SmallVector<SmallString<15>, 2> playerTags;
     SmallVector<SmallString<15>, 2> playerNames;
+    int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
-        json jFighterID = info["fighterid"];
         json jTag = info["tag"];
         json jName = info["name"];
+        json jFighterID = info["fighterid"];
 
-        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
-        playerTags.emplace(jTag.get<std::string>().c_str());
-        playerNames.emplace(jName.get<std::string>().c_str());
+        playerFighterIDs.push(jFighterID.is_number_integer() ?
+            FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        playerTags.emplace(jTag.is_string() ?
+            jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+        playerNames.emplace(jName.is_string() ?
+            jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+
+        fighterCount++;
     }
 
     // There must be at least 2 fighters, otherwise the data is invalid
@@ -1149,30 +1182,40 @@ static bool loadLegacy_1_4(
     json jSetNumber = jGameInfo["set"];
     json jWinner = jGameInfo["winner"];
 
-    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
-        time_qt_to_milli_seconds_since_epoch(jTimeStampSart.get<std::string>().c_str()));
-    const auto lastFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
-        time_qt_to_milli_seconds_since_epoch(jTimeStampEnd.get<std::string>().c_str()));
+    const auto timeStarted = jTimeStampSart.is_string() ?
+        TimeStamp::fromMillisSinceEpoch(
+            time_qt_to_milli_seconds_since_epoch(jTimeStampSart.get<std::string>().c_str())) :
+        TimeStamp::makeInvalid();
+    const auto timeEnded = jTimeStampEnd.is_string() ?
+        TimeStamp::fromMillisSinceEpoch(
+            time_qt_to_milli_seconds_since_epoch(jTimeStampEnd.get<std::string>().c_str())) :
+        TimeStamp::makeInvalid();
+    const auto stageID = jStageID.is_number_integer() ?
+        StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
+    const auto gameNumber = jGameNumber.is_number_integer() ?
+        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
+    const auto setNumber = jSetNumber.is_number_integer() ?
+        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()) : SetNumber::fromValue(1);
+    const auto format = jSetFormat.is_string() ?
+        SetFormat(jSetFormat.get<std::string>().c_str()) : SetFormat::FRIENDLIES;
+    int winner = jWinner.is_number_unsigned() ?
+        jWinner.get<int>() : -1;
+    if (winner > fighterCount)
+        winner = -1;
 
     Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
-        firstFrameTimeStamp,
-        lastFrameTimeStamp,
-        StageID::fromValue(jStageID.get<StageID::Type>()),
-        std::move(playerFighterIDs),
-        std::move(playerTags),
-        std::move(playerNames),
-        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
-        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str()),
-        jWinner.get<int>());
+        timeStarted, timeEnded, stageID, std::move(playerFighterIDs),
+            std::move(playerTags), std::move(playerNames), gameNumber,
+            setNumber, format, winner);
 
-    const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
+    const std::string streamDecoded = jPlayerStates.is_string() ?
+        base64_decode(jPlayerStates.get<std::string>()) : "";
     StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
-    for (int i = 0; i < metaData->fighterCount(); ++i)
+    auto uniqueFrameData = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
+    for (int i = 0; i < fighterCount; ++i)
     {
         int error = 0;
-        const FramesLeft::Type stateCount = stream.readLU32(&error);
+        const FrameNumber::Type stateCount = stream.readLU32(&error);
         if (error)
             return false;
 
@@ -1180,8 +1223,7 @@ static bool loadLegacy_1_4(
         if (stateCount == 0)
             return false;
 
-        FramesLeft::Type frameCounter = 0;
-        for (FramesLeft::Type f = 0; f < stateCount; ++f)
+        for (FrameNumber::Type f = 0; f < stateCount; ++f)
         {
             const auto frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64(&error));
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
@@ -1200,40 +1242,88 @@ static bool loadLegacy_1_4(
 
             if (error)
                 return false;
-            if (framesLeft.value() == 0)
-                return false;
 
-            // Usually only unique states are saved, which means there will be
-            // gaps in between frames. Duplicate the current frame as many times
-            // as necessary and make sure to update the time stamp and frame
-            // counters
-            for (; frameCounter < framesLeft.value(); ++frameCounter)
+            uniqueFrameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(0),  // We update the frame number later
+                framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+        }
+    }
+
+    // In this version of the file, one of the players has an extra frame in
+    // the beginning. We want the frame numbers to line up properly so determine
+    // which player this is and remove that frame
+    auto checkFirstFramesLeftMatches = [](const SmallVector<Vector<FighterState>, 2>& frameData) -> bool {
+        const auto framesLeft = frameData[0].front().framesLeft();
+        for (int i = 1; i != frameData.count(); ++i)
+            if (frameData[i].front().framesLeft() != framesLeft)
+                return false;
+        return true;
+    };
+    while (checkFirstFramesLeftMatches(uniqueFrameData) == false)
+    {
+        auto it = std::max_element(uniqueFrameData.begin(), uniqueFrameData.end(),
+            [](const Vector<FighterState>& a, const Vector<FighterState>& b) {
+                return a.front().framesLeft().value() < b.front().framesLeft().value();
+        });
+        it->erase(0);
+    }
+    // From the code above, all players should have the same frames left value now
+    const auto highestFramesLeft = uniqueFrameData[0].front().framesLeft();
+
+    // Usually only unique states are saved, which means there will be
+    // gaps in between frames. Go through all states and duplicate any frames
+    // to fill in these gaps, while making sure to update the frame number,
+    // frames left and timestamp correctly
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
+    for (int fighter = 0; fighter != fighterCount; ++fighter)
+    {
+        const auto& uniqueStates = uniqueFrameData[fighter];
+        auto& states = frameData[fighter];
+        states.reserve(uniqueFrameData[fighter].count());
+        states.push(uniqueStates[0]);
+        FramesLeft::Type framesLeftCounter = highestFramesLeft.value();
+        FrameNumber::Type frameCounter = 0;
+        for (int i = 1; i < uniqueStates.count(); ++i)
+        {
+            const auto& uniqueState = uniqueStates[i];
+
+            while (framesLeftCounter > uniqueState.framesLeft().value())
             {
-                const TimeStamp actualTimeStamp = frameTimeStamp +
-                        DeltaTime::fromMillis((framesLeft.value() - frameCounter - 1) * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                framesLeftCounter--; frameCounter++;
+                const auto diff = framesLeftCounter - uniqueState.framesLeft().value();
+                const auto newTimeStamp = uniqueState.timeStamp() - DeltaTime::fromMillis(diff * 1000.0 / 60.0);
+                states.push(uniqueState.withNewFrameCounters(
+                        newTimeStamp, FrameNumber::fromValue(frameCounter), FramesLeft::fromValue(framesLeftCounter)));
             }
         }
     }
 
     // Ensure that every fighter has the same number of frames
-    const int highestFrameIdx = std::max_element(frameData.begin(), frameData.end(),
-        [](const Vector<FighterState>& a, const Vector<FighterState>& b){
-            return a.count() < b.count();
-    })->count();
-    for (auto& frames : frameData)
-        while (frames.count() < highestFrameIdx)
-            frames.emplace(frames.back());
+    const auto highestFrameNumber = std::max_element(frameData.begin(), frameData.end(),
+        [](const Vector<FighterState>& a, const Vector<FighterState>& b) {
+            return a.back().frameNumber().value() < b.back().frameNumber().value();
+    })->back().frameNumber();
+    for (auto& states : frameData)
+    {
+        const auto finalState = states.back();
+        const auto finalFrameNumber = states.back().frameNumber().value();
+        while (states.back().frameNumber().value() < highestFrameNumber.value())
+        {
+            const auto framesDiff = states.back().frameNumber().value() - finalFrameNumber + 1;
+            const TimeStamp actualTimeStamp = finalState.timeStamp() + DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
+            const auto actualFrameNumber = FrameNumber::fromValue(finalFrameNumber + framesDiff);
+            const auto actualFramesLeft = FramesLeft::fromValue(finalState.framesLeft().value() - framesDiff);
+            states.emplace(finalState.withNewFrameCounters(actualTimeStamp, actualFrameNumber, actualFramesLeft));
+        }
+    }
 
     // Winner sanity check
 #ifndef NDEBUG
     if (frameData.count() > 0)
     {
-        SmallVector<FighterState, 4> frame;
-        for (const auto& state : frameData.back())
-            frame.push(state);
+        Frame frame;
+        for (const auto& states : frameData)
+            frame.push(states.back());
         const int winner = findWinner(frame);
-        assert(winner == static_cast<GameSessionMetaData*>(metaData.get())->winner());
     }
 #endif
 
@@ -1627,7 +1717,7 @@ static int findWinner(const SmallVector<FighterState, 4>& frame)
 {
     // The winner is the player with most stocks and least damage
     int winneridx = 0;
-    for (int i = 0; i != frame.count(); ++i)
+    for (int i = 1; i != frame.count(); ++i)
     {
         const auto& current = frame[i];
         const auto& winner = frame[winneridx];
