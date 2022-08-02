@@ -303,8 +303,8 @@ TimeStamp SessionMetaData::timeEnded() const
 // ----------------------------------------------------------------------------
 void SessionMetaData::setTimeEnded(TimeStamp timeStamp)
 {
-    bool notify = (timeStarted_ == timeStamp);
-    timeStarted_ = timeStamp;
+    bool notify = (timeEnded_ == timeStamp);
+    timeEnded_ = timeStamp;
     if (notify)
         dispatcher.dispatch(&SessionMetaDataListener::onSessionMetaDataTimeEndedChanged, timeStamp);
 }

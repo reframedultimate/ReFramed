@@ -1709,7 +1709,9 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame& frame)
 // ----------------------------------------------------------------------------
 void Session::onFrameDataNewFrame(int frameIdx, const Frame& frame)
 {
-    (void)frameIdx; (void)frame;
+    // Update ended timestamp
+    auto stamp = frame.back().timeStamp();
+    metaData_->setTimeEnded(stamp);
 }
 
 // ----------------------------------------------------------------------------
