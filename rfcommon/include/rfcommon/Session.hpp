@@ -8,12 +8,12 @@
 namespace rfcommon {
 
 class MappingInfo;
-class SessionMetaData;
+class MetaData;
 class FrameData;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
-    Session(FILE* fp, MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData);
+    Session(FILE* fp, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
 
 public:
     enum LoadFlags
@@ -27,8 +27,8 @@ public:
     ~Session();
 
     static Session* newModernSavedSession(FILE* fp);
-    static Session* newLegacySavedSession(MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData);
-    static Session* newActiveSession(MappingInfo* globalMappingInfo, SessionMetaData* metaData);
+    static Session* newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
+    static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
     static Session* load(const char* fileName, uint8_t loadFlags=0);
     bool save(const char* fileName);
 
@@ -42,7 +42,7 @@ public:
      */
     MappingInfo* tryGetMappingInfo();
 
-    SessionMetaData* tryGetMetaData();
+    MetaData* tryGetMetaData();
 
     FrameData* tryGetFrameData();
 
@@ -65,7 +65,7 @@ private:
     SmallVector<ContentTableEntry, 4> contentTable_;
 
     Reference<MappingInfo> mappingInfo_;
-    Reference<SessionMetaData> metaData_;
+    Reference<MetaData> metaData_;
     Reference<FrameData> frameData_;
 };
 

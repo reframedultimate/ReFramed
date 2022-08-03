@@ -7,7 +7,7 @@
 #include "rfcommon/FighterStocks.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/StreamBuffer.hpp"
 #include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
@@ -21,27 +21,27 @@ using nlohmann::json;
 
 static bool loadLegacy_1_0(
         json& jptr,
-        Reference<SessionMetaData>* metaData,
+        Reference<MetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_1(
         json& jptr,
-        Reference<SessionMetaData>* metaData,
+        Reference<MetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_2(
         json& jptr,
-        Reference<SessionMetaData>* metaData,
+        Reference<MetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_3(
         json& jptr,
-        Reference<SessionMetaData>* metaData,
+        Reference<MetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_4(
         json& jptr,
-        Reference<SessionMetaData>* metaData,
+        Reference<MetaData>* metaData,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static int findWinner(const Frame<4>& frame);
@@ -204,7 +204,7 @@ static std::string readUncompressedFile(const char* fileName)
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_0(
         json& j,
-        Reference<SessionMetaData>* metaDataOut,
+        Reference<MetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -268,7 +268,7 @@ static bool loadLegacy_1_0(
     json jGameNumber = jGameInfo["number"];
     json jStageID = jGameInfo["stageid"];
 
-    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+    Reference<MetaData> metaData = MetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
@@ -350,7 +350,7 @@ static bool loadLegacy_1_0(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        static_cast<GameSessionMetaData*>(metaData.get())->setWinner(winner);
+        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
     }
 
     *metaDataOut = metaData;
@@ -363,7 +363,7 @@ static bool loadLegacy_1_0(
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_1(
         json& j,
-        Reference<SessionMetaData>* metaDataOut,
+        Reference<MetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -471,7 +471,7 @@ static bool loadLegacy_1_1(
     json jGameNumber = jGameInfo["number"];
     json jStageID = jGameInfo["stageid"];
 
-    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+    Reference<MetaData> metaData = MetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
@@ -562,7 +562,7 @@ static bool loadLegacy_1_1(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        static_cast<GameSessionMetaData*>(metaData.get())->setWinner(winner);
+        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
     }
 
     *metaDataOut = metaData;
@@ -575,7 +575,7 @@ static bool loadLegacy_1_1(
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_2(
         json& j,
-        Reference<SessionMetaData>* metaDataOut,
+        Reference<MetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -691,7 +691,7 @@ static bool loadLegacy_1_2(
     json jGameNumber = jGameInfo["number"];
     json jSetNumber = jGameInfo["set"];
 
-    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+    Reference<MetaData> metaData = MetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
@@ -788,7 +788,7 @@ static bool loadLegacy_1_2(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        static_cast<GameSessionMetaData*>(metaData.get())->setWinner(winner);
+        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
     }
 
     *metaDataOut = metaData;
@@ -801,7 +801,7 @@ static bool loadLegacy_1_2(
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_3(
         json& j,
-        Reference<SessionMetaData>* metaDataOut,
+        Reference<MetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -931,7 +931,7 @@ static bool loadLegacy_1_3(
     json jSetNumber = jGameInfo["set"];
     json jWinner = jGameInfo["winner"];
 
-    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+    Reference<MetaData> metaData = MetaData::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
@@ -1031,7 +1031,7 @@ static bool loadLegacy_1_3(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        assert(winner == static_cast<GameSessionMetaData*>(metaData.get())->winner());
+        assert(winner == static_cast<GameMetaData*>(metaData.get())->winner());
     }
 #endif
 
@@ -1045,7 +1045,7 @@ static bool loadLegacy_1_3(
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_4(
         json& j,
-        Reference<SessionMetaData>* metaDataOut,
+        Reference<MetaData>* metaDataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -1203,7 +1203,7 @@ static bool loadLegacy_1_4(
     if (winner > fighterCount)
         winner = -1;
 
-    Reference<SessionMetaData> metaData = SessionMetaData::newSavedGameSession(
+    Reference<MetaData> metaData = MetaData::newSavedGameSession(
         timeStarted, timeEnded, stageID, std::move(playerFighterIDs),
             std::move(playerTags), std::move(playerNames), gameNumber,
             setNumber, format, winner);
@@ -1335,7 +1335,7 @@ static bool loadLegacy_1_4(
 }
 
 // ----------------------------------------------------------------------------
-Session::Session(FILE* fp, MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData)
+Session::Session(FILE* fp, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
     : fp_(fp)
     , mappingInfo_(mappingInfo)
     , metaData_(metaData)
@@ -1365,7 +1365,7 @@ Session* Session::newModernSavedSession(FILE* fp)
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, SessionMetaData* metaData, FrameData* frameData)
+Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
 {
     return new Session(
         nullptr,
@@ -1375,7 +1375,7 @@ Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, SessionMetaDat
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newActiveSession(MappingInfo* globalMappingInfo, SessionMetaData* metaData)
+Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData)
 {
     return new Session(
         nullptr,
@@ -1455,7 +1455,7 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    Reference<SessionMetaData> metaData;
+    Reference<MetaData> metaData;
     Reference<MappingInfo> mappingInfo;
     Reference<FrameData> frameData;
     std::string version = j["version"];
@@ -1645,7 +1645,7 @@ MappingInfo* Session::tryGetMappingInfo()
 }
 
 // ----------------------------------------------------------------------------
-SessionMetaData* Session::tryGetMetaData()
+MetaData* Session::tryGetMetaData()
 {
     if (metaData_.isNull())
     {
@@ -1656,7 +1656,7 @@ SessionMetaData* Session::tryGetMetaData()
                 if (fseek(fp_, entry.offset, SEEK_SET) != 0)
                     return nullptr;
 
-                metaData_ = SessionMetaData::load(fp_, entry.size);
+                metaData_ = MetaData::load(fp_, entry.size);
                 break;
             }
 
@@ -1702,8 +1702,8 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
     (void)frameIdx;
 
     // Winner might have changed
-    if (metaData_ && metaData_->type() == SessionMetaData::GAME)
-        static_cast<GameSessionMetaData*>(metaData_.get())->setWinner(findWinner(frame));
+    if (metaData_ && metaData_->type() == MetaData::GAME)
+        static_cast<GameMetaData*>(metaData_.get())->setWinner(findWinner(frame));
 }
 
 // ----------------------------------------------------------------------------

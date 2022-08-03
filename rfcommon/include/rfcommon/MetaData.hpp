@@ -13,9 +13,9 @@
 
 namespace rfcommon {
 
-class SessionMetaDataListener;
+class MetaDataListener;
 
-class RFCOMMON_PUBLIC_API SessionMetaData : public RefCounted
+class RFCOMMON_PUBLIC_API MetaData : public RefCounted
 {
 public:
     enum Type
@@ -25,7 +25,7 @@ public:
     };
 
 protected:
-    SessionMetaData(
+    MetaData(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -34,7 +34,7 @@ protected:
 
 public:
     /*!
-     * \brief Constructs a new GameSessionMetaData object from the specified
+     * \brief Constructs a new GameMetaData object from the specified
      * parameters.
      *
      * - SetNumber is set to 1
@@ -42,24 +42,24 @@ public:
      * - SetFormat is set to "Friendlies"
      * - TimeStarted and TimeEnded are set to the current time
      */
-    static SessionMetaData* newActiveGameSession(
+    static MetaData* newActiveGameSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags,
             SmallVector<SmallString<15>, 2>&& names);
 
     /*!
-     * \brief Constructs a new TrainingSessionMetaData object from the specified
+     * \brief Constructs a new TrainingMetaData object from the specified
      * parameters.
      *
      * - TimeStarted and TimeEnded are set to the current time
      */
-    static SessionMetaData* newActiveTrainingSession(
+    static MetaData* newActiveTrainingSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<SmallString<15>, 2>&& tags);
 
-    static SessionMetaData* newSavedGameSession(
+    static MetaData* newSavedGameSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -71,7 +71,7 @@ public:
             SetFormat setFormat,
             int winner);
 
-    static SessionMetaData* newSavedTrainingSession(
+    static MetaData* newSavedTrainingSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -79,11 +79,11 @@ public:
             SmallVector<SmallString<15>, 2>&& tags,
             GameNumber sessionNumber);
 
-    virtual ~SessionMetaData();
+    virtual ~MetaData();
 
     virtual Type type() const = 0;
 
-    static SessionMetaData* load(FILE* fp, uint32_t size);
+    static MetaData* load(FILE* fp, uint32_t size);
     uint32_t save(FILE* fp) const;
 
     /*!
@@ -170,7 +170,7 @@ public:
      */
     DeltaTime length() const;
 
-    ListenerDispatcher<SessionMetaDataListener> dispatcher;
+    ListenerDispatcher<MetaDataListener> dispatcher;
 
 protected:
     TimeStamp timeStarted_;
@@ -180,9 +180,9 @@ protected:
     StageID stageID_;
 };
 
-class RFCOMMON_PUBLIC_API GameSessionMetaData : public SessionMetaData
+class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
 {
-    GameSessionMetaData(
+    GameMetaData(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -267,7 +267,7 @@ public:
     void setWinner(int fighterIdx);
 
 private:
-    friend class SessionMetaData;
+    friend class MetaData;
 
     SmallVector<SmallString<15>, 2> names_;
     GameNumber gameNumber_;
@@ -276,9 +276,9 @@ private:
     int winner_;
 };
 
-class RFCOMMON_PUBLIC_API TrainingSessionMetaData : public SessionMetaData
+class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
 {
-    TrainingSessionMetaData(
+    TrainingMetaData(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -299,7 +299,7 @@ public:
     void resetSessionNumber();
 
 private:
-    friend class SessionMetaData;
+    friend class MetaData;
 
     GameNumber sessionNumber_;
 };

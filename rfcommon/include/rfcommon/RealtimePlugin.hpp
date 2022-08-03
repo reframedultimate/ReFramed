@@ -16,12 +16,12 @@ public:
     virtual ~RealtimePlugin();
 
     virtual void onGameSessionLoaded(rfcommon::Session* game) = 0;
-    virtual void onTrainingSessionLoaded(rfcommon::Session* training) = 0;
     virtual void onGameSessionUnloaded(rfcommon::Session* game) = 0;
+    virtual void onTrainingSessionLoaded(rfcommon::Session* training) = 0;
     virtual void onTrainingSessionUnloaded(rfcommon::Session* training) = 0;
 
-    virtual void onGameSetLoaded(rfcommon::Session** games, int numGames) = 0;
-    virtual void onGameSetUnloaded(rfcommon::Session** games, int numGames) = 0;
+    virtual void onGameSessionSetLoaded(rfcommon::Session** games, int numGames) = 0;
+    virtual void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) = 0;
 };
 
 }

@@ -1,7 +1,7 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FighterState.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "nlohmann/json.hpp"
 #include <memory>
 #include <unordered_set>
@@ -193,7 +193,7 @@ uint32_t MappingInfo::save(FILE* fp) const
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MappingInfo::saveNecessary(FILE* fp, const SessionMetaData* metaData, const FrameData* frameData) const
+uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const FrameData* frameData) const
 {
     assert(metaData->fighterCount() == frameData->fighterCount());
 

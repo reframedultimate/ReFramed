@@ -12,7 +12,7 @@
 namespace rfcommon {
 
 class FrameData;
-class SessionMetaData;
+class MetaData;
 
 class RFCOMMON_PUBLIC_API MappingInfo : public RefCounted
 {
@@ -22,7 +22,7 @@ public:
 
     static MappingInfo* load(FILE* fp, uint32_t size);
     uint32_t save(FILE* fp) const;
-    uint32_t saveNecessary(FILE* fp, const SessionMetaData* metaData, const FrameData* frameData) const;
+    uint32_t saveNecessary(FILE* fp, const MetaData* metaData, const FrameData* frameData) const;
 
     /*!
      * \brief This is the checksum value we received from the server when

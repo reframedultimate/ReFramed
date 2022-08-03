@@ -44,8 +44,9 @@ FrameData* FrameData::load(FILE* fp, uint32_t size)
 
         StreamBuffer buffer(decompressedSize);
         int result = uncompress(
-                static_cast<uint8_t*>(buffer.writeToPtr(decompressedSize)), &decompressedSize,
+                static_cast<uint8_t*>(buffer.writeToPtr(0)), &decompressedSize,
                 static_cast<const uint8_t*>(compressed.get()) + 6, compressed.capacity() - 6);
+        buffer.writeToPtr(decompressedSize);
         if (result != Z_OK)
             return nullptr;
         if (decompressedSize != (uLongf)buffer.capacity())
@@ -157,7 +158,7 @@ uint32_t FrameData::save(FILE* fp) const
     {
         return 0;
     }
-    compressed.seekW(compressedSize);  // Move write pointer to the correct location so bytesWritten() is correct
+    compressed.writeToPtr(compressedSize);  // Move write pointer to the correct location so bytesWritten() is correct
 
     if (fwrite(compressed.get(), 1, compressed.bytesWritten(), fp) != compressed.bytesWritten())
         return 0;
