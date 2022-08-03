@@ -51,8 +51,8 @@ void FrameDataListPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListPlugin::onGameSetLoaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
-void FrameDataListPlugin::onGameSetUnloaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
+void FrameDataListPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
+void FrameDataListPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
 
 // ----------------------------------------------------------------------------
 void FrameDataListPlugin::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
