@@ -3,7 +3,7 @@
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/tcp_socket.h"
 #include <QDateTime>
@@ -11,7 +11,7 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::SessionMetaData* meta, QString saveFormat)
+static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::MetaData* meta, QString saveFormat)
 {
     using namespace rfcommon;
 
@@ -22,9 +22,9 @@ static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::Sessi
     const char* p1char = map->fighter.toName(meta->fighterID(0));
     const char* p2char = map->fighter.toName(meta->fighterID(1));
 
-    if (meta->type() == SessionMetaData::GAME)
+    if (meta->type() == MetaData::GAME)
     {
-        const GameSessionMetaData* gameMeta = static_cast<const GameSessionMetaData*>(meta);
+        const GameMetaData* gameMeta = static_cast<const GameMetaData*>(meta);
 
         QString formatDesc = gameMeta->setFormat().description().cStr();
         QString setNumber = QString::number(gameMeta->setNumber().value());
@@ -59,8 +59,8 @@ static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::Sessi
     }
     else
     {
-        assert(meta->type() == SessionMetaData::TRAINING);
-        const TrainingSessionMetaData* trainingMeta = static_cast<const TrainingSessionMetaData*>(meta);
+        assert(meta->type() == MetaData::TRAINING);
+        const TrainingMetaData* trainingMeta = static_cast<const TrainingMetaData*>(meta);
 
         QString sessionNumber = QString::number(trainingMeta->sessionNumber().value());
 
@@ -104,9 +104,9 @@ ActiveSessionManager::~ActiveSessionManager()
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setSetFormat(const rfcommon::SetFormat& format)
 {
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::SessionMetaData::GAME)
+    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
-        auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         meta->setSetFormat(format);
     }
     else
@@ -120,9 +120,9 @@ void ActiveSessionManager::setP1Name(const QString& name)
 {
     if (activeMetaData_
         && activeMetaData_->fighterCount() == 2
-        && activeMetaData_->type() == rfcommon::SessionMetaData::GAME)
+        && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
-        auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         if (name == "")
             meta->setName(0, meta->tag(0));
         else
@@ -142,9 +142,9 @@ void ActiveSessionManager::setP2Name(const QString& name)
 {
     if (activeMetaData_
         && activeMetaData_->fighterCount() == 2
-        && activeMetaData_->type() == rfcommon::SessionMetaData::GAME)
+        && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
-        auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         if (name == "")
             meta->setName(1, meta->tag(1));
         else
@@ -162,9 +162,9 @@ void ActiveSessionManager::setP2Name(const QString& name)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
 {
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::SessionMetaData::GAME)
+    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
-        auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         meta->setGameNumber(number);
 
         findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
@@ -182,9 +182,9 @@ void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 {
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::SessionMetaData::TRAINING)
+    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::TRAINING)
     {
-        auto meta = static_cast<rfcommon::TrainingSessionMetaData*>(activeMetaData_.get());
+        auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
         meta->setSessionNumber(number);
 
         findUniqueTrainingSessionNumber(activeMappingInfo_, meta);
@@ -199,9 +199,9 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameSessionMetaData* meta)
+void ActiveSessionManager::findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameMetaData* meta)
 {
-    assert(meta->type() == rfcommon::SessionMetaData::GAME);
+    assert(meta->type() == rfcommon::MetaData::GAME);
 
     const QDir& dir = replayManager_->defaultGameSessionSourceDirectory();
     while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(map, meta, gameSaveFormat_))))
@@ -222,9 +222,9 @@ void ActiveSessionManager::findUniqueGameAndSetNumbers(rfcommon::MappingInfo* ma
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingSessionMetaData* meta)
+void ActiveSessionManager::findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingMetaData* meta)
 {
-    assert(meta->type() == rfcommon::SessionMetaData::TRAINING);
+    assert(meta->type() == rfcommon::MetaData::TRAINING);
 
     const QDir& dir = replayManager_->defaultGameSessionSourceDirectory();
     while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(map, meta, trainingSaveFormat_))))
@@ -232,7 +232,7 @@ void ActiveSessionManager::findUniqueTrainingSessionNumber(rfcommon::MappingInfo
 }
 
 // ----------------------------------------------------------------------------
-bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameSessionMetaData* meta)
+bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 {
     // For any game that doesn't have exactly 2 players we don't care about sets
     if (meta->fighterCount() != 2)
@@ -310,9 +310,9 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
     activeMappingInfo_ = game->tryGetMappingInfo();
     activeMetaData_ = game->tryGetMetaData();
     assert(activeMappingInfo_.notNull() && activeMetaData_.notNull());
-    assert(activeMetaData_->type() == rfcommon::SessionMetaData::GAME);
+    assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
 
-    auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+    auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
 
     // first off, copy the data we've stored from the UI into the new sessions
     // so comparing previous sessions is consistent
@@ -366,9 +366,9 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 {
     assert(activeMappingInfo_ == game->tryGetMappingInfo());
     assert(activeMetaData_ == game->tryGetMetaData());
-    assert(activeMetaData_->type() == rfcommon::SessionMetaData::GAME);
+    assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
 
-    auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+    auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
 
     // Save as replay
     QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
@@ -413,16 +413,16 @@ void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const
 
     switch (activeMetaData_->type())
     {
-        case rfcommon::SessionMetaData::GAME: {
-            auto meta = static_cast<rfcommon::GameSessionMetaData*>(activeMetaData_.get());
+        case rfcommon::MetaData::GAME: {
+            auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
             findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
 
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
         } break;
 
-        case rfcommon::SessionMetaData::TRAINING: {
-            auto meta = static_cast<rfcommon::TrainingSessionMetaData*>(activeMetaData_.get());
+        case rfcommon::MetaData::TRAINING: {
+            auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
             findUniqueTrainingSessionNumber(activeMappingInfo_, meta);
 
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
@@ -431,17 +431,17 @@ void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
+void ActiveSessionManager::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
+void ActiveSessionManager::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
 {
     if (activeMetaData_->fighterCount() == 2)
     {
@@ -453,31 +453,31 @@ void ActiveSessionManager::onSessionMetaDataPlayerNameChanged(int player, const 
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataSetNumberChanged(rfcommon::SetNumber number)
+void ActiveSessionManager::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataGameNumberChanged(rfcommon::GameNumber number)
+void ActiveSessionManager::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
+void ActiveSessionManager::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataWinnerChanged(int winner)
+void ActiveSessionManager::onMetaDataWinnerChanged(int winner)
 {
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerWinnerChanged, winner);
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onSessionMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
+void ActiveSessionManager::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
 {
 
 }

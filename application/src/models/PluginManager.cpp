@@ -5,7 +5,7 @@
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/StandalonePlugin.hpp"
 #include "rfcommon/VisualizerPlugin.hpp"
 #include "rfcommon/dynlib.h"
@@ -162,15 +162,15 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
         // might be interested in hookin in to the middle of a match/training mode session
         if (rfcommon::Session* session = protocol_->activeSession())
         {
-            rfcommon::SessionMetaData* meta = session->tryGetMetaData();
+            rfcommon::MetaData* meta = session->tryGetMetaData();
             assert(meta);
 
             switch (meta->type())
             {
-                case rfcommon::SessionMetaData::GAME:
+                case rfcommon::MetaData::GAME:
                     realtime->onProtocolGameResumed(protocol_->activeSession());
                     break;
-                case rfcommon::SessionMetaData::TRAINING:
+                case rfcommon::MetaData::TRAINING:
                     realtime->onProtocolTrainingResumed(protocol_->activeSession());
                     break;
             }

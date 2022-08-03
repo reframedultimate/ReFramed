@@ -6,15 +6,15 @@
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ProtocolListener.hpp"
-#include "rfcommon/SessionMetaDataListener.hpp"
+#include "rfcommon/MetaDataListener.hpp"
 #include <QObject>
 #include <QDir>
 #include <vector>
 
 namespace rfcommon {
     class Session;
-    class GameSessionMetaData;
-    class TrainingSessionMetaData;
+    class GameMetaData;
+    class TrainingMetaData;
 }
 
 namespace rfapp {
@@ -32,7 +32,7 @@ class ReplayManager;
 class ActiveSessionManager : public QObject
                            , public ReplayManagerListener
                            , public rfcommon::ProtocolListener
-                           , public rfcommon::SessionMetaDataListener
+                           , public rfcommon::MetaDataListener
 {
     Q_OBJECT
 
@@ -49,9 +49,9 @@ public:
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
-    void findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameSessionMetaData* meta);
-    void findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingSessionMetaData* meta);
-    bool shouldStartNewSet(const rfcommon::GameSessionMetaData* meta);
+    void findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameMetaData* meta);
+    void findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingMetaData* meta);
+    bool shouldStartNewSet(const rfcommon::GameMetaData* meta);
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
@@ -85,22 +85,22 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override { (void)name; }
 
 private:
-    void onSessionMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
-    void onSessionMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
+    void onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
+    void onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
 
-    void onSessionMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
-    void onSessionMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
-    void onSessionMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
-    void onSessionMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;
-    void onSessionMetaDataWinnerChanged(int winner) override;
+    void onMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+    void onMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
+    void onMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
+    void onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;
+    void onMetaDataWinnerChanged(int winner) override;
 
-    void onSessionMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) override;
+    void onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) override;
 
 private:
     Protocol* protocol_;
     ReplayManager* replayManager_;
-    std::vector<rfcommon::Reference<rfcommon::GameSessionMetaData>> pastGameMetaData_;
-    rfcommon::Reference<rfcommon::SessionMetaData> activeMetaData_;
+    std::vector<rfcommon::Reference<rfcommon::GameMetaData>> pastGameMetaData_;
+    rfcommon::Reference<rfcommon::MetaData> activeMetaData_;
     rfcommon::Reference<rfcommon::MappingInfo> activeMappingInfo_;
     QString gameSaveFormat_;
     QString trainingSaveFormat_;

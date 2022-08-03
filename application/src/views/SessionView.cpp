@@ -16,7 +16,7 @@ SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
 {
     ui_->setupUi(this);
 
-    //damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
+    damageTimePlugin_ = pluginManager_->createRealtimeModel("Damage vs Time Plot");
     // = pluginManager_->createRealtimeModel("XY Positions Plot");
     frameDataListPlugin_ = pluginManager_->createRealtimeModel("Frame Data List");
     decisionGraphPlugin_ = pluginManager_->createRealtimeModel("Decision Graph");
@@ -136,6 +136,32 @@ void SessionView::clearSavedGameSession(rfcommon::Session* session)
         frameDataListPlugin_->onGameSessionUnloaded(session);
     if (decisionGraphPlugin_)
         decisionGraphPlugin_->onGameSessionUnloaded(session);
+}
+
+// ----------------------------------------------------------------------------
+void SessionView::setSavedGameSessionSet(rfcommon::Session** sessions, int count)
+{
+    if (damageTimePlugin_)
+        damageTimePlugin_->onGameSessionSetLoaded(sessions, count);
+    if (xyPositionsPlugin_)
+        xyPositionsPlugin_->onGameSessionSetLoaded(sessions, count);
+    if (frameDataListPlugin_)
+        frameDataListPlugin_->onGameSessionSetLoaded(sessions, count);
+    if (decisionGraphPlugin_)
+        decisionGraphPlugin_->onGameSessionSetLoaded(sessions, count);
+}
+
+// ----------------------------------------------------------------------------
+void SessionView::clearSavedGameSessionSet(rfcommon::Session** sessions, int count)
+{
+    if (damageTimePlugin_)
+        damageTimePlugin_->onGameSessionSetUnloaded(sessions, count);
+    if (xyPositionsPlugin_)
+        xyPositionsPlugin_->onGameSessionSetUnloaded(sessions, count);
+    if (frameDataListPlugin_)
+        frameDataListPlugin_->onGameSessionSetUnloaded(sessions, count);
+    if (decisionGraphPlugin_)
+        decisionGraphPlugin_->onGameSessionSetUnloaded(sessions, count);
 }
 
 }

@@ -1,7 +1,7 @@
 #include "application/models/DataSetBackgroundLoader.hpp"
 #include "application/models/ReplayGroup.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/LinearMap.hpp"
 #include <QRunnable>
 #include <QThreadPool>
@@ -48,7 +48,7 @@ private:
             if (session)
             {
                 // We currently don't support loading training mode sessions, only game sessions
-                if (session->tryGetMetaData()->type() == rfcommon::SessionMetaData::GAME)
+                if (session->tryGetMetaData()->type() == rfcommon::MetaData::GAME)
                 {
                     out_->enqueue({session, item.group, item.taskID});
                     session.detach();

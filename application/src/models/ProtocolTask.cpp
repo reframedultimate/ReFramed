@@ -2,7 +2,7 @@
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/time.h"
 #include "rfcommon/tcp_socket.h"
 #include "rfcommon/Vector.hpp"
@@ -358,7 +358,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 fighterSlots[0] = 0;
                 fighterSlots[1] = 1;
 
-                rfcommon::SessionMetaData* meta = rfcommon::SessionMetaData::newActiveTrainingSession(
+                rfcommon::MetaData* meta = rfcommon::MetaData::newActiveTrainingSession(
                         stageID,
                         std::move(fighterIDs),
                         std::move(tags));
@@ -414,7 +414,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
 #undef stageL
 #undef playerCount
 
-                rfcommon::SessionMetaData* meta = rfcommon::SessionMetaData::newActiveGameSession(
+                rfcommon::MetaData* meta = rfcommon::MetaData::newActiveGameSession(
                         stageID,
                         std::move(fighterIDs),
                         std::move(tags),

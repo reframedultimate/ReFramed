@@ -5,7 +5,7 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/SessionMetaData.hpp"
+#include "rfcommon/MetaData.hpp"
 #include <QTimer>
 #include <QStandardPaths>
 #include <QDir>
@@ -112,7 +112,7 @@ void Protocol::onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedProxy(rfcommon::SessionMetaData* trainingMeta)
+void Protocol::onTrainingStartedProxy(rfcommon::MetaData* trainingMeta)
 {
     // If the timer did not reset this in time, it means that a stop and a
     // start event occurred in quick succession. This is how we detect a reset
@@ -144,7 +144,7 @@ void Protocol::onTrainingStartedProxy(rfcommon::SessionMetaData* trainingMeta)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedActually(rfcommon::SessionMetaData* trainingMeta)
+void Protocol::onTrainingStartedActually(rfcommon::MetaData* trainingMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
@@ -158,7 +158,7 @@ void Protocol::onTrainingStartedActually(rfcommon::SessionMetaData* trainingMeta
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingResumed(rfcommon::SessionMetaData* trainingMeta)
+void Protocol::onTrainingResumed(rfcommon::MetaData* trainingMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
@@ -191,7 +191,7 @@ void Protocol::onTrainingEndedActually()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameStarted(rfcommon::SessionMetaData* gameMeta)
+void Protocol::onGameStarted(rfcommon::MetaData* gameMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
@@ -205,7 +205,7 @@ void Protocol::onGameStarted(rfcommon::SessionMetaData* gameMeta)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameResumed(rfcommon::SessionMetaData* gameMeta)
+void Protocol::onGameResumed(rfcommon::MetaData* gameMeta)
 {
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
@@ -407,15 +407,15 @@ void Protocol::endSessionIfNecessary()
     if (activeSession_.isNull())
         return;
 
-    rfcommon::SessionMetaData* meta = activeSession_->tryGetMetaData();
+    rfcommon::MetaData* meta = activeSession_->tryGetMetaData();
     assert(meta != nullptr);
 
     switch (meta->type())
     {
-        case rfcommon::SessionMetaData::GAME:
+        case rfcommon::MetaData::GAME:
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameEnded, activeSession_);
             break;
-        case rfcommon::SessionMetaData::TRAINING:
+        case rfcommon::MetaData::TRAINING:
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, activeSession_);
             break;
     }

@@ -5,7 +5,7 @@
 
 namespace rfcommon {
     class MappingInfo;
-    class SessionMetaData;
+    class MetaData;
 }
 
 namespace rfapp {
@@ -47,11 +47,11 @@ signals:
     void connectionClosed();
 
     void mappingInfoReceived(rfcommon::MappingInfo* mappingInfo);
-    void trainingStarted(rfcommon::SessionMetaData* training);
-    void trainingResumed(rfcommon::SessionMetaData* training);
+    void trainingStarted(rfcommon::MetaData* training);
+    void trainingResumed(rfcommon::MetaData* training);
     void trainingEnded();
-    void gameStarted(rfcommon::SessionMetaData* game);
-    void gameResumed(rfcommon::SessionMetaData* game);
+    void gameStarted(rfcommon::MetaData* game);
+    void gameResumed(rfcommon::MetaData* game);
     void gameEnded();
     void fighterState(
             quint64 frameTimeStamp,

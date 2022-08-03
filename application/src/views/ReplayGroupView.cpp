@@ -107,8 +107,8 @@ ReplayGroupView::ReplayGroupView(
 
     replayManager_->dispatcher.addListener(this);
 
-    connect(replayListWidget_, &QListWidget::currentItemChanged,
-            this, &ReplayGroupView::onCurrentItemChanged);
+    connect(replayListWidget_, &QListWidget::itemSelectionChanged,
+            this, &ReplayGroupView::onItemSelectionChanged);
     connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
             this, &ReplayGroupView::onFiltersTextChanged);
     connect(shortcut, &QShortcut::activated,
@@ -160,23 +160,69 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayGroupView::onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+void ReplayGroupView::onItemSelectionChanged()
 {
     if (currentGroup_ == nullptr)
         return;
 
-    for (const auto& fileName : currentGroup_->absFilePathList())
-        if (replayListWidget_->itemMatchesSavedGameSessionFileName(current, fileName))
+    auto clearPreviousSessions = [this]() {
+
+        if (currentSession_)
+            sessionView_->clearSavedGameSession(currentSession_);
+        currentSession_.drop();
+
+        // API expects an array of session pointers, but we have a vector
+        // of smart pointers. Have to convert
+        rfcommon::SmallVector<rfcommon::Session*, 16> sessions;
+        for (const auto& session : currentSessionSet_)
+            sessions.push(session);
+
+        if (currentSessionSet_.count() > 0)
+            sessionView_->clearSavedGameSessionSet(sessions.data(), sessions.count());
+        currentSessionSet_.clearCompact();
+    };
+
+    const auto selected = replayListWidget_->selectedItems();
+
+    if (selected.length() == 0)
+    {
+        clearPreviousSessions();
+    }
+    else if (selected.length() == 1)
+    {
+        for (const auto& fileName : currentGroup_->absFilePathList())
+            if (replayListWidget_->itemMatchesSavedGameSessionFileName(selected[0], fileName))
+            {
+                clearPreviousSessions();
+
+                currentSession_ = rfcommon::Session::load(fileName.absoluteFilePath().toStdString().c_str());
+                if (currentSession_)
+                    sessionView_->setSavedGameSession(currentSession_);
+
+                break;
+            }
+    }
+    else
+    {
+        rfcommon::SmallVector<rfcommon::Session*, 16> sessions;
+        for (auto item : selected)
+            for (const auto& fileName : currentGroup_->absFilePathList())
+                if (replayListWidget_->itemMatchesSavedGameSessionFileName(item, fileName))
+                {
+                    if (auto session = rfcommon::Session::load(fileName.absoluteFilePath().toStdString().c_str()))
+                        sessions.push(session);
+                    continue;
+                }
+
+        if (sessions.count() > 0)
         {
-            if (currentSession_)
-                sessionView_->clearSavedGameSession(currentSession_);
-
-            currentSession_ = rfcommon::Session::load(fileName.absoluteFilePath().toStdString().c_str());
-            if (currentSession_)
-                sessionView_->setSavedGameSession(currentSession_);
-
-            break;
+            clearPreviousSessions();
+            sessionView_->setSavedGameSessionSet(sessions.data(), sessions.count());
         }
+
+        for (auto session : sessions)
+            currentSessionSet_.push(session);
+    }
 }
 
 // ----------------------------------------------------------------------------

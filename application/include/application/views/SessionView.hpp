@@ -29,6 +29,9 @@ public slots:
     void setSavedGameSession(rfcommon::Session* session);
     void clearSavedGameSession(rfcommon::Session* session);
 
+    void setSavedGameSessionSet(rfcommon::Session** sessions, int count);
+    void clearSavedGameSessionSet(rfcommon::Session** sessions, int count);
+
 private slots:
     // This is still broken, see
     // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)

@@ -3,6 +3,7 @@
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/listeners/ReplayGroupListener.hpp"
 #include "rfcommon/Reference.hpp"
+#include "rfcommon/Vector.hpp"
 #include <QWidget>
 
 class QListWidgetItem;
@@ -48,7 +49,7 @@ public slots:
     void clearReplayGroup(ReplayGroup* group);
 
 private slots:
-    void onCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
+    void onItemSelectionChanged();
     void onFiltersTextChanged(const QString& text);
     void onDeleteKeyPressed();
 
@@ -77,6 +78,7 @@ private:
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
     rfcommon::Reference<rfcommon::Session> currentSession_;
+    rfcommon::SmallVector<rfcommon::Reference<rfcommon::Session>, 16> currentSessionSet_;
     SavedGameSessionListWidget* replayListWidget_;
     ReplayNameCompleter* filterCompleter_;
     SessionView* sessionView_;
