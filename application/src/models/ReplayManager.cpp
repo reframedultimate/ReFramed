@@ -17,7 +17,7 @@ ReplayManager::ReplayManager(Config* config)
     auto cfgReplayManager = cfg["replaymanager"].toObject();
     if (cfgReplayManager["defaultreplaypath"].isNull())
     {
-        QDir defaultReplayPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/replays";
+        QDir defaultReplayPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/replays";
         cfgReplayManager["defaultreplaypath"] = QDir(defaultReplayPath).absolutePath();
     }
     cfg["replaymanager"] = cfgReplayManager;
