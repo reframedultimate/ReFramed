@@ -1,48 +1,48 @@
-#include "rfcommon/FrameNumber.hpp"
+#include "rfcommon/FrameIndex.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-FrameNumber FrameNumber::fromValue(Type value)
+FrameIndex FrameIndex::fromValue(Type value)
 {
-    return FrameNumber(value);
+    return FrameIndex(value);
 }
 
 // ----------------------------------------------------------------------------
-FrameNumber::~FrameNumber()
+FrameIndex::~FrameIndex()
 {}
 
 // ----------------------------------------------------------------------------
-FrameNumber::Type FrameNumber::value() const
+FrameIndex::Type FrameIndex::value() const
 {
     return value_;
 }
 
 // ----------------------------------------------------------------------------
-double FrameNumber::secondsPassed() const
+double FrameIndex::secondsPassed() const
 {
     return static_cast<double>(value_) / 60.0;
 }
 
 // ----------------------------------------------------------------------------
-bool FrameNumber::operator==(FrameNumber other) const
+bool FrameIndex::operator==(FrameIndex other) const
 {
     return value_ == other.value_;
 }
 
 // ----------------------------------------------------------------------------
-bool FrameNumber::operator!=(FrameNumber other) const
+bool FrameIndex::operator!=(FrameIndex other) const
 {
     return value_ != other.value_;
 }
 
 // ----------------------------------------------------------------------------
-FrameNumber::FrameNumber()
+FrameIndex::FrameIndex()
     : value_(0)
 {}
 
 // ----------------------------------------------------------------------------
-FrameNumber::FrameNumber(Type value)
+FrameIndex::FrameIndex(Type value)
     : value_(value)
 {}
 

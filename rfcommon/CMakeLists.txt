@@ -13,13 +13,6 @@ test_visibility_macros (
     RFCOMMON_API_IMPORT 
     RFCOMMON_API_LOCAL)
 
-# We need to define a special macro for exporting template instantiations for
-# Windows DLLs. MacOSX and Linux don't care about this.
-if (WIN32)
-    set (RFCOMMON_TEMPLATE_EXPORT ${RFCOMMON_API_EXPORT})
-    set (RFCOMMON_TEMPLATE_IMPORT ${RFCOMMON_API_IMPORT})
-endif ()
-
 # check endianness of system
 test_big_endian (I_AM_BIG)
 
@@ -84,7 +77,7 @@ add_library (rfcommon SHARED
     "src/FighterStatus.cpp"
     "src/FighterStocks.cpp"
     "src/FrameData.cpp"
-    "src/FrameNumber.cpp"
+    "src/FrameIndex.cpp"
     "src/FramesLeft.cpp"
     "src/GameNumber.cpp"
     "src/hash40.cpp"

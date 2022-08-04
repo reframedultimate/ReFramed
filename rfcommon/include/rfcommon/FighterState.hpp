@@ -7,7 +7,7 @@
 #include "rfcommon/FighterMotion.hpp"
 #include "rfcommon/FighterStatus.hpp"
 #include "rfcommon/FighterStocks.hpp"
-#include "rfcommon/FrameNumber.hpp"
+#include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/TimeStamp.hpp"
 
@@ -22,7 +22,7 @@ class RFCOMMON_PUBLIC_API FighterState
 public:
     FighterState(
             TimeStamp timeStamp,
-            FrameNumber frameNumber,
+            FrameIndex frameIndex,
             FramesLeft framesLeft,
             float posx, float posy,
             float damage,
@@ -35,11 +35,11 @@ public:
             FighterFlags flags);
     ~FighterState();
 
-    FighterState withNewFrameNumber(FrameNumber number) const;
-    FighterState withNewFrameCounters(TimeStamp timeStamp, FrameNumber number, FramesLeft framesLeft) const;
+    FighterState withNewFrameIndex(FrameIndex index) const;
+    FighterState withNewFrameCounters(TimeStamp timeStamp, FrameIndex index, FramesLeft framesLeft) const;
 
     TimeStamp timeStamp() const { return timeStamp_; }
-    FrameNumber frameNumber() const { return frameNumber_; }
+    FrameIndex frameIndex() const { return frameIndex_; }
     FramesLeft framesLeft() const { return framesLeft_; }
     float posx() const { return posx_; }
     float posy() const { return posy_; }
@@ -57,7 +57,7 @@ public:
 private:
     TimeStamp timeStamp_;         // u64
     FighterMotion motion_;        // u64
-    FrameNumber frameNumber_;     // u32
+    FrameIndex frameIndex_;       // u32
     FramesLeft framesLeft_;       // u32
     float posx_;
     float posy_;

@@ -1,7 +1,7 @@
 #include "rfcommon/Endian.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/FrameNumber.hpp"
+#include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/FighterFlags.hpp"
 #include "rfcommon/FighterStocks.hpp"
@@ -323,7 +323,7 @@ static bool loadLegacy_1_0(
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+                frameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
             }
         }
     }
@@ -500,9 +500,9 @@ static bool loadLegacy_1_1(
         if (stateCount == 0)
             return false;
 
-        FrameNumber::Type frameCounter = 0;
-        FrameNumber::Type highestFramesLeft = 0;
-        for (FrameNumber::Type f = 0; f < stateCount; ++f)
+        FrameIndex::Type frameCounter = 0;
+        FrameIndex::Type highestFramesLeft = 0;
+        for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const auto status = FighterStatus::fromValue(stream.readBU16(&error));
@@ -534,7 +534,7 @@ static bool loadLegacy_1_1(
                 const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
                 frameCounter++;
             }
         }
@@ -720,9 +720,9 @@ static bool loadLegacy_1_2(
         if (stateCount == 0)
             return false;
 
-        FrameNumber::Type frameCounter = 0;
-        FrameNumber::Type highestFramesLeft = 0;
-        for (FrameNumber::Type f = 0; f < stateCount; ++f)
+        FrameIndex::Type frameCounter = 0;
+        FrameIndex::Type highestFramesLeft = 0;
+        for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const float posx = static_cast<float>(stream.readBF64(&error));
@@ -760,7 +760,7 @@ static bool loadLegacy_1_2(
                 const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
                 frameCounter++;
             }
         }
@@ -960,9 +960,9 @@ static bool loadLegacy_1_3(
         if (stateCount == 0)
             return false;
 
-        FrameNumber::Type frameCounter = 0;
-        FrameNumber::Type highestFramesLeft = 0;
-        for (FrameNumber::Type f = 0; f < stateCount; ++f)
+        FrameIndex::Type frameCounter = 0;
+        FrameIndex::Type highestFramesLeft = 0;
+        for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
@@ -1002,7 +1002,7 @@ static bool loadLegacy_1_3(
                 const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameNumber::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
                 frameCounter++;
             }
         }
@@ -1215,7 +1215,7 @@ static bool loadLegacy_1_4(
     for (int i = 0; i < fighterCount; ++i)
     {
         int error = 0;
-        const FrameNumber::Type stateCount = stream.readLU32(&error);
+        const FrameIndex::Type stateCount = stream.readLU32(&error);
         if (error)
             return false;
 
@@ -1223,7 +1223,7 @@ static bool loadLegacy_1_4(
         if (stateCount == 0)
             return false;
 
-        for (FrameNumber::Type f = 0; f < stateCount; ++f)
+        for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
             const auto frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64(&error));
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
@@ -1243,7 +1243,7 @@ static bool loadLegacy_1_4(
             if (error)
                 return false;
 
-            uniqueFrameData[i].emplace(frameTimeStamp, FrameNumber::fromValue(0),  // We update the frame number later
+            uniqueFrameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(0),  // We update the frame number later
                 framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
         }
     }
@@ -1281,7 +1281,7 @@ static bool loadLegacy_1_4(
         states.reserve(uniqueFrameData[fighter].count());
         states.push(uniqueStates[0]);
         FramesLeft::Type framesLeftCounter = highestFramesLeft.value();
-        FrameNumber::Type frameCounter = 0;
+        FrameIndex::Type frameCounter = 0;
         for (int i = 1; i < uniqueStates.count(); ++i)
         {
             const auto& uniqueState = uniqueStates[i];
@@ -1292,7 +1292,7 @@ static bool loadLegacy_1_4(
                 const auto diff = framesLeftCounter - uniqueState.framesLeft().value();
                 const auto newTimeStamp = uniqueState.timeStamp() - DeltaTime::fromMillis(diff * 1000.0 / 60.0);
                 states.push(uniqueState.withNewFrameCounters(
-                        newTimeStamp, FrameNumber::fromValue(frameCounter), FramesLeft::fromValue(framesLeftCounter)));
+                        newTimeStamp, FrameIndex::fromValue(frameCounter), FramesLeft::fromValue(framesLeftCounter)));
             }
         }
     }
@@ -1300,17 +1300,17 @@ static bool loadLegacy_1_4(
     // Ensure that every fighter has the same number of frames
     const auto highestFrameNumber = std::max_element(frameData.begin(), frameData.end(),
         [](const Vector<FighterState>& a, const Vector<FighterState>& b) {
-            return a.back().frameNumber().value() < b.back().frameNumber().value();
-    })->back().frameNumber();
+            return a.back().frameIndex().value() < b.back().frameIndex().value();
+    })->back().frameIndex();
     for (auto& states : frameData)
     {
         const auto finalState = states.back();
-        const auto finalFrameNumber = states.back().frameNumber().value();
-        while (states.back().frameNumber().value() < highestFrameNumber.value())
+        const auto finalFrameNumber = states.back().frameIndex().value();
+        while (states.back().frameIndex().value() < highestFrameNumber.value())
         {
-            const auto framesDiff = states.back().frameNumber().value() - finalFrameNumber + 1;
+            const auto framesDiff = states.back().frameIndex().value() - finalFrameNumber + 1;
             const TimeStamp actualTimeStamp = finalState.timeStamp() + DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-            const auto actualFrameNumber = FrameNumber::fromValue(finalFrameNumber + framesDiff);
+            const auto actualFrameNumber = FrameIndex::fromValue(finalFrameNumber + framesDiff);
             const auto actualFramesLeft = FramesLeft::fromValue(finalState.framesLeft().value() - framesDiff);
             states.emplace(finalState.withNewFrameCounters(actualTimeStamp, actualFrameNumber, actualFramesLeft));
         }

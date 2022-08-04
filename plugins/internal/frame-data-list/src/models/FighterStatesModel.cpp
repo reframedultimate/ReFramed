@@ -6,7 +6,7 @@
 
 enum ColumnType
 {
-    FrameNumber,
+    FrameIndex,
     TimePassed,
     FramesLeft,
     TimeLeft,
@@ -65,7 +65,7 @@ QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation
         {
             switch (section)
             {
-                case FrameNumber: return "Frame";
+                case FrameIndex: return "Frame";
                 case TimePassed: return "Time";
                 case FramesLeft: return "Left";
                 case TimeLeft: return "Timer";
@@ -88,7 +88,7 @@ QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation
         else if (orientation == Qt::Vertical)
         {
             const rfcommon::FighterState& state = frameData_->stateAt(fighterIdx_, section);
-            return QString::number(state.frameNumber().value());
+            return QString::number(state.frameIndex().value());
         }
     }
 
@@ -134,8 +134,8 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
 
             switch (index.column())
             {
-                case FrameNumber: return QString::number(state.frameNumber().value());
-                case TimePassed: return formatTimer(state.frameNumber().secondsPassed());
+                case FrameIndex: return QString::number(state.frameIndex().value());
+                case TimePassed: return formatTimer(state.frameIndex().secondsPassed());
                 case FramesLeft: return QString::number(state.framesLeft().value());
                 case TimeLeft: return formatTimer(state.framesLeft().secondsLeft());
                 case Position: return formatPosition(state.posx(), state.posy());

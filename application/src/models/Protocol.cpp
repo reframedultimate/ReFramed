@@ -264,7 +264,7 @@ void Protocol::onFighterState(
 
     stateBuffer_[fighterIdx].emplace(
             rfcommon::TimeStamp::fromMillisSinceEpoch(frameTimeStamp),
-            rfcommon::FrameNumber::fromValue(0),  // We change the frame number later
+            rfcommon::FrameIndex::fromValue(0),  // We change the frame number later
             rfcommon::FramesLeft::fromValue(framesLeft),
             posx, posy,
             damage,
@@ -304,9 +304,9 @@ void Protocol::onFighterState(
         {
             rfcommon::Frame<4> frame;
             const int frameCount = frameData->frameCount();
-            const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
+            const auto frameNumber = rfcommon::FrameIndex::fromValue(frameCount);
             for (auto& states : stateBuffer_)
-                frame.push(states.take(0).withNewFrameNumber(frameNumber));
+                frame.push(states.take(0).withNewFrameIndex(frameNumber));
             frameData->addFrame(std::move(frame));
 
             return;
@@ -319,9 +319,9 @@ void Protocol::onFighterState(
         {
             rfcommon::Frame<4> frame;
             const int frameCount = frameData->frameCount();
-            const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
+            const auto frameNumber = rfcommon::FrameIndex::fromValue(frameCount);
             for (auto& states : stateBuffer_)
-                frame.push(states.take(0).withNewFrameNumber(frameNumber));
+                frame.push(states.take(0).withNewFrameIndex(frameNumber));
             frameData->addFrame(std::move(frame));
 
             return;
@@ -392,9 +392,9 @@ void Protocol::onFighterState(
     {
         rfcommon::Frame<4> frame;
         const int frameCount = frameData->frameCount();
-        const auto frameNumber = rfcommon::FrameNumber::fromValue(frameCount);
+        const auto frameNumber = rfcommon::FrameIndex::fromValue(frameCount);
         for (auto& states : stateBuffer_)
-            frame.push(states.take(0).withNewFrameNumber(frameNumber));
+            frame.push(states.take(0).withNewFrameIndex(frameNumber));
         frameData->addFrame(std::move(frame));
 
         return;

@@ -60,14 +60,14 @@ FrameData* FrameData::load(FILE* fp, uint32_t size)
 FrameData* load_1_5(StreamBuffer* data)
 {
     int error = 0;
-    FrameNumber::Type frameCount = data->readLU32(&error);
+    FrameIndex::Type frameCount = data->readLU32(&error);
     int fighterCount = data->readU8(&error);
     if (error)
         return nullptr;
 
     auto frames = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
     for (int fighter = 0; fighter != fighterCount; ++fighter)
-        for (FrameNumber::Type frame = 0; frame < frameCount; ++frame)
+        for (FrameIndex::Type frame = 0; frame < frameCount; ++frame)
         {
             const auto timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
             const auto framesLeft = FramesLeft::fromValue(data->readLU32(&error));
@@ -89,7 +89,7 @@ FrameData* load_1_5(StreamBuffer* data)
 
             frames[fighter].push(FighterState(
                 timeStamp,
-                FrameNumber::fromValue(frame),
+                FrameIndex::fromValue(frame),
                 framesLeft,
                 posx,
                 posy,
@@ -209,7 +209,7 @@ void FrameData::addFrame(Frame<4>&& frame)
     for (int i = 1; i < fighterCount(); ++i)
     {
         assert(frame[0].framesLeft() == frame[i].framesLeft());
-        assert(frame[0].frameNumber() == frame[i].frameNumber());
+        assert(frame[0].frameIndex() == frame[i].frameIndex());
     }
 #endif
 
