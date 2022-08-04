@@ -35,6 +35,9 @@ int processOptions(int argc, char** argv)
 int main(int argc, char** argv)
 {
     int result;
+    if (rfcommon_init() != 0)
+        return -1;
+
     processOptions(argc, argv);
 
 #ifdef _WIN32
@@ -54,14 +57,9 @@ int main(int argc, char** argv)
     int y = (screenRect.height() - height) / 2 + screenRect.y();
     mainWindow.setGeometry(x, y, width, height);
 
-    if (rfcommon_init() != 0)
-        goto init_rfcommon_library_failed;
-
     mainWindow.showMaximized();
     result = app.exec();
 
     rfcommon_deinit();
     return result;
-
-    init_rfcommon_library_failed: return -1;
 }
