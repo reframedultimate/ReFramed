@@ -52,8 +52,8 @@ add_subdirectory ("thirdparty/zlib-1.2.11")
 add_subdirectory ("thirdparty/cpp-base64")
 add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
-add_subdirectory ("plugins")
 add_subdirectory ("application")
+add_subdirectory ("plugins")
 add_subdirectory ("tests")
 
 # set_target_properties (gmock

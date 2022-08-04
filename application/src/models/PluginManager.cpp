@@ -56,7 +56,7 @@ bool PluginManager::loadPlugin(const QString& fileName)
         qDebug() << "Failed to lookup symbol 'plugin_interface' in " << fileName;
         goto init_plugin_failed;
     }
-    if (i->start(APP_VERSION, &pluginError) != 0)
+    if (i->start == nullptr || i->start(APP_VERSION, &pluginError) != 0)
     {
         qDebug() << "Call to start() failed in " << fileName;
         if (pluginError)
