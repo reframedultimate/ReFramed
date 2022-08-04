@@ -40,16 +40,15 @@ private slots:
 private:
     PluginManager* pluginManager_;
     Ui::SessionView* ui_;
-    rfcommon::RealtimePlugin* damageTimePlugin_ = nullptr;
-    QWidget* damageTimePlot_ = nullptr;
-    rfcommon::RealtimePlugin* xyPositionsPlugin_ = nullptr;
-    QWidget* xyPositionsPlot_ = nullptr;
-    rfcommon::RealtimePlugin* frameDataListPlugin_ = nullptr;
-    QWidget* frameDataListView_ = nullptr;
-    rfcommon::RealtimePlugin* decisionGraphPlugin_ = nullptr;
-    QWidget* decisionGraphView_ = nullptr;
-    rfcommon::RealtimePlugin* bridgeLabPlugin_ = nullptr;
-    QWidget* bridgeLabView_ = nullptr;
+    
+    struct PluginData
+    {
+        rfcommon::RealtimePlugin* plugin;
+        QWidget* view;
+        QString name;
+    };
+
+    QVector<PluginData> plugins_;
 };
 
 }

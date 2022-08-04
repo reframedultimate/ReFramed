@@ -14,6 +14,7 @@ public:
     ~MappingInfoFighter();
 
     const char* toName(FighterID fighterID) const;
+    const char* toName(FighterID fighterID, const char* fallback) const;
     const FighterID toID(const char* name) const;
 
     void add(FighterID fighterID, const char* name);

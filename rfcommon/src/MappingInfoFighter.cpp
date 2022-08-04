@@ -12,10 +12,16 @@ MappingInfoFighter::~MappingInfoFighter()
 // ----------------------------------------------------------------------------
 const char* MappingInfoFighter::toName(FighterID fighterID) const
 {
+    return toName(fighterID, "(Unknown Fighter)");
+}
+
+// ----------------------------------------------------------------------------
+const char* MappingInfoFighter::toName(FighterID fighterID, const char* fallback) const
+{
     const auto it = nameMap_.find(fighterID);
     if (it != nameMap_.end())
         return it->value().cStr();
-    return "(Unknown Fighter)";
+    return fallback;
 }
 
 // ----------------------------------------------------------------------------
