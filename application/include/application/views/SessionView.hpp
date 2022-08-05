@@ -1,14 +1,10 @@
 #pragma once
 
-#include <QWidget>
+#include <QTabWidget>
 
 namespace rfcommon {
     class Session;
     class RealtimePlugin;
-}
-
-namespace Ui {
-    class SessionView;
 }
 
 namespace rfapp {
@@ -16,14 +12,12 @@ namespace rfapp {
 class PluginManager;
 class SessionDataView;
 
-class SessionView : public QWidget
+class SessionView : public QTabWidget
 {
     Q_OBJECT
 public:
     explicit SessionView(PluginManager* pluginManager, QWidget* parent=nullptr);
     ~SessionView();
-
-    void showDamagePlot();
 
 public slots:
     void setSavedGameSession(rfcommon::Session* session);
@@ -33,13 +27,11 @@ public slots:
     void clearSavedGameSessionSet(rfcommon::Session** sessions, int count);
 
 private slots:
-    // This is still broken, see
-    // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
-    void addPlotsToUI();
+    void onTabBarClicked(int index);
+    void onCurrentTabChanged(int index);
 
 private:
     PluginManager* pluginManager_;
-    Ui::SessionView* ui_;
     
     struct PluginData
     {
@@ -49,6 +41,7 @@ private:
     };
 
     QVector<PluginData> plugins_;
+    int previousTab_;
 };
 
 }

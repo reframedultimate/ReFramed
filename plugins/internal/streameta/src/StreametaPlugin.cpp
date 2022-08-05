@@ -15,7 +15,7 @@ StreametaPlugin::~StreametaPlugin()
 // ----------------------------------------------------------------------------
 QWidget* StreametaPlugin::createView() 
 { 
-    QWidget* view = new QWidget();
+    return new QWidget();
 }
 
 // ----------------------------------------------------------------------------

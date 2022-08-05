@@ -31,8 +31,6 @@ public:
             QWidget* parent=nullptr);
     ~ActiveSessionView();
 
-    void showDamagePlot();
-
 private slots:
     void onComboBoxFormatIndexChanged(int index);
     void onLineEditFormatChanged(const QString& formatDesc);

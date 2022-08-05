@@ -43,12 +43,6 @@ ActiveSessionView::~ActiveSessionView()
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::showDamagePlot()
-{
-    sessionView_->showDamagePlot();
-}
-
-// ----------------------------------------------------------------------------
 void ActiveSessionView::onComboBoxFormatIndexChanged(int index)
 {
     if (static_cast<rfcommon::SetFormat::Type>(index) == rfcommon::SetFormat::OTHER)

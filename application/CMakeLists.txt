@@ -43,7 +43,6 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/DataSetFilterWidget_PlayerCount.ui"
     "forms/DataSetFilterWidget_Stage.ui"
     "forms/ReplayGroupView.ui"
-    "forms/SessionView.ui"
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (APPLICATION_RESOURCES_GEN

@@ -3,52 +3,21 @@
 #include "application/models/PluginManager.hpp"
 #include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
-
-#include <QTreeWidgetItem>
+#include <QTabBar>
+#include <QMenu>
+#include <QAction>
 
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
 SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
-    : QWidget(parent)
+    : QTabWidget(parent)
     , pluginManager_(pluginManager)
-    , ui_(new Ui::SessionView)
+    , previousTab_(0)
 {
-    ui_->setupUi(this);
-
-    while (ui_->tabWidget->count())
-        ui_->tabWidget->removeTab(0);
-    for (const auto& name : {
-        "Damage vs Time Plot",
-        "XY Positions Plot",
-        "Frame Data List",
-        "Decision Graph",
-        "Pikachu BridgeLab",
-        "Statistics"
-    }) {
-        rfcommon::RealtimePlugin* plugin = pluginManager_->createRealtimeModel(name);
-        if (plugin == nullptr)
-            continue;
-        QWidget* view = plugin->createView();
-        if (view == nullptr)
-        {
-            pluginManager_->destroyModel(plugin);
-            continue;
-        }
-
-        plugins_.push_back({ plugin, view, name });
-    }
-
-    // This is still broken, see
-    // https://www.qtcentre.org/threads/66591-QwtPlot-is-broken-(size-constraints-disregarded)
-    QMetaObject::invokeMethod(this, "addPlotsToUI", Qt::QueuedConnection);
-}
-
-// ----------------------------------------------------------------------------
-void SessionView::addPlotsToUI()
-{
-    for (const auto& data : plugins_)
-        ui_->tabWidget->addTab(data.view, data.name);
+    addTab(new QWidget, "+");
+    connect(this, &QTabWidget::tabBarClicked, this, &SessionView::onTabBarClicked);
+    connect(this, &QTabWidget::currentChanged, this, &SessionView::onCurrentTabChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -60,14 +29,6 @@ SessionView::~SessionView()
         data.plugin->destroyView(data.view);
         pluginManager_->destroyModel(data.plugin);
     }
-    
-    delete ui_;
-}
-
-// ----------------------------------------------------------------------------
-void SessionView::showDamagePlot()
-{
-    ui_->tabWidget->setCurrentWidget(ui_->tab_damage_vs_time);
 }
 
 // ----------------------------------------------------------------------------
@@ -96,6 +57,57 @@ void SessionView::clearSavedGameSessionSet(rfcommon::Session** sessions, int cou
 {
     for (const auto& data : plugins_)
         data.plugin->onGameSessionSetUnloaded(sessions, count);
+}
+
+// ----------------------------------------------------------------------------
+void SessionView::onTabBarClicked(int index)
+{
+    if (index < count() - 1 || index < 0)
+        return;
+
+    auto pluginLoaded = [this](const QString& name) -> bool {
+        for (const auto& data : plugins_)
+            if (data.name == name)
+                return true;
+        return false;
+    };
+
+    QMenu popup;
+    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::REALTIME))
+    {
+        if (pluginLoaded(name))
+            continue;
+        popup.addAction(name);
+    }
+
+    QAction* action = popup.exec(QCursor::pos());
+    if (action == nullptr)
+        return;
+
+    PluginData data;
+    data.name = action->text();
+    data.plugin = pluginManager_->createRealtimeModel(data.name);
+    if (data.plugin == nullptr)
+        return;
+    data.view = data.plugin->createView();
+    if (data.view == nullptr)
+    {
+        pluginManager_->destroyModel(data.plugin);
+        return;
+    }
+    plugins_.push_back(data);
+
+    insertTab(index, data.view, data.name);
+    previousTab_ = index;
+}
+
+// ----------------------------------------------------------------------------
+void SessionView::onCurrentTabChanged(int index)
+{
+    if (index > 0 && index < count() - 1)
+        previousTab_ = index;
+    else
+        setCurrentIndex(previousTab_);
 }
 
 }
