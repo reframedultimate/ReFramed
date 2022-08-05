@@ -6,6 +6,8 @@
 #include <QTabBar>
 #include <QMenu>
 #include <QAction>
+#include <QToolButton>
+#include <QStyle>
 
 namespace rfapp {
 
@@ -16,6 +18,7 @@ SessionView::SessionView(PluginManager* pluginManager, QWidget* parent)
     , previousTab_(0)
 {
     addTab(new QWidget, "+");
+
     connect(this, &QTabWidget::tabBarClicked, this, &SessionView::onTabBarClicked);
     connect(this, &QTabWidget::currentChanged, this, &SessionView::onCurrentTabChanged);
 }
@@ -97,17 +100,54 @@ void SessionView::onTabBarClicked(int index)
     }
     plugins_.push_back(data);
 
+
+    QStyle* style = qApp->style();
+    QIcon closeIcon = style->standardIcon(QStyle::SP_TitleBarCloseButton);
+    QToolButton* closeButton = new QToolButton;
+    closeButton->setStyleSheet("border: none;");
+    closeButton->setIcon(closeIcon);
     insertTab(index, data.view, data.name);
+    tabBar()->setTabButton(index, QTabBar::RightSide, closeButton);
+
+    QWidget* view = data.view;
+    connect(closeButton, &QToolButton::released, [this, view]() {
+        closeTabWithView(view);
+    });
+
     previousTab_ = index;
 }
 
 // ----------------------------------------------------------------------------
 void SessionView::onCurrentTabChanged(int index)
 {
-    if (index > 0 && index < count() - 1)
+    if (index >= 0 && index < count() - 1)
         previousTab_ = index;
     else
         setCurrentIndex(previousTab_);
+}
+
+// ----------------------------------------------------------------------------
+void SessionView::closeTabWithView(QWidget* view)
+{
+    int currentTab = currentIndex();
+    int tabCount = count();
+    if (currentTab == tabCount - 2 && currentTab > 0)
+    {
+        previousTab_ = currentTab - 1;
+    }
+
+    for (auto it = plugins_.begin(); it != plugins_.end(); ++it)
+    {
+        if (it->view != view)
+            continue;
+        it->view->setParent(nullptr);
+        it->plugin->destroyView(it->view);
+        pluginManager_->destroyModel(it->plugin);
+        plugins_.erase(it);
+        break;
+    }
+
+    setCurrentIndex(previousTab_);
 }
 
 }

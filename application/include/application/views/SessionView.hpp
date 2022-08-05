@@ -29,6 +29,7 @@ public slots:
 private slots:
     void onTabBarClicked(int index);
     void onCurrentTabChanged(int index);
+    void closeTabWithView(QWidget* view);
 
 private:
     PluginManager* pluginManager_;
