@@ -63,8 +63,20 @@ void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* m
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::onDataFinalized(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void DataViewerView::onClear()
 {
+    clearStackedWidget(ui_->stackedWidget_playerData);
+    playerDataTables_.clearCompact();
+
+    ui_->treeWidget->clear();
+    playerDataItems_.clear();
+
+    metaDataItem_ = nullptr;
+    stageIDMappingsItem_ = nullptr;
+    fighterIDMappingsItem_ = nullptr;
+    baseStatusIDMappingsItem_ = nullptr;
+    specificStatusIDMappingsItem_ = nullptr;
+    hitStatusIDMappingsItem_ = nullptr;
 }
 
 // ----------------------------------------------------------------------------

@@ -31,7 +31,7 @@ public:
     ~DataViewerModel();
 
     void setSession(rfcommon::Session* session);
-    void finalizeSession(rfcommon::Session* session);
+    void clearSession();
 
     rfcommon::MappingInfo* mappingInfo() const;
     rfcommon::MetaData* metaData() const;

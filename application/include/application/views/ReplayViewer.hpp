@@ -49,7 +49,7 @@ public:
      * plugins to receive onGameSessionSetUnloaded() before receiving
      * onGameSessionSetLoaded().
      */
-    void loadReplays(const QStringList& fileNames);
+    void loadGameReplays(const QStringList& fileNames);
 
     /*!
      * \brief Clears any sessions loaded from files. This does not affect
@@ -68,7 +68,7 @@ public:
     void clearActiveSession();
 
 private slots:
-    void onReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions);
+    void onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions);
     void onTabBarClicked(int index);
     void onCurrentTabChanged(int index);
 
@@ -109,15 +109,23 @@ private:
         ATTEMPT_CONNECT,
         CONNECTED,
     };
-    enum ActiveReplayState
+    enum ActiveSessionState
     {
-        NONE,
+        NO_ACTIVE_SESSION,
         TRAINING_STARTED,
         TRAINING_RESUMED,
-        TRAINING_ENDED,
+        TRAINING_STARTED_ENDED,
+        TRAINING_RESUMED_ENDED,
         GAME_STARTED,
         GAME_RESUMED,
-        GAME_ENDED
+        GAME_STARTED_ENDED,
+        GAME_RESUMED_ENDED
+    };
+    enum ReplayState
+    {
+        NONE_LOADED,
+        GAME_LOADED,
+        TRAINING_LOADED
     };
 
     int findInCache(const QString& fileName) const;
@@ -129,8 +137,9 @@ private:
     QString ipAddress_;
     uint16_t port_;
     SessionState sessionState_;
-    ActiveReplayState activeReplayState_;
+    ActiveSessionState activeSessionState_;
 
+    ReplayState replayState_;
     QVector<rfcommon::Session*> activeReplays_;
     QStringList pendingReplays_;
     QVector<ReplayData> replayCache_;

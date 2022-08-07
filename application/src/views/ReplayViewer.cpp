@@ -18,7 +18,8 @@ ReplayViewer::ReplayViewer(PluginManager* pluginManager, QWidget* parent)
     , protocol_(nullptr)
     , pluginManager_(pluginManager)
     , sessionState_(DISCONNECTED)
-    , activeReplayState_(NONE)
+    , activeSessionState_(NO_ACTIVE_SESSION)
+    , replayState_(NONE_LOADED)
     , previousTab_(0)
 {
     addTab(new QWidget, "+");
@@ -33,7 +34,8 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
     , protocol_(protocol)
     , pluginManager_(pluginManager)
     , sessionState_(DISCONNECTED)
-    , activeReplayState_(NONE)
+    , activeSessionState_(NO_ACTIVE_SESSION)
+    , replayState_(NONE_LOADED)
     , previousTab_(0)
 {
     addTab(new QWidget, "+");
@@ -45,6 +47,7 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
 // ----------------------------------------------------------------------------
 ReplayViewer::~ReplayViewer()
 {
+    clearActiveSession();
     clearReplays();
 
     for (const auto& data : plugins_)
@@ -65,7 +68,7 @@ int ReplayViewer::findInCache(const QString& fileName) const
 };
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::loadReplays(const QStringList& fileNames)
+void ReplayViewer::loadGameReplays(const QStringList& fileNames)
 {
     clearReplays();
     pendingReplays_ = fileNames;
@@ -87,11 +90,11 @@ void ReplayViewer::loadReplays(const QStringList& fileNames)
     }
 
     // TODO background loading
-    onReplaysLoaded(loadedFileNames, loadedSessions);
+    onGameReplaysLoaded(loadedFileNames, loadedSessions);
 }
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions)
+void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions)
 {
     assert(fileNames.size() == sessions.size());
 
@@ -122,6 +125,8 @@ void ReplayViewer::onReplaysLoaded(const QStringList& fileNames, const QVector<r
         for (const auto& data : plugins_)
             data.plugin->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
     }
+    
+    replayState_ = GAME_LOADED;
 }
 
 // ----------------------------------------------------------------------------
@@ -148,14 +153,18 @@ void ReplayViewer::clearReplays()
     // ours.
     while (replayCache_.size() > 20)
         replayCache_.pop_front();
+
+    replayState_ = NONE_LOADED;
 }
 
 // ----------------------------------------------------------------------------
 void ReplayViewer::clearActiveSession()
 {
-    if (activeSession_)
+    if (activeSessionState_ != NO_ACTIVE_SESSION)
     {
+        assert(activeSession_.notNull());
         assert(activeSession_->tryGetMetaData());
+
         switch (activeSession_->tryGetMetaData()->type())
         {
             case rfcommon::MetaData::GAME:
@@ -169,7 +178,8 @@ void ReplayViewer::clearActiveSession()
                 break;
         }
 
-        
+        activeSession_.drop();
+        activeSessionState_ = NO_ACTIVE_SESSION;
     }
 }
 
@@ -186,6 +196,7 @@ void ReplayViewer::onTabBarClicked(int index)
         return false;
     };
 
+    // Open popup menu with all of the plugins that aren't loaded yet
     QMenu popup;
     for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::REALTIME))
     {
@@ -198,6 +209,7 @@ void ReplayViewer::onTabBarClicked(int index)
     if (action == nullptr)
         return;
 
+    // Create plugin
     PluginData data;
     data.name = action->text();
     data.plugin = pluginManager_->createRealtimeModel(data.name);
@@ -211,7 +223,7 @@ void ReplayViewer::onTabBarClicked(int index)
     }
     plugins_.push_back(data);
 
-
+    // Create tab and place view from plugin inside it
     QStyle* style = qApp->style();
     QIcon closeIcon = style->standardIcon(QStyle::SP_TitleBarCloseButton);
     QToolButton* closeButton = new QToolButton;
@@ -226,6 +238,71 @@ void ReplayViewer::onTabBarClicked(int index)
     });
 
     previousTab_ = index;
+
+    // See if there is an active session we can give to the new plugin
+    switch (activeSessionState_)
+    {
+    case TRAINING_STARTED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolTrainingStarted(activeSession_);
+        break;
+
+    case TRAINING_RESUMED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolTrainingResumed(activeSession_);
+        break;
+
+    case TRAINING_STARTED_ENDED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolTrainingStarted(activeSession_);
+        data.plugin->onProtocolTrainingEnded(activeSession_);
+        break;
+
+    case TRAINING_RESUMED_ENDED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolTrainingResumed(activeSession_);
+        data.plugin->onProtocolTrainingEnded(activeSession_);
+        break;
+
+    case GAME_STARTED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolGameStarted(activeSession_);
+        break;
+
+    case GAME_RESUMED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolGameResumed(activeSession_);
+        break;
+
+    case GAME_STARTED_ENDED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolGameStarted(activeSession_);
+        data.plugin->onProtocolGameEnded(activeSession_);
+        break;
+
+    case GAME_RESUMED_ENDED:
+        assert(activeSession_.notNull());
+        data.plugin->onProtocolGameResumed(activeSession_);
+        data.plugin->onProtocolGameEnded(activeSession_);
+        break;
+
+    case NO_ACTIVE_SESSION:
+        switch (replayState_)
+        {
+        case GAME_LOADED:
+            assert(activeReplays_.size() > 0);
+            if (activeReplays_.size() == 1)
+                data.plugin->onGameSessionLoaded(activeReplays_[0]);
+            else
+                data.plugin->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+            break;
+
+        case TRAINING_LOADED:
+            assert(activeReplays_.size() == 1);
+            data.plugin->onTrainingSessionLoaded(activeReplays_[0]);
+            break;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -267,55 +344,118 @@ void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint1
     sessionState_ = ATTEMPT_CONNECT;
     ipAddress_ = ipAddress;
     port_ = port;
+
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolAttemptConnectToServer(ipAddress, port);
 }
 void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) 
 {
     sessionState_ = DISCONNECTED;
+
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolFailedToConnectToServer(errormsg, ipAddress, port);
 }
 void ReplayViewer::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
     sessionState_ = CONNECTED;
+
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolConnectedToServer(ipAddress, port);
 }
 void ReplayViewer::onProtocolDisconnectedFromServer() 
 {
     sessionState_ = DISCONNECTED;
+
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolDisconnectedFromServer();
 }
 
 // ----------------------------------------------------------------------------
 void ReplayViewer::onProtocolTrainingStarted(rfcommon::Session* training)
 {
-    activeReplayState_ = TRAINING_STARTED;
+    activeSessionState_ = TRAINING_STARTED;
     activeSession_ = training;
+
+    // If there are replays being displayed currently, override it with
+    // the active session. Seems to make sense from a user perspective
+    clearReplays();
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolTrainingStarted(training);
 }
 void ReplayViewer::onProtocolTrainingResumed(rfcommon::Session* training)
 {
-    activeReplayState_ = TRAINING_RESUMED;
+    activeSessionState_ = TRAINING_RESUMED;
     activeSession_ = training;
+
+    // If there are replays being displayed currently, override it with
+    // the active session. Seems to make sense from a user perspective
+    clearReplays();
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolTrainingResumed(training);
 }
 void ReplayViewer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
     assert(activeSession_ == oldTraining);
     activeSession_ = newTraining;
+
+    // If there are replays being displayed currently, then those have
+    // precedence. Store the active session for when the user deselects
+    // replays in the UI, or until a session start event is received
+    if (replayState_ == NONE_LOADED)
+    {
+        for (const auto& data : plugins_)
+            data.plugin->onProtocolTrainingReset(oldTraining, newTraining);
+    }
 }
 void ReplayViewer::onProtocolTrainingEnded(rfcommon::Session* training)
 {
     assert(activeSession_ == training);
-    activeReplayState_ = TRAINING_ENDED;
+    activeSessionState_ = activeSessionState_ == TRAINING_STARTED ? TRAINING_STARTED_ENDED : TRAINING_RESUMED_ENDED;
+
+    // If there are replays being displayed currently, then those
+    // have precendence and we don't need to propagate the training
+    // ended event
+    if (replayState_ == NONE_LOADED)
+    {
+        for (const auto& data : plugins_)
+            data.plugin->onProtocolTrainingEnded(training);
+    }
 }
 void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
 {
-    activeReplayState_ = GAME_STARTED;
+    activeSessionState_ = GAME_STARTED;
     activeSession_ = game;
+
+    // If there are replays being displayed currently, override it with
+    // the active session. Seems to make sense from a user perspective
+    clearReplays();
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolTrainingStarted(game);
 }
 void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
 {
-    activeReplayState_ = GAME_RESUMED;
+    activeSessionState_ = GAME_RESUMED;
     activeSession_ = game;
+
+    // If there are replays being displayed currently, override it with
+    // the active session. Seems to make sense from a user perspective
+    clearReplays();
+    for (const auto& data : plugins_)
+        data.plugin->onProtocolTrainingResumed(game);
 }
 void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
 {
     assert(activeSession_ == game);
-    activeReplayState_ = GAME_ENDED;
+    activeSessionState_ = activeSessionState_ == GAME_STARTED ? GAME_STARTED_ENDED : GAME_RESUMED_ENDED;
+
+    // If there are replays being displayed currently, then those
+    // have precendence and we don't need to propagate the training
+    // ended event
+    if (replayState_ == NONE_LOADED)
+    {
+        for (const auto& data : plugins_)
+            data.plugin->onProtocolTrainingEnded(game);
+    }
 }
 
 }

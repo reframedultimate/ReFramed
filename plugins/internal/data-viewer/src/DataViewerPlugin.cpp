@@ -35,7 +35,7 @@ void DataViewerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
-    model_->finalizeSession(game);
+    model_->clearSession();
 }
 
 // ----------------------------------------------------------------------------
@@ -47,12 +47,21 @@ void DataViewerPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
 {
-    model_->finalizeSession(training);
+    model_->clearSession();
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
-void DataViewerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) { (void)games; (void)numGames; }
+void DataViewerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
+{ 
+    model_->clearSession();
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) 
+{ 
+    (void)games; 
+    (void)numGames; 
+}
 
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { (void)ipAddress; (void)port; }
@@ -75,15 +84,12 @@ void DataViewerPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
-    // We probably want to clear the existing data in this case
-    model_->finalizeSession(oldTraining);
     model_->setSession(newTraining);
 }
 
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolTrainingEnded(rfcommon::Session* training)
 {
-    model_->finalizeSession(training);
 }
 
 // ----------------------------------------------------------------------------
@@ -101,5 +107,4 @@ void DataViewerPlugin::onProtocolGameResumed(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
-    model_->finalizeSession(game);
 }

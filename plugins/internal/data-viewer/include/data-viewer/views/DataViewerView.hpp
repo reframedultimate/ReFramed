@@ -16,8 +16,9 @@ namespace rfcommon {
     class FighterState;
 }
 
-class DataViewerView : public QWidget
-                        , public DataViewerListener
+class DataViewerView 
+    : public QWidget
+    , public DataViewerListener
 {
     Q_OBJECT
 
@@ -34,7 +35,7 @@ private:
 
 private:
     void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
-    void onDataFinalized(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
+    void onClear() override;
     void onNewFrame() override;
 
 private:

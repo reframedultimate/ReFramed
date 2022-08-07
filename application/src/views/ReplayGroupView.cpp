@@ -174,7 +174,7 @@ void ReplayGroupView::onItemSelectionChanged()
             if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
             {
                 replayViewer_->clearReplays();
-                replayViewer_->loadReplays({fileName.absoluteFilePath()});
+                replayViewer_->loadGameReplays({fileName.absoluteFilePath()});
                 break;
             }
     }
@@ -190,7 +190,7 @@ void ReplayGroupView::onItemSelectionChanged()
                 }
 
 
-        replayViewer_->loadReplays(fileNames);
+        replayViewer_->loadGameReplays(fileNames);
     }
 }
 

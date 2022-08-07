@@ -57,9 +57,16 @@ void DataViewerModel::setSession(rfcommon::Session* session)
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerModel::finalizeSession(rfcommon::Session* session)
+void DataViewerModel::clearSession()
 {
-    dispatcher.dispatch(&DataViewerListener::onDataFinalized, mappingInfo_, metaData_, frameData_);
+    dispatcher.dispatch(&DataViewerListener::onClear);
+
+    baseStatusIDModel_->setMappingInfo(nullptr);
+    fighterIDModel_->setMappingInfo(nullptr);
+    hitStatusIDModel_->setMappingInfo(nullptr);
+    metaDataModel_->setMetaData(nullptr, nullptr);
+    specificStatusIDModel_->setMappingInfo(nullptr);
+    stageIDModel_->setMappingInfo(nullptr);
 
     if (frameData_)
         frameData_->dispatcher.removeListener(this);
