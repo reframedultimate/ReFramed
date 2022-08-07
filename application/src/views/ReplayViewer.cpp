@@ -198,7 +198,9 @@ void ReplayViewer::onTabBarClicked(int index)
 
     // Open popup menu with all of the plugins that aren't loaded yet
     QMenu popup;
-    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::REALTIME))
+    auto pluginNames = pluginManager_->availableFactoryNames(RFPluginType::REALTIME);
+    qSort(pluginNames.begin(), pluginNames.end());
+    for (const auto& name : pluginNames)
     {
         if (pluginLoaded(name))
             continue;
