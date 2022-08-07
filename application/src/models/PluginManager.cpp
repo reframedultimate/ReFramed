@@ -17,8 +17,7 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-PluginManager::PluginManager(Protocol* protocol)
-    : protocol_(protocol)
+PluginManager::PluginManager()
 {
     QDir pluginDir("share/reframed/plugins");
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
@@ -152,31 +151,6 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
     if (model == nullptr)
         return nullptr;
 
-    rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
-    if (realtime)
-    {
-        // Realtime plugins listen to protocol events
-        protocol_->dispatcher.addListener(realtime);
-
-        // It's possible the plugin was created during an active session. Some plugins
-        // might be interested in hookin in to the middle of a match/training mode session
-        if (rfcommon::Session* session = protocol_->activeSession())
-        {
-            rfcommon::MetaData* meta = session->tryGetMetaData();
-            assert(meta);
-
-            switch (meta->type())
-            {
-                case rfcommon::MetaData::GAME:
-                    realtime->onProtocolGameResumed(protocol_->activeSession());
-                    break;
-                case rfcommon::MetaData::TRAINING:
-                    realtime->onProtocolTrainingResumed(protocol_->activeSession());
-                    break;
-            }
-        }
-    }
-
     return model;
 }
 
@@ -184,11 +158,6 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
 void PluginManager::destroyModel(rfcommon::Plugin* model)
 {
     RFPluginFactory* factory = model->factory();
-
-    rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(model);
-    if (realtime)
-        protocol_->dispatcher.removeListener(realtime);
-
     factory->destroyModel(model);
 }
 

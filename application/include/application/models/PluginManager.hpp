@@ -32,7 +32,7 @@ class Protocol;
 class PluginManager
 {
 public:
-    PluginManager(Protocol* protocol);
+    PluginManager();
     ~PluginManager();
 
     /*!
@@ -65,7 +65,6 @@ public:
     void destroyModel(rfcommon::Plugin* plugin);
 
 private:
-    Protocol* protocol_;
     QHash<QString, RFPluginFactory*> factories_;
     QVector<rfcommon_dynlib*> libraries_;
 };

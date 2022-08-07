@@ -1,5 +1,6 @@
 #include "application/views/ReplayViewer.hpp"
 #include "application/models/PluginManager.hpp"
+#include "application/models/Protocol.hpp"
 #include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
@@ -40,6 +41,8 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
 {
     addTab(new QWidget, "+");
 
+    protocol_->dispatcher.addListener(this);
+
     connect(this, &QTabWidget::tabBarClicked, this, &ReplayViewer::onTabBarClicked);
     connect(this, &QTabWidget::currentChanged, this, &ReplayViewer::onCurrentTabChanged);
 }
@@ -47,6 +50,9 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
 // ----------------------------------------------------------------------------
 ReplayViewer::~ReplayViewer()
 {
+    if (protocol_)
+        protocol_->dispatcher.removeListener(this);
+
     clearActiveSession();
     clearReplays();
 
@@ -225,6 +231,14 @@ void ReplayViewer::onTabBarClicked(int index)
     }
     plugins_.push_back(data);
 
+    // Realtime plugins listen to protocol events
+    if (protocol_)
+    {
+        rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(data.plugin);
+        if (realtime)
+            protocol_->dispatcher.addListener(realtime);
+    }
+
     // Create tab and place view from plugin inside it
     QStyle* style = qApp->style();
     QIcon closeIcon = style->standardIcon(QStyle::SP_TitleBarCloseButton);
@@ -330,6 +344,14 @@ void ReplayViewer::closeTabWithView(QWidget* view)
     {
         if (it->view != view)
             continue;
+
+        if (protocol_)
+        {
+            rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(it->plugin);
+            if (realtime)
+                protocol_->dispatcher.removeListener(realtime);
+        }
+
         it->view->setParent(nullptr);
         it->plugin->destroyView(it->view);
         pluginManager_->destroyModel(it->plugin);
