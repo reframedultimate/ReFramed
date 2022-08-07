@@ -14,9 +14,10 @@ namespace rfapp {
 class CategoryModel;
 class TrainingModeModel;
 
-class TrainingModeView : public QWidget
-                       , public TrainingModeListener
-                       , public CategoryListener
+class TrainingModeView 
+    : public QWidget
+    , public TrainingModeListener
+    , public CategoryListener
 {
     Q_OBJECT
 

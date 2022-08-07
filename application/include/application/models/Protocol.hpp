@@ -53,8 +53,6 @@ public:
     void connectToServer(const QString& ipAddress, uint16_t port);
     void disconnectFromServer();
 
-    rfcommon::Session* activeSession() const;
-
     rfcommon::ListenerDispatcher<rfcommon::ProtocolListener> dispatcher;
 
 private slots:

@@ -1,6 +1,7 @@
 #include "application/ui_ActiveSessionView.h"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
+#include "application/views/ReplayViewer.hpp"
 #include "application/Util.hpp"
 
 #include <QVBoxLayout>
@@ -19,9 +20,7 @@ ActiveSessionView::ActiveSessionView(
 {
     ui_->setupUi(this);
     ui_->lineEdit_formatOther->setVisible(false);
-
-    // Initial page should show "disconnected"
-    ui_->stackedWidget->setCurrentWidget(ui_->page_disconnected);
+    ui_->layout_sessionViewer->addWidget(new ReplayViewer(activeSessionManager_->protocol(), pluginManager));
 
     connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveSessionView::onComboBoxFormatIndexChanged);
     connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditFormatChanged);

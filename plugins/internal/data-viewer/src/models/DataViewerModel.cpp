@@ -33,6 +33,8 @@ DataViewerModel::~DataViewerModel()
 // ----------------------------------------------------------------------------
 void DataViewerModel::setSession(rfcommon::Session* session)
 {
+    clearSession();
+
     mappingInfo_ = session->tryGetMappingInfo();
     metaData_ = session->tryGetMetaData();
     frameData_ = session->tryGetFrameData();

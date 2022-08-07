@@ -70,12 +70,6 @@ void Protocol::disconnectFromServer()
 }
 
 // ----------------------------------------------------------------------------
-rfcommon::Session* Protocol::activeSession() const
-{
-    return activeSession_;
-}
-
-// ----------------------------------------------------------------------------
 void Protocol::onConnectionSuccess(const QString& ipAddress, quint16 port)
 {
     QByteArray ba = ipAddress.toUtf8();

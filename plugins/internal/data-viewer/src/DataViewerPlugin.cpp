@@ -90,6 +90,7 @@ void DataViewerPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, r
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolTrainingEnded(rfcommon::Session* training)
 {
+    model_->clearSession();
 }
 
 // ----------------------------------------------------------------------------

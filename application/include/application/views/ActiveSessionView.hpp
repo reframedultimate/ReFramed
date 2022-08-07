@@ -16,11 +16,13 @@ namespace Ui {
 
 namespace rfapp {
 
-class PluginManager;
 class ActiveSessionManager;
+class PluginManager;
+class Protocol;
 
-class ActiveSessionView : public QWidget
-                        , public ActiveSessionManagerListener
+class ActiveSessionView 
+    : public QWidget
+    , public ActiveSessionManagerListener
 {
     Q_OBJECT
 public:

@@ -199,6 +199,12 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 }
 
 // ----------------------------------------------------------------------------
+Protocol* ActiveSessionManager::protocol() const
+{
+    return protocol_;
+}
+
+// ----------------------------------------------------------------------------
 void ActiveSessionManager::findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameMetaData* meta)
 {
     assert(meta->type() == rfcommon::MetaData::GAME);

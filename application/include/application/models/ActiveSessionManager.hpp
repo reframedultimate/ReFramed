@@ -46,6 +46,8 @@ public:
     void setGameNumber(rfcommon::GameNumber number);
     void setTrainingSessionNumber(rfcommon::GameNumber number);
 
+    Protocol* protocol() const;
+
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:

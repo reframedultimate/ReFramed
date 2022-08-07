@@ -14,8 +14,9 @@ namespace rfapp {
 
 class ReplayManagerListener;
 
-class ReplayManager : public ConfigAccessor
-                    , public ReplayGroupListener
+class ReplayManager 
+    : public ConfigAccessor
+    , public ReplayGroupListener
 {
 public:
     ReplayManager(Config* config);

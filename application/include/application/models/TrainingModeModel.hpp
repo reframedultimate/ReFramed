@@ -14,6 +14,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class PluginManager;
+class Protocol;
 class TrainingModeListener;
 
 class TrainingModeModel

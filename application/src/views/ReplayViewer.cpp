@@ -231,14 +231,6 @@ void ReplayViewer::onTabBarClicked(int index)
     }
     plugins_.push_back(data);
 
-    // Realtime plugins listen to protocol events
-    if (protocol_)
-    {
-        rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(data.plugin);
-        if (realtime)
-            protocol_->dispatcher.addListener(realtime);
-    }
-
     // Create tab and place view from plugin inside it
     QStyle* style = qApp->style();
     QIcon closeIcon = style->standardIcon(QStyle::SP_TitleBarCloseButton);
@@ -345,13 +337,6 @@ void ReplayViewer::closeTabWithView(QWidget* view)
         if (it->view != view)
             continue;
 
-        if (protocol_)
-        {
-            rfcommon::RealtimePlugin* realtime = dynamic_cast<rfcommon::RealtimePlugin*>(it->plugin);
-            if (realtime)
-                protocol_->dispatcher.removeListener(realtime);
-        }
-
         it->view->setParent(nullptr);
         it->plugin->destroyView(it->view);
         pluginManager_->destroyModel(it->plugin);
@@ -454,7 +439,7 @@ void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolTrainingStarted(game);
+        data.plugin->onProtocolGameStarted(game);
 }
 void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
 {
@@ -465,7 +450,7 @@ void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolTrainingResumed(game);
+        data.plugin->onProtocolGameResumed(game);
 }
 void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
 {
@@ -478,7 +463,7 @@ void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
     if (replayState_ == NONE_LOADED)
     {
         for (const auto& data : plugins_)
-            data.plugin->onProtocolTrainingEnded(game);
+            data.plugin->onProtocolGameEnded(game);
     }
 }
 
