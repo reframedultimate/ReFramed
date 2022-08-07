@@ -8,18 +8,18 @@ class QFileInfo;
 
 namespace rfapp {
 
-class SavedGameSessionListWidget : public QListWidget
+class ReplayListWidget : public QListWidget
 {
     Q_OBJECT
 
 public:
-    explicit SavedGameSessionListWidget(QWidget* parent=nullptr);
-    ~SavedGameSessionListWidget();
+    explicit ReplayListWidget(QWidget* parent=nullptr);
+    ~ReplayListWidget();
 
-    void addSavedGameSessionFileName(const QFileInfo& absPathToFile);
-    void removeSavedGameSessionFileName(const QFileInfo& absPathToFile);
-    bool itemMatchesSavedGameSessionFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
-    QVector<QFileInfo> selectedSavedGameSessionFilePaths() const;
+    void addReplayFileName(const QFileInfo& absPathToFile);
+    void removeReplayFileName(const QFileInfo& absPathToFile);
+    bool itemMatchesReplayFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
+    QVector<QFileInfo> selectedReplayFilePaths() const;
 
 protected:
     QStringList mimeTypes() const override;

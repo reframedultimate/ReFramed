@@ -8,7 +8,7 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-SavedGameSessionListWidget::SavedGameSessionListWidget(QWidget* parent)
+ReplayListWidget::ReplayListWidget(QWidget* parent)
     : QListWidget(parent)
 {
     setDragDropMode(DragOnly);
@@ -16,12 +16,12 @@ SavedGameSessionListWidget::SavedGameSessionListWidget(QWidget* parent)
 }
 
 // ----------------------------------------------------------------------------
-SavedGameSessionListWidget::~SavedGameSessionListWidget()
+ReplayListWidget::~ReplayListWidget()
 {
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionListWidget::addSavedGameSessionFileName(const QFileInfo& absPathToFile)
+void ReplayListWidget::addReplayFileName(const QFileInfo& absPathToFile)
 {
     QListWidgetItem* item = new QListWidgetItem(absPathToFile.completeBaseName());
     item->setData(Qt::UserRole, QVariant(absPathToFile.absoluteFilePath()));
@@ -29,20 +29,20 @@ void SavedGameSessionListWidget::addSavedGameSessionFileName(const QFileInfo& ab
 }
 
 // ----------------------------------------------------------------------------
-void SavedGameSessionListWidget::removeSavedGameSessionFileName(const QFileInfo& absPathToFile)
+void ReplayListWidget::removeReplayFileName(const QFileInfo& absPathToFile)
 {
     for (const auto& item : findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
         delete item;
 }
 
 // ----------------------------------------------------------------------------
-bool SavedGameSessionListWidget::itemMatchesSavedGameSessionFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
+bool ReplayListWidget::itemMatchesReplayFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
 {
     return item->data(Qt::UserRole).toString() == absPathToFile.absoluteFilePath();
 }
 
 // ----------------------------------------------------------------------------
-QVector<QFileInfo> SavedGameSessionListWidget::selectedSavedGameSessionFilePaths() const
+QVector<QFileInfo> ReplayListWidget::selectedReplayFilePaths() const
 {
     QVector<QFileInfo> recordings;
     for (const auto& item : selectedItems())
@@ -51,7 +51,7 @@ QVector<QFileInfo> SavedGameSessionListWidget::selectedSavedGameSessionFilePaths
 }
 
 // ----------------------------------------------------------------------------
-QStringList SavedGameSessionListWidget::mimeTypes() const
+QStringList ReplayListWidget::mimeTypes() const
 {
     QStringList types;
     types << "application/x-ultimate-hindsight-rfr";
@@ -59,7 +59,7 @@ QStringList SavedGameSessionListWidget::mimeTypes() const
 }
 
 // ----------------------------------------------------------------------------
-QMimeData* SavedGameSessionListWidget::mimeData(const QList<QListWidgetItem*> items) const
+QMimeData* ReplayListWidget::mimeData(const QList<QListWidgetItem*> items) const
 {
     QMimeData* mimeData = new QMimeData;
     QByteArray encodedData;

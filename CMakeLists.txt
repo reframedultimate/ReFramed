@@ -53,8 +53,8 @@ add_subdirectory ("thirdparty/cpp-base64")
 add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
 add_subdirectory ("application")
-add_subdirectory ("plugins")
 add_subdirectory ("tests")
+add_subdirectory ("plugins")
 
 # set_target_properties (gmock
 #     PROPERTIES
@@ -105,8 +105,7 @@ install (
 include(CMakePackageConfigHelpers)
 configure_package_config_file("cmake/ReFramedConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/ReFramedConfig.cmake"
-    INSTALL_DESTINATION ${REFRAMED_INSTALL_CMAKEDIR})
+    INSTALL_DESTINATION "${REFRAMED_INSTALL_CMAKEDIR}")
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/ReFramedConfig.cmake"
     DESTINATION ${REFRAMED_INSTALL_CMAKEDIR})
-

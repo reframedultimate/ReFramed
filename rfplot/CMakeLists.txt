@@ -81,4 +81,3 @@ export (
     TARGETS rfplot
     NAMESPACE ReFramed::
     FILE ReFramedTargets.cmake)
-

@@ -14,7 +14,6 @@
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
-#include "application/views/SessionView.hpp"
 #include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
 

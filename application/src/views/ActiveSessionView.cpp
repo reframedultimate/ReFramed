@@ -1,8 +1,7 @@
-#include "application/Util.hpp"
 #include "application/ui_ActiveSessionView.h"
-#include "application/views/ActiveSessionView.hpp"
-#include "application/views/SessionView.hpp"
 #include "application/models/ActiveSessionManager.hpp"
+#include "application/views/ActiveSessionView.hpp"
+#include "application/Util.hpp"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -17,10 +16,8 @@ ActiveSessionView::ActiveSessionView(
     : QWidget(parent)
     , ui_(new Ui::ActiveSessionView)
     , activeSessionManager_(activeSessionManager)
-    , sessionView_(new SessionView(pluginManager))
 {
     ui_->setupUi(this);
-    ui_->layout_recordingView->addWidget(sessionView_);
     ui_->lineEdit_formatOther->setVisible(false);
 
     // Initial page should show "disconnected"

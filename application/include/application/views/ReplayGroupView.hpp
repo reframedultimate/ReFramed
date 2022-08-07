@@ -23,12 +23,13 @@ class PluginManager;
 class ReplayManager;
 class ReplayGroup;
 class ReplayNameCompleter;
-class SavedGameSessionListWidget;
-class SessionView;
+class ReplayListWidget;
+class ReplayViewer;
 
-class ReplayGroupView : public QWidget
-                      , public ReplayManagerListener
-                      , public ReplayGroupListener
+class ReplayGroupView 
+    : public QWidget
+    , public ReplayManagerListener
+    , public ReplayGroupListener
 {
     Q_OBJECT
 
@@ -54,7 +55,7 @@ private slots:
     void onDeleteKeyPressed();
 
 private:
-    // In case a group gets deleted, we need remove ourselves as a listener
+    // In case a group gets deleted, we need to remove ourselves as a listener
     void onReplayManagerGroupRemoved(ReplayGroup* group) override;
     void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
 
@@ -77,11 +78,9 @@ private:
     Ui::ReplayGroupView* ui_;
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
-    rfcommon::Reference<rfcommon::Session> currentSession_;
-    rfcommon::SmallVector<rfcommon::Reference<rfcommon::Session>, 16> currentSessionSet_;
-    SavedGameSessionListWidget* replayListWidget_;
+    ReplayListWidget* replayListWidget_;
     ReplayNameCompleter* filterCompleter_;
-    SessionView* sessionView_;
+    ReplayViewer* replayViewer_;
 };
 
 }

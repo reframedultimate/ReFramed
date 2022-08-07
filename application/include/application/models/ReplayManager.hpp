@@ -21,7 +21,7 @@ public:
     ReplayManager(Config* config);
 
     /*!
-     * \brief This is the location where recordings are saved automatically.
+     * \brief This is the location where replays are saved automatically.
      * Should always exist.
      *
      * The main window has some logic that forces the user to set a default
@@ -29,10 +29,26 @@ public:
      */
     QDir defaultReplaySourceDirectory() const;
 
-    QDir defaultGameSessionSourceDirectory() const;
-    QDir defaultTrainingSessionSourceDirectory() const;
-
+    /*!
+     * \brief Changes the location where replays are saved.
+     * \note If there are replays in the existing source directory, then
+     * the path to the existing directory is added to the list of source
+     * directories via addReplaySource() before changing the default
+     * directory. This makes sure that all replays can still be found.
+     */
     void setDefaultReplaySourceDirectory(const QDir& path);
+
+    /*!
+     * \brief Gets the path to the default directory to store replay files
+     * from games.
+     */
+    QDir defaultGameSessionSourceDirectory() const;
+
+    /*!
+     * \brief Gets the path to the default directory to store replay files
+     * from training sessions.
+     */
+    QDir defaultTrainingSessionSourceDirectory() const;
 
     bool addReplaySource(const QString& name, const QDir& path);
     bool changeReplaySourceName(const QString& oldName, const QString& newName);

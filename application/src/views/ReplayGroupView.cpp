@@ -3,7 +3,7 @@
 #include "application/models/ReplayManager.hpp"
 #include "application/models/ReplayGroup.hpp"
 #include "application/views/ReplayListWidget.hpp"
-#include "application/views/SessionView.hpp"
+#include "application/views/ReplayViewer.hpp"
 #include "rfcommon/Session.hpp"
 
 #include <QListWidget>
@@ -90,16 +90,16 @@ ReplayGroupView::ReplayGroupView(
     : QWidget(parent)
     , ui_(new Ui::ReplayGroupView)
     , replayManager_(replayManager)
-    , replayListWidget_(new SavedGameSessionListWidget)
+    , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
-    , sessionView_(new SessionView(pluginManager))
+    , replayViewer_(new ReplayViewer(pluginManager))
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
     ui_->splitter->setStretchFactor(1, 1);
     ui_->splitter->setSizes({600});
     ui_->layout_recordingList->addWidget(replayListWidget_);
-    ui_->layout_data->addWidget(sessionView_);
+    ui_->layout_data->addWidget(replayViewer_);
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
@@ -132,11 +132,13 @@ void ReplayGroupView::setReplayGroup(ReplayGroup* group)
 {
     assert(currentGroup_ == nullptr);
 
+    replayViewer_->clearReplays();
+
     currentGroup_ = group;
     currentGroup_->dispatcher.addListener(this);
 
     for (const auto& fileName : group->absFilePathList())
-        replayListWidget_->addSavedGameSessionFileName(fileName);
+        replayListWidget_->addReplayFileName(fileName);
     replayListWidget_->sortItems(Qt::DescendingOrder);
 
     /*filterCompleter_->setRecordingGroupWeakRef(group);*/
@@ -147,9 +149,7 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 {
     assert(currentGroup_ == group && group != nullptr);
 
-    if (currentSession_)
-        sessionView_->clearSavedGameSession(currentSession_);
-    currentSession_.drop();
+    replayViewer_->clearReplays();
 
     currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
@@ -165,63 +165,32 @@ void ReplayGroupView::onItemSelectionChanged()
     if (currentGroup_ == nullptr)
         return;
 
-    auto clearPreviousSessions = [this]() {
-
-        if (currentSession_)
-            sessionView_->clearSavedGameSession(currentSession_);
-        currentSession_.drop();
-
-        // API expects an array of session pointers, but we have a vector
-        // of smart pointers. Have to convert
-        rfcommon::SmallVector<rfcommon::Session*, 16> sessions;
-        for (const auto& session : currentSessionSet_)
-            sessions.push(session);
-
-        if (currentSessionSet_.count() > 0)
-            sessionView_->clearSavedGameSessionSet(sessions.data(), sessions.count());
-        currentSessionSet_.clearCompact();
-    };
+    replayViewer_->clearReplays();
 
     const auto selected = replayListWidget_->selectedItems();
-
-    if (selected.length() == 0)
-    {
-        clearPreviousSessions();
-    }
-    else if (selected.length() == 1)
+    if (selected.length() == 1)
     {
         for (const auto& fileName : currentGroup_->absFilePathList())
-            if (replayListWidget_->itemMatchesSavedGameSessionFileName(selected[0], fileName))
+            if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
             {
-                clearPreviousSessions();
-
-                currentSession_ = rfcommon::Session::load(fileName.absoluteFilePath().toStdString().c_str());
-                if (currentSession_)
-                    sessionView_->setSavedGameSession(currentSession_);
-
+                replayViewer_->clearReplays();
+                replayViewer_->loadReplays({fileName.absoluteFilePath()});
                 break;
             }
     }
-    else
+    else if (selected.length() > 1)
     {
-        rfcommon::SmallVector<rfcommon::Session*, 16> sessions;
+        QStringList fileNames;
         for (auto item : selected)
             for (const auto& fileName : currentGroup_->absFilePathList())
-                if (replayListWidget_->itemMatchesSavedGameSessionFileName(item, fileName))
+                if (replayListWidget_->itemMatchesReplayFileName(item, fileName))
                 {
-                    if (auto session = rfcommon::Session::load(fileName.absoluteFilePath().toStdString().c_str()))
-                        sessions.push(session);
-                    continue;
+                    fileNames.push_back(fileName.absoluteFilePath());
+                    break;
                 }
 
-        if (sessions.count() > 0)
-        {
-            clearPreviousSessions();
-            sessionView_->setSavedGameSessionSet(sessions.data(), sessions.count());
-        }
 
-        for (auto session : sessions)
-            currentSessionSet_.push(session);
+        replayViewer_->loadReplays(fileNames);
     }
 }
 
@@ -242,7 +211,7 @@ void ReplayGroupView::onDeleteKeyPressed()
     if (currentGroup_ == nullptr || currentGroup_ == replayManager_->allReplayGroup())
         return;
 
-    for (const auto& absFilePath : replayListWidget_->selectedSavedGameSessionFilePaths())
+    for (const auto& absFilePath : replayListWidget_->selectedReplayFilePaths())
         currentGroup_->removeFile(absFilePath);
 }
 
@@ -262,7 +231,7 @@ void ReplayGroupView::onReplayManagerGroupNameChanged(ReplayGroup* group, const 
 void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    replayListWidget_->addSavedGameSessionFileName(absPathToFile);
+    replayListWidget_->addReplayFileName(absPathToFile);
     replayListWidget_->sortItems(Qt::DescendingOrder);
 }
 
@@ -270,7 +239,7 @@ void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo
 void ReplayGroupView::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
     (void)group;
-    replayListWidget_->removeSavedGameSessionFileName(absPathToFile);
+    replayListWidget_->removeReplayFileName(absPathToFile);
 }
 
 }

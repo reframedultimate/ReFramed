@@ -18,7 +18,6 @@ namespace rfapp {
 
 class PluginManager;
 class ActiveSessionManager;
-class SessionView;
 
 class ActiveSessionView : public QWidget
                         , public ActiveSessionManagerListener
@@ -53,7 +52,6 @@ private:
 private:
     Ui::ActiveSessionView* ui_;
     ActiveSessionManager* activeSessionManager_;
-    SessionView* sessionView_;
     std::vector<QGroupBox*> names_;
     std::vector<QLabel*> fighterName_;
     std::vector<QLabel*> fighterStatus_;

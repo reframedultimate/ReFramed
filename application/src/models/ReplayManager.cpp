@@ -40,6 +40,18 @@ QDir ReplayManager::defaultReplaySourceDirectory() const
 }
 
 // ----------------------------------------------------------------------------
+void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
+{
+    QJsonObject& cfg = getConfig();
+    QJsonObject cfgReplayManager = cfg["replaymanager"].toObject();
+    cfgReplayManager["defaultreplaypath"] = path.absolutePath();
+    cfg["replaymanager"] = cfgReplayManager;
+    saveConfig();
+
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultReplaySaveLocationChanged, path);
+}
+
+// ----------------------------------------------------------------------------
 QDir ReplayManager::defaultGameSessionSourceDirectory() const
 {
     QDir dir = defaultReplaySourceDirectory();
@@ -51,18 +63,6 @@ QDir ReplayManager::defaultTrainingSessionSourceDirectory() const
 {
     QDir dir = defaultReplaySourceDirectory();
     return dir.absolutePath() + "/training";
-}
-
-// ----------------------------------------------------------------------------
-void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
-{
-    QJsonObject& cfg = getConfig();
-    QJsonObject cfgReplayManager = cfg["replaymanager"].toObject();
-    cfgReplayManager["defaultreplaypath"] = path.absolutePath();
-    cfg["replaymanager"] = cfgReplayManager;
-    saveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultReplaySaveLocationChanged, path);
 }
 
 // ----------------------------------------------------------------------------
@@ -86,8 +86,8 @@ bool ReplayManager::changeReplaySourceName(const QString& oldName, const QString
         return false;
 
     QDir dir = it.value();
-    replayDirectories_.insert(newName, dir);
     replayDirectories_.erase(it);
+    replayDirectories_.insert(newName, dir);
 
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerReplaySourceNameChanged, oldName, newName);
     return true;
