@@ -16,21 +16,20 @@ public:
 
     ~TimeStamp();
 
-    Type millisSinceEpoch() const;
+    Type millisSinceEpoch() const { return millisSinceEpoch_; }
 
-    bool isValid() const;
+    bool isValid() const { return millisSinceEpoch_ != 0; }
 
-    bool operator==(TimeStamp rhs) const;
-    bool operator!=(TimeStamp rhs) const;
-    bool operator< (TimeStamp rhs) const;
-    bool operator<=(TimeStamp rhs) const;
-    bool operator> (TimeStamp rhs) const;
-    bool operator>=(TimeStamp rhs) const;
-    TimeStamp& operator+=(DeltaTime rhs);
-    TimeStamp& operator-=(DeltaTime rhs);
+    bool operator==(TimeStamp rhs) const { return millisSinceEpoch_ == rhs.millisSinceEpoch_; }
+    bool operator!=(TimeStamp rhs) const { return millisSinceEpoch_ != rhs.millisSinceEpoch_; }
+    bool operator< (TimeStamp rhs) const { return millisSinceEpoch_ < rhs.millisSinceEpoch_; }
+    bool operator<=(TimeStamp rhs) const { return millisSinceEpoch_ <= rhs.millisSinceEpoch_; }
+    bool operator> (TimeStamp rhs) const { return millisSinceEpoch_ > rhs.millisSinceEpoch_; }
+    bool operator>=(TimeStamp rhs) const { return millisSinceEpoch_ >= rhs.millisSinceEpoch_; }
+    TimeStamp& operator+=(DeltaTime rhs) { millisSinceEpoch_ += rhs.millis(); return *this; }
+    TimeStamp& operator-=(DeltaTime rhs) { millisSinceEpoch_ -= rhs.millis(); return *this; }
 
 private:
-    TimeStamp();
     TimeStamp(Type millisSinceEpoch);
 
 private:

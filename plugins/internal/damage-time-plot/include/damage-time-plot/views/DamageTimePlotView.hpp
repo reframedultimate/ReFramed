@@ -6,6 +6,7 @@
 
 class DamageTimePlotModel;
 class QListView;
+class QSplitter;
 class QwtPlotCurve;
 
 namespace rfplot {
@@ -30,7 +31,9 @@ private:
 
 private:
     DamageTimePlotModel* model_;
+    QSplitter* splitter_;
     rfplot::RealtimePlot* plot_;
     QListView* sessionsList_;
     rfcommon::SmallVector<QwtPlotCurve*, 2> curves_;
+    int lastSessionCount_;
 };

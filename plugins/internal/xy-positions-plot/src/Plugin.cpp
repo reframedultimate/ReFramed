@@ -1,10 +1,10 @@
 #include "xy-positions-plot/PluginConfig.hpp"
-#include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
+#include "xy-positions-plot/XYPositionsPlotPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
 static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
 {
-    return new XYPositionsPlotModel(factory);
+    return new XYPositionsPlotPlugin(factory);
 }
 
 static void destroyPlugin(rfcommon::Plugin* model)

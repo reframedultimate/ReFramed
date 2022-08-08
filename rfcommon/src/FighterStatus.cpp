@@ -16,41 +16,6 @@ FighterStatus FighterStatus::makeInvalid()
 }
 
 // ----------------------------------------------------------------------------
-FighterStatus::Type FighterStatus::value() const
-{
-    assert(isValid());
-    return value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterStatus::isValid() const
-{
-    return value_ != Type(-1);
-}
-// ----------------------------------------------------------------------------
-
-bool FighterStatus::operator==(FighterStatus other) const
-{
-    return value_ == other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterStatus::operator!=(FighterStatus other) const
-{
-    return value_ != other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterStatus::operator<(FighterStatus other) const
-{
-    return value_ < other.value_;
-}
-
-// ----------------------------------------------------------------------------
-FighterStatus::FighterStatus()
-{}
-
-// ----------------------------------------------------------------------------
 FighterStatus::FighterStatus(Type value)
     : value_(value)
 {}

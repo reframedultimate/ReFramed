@@ -22,53 +22,6 @@ FighterFlags::~FighterFlags()
 {}
 
 // ----------------------------------------------------------------------------
-FighterFlags::Type FighterFlags::value() const
-{
-    return value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::attackConnected() const
-{
-    return !!(value_ & 1);
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::facingLeft() const
-{
-    return !!(value_ & 2);
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::opponentInHitlag() const
-{
-    return !!(value_ & 4);
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::operator==(FighterFlags other) const
-{
-    return value_ == other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::operator!=(FighterFlags other) const
-{
-    return value_ != other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterFlags::operator<(FighterFlags other) const
-{
-    return value_ < other.value_;
-}
-
-// ----------------------------------------------------------------------------
-FighterFlags::FighterFlags()
-    : value_(0)
-{}
-
-// ----------------------------------------------------------------------------
 FighterFlags::FighterFlags(Type value)
     : value_(value)
 {}

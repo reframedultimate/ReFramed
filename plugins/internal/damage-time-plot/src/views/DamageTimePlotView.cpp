@@ -31,25 +31,23 @@ private:
 DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* parent)
     : QWidget(parent)
     , model_(model)
+    , splitter_(new QSplitter)
     , plot_(new rfplot::RealtimePlot)
     , sessionsList_(new QListView)
+    , lastSessionCount_(0)
 {
     plot_->setTitle("Damage over Time");
     plot_->setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw);
     plot_->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Inverted, true);
-    buildCurves();
 
-    QSplitter* splitter = new QSplitter;
-    splitter->addWidget(sessionsList_);
-    splitter->addWidget(plot_);
-    splitter->setStretchFactor(0, 0);
-    splitter->setStretchFactor(1, 1);
-    splitter->setSizes({440, 1});
+    splitter_->addWidget(plot_);
 
     setLayout(new QVBoxLayout);
-    layout()->addWidget(splitter);
+    layout()->addWidget(splitter_);
 
     model_->dispatcher.addListener(this);
+
+    buildCurves();
 }
 
 // ----------------------------------------------------------------------------
@@ -69,7 +67,6 @@ void DamageTimePlotView::clearCurves()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::buildCurves()
 {
-
     for (int sessionIdx = 0; sessionIdx != model_->sessionCount(); ++sessionIdx)
         for (int fighterIdx = 0; fighterIdx != model_->fighterCount(sessionIdx); ++fighterIdx)
         {
@@ -85,6 +82,25 @@ void DamageTimePlotView::buildCurves()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onDataSetChanged()
 {
+    if (model_->sessionCount() == 1)
+    {
+        plot_->setParent(nullptr);
+        sessionsList_->setParent(nullptr);
+        splitter_->addWidget(plot_);
+    }
+    else if (lastSessionCount_ == 1 && model_->sessionCount() > 1)
+    {
+        plot_->setParent(nullptr);
+        sessionsList_->setParent(nullptr);
+
+        splitter_->addWidget(sessionsList_);
+        splitter_->addWidget(plot_);
+        splitter_->setStretchFactor(0, 0);
+        splitter_->setStretchFactor(1, 1);
+        splitter_->setSizes({ 440, 1 });
+    }
+    lastSessionCount_ = model_->sessionCount();
+
     clearCurves();
     buildCurves();
     plot_->forceAutoScale();

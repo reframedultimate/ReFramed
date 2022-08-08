@@ -107,6 +107,7 @@ add_library (rfcommon SHARED
     "src/TimeStamp.cpp"
     "src/UserLabels.cpp"
     "src/Vector.cpp"
+    "src/Vec2.cpp"
     "src/VisualizerPlugin.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"

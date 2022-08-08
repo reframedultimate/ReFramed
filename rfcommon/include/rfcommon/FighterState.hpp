@@ -10,6 +10,7 @@
 #include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/TimeStamp.hpp"
+#include "rfcommon/Vec2.hpp"
 
 namespace rfcommon {
 
@@ -24,7 +25,7 @@ public:
             TimeStamp timeStamp,
             FrameIndex frameIndex,
             FramesLeft framesLeft,
-            float posx, float posy,
+            const Vec2& position,
             float damage,
             float hitstun,
             float shield,
@@ -41,8 +42,7 @@ public:
     TimeStamp timeStamp() const { return timeStamp_; }
     FrameIndex frameIndex() const { return frameIndex_; }
     FramesLeft framesLeft() const { return framesLeft_; }
-    float posx() const { return posx_; }
-    float posy() const { return posy_; }
+    const Vec2& pos() const { return pos_; }
     float damage() const { return damage_; }
     float hitstun() const { return hitstun_; }
     float shield() const { return shield_; }
@@ -59,8 +59,7 @@ private:
     FighterMotion motion_;        // u64
     FrameIndex frameIndex_;       // u32
     FramesLeft framesLeft_;       // u32
-    float posx_;
-    float posy_;
+    Vec2 pos_;                    // f32 + f32
     float damage_;
     float hitstun_;
     float shield_;

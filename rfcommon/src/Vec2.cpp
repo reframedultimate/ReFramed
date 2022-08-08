@@ -1,27 +1,27 @@
-#include "rfcommon/TimeStamp.hpp"
-#include <cassert>
+#include "rfcommon/Vec2.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-TimeStamp TimeStamp::fromMillisSinceEpoch(Type value)
+Vec2 Vec2::fromValues(float x, float y)
 {
-    return TimeStamp(value);
+    return Vec2(x, y);
 }
 
 // ----------------------------------------------------------------------------
-TimeStamp TimeStamp::makeInvalid()
+Vec2 Vec2::makeZero()
 {
-    return TimeStamp(0);
+    return Vec2(0, 0);
 }
 
 // ----------------------------------------------------------------------------
-TimeStamp::~TimeStamp()
+Vec2::Vec2(float x, float y)
+    : x_(x)
+    , y_(y)
 {}
 
 // ----------------------------------------------------------------------------
-TimeStamp::TimeStamp(Type millisSinceEpoch)
-    : millisSinceEpoch_(millisSinceEpoch)
+Vec2::~Vec2()
 {}
 
 }

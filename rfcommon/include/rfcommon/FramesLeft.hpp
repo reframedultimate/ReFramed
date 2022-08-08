@@ -14,18 +14,17 @@ public:
 
     ~FramesLeft();
 
-    Type value() const;
-    double secondsLeft() const;
+    Type count() const { return value_; }
+    double secondsLeft() const { return static_cast<double>(value_) / 60.0; }
 
-    bool operator==(FramesLeft rhs) const;
-    bool operator!=(FramesLeft rhs) const;
-    bool operator<(FramesLeft rhs) const;
-    bool operator>(FramesLeft rhs) const;
-    bool operator<=(FramesLeft rhs) const;
-    bool operator>=(FramesLeft rhs) const;
+    bool operator==(FramesLeft rhs) const { return value_ == rhs.value_; }
+    bool operator!=(FramesLeft rhs) const { return value_ != rhs.value_; }
+    bool operator<(FramesLeft rhs) const { return value_ < rhs.value_; }
+    bool operator>(FramesLeft rhs) const { return value_ > rhs.value_; }
+    bool operator<=(FramesLeft rhs) const { return value_ <= rhs.value_; }
+    bool operator>=(FramesLeft rhs) const { return value_ >= rhs.value_; }
 
 private:
-    FramesLeft();
     FramesLeft(Type value);
 
 private:

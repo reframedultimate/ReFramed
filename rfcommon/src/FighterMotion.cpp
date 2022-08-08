@@ -25,52 +25,6 @@ FighterMotion::~FighterMotion()
 {}
 
 // ----------------------------------------------------------------------------
-uint8_t FighterMotion::upper() const
-{
-    return (value_ >> 32) & 0xFF;
-}
-
-// ----------------------------------------------------------------------------
-uint32_t FighterMotion::lower() const
-{
-    return value_ & 0xFFFFFFFF;
-}
-
-// ----------------------------------------------------------------------------
-FighterMotion::Type FighterMotion::value() const
-{
-    return value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterMotion::isValid() const
-{
-    return value_ != 0;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterMotion::operator==(FighterMotion other) const
-{
-    return value_ == other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterMotion::operator!=(FighterMotion other) const
-{
-    return value_ != other.value_;
-}
-
-// ----------------------------------------------------------------------------
-bool FighterMotion::operator<(FighterMotion other) const
-{
-    return value_ < other.value_;
-}
-
-// ----------------------------------------------------------------------------
-FighterMotion::FighterMotion()
-{}
-
-// ----------------------------------------------------------------------------
 FighterMotion::FighterMotion(Type value)
     : value_(value)
 {}

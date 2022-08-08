@@ -14,14 +14,13 @@ public:
 
     ~FrameIndex();
 
-    Type value() const;
-    double secondsPassed() const;
+    Type index() const { return value_; }
+    double secondsPassed() const { return static_cast<double>(value_) / 60.0; }
 
-    bool operator==(FrameIndex other) const;
-    bool operator!=(FrameIndex other) const;
+    bool operator==(FrameIndex other) const { return value_ == other.value_; }
+    bool operator!=(FrameIndex other) const { return value_ != other.value_; }
 
 private:
-    FrameIndex();
     FrameIndex(Type value);
 
 private:

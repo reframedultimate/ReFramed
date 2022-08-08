@@ -260,7 +260,7 @@ void Protocol::onFighterState(
             rfcommon::TimeStamp::fromMillisSinceEpoch(frameTimeStamp),
             rfcommon::FrameIndex::fromValue(0),  // We change the frame number later
             rfcommon::FramesLeft::fromValue(framesLeft),
-            posx, posy,
+            rfcommon::Vec2::fromValues(posx, posy),
             damage,
             hitstun,
             shield,
@@ -294,7 +294,7 @@ void Protocol::onFighterState(
     // "frames left" will equal 0), then add the frame to the session.
     if (framesLeftMatch())
     {
-        if (stateBuffer_[0][0].framesLeft().value() != 0)
+        if (stateBuffer_[0][0].framesLeft().count() != 0)
         {
             rfcommon::Frame<4> frame;
             const int frameCount = frameData->frameCount();
@@ -326,14 +326,14 @@ void Protocol::onFighterState(
     // based on the "frames left" value of each state. This only works if we're
     // not in training mode. We need at least 2 frames worth of states to
     // make this decision.
-    if (haveAtLeast(2) && stateBuffer_[0][0].framesLeft().value() != 0)
+    if (haveAtLeast(2) && stateBuffer_[0][0].framesLeft().count() != 0)
     {
         const auto findHighestFramesLeftValue = [this]() -> rfcommon::FramesLeft::Type
         {
-            rfcommon::FramesLeft::Type framesLeft = stateBuffer_[0][0].framesLeft().value();
+            rfcommon::FramesLeft::Type framesLeft = stateBuffer_[0][0].framesLeft().count();
             for (int i = 1; i < stateBuffer_.count(); ++i)
-                if (framesLeft < stateBuffer_[i][0].framesLeft().value())
-                    framesLeft = stateBuffer_[i][0].framesLeft().value();
+                if (framesLeft < stateBuffer_[i][0].framesLeft().count())
+                    framesLeft = stateBuffer_[i][0].framesLeft().count();
             return framesLeft;
         };
 
@@ -343,7 +343,7 @@ void Protocol::onFighterState(
             {
                 if ([&states, &value]() -> bool {
                     for (const auto& state : states)
-                        if (state.framesLeft().value() == value)
+                        if (state.framesLeft().count() == value)
                             return true;
                     return false;
                 }() == false)
@@ -359,7 +359,7 @@ void Protocol::onFighterState(
         {
             for (const auto& states : stateBuffer_)
                 for (const auto& state : states)
-                    if (state.framesLeft().value() == value)
+                    if (state.framesLeft().count() == value)
                         return true;
             return false;
         };
@@ -370,7 +370,7 @@ void Protocol::onFighterState(
 
         for (auto& states : stateBuffer_)
         {
-            while (states.count() > 0 && states[0].framesLeft().value() != firstValidFramesLeft)
+            while (states.count() > 0 && states[0].framesLeft().count() != firstValidFramesLeft)
                 states.erase(0);
         }
 

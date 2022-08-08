@@ -7,7 +7,7 @@ FighterState::FighterState(
         TimeStamp timeStamp,
         FrameIndex frameIndex,
         FramesLeft framesLeft,
-        float posx, float posy,
+        const Vec2& position,
         float damage,
         float hitstun,
         float shield,
@@ -20,8 +20,7 @@ FighterState::FighterState(
     , motion_(motion)
     , frameIndex_(frameIndex)
     , framesLeft_(framesLeft)
-    , posx_(posx)
-    , posy_(posy)
+    , pos_(position)
     , damage_(damage)
     , hitstun_(hitstun)
     , shield_(shield)
@@ -38,7 +37,7 @@ FighterState FighterState::withNewFrameIndex(FrameIndex index) const
         timeStamp_,
         index,
         framesLeft_,
-        posx_, posy_,
+        pos_,
         damage_,
         hitstun_,
         shield_,
@@ -56,7 +55,7 @@ FighterState FighterState::withNewFrameCounters(TimeStamp timeStamp, FrameIndex 
         timeStamp,
         index,
         framesLeft,
-        posx_, posy_,
+        pos_,
         damage_,
         hitstun_,
         shield_,
@@ -78,8 +77,7 @@ bool FighterState::hasSameDataAs(const FighterState& other) const
     if (motion() != other.motion()) return false;
     // Frame number is allowed to be different
     // Frames left is allowed to be different
-    if (posx() != other.posx()) return false;
-    if (posy() != other.posy()) return false;
+    if (pos() != other.pos()) return false;
     if (damage() != other.damage()) return false;
     if (hitstun() != other.hitstun()) return false;
     if (shield() != other.shield()) return false;

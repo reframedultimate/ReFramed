@@ -15,15 +15,14 @@ public:
 
     ~StageID();
 
-    Type value() const;
-    bool isValid() const;
+    Type value() const { return value_; }
+    bool isValid() const { return value_ != Type(-1); }
 
-    bool operator==(StageID other) const;
-    bool operator!=(StageID other) const;
-    bool operator<(StageID other) const;
+    bool operator==(StageID other) const { return value_ == other.value_; }
+    bool operator!=(StageID other) const { return value_ != other.value_; }
+    bool operator<(StageID other) const { return value_ < other.value_; }
 
 private:
-    StageID();
     StageID(Type value);
 
 private:

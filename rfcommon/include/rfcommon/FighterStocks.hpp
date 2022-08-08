@@ -15,18 +15,16 @@ public:
 
     ~FighterStocks();
 
-    Type value() const;
+    Type count() const { return value_; }
 
-    bool operator==(FighterStocks other) const;
-    bool operator!=(FighterStocks other) const;
-    bool operator< (FighterStocks other) const;
-    bool operator<=(FighterStocks other) const;
-    bool operator> (FighterStocks other) const;
-    bool operator>=(FighterStocks other) const;
+    bool operator==(FighterStocks other) const { return value_ == other.value_; }
+    bool operator!=(FighterStocks other) const { return value_ != other.value_; }
+    bool operator< (FighterStocks other) const { return value_ < other.value_; }
+    bool operator<=(FighterStocks other) const { return value_ <= other.value_; }
+    bool operator> (FighterStocks other) const { return value_ > other.value_; }
+    bool operator>=(FighterStocks other) const { return value_ >= other.value_; }
 
 private:
-    friend class FighterState;
-    FighterStocks();
     FighterStocks(Type value);
 
 private:

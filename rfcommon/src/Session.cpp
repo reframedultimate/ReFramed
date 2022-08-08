@@ -308,14 +308,14 @@ static bool loadLegacy_1_0(
 
             if (error)
                 return false;
-            if (framesLeft.value() == 0)
+            if (framesLeft.count() == 0)
                 return false;
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
             // counter
-            for (; frameCounter < framesLeft.value(); ++frameCounter)
+            for (; frameCounter < framesLeft.count(); ++frameCounter)
             {
                 // Version 1.0 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
@@ -323,7 +323,7 @@ static bool loadLegacy_1_0(
                 // lag, but it should be good enough.
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(frameCounter), framesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+                frameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(frameCounter), framesLeft, Vec2::makeZero(), damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
             }
         }
     }
@@ -512,16 +512,16 @@ static bool loadLegacy_1_1(
 
             if (error)
                 return false;
-            if (framesLeft.value() == 0)
+            if (framesLeft.count() == 0)
                 return false;
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
             // counters
-            if (highestFramesLeft < framesLeft.value())
-                highestFramesLeft = framesLeft.value();
-            while (frameCounter <= highestFramesLeft - framesLeft.value())
+            if (highestFramesLeft < framesLeft.count())
+                highestFramesLeft = framesLeft.count();
+            while (frameCounter <= highestFramesLeft - framesLeft.count())
             {
                 // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
@@ -530,11 +530,11 @@ static bool loadLegacy_1_1(
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
 
-                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
-                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto framesDiff = highestFramesLeft - framesLeft.count() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.count() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, 0.0f, 0.0f, damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, Vec2::makeZero(), damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
                 frameCounter++;
             }
         }
@@ -727,6 +727,7 @@ static bool loadLegacy_1_2(
             const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
             const float posx = static_cast<float>(stream.readBF64(&error));
             const float posy = static_cast<float>(stream.readBF64(&error));
+            const auto pos = Vec2::fromValues(posx, posy);
             const float damage = static_cast<float>(stream.readBF64(&error));
             const float hitstun = static_cast<float>(stream.readBF64(&error));
             const float shield = static_cast<float>(stream.readBF64(&error));
@@ -738,16 +739,16 @@ static bool loadLegacy_1_2(
 
             if (error)
                 return false;
-            if (framesLeft.value() == 0)
+            if (framesLeft.count() == 0)
                 return false;
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
             // counters
-            if (highestFramesLeft < framesLeft.value())
-                highestFramesLeft = framesLeft.value();
-            while (frameCounter <= highestFramesLeft - framesLeft.value())
+            if (highestFramesLeft < framesLeft.count())
+                highestFramesLeft = framesLeft.count();
+            while (frameCounter <= highestFramesLeft - framesLeft.count())
             {
                 // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
@@ -756,11 +757,11 @@ static bool loadLegacy_1_2(
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
 
-                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
-                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto framesDiff = highestFramesLeft - framesLeft.count() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.count() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, pos, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
                 frameCounter++;
             }
         }
@@ -967,6 +968,7 @@ static bool loadLegacy_1_3(
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
             const float posy = stream.readLF32(&error);
+            const auto pos = Vec2::fromValues(posx, posy);
             const float damage = stream.readLF32(&error);
             const float hitstun = stream.readLF32(&error);
             const float shield = stream.readLF32(&error);
@@ -980,16 +982,16 @@ static bool loadLegacy_1_3(
 
             if (error)
                 return false;
-            if (framesLeft.value() == 0)
+            if (framesLeft.count() == 0)
                 return false;
 
             // Usually only unique states are saved, which means there will be
             // gaps in between frames. Duplicate the current frame as many times
             // as necessary and make sure to update the time stamp and frame
             // counters
-            if (highestFramesLeft < framesLeft.value())
-                highestFramesLeft = framesLeft.value();
-            while (frameCounter <= highestFramesLeft - framesLeft.value())
+            if (highestFramesLeft < framesLeft.count())
+                highestFramesLeft = framesLeft.count();
+            while (frameCounter <= highestFramesLeft - framesLeft.count())
             {
                 // Version 1.3 did not timestamp each frame so we have to make a guesstimate
                 // based on the timestamp of when the recording started and how many
@@ -998,11 +1000,11 @@ static bool loadLegacy_1_3(
                 const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
                         DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
 
-                const auto framesDiff = highestFramesLeft - framesLeft.value() - frameCounter;
-                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.value() + framesDiff);
+                const auto framesDiff = highestFramesLeft - framesLeft.count() - frameCounter;
+                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.count() + framesDiff);
                 const auto actualTimeStamp = frameTimeStamp -
                         DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, pos, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
                 frameCounter++;
             }
         }
@@ -1229,6 +1231,7 @@ static bool loadLegacy_1_4(
             const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
             const float posx = stream.readLF32(&error);
             const float posy = stream.readLF32(&error);
+            const auto pos = Vec2::fromValues(posx, posy);
             const float damage = stream.readLF32(&error);
             const float hitstun = stream.readLF32(&error);
             const float shield = stream.readLF32(&error);
@@ -1244,7 +1247,7 @@ static bool loadLegacy_1_4(
                 return false;
 
             uniqueFrameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(0),  // We update the frame number later
-                framesLeft, posx, posy, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
+                framesLeft, pos, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
         }
     }
 
@@ -1262,7 +1265,7 @@ static bool loadLegacy_1_4(
     {
         auto it = std::max_element(uniqueFrameData.begin(), uniqueFrameData.end(),
             [](const Vector<FighterState>& a, const Vector<FighterState>& b) {
-                return a.front().framesLeft().value() < b.front().framesLeft().value();
+                return a.front().framesLeft().count() < b.front().framesLeft().count();
         });
         it->erase(0);
     }
@@ -1280,16 +1283,16 @@ static bool loadLegacy_1_4(
         auto& states = frameData[fighter];
         states.reserve(uniqueFrameData[fighter].count());
         states.push(uniqueStates[0]);
-        FramesLeft::Type framesLeftCounter = highestFramesLeft.value();
+        FramesLeft::Type framesLeftCounter = highestFramesLeft.count();
         FrameIndex::Type frameCounter = 0;
         for (int i = 1; i < uniqueStates.count(); ++i)
         {
             const auto& uniqueState = uniqueStates[i];
 
-            while (framesLeftCounter > uniqueState.framesLeft().value())
+            while (framesLeftCounter > uniqueState.framesLeft().count())
             {
                 framesLeftCounter--; frameCounter++;
-                const auto diff = framesLeftCounter - uniqueState.framesLeft().value();
+                const auto diff = framesLeftCounter - uniqueState.framesLeft().count();
                 const auto newTimeStamp = uniqueState.timeStamp() - DeltaTime::fromMillis(diff * 1000.0 / 60.0);
                 states.push(uniqueState.withNewFrameCounters(
                         newTimeStamp, FrameIndex::fromValue(frameCounter), FramesLeft::fromValue(framesLeftCounter)));
@@ -1298,21 +1301,21 @@ static bool loadLegacy_1_4(
     }
 
     // Ensure that every fighter has the same number of frames
-    const auto highestFrameNumber = std::max_element(frameData.begin(), frameData.end(),
+    const auto highestFrameIdx = std::max_element(frameData.begin(), frameData.end(),
         [](const Vector<FighterState>& a, const Vector<FighterState>& b) {
-            return a.back().frameIndex().value() < b.back().frameIndex().value();
+            return a.back().frameIndex().index() < b.back().frameIndex().index();
     })->back().frameIndex();
     for (auto& states : frameData)
     {
         const auto finalState = states.back();
-        const auto finalFrameNumber = states.back().frameIndex().value();
-        while (states.back().frameIndex().value() < highestFrameNumber.value())
+        const auto finalFrameIdx = states.back().frameIndex().index();
+        while (states.back().frameIndex().index() < highestFrameIdx.index())
         {
-            const auto framesDiff = states.back().frameIndex().value() - finalFrameNumber + 1;
+            const auto framesDiff = states.back().frameIndex().index() - finalFrameIdx + 1;
             const TimeStamp actualTimeStamp = finalState.timeStamp() + DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-            const auto actualFrameNumber = FrameIndex::fromValue(finalFrameNumber + framesDiff);
-            const auto actualFramesLeft = FramesLeft::fromValue(finalState.framesLeft().value() - framesDiff);
-            states.emplace(finalState.withNewFrameCounters(actualTimeStamp, actualFrameNumber, actualFramesLeft));
+            const auto actualFrameIdx = FrameIndex::fromValue(finalFrameIdx + framesDiff);
+            const auto actualFramesLeft = FramesLeft::fromValue(finalState.framesLeft().count() - framesDiff);
+            states.emplace(finalState.withNewFrameCounters(actualTimeStamp, actualFrameIdx, actualFramesLeft));
         }
     }
 

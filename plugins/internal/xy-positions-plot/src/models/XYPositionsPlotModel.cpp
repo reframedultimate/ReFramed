@@ -1,121 +1,59 @@
+#include "xy-positions-plot/models/XYPositionsPlotCurveData.hpp"
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
-#include "xy-positions-plot/views/XYPositionsPlotView.hpp"
 #include "xy-positions-plot/listeners/XYPositionsPlotListener.hpp"
 #include "rfcommon/Frame.hpp"
-#include "rfcommon/RunningGameSession.hpp"
-#include "rfcommon/RunningTrainingSession.hpp"
-#include "rfcommon/SavedGameSession.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/FrameData.hpp"
 
 // ----------------------------------------------------------------------------
-XYPositionsPlotModel::XYPositionsPlotModel(RFPluginFactory* factory)
-    : RealtimePlugin(factory)
-{
-}
+XYPositionsPlotModel::XYPositionsPlotModel()
+{}
 
 // ----------------------------------------------------------------------------
 XYPositionsPlotModel::~XYPositionsPlotModel()
 {
+    clearAll();
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::setSession(rfcommon::Session* session)
+void XYPositionsPlotModel::addSession(rfcommon::Session* session)
 {
-    session_ = session;
-    session_->dispatcher.addListener(this);
-    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotSessionSet, session);
+    rfcommon::FrameData* frameData = session->tryGetFrameData();
+    if (frameData == nullptr)
+        return;  // No frame data, no point
+
+    sessions_.emplace(session);
+
+    dispatcher.dispatch(&XYPositionsPlotListener::onDataSetChanged);
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::clearSession(rfcommon::Session* session)
+void XYPositionsPlotModel::clearAll()
 {
-    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotSessionCleared, session);
-    session->dispatcher.removeListener(this);
-    session_.drop();
+    sessions_.clearCompact();
+    dispatcher.dispatch(&XYPositionsPlotListener::onDataSetChanged);
 }
 
 // ----------------------------------------------------------------------------
-QWidget* XYPositionsPlotModel::createView()
+int XYPositionsPlotModel::sessionCount() const
 {
-    return new XYPositionsPlotView(this);
+    return sessions_.count();
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::destroyView(QWidget* view)
+int XYPositionsPlotModel::fighterCount(int sessionIdx)
 {
-    delete view;
+    return sessions_[sessionIdx]->tryGetFrameData()->fighterCount();
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::setSavedGameSession(rfcommon::SavedGameSession* session)
+XYPositionsPlotCurveData* XYPositionsPlotModel::newCurveData(int sessionIdx, int fighterIdx)
 {
-    setSession(session);
+    return new XYPositionsPlotCurveData(this, sessions_[sessionIdx]->tryGetFrameData(), fighterIdx);
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotModel::clearSavedGameSession(rfcommon::SavedGameSession* session)
+void XYPositionsPlotModel::onCurveDataChanged()
 {
-    clearSession(session);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolTrainingStarted(rfcommon::RunningTrainingSession* training)
-{
-    setSession(training);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolTrainingResumed(rfcommon::RunningTrainingSession* training)
-{
-    setSession(training);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolTrainingReset(rfcommon::RunningTrainingSession* oldTraining, rfcommon::RunningTrainingSession* newTraining)
-{
-    // We probably want to reset everything in this case
-    clearSession(oldTraining);
-    setSession(newTraining);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolTrainingEnded(rfcommon::RunningTrainingSession* training)
-{
-    clearSession(training);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolMatchStarted(rfcommon::RunningGameSession* match)
-{
-    setSession(match);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolMatchResumed(rfcommon::RunningGameSession* match)
-{
-    setSession(match);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onProtocolMatchEnded(rfcommon::RunningGameSession* match)
-{
-    clearSession(match);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onRunningGameSessionPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
-{
-    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotNameChanged, player, name);
-}
-
-// ----------------------------------------------------------------------------
-void XYPositionsPlotModel::onRunningSessionNewUniqueFrame(int frameIdx, const rfcommon::Frame& frame)
-{
-    rfcommon::SmallVector<float, 8> posx;
-    rfcommon::SmallVector<float, 8> posy;
-    for (const auto& state : frame)
-    {
-        posx.push(state.posx());
-        posy.push(state.posy());
-    }
-    dispatcher.dispatch(&XYPositionsPlotListener::onXYPositionsPlotNewValue, posx, posy);
+    dispatcher.dispatch(&XYPositionsPlotListener::onDataChanged);
 }

@@ -91,8 +91,7 @@ FrameData* load_1_5(StreamBuffer* data)
                 timeStamp,
                 FrameIndex::fromValue(frame),
                 framesLeft,
-                posx,
-                posy,
+                Vec2::fromValues(posx, posy),
                 damage,
                 hitstun,
                 shield,
@@ -112,8 +111,7 @@ uint32_t FrameData::save(FILE* fp) const
     const int fighterStateSize =
             sizeof(TimeStamp::Type) +
             sizeof(FramesLeft::Type) +
-            sizeof(fighters_[0][0].posx()) +
-            sizeof(fighters_[0][0].posy()) +
+            sizeof(Vec2::ComponentType) * 2 +
             sizeof(fighters_[0][0].damage()) +
             sizeof(fighters_[0][0].hitstun()) +
             sizeof(fighters_[0][0].shield()) +
@@ -132,9 +130,9 @@ uint32_t FrameData::save(FILE* fp) const
         {
             buffer
                 .writeLU64(frame.timeStamp().millisSinceEpoch())
-                .writeLU32(frame.framesLeft().value())
-                .writeLF32(frame.posx())
-                .writeLF32(frame.posy())
+                .writeLU32(frame.framesLeft().count())
+                .writeLF32(frame.pos().x())
+                .writeLF32(frame.pos().y())
                 .writeLF32(frame.damage())
                 .writeLF32(frame.hitstun())
                 .writeLF32(frame.shield())
@@ -142,7 +140,7 @@ uint32_t FrameData::save(FILE* fp) const
                 .writeLU32(frame.motion().lower())
                 .writeU8(frame.motion().upper())
                 .writeU8(frame.hitStatus().value())
-                .writeU8(frame.stocks().value())
+                .writeU8(frame.stocks().count())
                 .writeU8(frame.flags().value());
         }
     assert(buffer.bytesWritten() == 5 + frameSize * frameCount());

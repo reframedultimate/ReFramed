@@ -14,7 +14,7 @@ public:
 
     ~DeltaTime();
 
-    Type millis() const;
+    Type millis() const { return value_; }
 
 private:
     DeltaTime();

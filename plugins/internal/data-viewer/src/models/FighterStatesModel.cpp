@@ -88,7 +88,7 @@ QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation
         else if (orientation == Qt::Vertical)
         {
             const rfcommon::FighterState& state = frameData_->stateAt(fighterIdx_, section);
-            return QString::number(state.frameIndex().value());
+            return QString::number(state.frameIndex().index());
         }
     }
 
@@ -110,8 +110,8 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 return QString::number(m) + ":" + QString::number(s) + "." + QString::number(hundredths).rightJustified(2, '0');
             };
 
-            auto formatPosition = [](double x, double y) -> QString {
-                return "[" + QString::number(x, 'f', 2) + ", " + QString::number(y, 'f', 2) + "]";
+            auto formatPosition = [](const rfcommon::Vec2& pos) -> QString {
+                return "[" + QString::number(pos.x(), 'f', 2) + ", " + QString::number(pos.y(), 'f', 2) + "]";
             };
 
             auto statusName = [this](rfcommon::FighterStatus status) -> QString {
@@ -134,11 +134,11 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
 
             switch (index.column())
             {
-                case FrameIndex: return QString::number(state.frameIndex().value());
+                case FrameIndex: return QString::number(state.frameIndex().index());
                 case TimePassed: return formatTimer(state.frameIndex().secondsPassed());
-                case FramesLeft: return QString::number(state.framesLeft().value());
+                case FramesLeft: return QString::number(state.framesLeft().count());
                 case TimeLeft: return formatTimer(state.framesLeft().secondsLeft());
-                case Position: return formatPosition(state.posx(), state.posy());
+                case Position: return formatPosition(state.pos());
                 case Facing: return state.flags().facingLeft() ? "Left" : "Right";
                 case Damage: return QString::number(state.damage(), 'f', 1);
                 case Hitstun: return QString::number(state.hitstun(), 'f', 1);
@@ -150,7 +150,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case MotionUserLabel: return "";
                 case HitStatus: return "";
                 case HitStatusName: return formatHitStatusName(state.hitStatus());
-                case Stocks: return QString::number(state.stocks().value());
+                case Stocks: return QString::number(state.stocks().count());
                 case AttackConnected: return state.flags().attackConnected() ? "True" : "False";
             }
         } break;

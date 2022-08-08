@@ -15,12 +15,12 @@ public:
 
     ~FighterHitStatus();
 
-    Type value() const;
-    bool isValid() const;
+    Type value() const { return value_; }
+    bool isValid() const { return value_ != Type(-1); }
 
-    bool operator==(FighterHitStatus other) const;
-    bool operator<(FighterHitStatus other) const;
-    bool operator!=(FighterHitStatus other) const;
+    bool operator==(FighterHitStatus other) const { return value_ == other.value_; }
+    bool operator!=(FighterHitStatus other) const { return value_ != other.value_; }
+    bool operator<(FighterHitStatus other) const { return value_ < other.value_; }
 
     struct Hasher {
         typedef rfcommon::Hasher<Type>::HashType HashType;
@@ -30,7 +30,6 @@ public:
     };
 
 private:
-    FighterHitStatus();
     FighterHitStatus(Type value);
 
 private:

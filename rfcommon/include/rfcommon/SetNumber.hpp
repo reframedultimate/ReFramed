@@ -14,12 +14,12 @@ public:
 
     ~SetNumber();
 
-    Type value() const;
+    Type value() const { return value_; }
 
-    bool operator==(const SetNumber& rhs) const;
-    bool operator!=(const SetNumber& rhs) const;
-    SetNumber& operator+=(int value);
-    SetNumber& operator-=(int value);
+    bool operator==(SetNumber rhs) const { return value_ == rhs.value_; }
+    bool operator!=(SetNumber rhs) const { return value_ != rhs.value_; }
+    SetNumber& operator+=(int value) { value_ += value; return *this; }
+    SetNumber& operator-=(int value) { value_ -= value; return *this; }
 
 private:
     SetNumber(Type value);

@@ -16,14 +16,14 @@ public:
 
     ~FighterMotion();
 
-    uint8_t upper() const;
-    uint32_t lower() const;
-    Type value() const;
-    bool isValid() const;
+    uint8_t upper() const { return (value_ >> 32) & 0xFF; }
+    uint32_t lower() const { return value_ & 0xFFFFFFFF; }
+    Type value() const { return value_; }
+    bool isValid() const { return value_ != 0; }
 
-    bool operator==(FighterMotion other) const;
-    bool operator!=(FighterMotion other) const;
-    bool operator<(FighterMotion other) const;
+    bool operator==(FighterMotion other) const { return value_ == other.value_; }
+    bool operator!=(FighterMotion other) const { return value_ != other.value_; }
+    bool operator<(FighterMotion other) const { return value_ < other.value_; }
 
     // Motion values are actually 40 bits in length, where the lower 32 bits are
     // a crc32 checksum of the original string, and the upper byte is the length
@@ -37,8 +37,6 @@ public:
     };
 
 private:
-    friend class FighterState;
-    FighterMotion();
     FighterMotion(Type value);
 
 private:

@@ -15,17 +15,16 @@ public:
 
     ~FighterFlags();
 
-    Type value() const;
-    bool attackConnected() const;
-    bool facingLeft() const;
-    bool opponentInHitlag() const;
+    Type value() const { return value_; }
+    bool attackConnected() const { return !!(value_ & 1); }
+    bool facingLeft() const { return !!(value_ & 2); }
+    bool opponentInHitlag() const { return !!(value_ & 4); }
 
-    bool operator==(FighterFlags other) const;
-    bool operator!=(FighterFlags other) const;
-    bool operator<(FighterFlags other) const;
+    bool operator==(FighterFlags other) const { return value_ == other.value_; }
+    bool operator!=(FighterFlags other) const { return value_ != other.value_; }
+    bool operator<(FighterFlags other) const { return value_ < other.value_; }
 
 private:
-    FighterFlags();
     FighterFlags(Type value);
 
 private:
