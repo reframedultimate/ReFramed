@@ -15,7 +15,7 @@ public:
     virtual void onMetaDataTimeEndedChanged(TimeStamp timeEnded) = 0;
 
     // Game related events
-    virtual void onMetaDataPlayerNameChanged(int fighterIdx, const SmallString<15>& name) = 0;
+    virtual void onMetaDataPlayerNameChanged(int fighterIdx, const String& name) = 0;
     virtual void onMetaDataSetNumberChanged(SetNumber number) = 0;
     virtual void onMetaDataGameNumberChanged(GameNumber number) = 0;
     virtual void onMetaDataSetFormatChanged(const SetFormat& format) = 0;

@@ -144,7 +144,7 @@ void ActiveSessionView::onTrainingStarted(rfcommon::Session* training)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::onActiveSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::SmallString<15>& name)
+void ActiveSessionView::onActiveSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::String& name)
 {
     if (names_.size() <= playerIdx)
         return;

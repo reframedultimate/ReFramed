@@ -13,8 +13,8 @@ static MetaData* load_1_5(json& j);
 MetaData* MetaData::newActiveGameSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags,
-        SmallVector<SmallString<15>, 2>&& names)
+        SmallVector<String, 2>&& tags,
+        SmallVector<String, 2>&& names)
 {
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
@@ -35,7 +35,7 @@ MetaData* MetaData::newActiveGameSession(
 MetaData* MetaData::newActiveTrainingSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags)
+        SmallVector<String, 2>&& tags)
 {
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
@@ -54,8 +54,8 @@ MetaData* MetaData::newSavedGameSession(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags,
-        SmallVector<SmallString<15>, 2>&& names,
+        SmallVector<String, 2>&& tags,
+        SmallVector<String, 2>&& names,
         GameNumber gameNumber,
         SetNumber setNumber,
         SetFormat setFormat,
@@ -80,7 +80,7 @@ MetaData* MetaData::newSavedTrainingSession(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<String, 2>&& tags,
         GameNumber sessionNumber)
 {
     return new TrainingMetaData(
@@ -98,7 +98,7 @@ MetaData::MetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags)
+        SmallVector<String, 2>&& tags)
     : timeStarted_(timeStarted)
     , timeEnded_(timeEnded)
     , fighterIDs_(std::move(fighterIDs))
@@ -146,8 +146,8 @@ static MetaData* load_1_5(json& j)
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
     SmallVector<FighterID, 2> fighterIDs;
-    SmallVector<SmallString<15>, 2> tags;
-    SmallVector<SmallString<15>, 2> names;
+    SmallVector<String, 2> tags;
+    SmallVector<String, 2> names;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
@@ -262,7 +262,7 @@ int MetaData::fighterCount() const
 }
 
 // ----------------------------------------------------------------------------
-const SmallString<15>& MetaData::tag(int fighterIdx) const
+const String& MetaData::tag(int fighterIdx) const
 {
     return tags_[fighterIdx];
 }
@@ -321,8 +321,8 @@ GameMetaData::GameMetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags,
-        SmallVector<SmallString<15>, 2>&& names,
+        SmallVector<String, 2>&& tags,
+        SmallVector<String, 2>&& names,
         GameNumber gameNumber,
         SetNumber setNumber,
         SetFormat setFormat,
@@ -342,13 +342,13 @@ MetaData::Type GameMetaData::type() const
 }
 
 // ----------------------------------------------------------------------------
-const SmallString<15>& GameMetaData::name(int playerIdx) const
+const String& GameMetaData::name(int playerIdx) const
 {
     return names_[playerIdx];
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setName(int fighterIdx, const SmallString<15>& name)
+void GameMetaData::setName(int fighterIdx, const String& name)
 {
     bool notify = (names_[fighterIdx] == name);
     names_[fighterIdx] = name;
@@ -433,7 +433,7 @@ TrainingMetaData::TrainingMetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<SmallString<15>, 2>&& tags,
+        SmallVector<String, 2>&& tags,
         GameNumber sessionNumber)
     : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
     , sessionNumber_(sessionNumber)
@@ -446,7 +446,7 @@ MetaData::Type TrainingMetaData::type() const
 }
 
 // ----------------------------------------------------------------------------
-const SmallString<15>& TrainingMetaData::name(int playerIdx) const
+const String& TrainingMetaData::name(int playerIdx) const
 {
     return tag(playerIdx);
 }

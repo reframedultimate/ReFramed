@@ -44,7 +44,7 @@ private:
     void onGameStarted(rfcommon::Session* game);
     void onTrainingStarted(rfcommon::Session* training);
 
-    void onActiveSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+    void onActiveSessionManagerPlayerNameChanged(int player, const rfcommon::String& name) override;
     void onActiveSessionManagerSetNumberChanged(rfcommon::SetNumber number) override;
     void onActiveSessionManagerGameNumberChanged(rfcommon::GameNumber number) override;
     void onActiveSessionManagerFormatChanged(const rfcommon::SetFormat& format) override;

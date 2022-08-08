@@ -347,7 +347,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                     rfcommon::FighterID::fromValue(playerFighterID),
                     rfcommon::FighterID::fromValue(cpuFighterID)
                 });
-                rfcommon::SmallVector<rfcommon::SmallString<15>, 2> tags({"Player 1", "CPU"});
+                rfcommon::SmallVector<rfcommon::String, 2> tags({"Player 1", "CPU"});
 #undef stageH
 #undef stageL
 #undef playerFighterID
@@ -385,8 +385,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
 #define playerCount buf[2]
                 const auto stageID = rfcommon::StageID::fromValue((stageH << 8) | (stageL << 0));
                 auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeResized(playerCount);
-                auto tags = rfcommon::SmallVector<rfcommon::SmallString<15>, 2>::makeReserved(playerCount);
-                auto names = rfcommon::SmallVector<rfcommon::SmallString<15>, 2>::makeReserved(playerCount);
+                auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
+                auto names = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
 
                 fighterSlots.resize(playerCount);
                 if (tcp_socket_read_exact(&socket, fighterSlots.data(), playerCount) != playerCount)

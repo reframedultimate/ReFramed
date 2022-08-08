@@ -133,7 +133,7 @@ void ActiveSessionManager::setP1Name(const QString& name)
     else
     {
         p1Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, rfcommon::SmallString<15>(name.toStdString().c_str()));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, rfcommon::String(name.toStdString().c_str()));
     }
 }
 
@@ -155,7 +155,7 @@ void ActiveSessionManager::setP2Name(const QString& name)
     else
     {
         p2Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, rfcommon::SmallString<15>(name.toStdString().c_str()));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, rfcommon::String(name.toStdString().c_str()));
     }
 }
 
@@ -454,7 +454,7 @@ void ActiveSessionManager::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEn
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name)
+void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommon::String& name)
 {
     if (activeMetaData_->fighterCount() == 2)
     {

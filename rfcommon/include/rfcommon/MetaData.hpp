@@ -30,7 +30,7 @@ protected:
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags);
+            SmallVector<String, 2>&& tags);
 
 public:
     /*!
@@ -45,8 +45,8 @@ public:
     static MetaData* newActiveGameSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
-            SmallVector<SmallString<15>, 2>&& names);
+            SmallVector<String, 2>&& tags,
+            SmallVector<String, 2>&& names);
 
     /*!
      * \brief Constructs a new TrainingMetaData object from the specified
@@ -57,15 +57,15 @@ public:
     static MetaData* newActiveTrainingSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags);
+            SmallVector<String, 2>&& tags);
 
     static MetaData* newSavedGameSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
-            SmallVector<SmallString<15>, 2>&& names,
+            SmallVector<String, 2>&& tags,
+            SmallVector<String, 2>&& names,
             GameNumber gameNumber,
             SetNumber setNumber,
             SetFormat setFormat,
@@ -76,7 +76,7 @@ public:
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<String, 2>&& tags,
             GameNumber sessionNumber);
 
     virtual ~MetaData();
@@ -97,7 +97,7 @@ public:
      * above the player in-game and is created when the player sets their controls.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& tag(int fighterIdx) const;
+    const String& tag(int fighterIdx) const;
 
     /*!
      * \brief Gets the name of the player. By default this will be the same as
@@ -107,7 +107,7 @@ public:
      * \note If training mode, this will always be the same as the tag.
      * \param fighterIdx Which player to get
      */
-    virtual const SmallString<15>& name(int fighterIdx) const = 0;
+    virtual const String& name(int fighterIdx) const = 0;
 
     /*!
      * \brief Gets the fighter ID being used by the specified player. The ID
@@ -176,7 +176,7 @@ protected:
     TimeStamp timeStarted_;
     TimeStamp timeEnded_;
     SmallVector<FighterID, 2> fighterIDs_;
-    SmallVector<SmallString<15>, 2> tags_;
+    SmallVector<String, 2> tags_;
     StageID stageID_;
 };
 
@@ -187,8 +187,8 @@ class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
-            SmallVector<SmallString<15>, 2>&& names,
+            SmallVector<String, 2>&& tags,
+            SmallVector<String, 2>&& names,
             GameNumber gameNumber,
             SetNumber setNumber,
             SetFormat setFormat,
@@ -205,9 +205,9 @@ public:
      * \note If training mode, this will always be the same as the tag.
      * \param fighterIdx Which player to get
      */
-    const SmallString<15>& name(int fighterIdx) const override;
+    const String& name(int fighterIdx) const override;
 
-    void setName(int fighterIdx, const SmallString<15>& name);
+    void setName(int fighterIdx, const String& name);
 
     /*!
      * \brief Gets the current game number. Starts at 1 and counts upwards as
@@ -269,7 +269,7 @@ public:
 private:
     friend class MetaData;
 
-    SmallVector<SmallString<15>, 2> names_;
+    SmallVector<String, 2> names_;
     GameNumber gameNumber_;
     SetNumber setNumber_;
     SetFormat setFormat_;
@@ -283,13 +283,13 @@ class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<SmallString<15>, 2>&& tags,
+            SmallVector<String, 2>&& tags,
             GameNumber sessionNumber);
 
 public:
     Type type() const override;
 
-    const SmallString<15>& name(int playerIdx) const override;
+    const String& name(int playerIdx) const override;
 
     FighterID playerFighterID() const;
     FighterID cpuFighterID() const;

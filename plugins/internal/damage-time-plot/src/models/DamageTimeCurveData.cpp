@@ -61,7 +61,7 @@ void DamageTimeCurveData::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeS
 void DamageTimeCurveData::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) { (void)timeEnded; }
 
 // ----------------------------------------------------------------------------
-void DamageTimeCurveData::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::SmallString<15>& name)
+void DamageTimeCurveData::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
 }
 

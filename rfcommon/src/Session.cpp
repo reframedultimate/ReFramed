@@ -245,8 +245,8 @@ static bool loadLegacy_1_0(
     // skip loading status mappings, it was broken in 1.0
 
     SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<SmallString<15>, 2> playerTags;
-    SmallVector<SmallString<15>, 2> playerNames;
+    SmallVector<String, 2> playerTags;
+    SmallVector<String, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -448,8 +448,8 @@ static bool loadLegacy_1_1(
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<SmallString<15>, 2> playerTags;
-    SmallVector<SmallString<15>, 2> playerNames;
+    SmallVector<String, 2> playerTags;
+    SmallVector<String, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -666,8 +666,8 @@ static bool loadLegacy_1_2(
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<SmallString<15>, 2> playerTags;
-    SmallVector<SmallString<15>, 2> playerNames;
+    SmallVector<String, 2> playerTags;
+    SmallVector<String, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -906,8 +906,8 @@ static bool loadLegacy_1_3(
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<SmallString<15>, 2> playerTags;
-    SmallVector<SmallString<15>, 2> playerNames;
+    SmallVector<String, 2> playerTags;
+    SmallVector<String, 2> playerNames;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -1151,8 +1151,8 @@ static bool loadLegacy_1_4(
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<SmallString<15>, 2> playerTags;
-    SmallVector<SmallString<15>, 2> playerNames;
+    SmallVector<String, 2> playerTags;
+    SmallVector<String, 2> playerNames;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {

@@ -178,7 +178,7 @@ void MetaDataModel::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::SmallString<15>& name)
+void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
     emit dataChanged(index(FixedRowCount + fighterIdx, 0), index(FixedRowCount + fighterIdx, 0));
 }

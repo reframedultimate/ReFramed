@@ -59,7 +59,7 @@ class RFCOMMON_PUBLIC_API DataSetProcessor : public SessionListener
 {
 public:
     // RunningGameSession events
-    virtual void onRunningGameSessionPlayerNameChanged(int playerIdx, const SmallString<15>& name) = 0;
+    virtual void onRunningGameSessionPlayerNameChanged(int playerIdx, const String& name) = 0;
     virtual void onRunningGameSessionSetNumberChanged(SetNumber number) = 0;
     virtual void onRunningGameSessionGameNumberChanged(GameNumber number) = 0;
     virtual void onRunningGameSessionFormatChanged(const SetFormat& format) = 0;

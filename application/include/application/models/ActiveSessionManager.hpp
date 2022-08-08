@@ -90,7 +90,7 @@ private:
     void onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
     void onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
 
-    void onMetaDataPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) override;
+    void onMetaDataPlayerNameChanged(int player, const rfcommon::String& name) override;
     void onMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
     void onMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
     void onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;

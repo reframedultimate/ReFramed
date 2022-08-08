@@ -16,7 +16,7 @@ public:
     // We re-propagate all Session frame and meta-data events because
     // ActiveGameSessionManager allows you to change these properties even when
     // there is no active session
-    virtual void onActiveSessionManagerPlayerNameChanged(int player, const rfcommon::SmallString<15>& name) = 0;
+    virtual void onActiveSessionManagerPlayerNameChanged(int player, const rfcommon::String& name) = 0;
     virtual void onActiveSessionManagerSetNumberChanged(rfcommon::SetNumber number) = 0;
     virtual void onActiveSessionManagerGameNumberChanged(rfcommon::GameNumber number) = 0;
     virtual void onActiveSessionManagerFormatChanged(const rfcommon::SetFormat& format) = 0;
