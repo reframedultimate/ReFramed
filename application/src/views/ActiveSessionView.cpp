@@ -22,6 +22,10 @@ ActiveSessionView::ActiveSessionView(
     ui_->lineEdit_formatOther->setVisible(false);
     ui_->layout_sessionViewer->addWidget(new ReplayViewer(activeSessionManager_->protocol(), pluginManager));
 
+#define X(type, str) ui_->comboBox_format->addItem(str);
+    SET_FORMAT_LIST
+#undef X
+
     connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveSessionView::onComboBoxFormatIndexChanged);
     connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditFormatChanged);
     connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ActiveSessionView::onSpinBoxGameNumberChanged);
@@ -165,7 +169,7 @@ void ActiveSessionView::onActiveSessionManagerFormatChanged(const rfcommon::SetF
     const QSignalBlocker blocker1(ui_->comboBox_format);
     const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
 
-    ui_->comboBox_format->setCurrentIndex(static_cast<int>(format.type()));
+    ui_->comboBox_format->setCurrentIndex(format.index());
 
     if (format.type() == rfcommon::SetFormat::OTHER)
         ui_->lineEdit_formatOther->setText(format.description().cStr());

@@ -276,33 +276,40 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 
     switch (meta->setFormat().type())
     {
-        case rfcommon::SetFormat::BO3: {
+        case rfcommon::SetFormat::BO3:
+        case rfcommon::SetFormat::BO3MM: {
             if (win[0] >= 2 || win[1] >= 2)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::BO5: {
+        case rfcommon::SetFormat::BO5:
+        case rfcommon::SetFormat::BO5MM: {
             if (win[0] >= 3 || win[1] >= 3)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::BO7: {
+        case rfcommon::SetFormat::BO7:
+        case rfcommon::SetFormat::BO7MM: {
             if (win[0] >= 4 || win[1] >= 4)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::FT5: {
+        case rfcommon::SetFormat::FT5:
+        case rfcommon::SetFormat::FT5MM: {
             if (win[0] >= 5 || win[1] >= 5)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::FT10: {
+        case rfcommon::SetFormat::FT10:
+        case rfcommon::SetFormat::FT10MM: {
             if (win[0] >= 10 || win[1] >= 10)
                 return true;
         } break;
 
         case rfcommon::SetFormat::FRIENDLIES:
         case rfcommon::SetFormat::PRACTICE:
+        case rfcommon::SetFormat::TRAINING:
+        case rfcommon::SetFormat::COACHING:
         case rfcommon::SetFormat::OTHER:
             break;
     }
