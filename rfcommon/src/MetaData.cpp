@@ -350,7 +350,7 @@ const String& GameMetaData::name(int playerIdx) const
 // ----------------------------------------------------------------------------
 void GameMetaData::setName(int fighterIdx, const String& name)
 {
-    bool notify = (names_[fighterIdx] == name);
+    bool notify = (names_[fighterIdx] != name);
     names_[fighterIdx] = name;
     if (notify)
         dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerNameChanged, fighterIdx, name);
