@@ -30,8 +30,8 @@ private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-    void repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames);
-    void repopulatePlayerDataTables();
+    void populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames);
+    void populatePlayerDataTables();
 
 private:
     void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
@@ -49,4 +49,7 @@ private:
     QTreeWidgetItem* hitStatusIDMappingsItem_ = nullptr;
     rfcommon::SmallVector<QTreeWidgetItem*, 8> playerDataItems_;
     rfcommon::SmallVector<QTableView*, 8> playerDataTables_;
+
+    int playerDataTableIdxOnClear_ = -1;
+    int selectedTreeItemOnClear_ = -1;
 };

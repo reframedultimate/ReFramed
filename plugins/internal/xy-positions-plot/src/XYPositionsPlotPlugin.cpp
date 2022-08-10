@@ -56,7 +56,6 @@ void XYPositionsPlotPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraini
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolTrainingEnded(rfcommon::Session* training)
 {
-    model_->clearAll();
 }
 
 // ----------------------------------------------------------------------------

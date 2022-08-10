@@ -29,6 +29,8 @@ Protocol::~Protocol()
 // ----------------------------------------------------------------------------
 void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 {
+    disconnectFromServer();
+
     uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
     task_.reset(new ProtocolTask(ipAddress, port, mappingInfoChecksum));
 

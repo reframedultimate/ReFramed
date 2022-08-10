@@ -51,8 +51,8 @@ DataViewerView::~DataViewerView()
 // ----------------------------------------------------------------------------
 void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
-    repopulatePlayerDataTables();
-    repopulateTree(map, meta, frames);
+    populatePlayerDataTables();
+    populateTree(map, meta, frames);
 
     ui_->tableView_baseStatusIDs->resizeColumnsToContents();
     ui_->tableView_metaData->resizeColumnsToContents();
@@ -65,6 +65,23 @@ void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* m
 // ----------------------------------------------------------------------------
 void DataViewerView::onClear()
 {
+    playerDataTableIdxOnClear_ = ui_->stackedWidget_playerData->currentIndex();
+    selectedTreeItemOnClear_ = [this]() -> int {
+        const auto item = ui_->treeWidget->currentItem();
+        if (item == nullptr)
+            return -1;
+        if (item == metaDataItem_) return 0;
+        else if (item == stageIDMappingsItem_) return 1;
+        else if (item == fighterIDMappingsItem_) return 2;
+        else if (item == baseStatusIDMappingsItem_) return 3;
+        else if (item == specificStatusIDMappingsItem_) return 4;
+        else if (item == hitStatusIDMappingsItem_) return 5;
+        for (int i = 0; i != playerDataItems_.count(); ++i)
+            if (item == playerDataItems_[i])
+                return 6 + i;
+        return -1;
+    }();
+
     clearStackedWidget(ui_->stackedWidget_playerData);
     playerDataTables_.clearCompact();
 
@@ -94,6 +111,12 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
     if (current == nullptr)
         return;
 
+    // Saves a bit of time when player is selecting different replays, because
+    // the UI doesn't have to build the tables if they're not visible
+    if (previous == baseStatusIDMappingsItem_)
+        ui_->tableView_baseStatusIDs->setModel(nullptr);
+    else if (previous == specificStatusIDMappingsItem_)
+        ui_->tableView_specificStatusIDs->setModel(nullptr);
     for (int i = 0; i != model_->fighterStatesModelCount(); ++i)
         if (previous == playerDataItems_[i])
         {
@@ -108,9 +131,15 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
     else if (current == fighterIDMappingsItem_)
         ui_->stackedWidget->setCurrentWidget(ui_->page_fighterIDs);
     else if (current == baseStatusIDMappingsItem_)
+    {
         ui_->stackedWidget->setCurrentWidget(ui_->page_baseStatusIDs);
+        ui_->tableView_baseStatusIDs->setModel(model_->baseStatusIDModel());
+    }
     else if (current == specificStatusIDMappingsItem_)
+    {
         ui_->stackedWidget->setCurrentWidget(ui_->page_specificStatusIDs);
+        ui_->tableView_specificStatusIDs->setModel(model_->specificStatusIDModel());
+    }
     else if (current == hitStatusIDMappingsItem_)
         ui_->stackedWidget->setCurrentWidget(ui_->page_hitStatusIDs);
     else
@@ -130,34 +159,8 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
-    const int previouslySelectedItem = [this]() -> int {
-        const auto item = ui_->treeWidget->currentItem();
-        if (item == nullptr)
-            return -1;
-        if (item == metaDataItem_) return 0;
-        else if (item == stageIDMappingsItem_) return 1;
-        else if (item == fighterIDMappingsItem_) return 2;
-        else if (item == baseStatusIDMappingsItem_) return 3;
-        else if (item == specificStatusIDMappingsItem_) return 4;
-        else if (item == hitStatusIDMappingsItem_) return 5;
-        for (int i = 0; i != playerDataItems_.count(); ++i)
-            if (item == playerDataItems_[i])
-                return 6 + i;
-        return -1;
-    }();
-
-    ui_->treeWidget->clear();
-    playerDataItems_.clear();
-
-    metaDataItem_ = nullptr;
-    stageIDMappingsItem_ = nullptr;
-    fighterIDMappingsItem_ = nullptr;
-    baseStatusIDMappingsItem_ = nullptr;
-    specificStatusIDMappingsItem_ = nullptr;
-    hitStatusIDMappingsItem_ = nullptr;
-
     // Meta Data
     if (meta)
     {
@@ -205,7 +208,7 @@ void DataViewerView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaDa
         playerStates->setExpanded(true);
     }
 
-    switch (previouslySelectedItem)
+    switch (selectedTreeItemOnClear_)
     {
 #define SELECT(item) { ui_->treeWidget->setCurrentItem(item); }
         case 0: SELECT(metaDataItem_) break;
@@ -215,19 +218,16 @@ void DataViewerView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaDa
         case 4: SELECT(specificStatusIDMappingsItem_) break;
         case 5: SELECT(hitStatusIDMappingsItem_) break;
         default:
-            if (previouslySelectedItem >= 6 && previouslySelectedItem < 6 + playerDataItems_.count())
-                SELECT(playerDataItems_[previouslySelectedItem - 6])
+            if (selectedTreeItemOnClear_ >= 6 && selectedTreeItemOnClear_ < 6 + playerDataItems_.count())
+                SELECT(playerDataItems_[selectedTreeItemOnClear_ - 6])
             break;
+#undef SELECT
     }
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::repopulatePlayerDataTables()
+void DataViewerView::populatePlayerDataTables()
 {
-    const int storeIdx = ui_->stackedWidget_playerData->currentIndex();
-    clearStackedWidget(ui_->stackedWidget_playerData);
-    playerDataTables_.clearCompact();
-
     for (int i = 0; i != model_->fighterStatesModelCount(); ++i)
     {
         QTableView* view = new QTableView;
@@ -237,10 +237,9 @@ void DataViewerView::repopulatePlayerDataTables()
     }
 
     // Since we cleared the stacked widget, it won't remember which one was
-    // selected. storeCurrentPageIndex_ is saved in clearUI() and we try to
-    // select the same player index again
-    if (storeIdx >= model_->fighterStatesModelCount())
-        ui_->stackedWidget_playerData->setCurrentIndex(0);
+    // selected. Try to select the same player index again
+    if (playerDataTableIdxOnClear_ >= 0 && playerDataTableIdxOnClear_ < model_->fighterStatesModelCount())
+        ui_->stackedWidget_playerData->setCurrentIndex(playerDataTableIdxOnClear_);
     else
-        ui_->stackedWidget_playerData->setCurrentIndex(storeIdx);
+        ui_->stackedWidget_playerData->setCurrentIndex(0);
 }

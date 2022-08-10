@@ -2,9 +2,11 @@
 #include "application/listeners/ActiveSessionManagerListener.hpp"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "rfcommon/Session.hpp"
+#include "rfcommon/Frame.hpp"
+#include "rfcommon/FrameData.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Session.hpp"
 #include "rfcommon/tcp_socket.h"
 #include <QDateTime>
 
@@ -112,7 +114,7 @@ void ActiveSessionManager::setSetFormat(const rfcommon::SetFormat& format)
     else
         format_ = format;
 
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFormatChanged, format);
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
@@ -318,11 +320,49 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 }
 
 // ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
+{
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerConnected, ipAddress, port);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolDisconnectedFromServer()
+{
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerDisconnected);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolTrainingStarted(rfcommon::Session* training)
+{
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolTrainingResumed(rfcommon::Session* training)
+{
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
+{
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onProtocolTrainingEnded(rfcommon::Session* training)
+{
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingEnded, training);
+}
+
+// ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 {
     activeMappingInfo_ = game->tryGetMappingInfo();
     activeMetaData_ = game->tryGetMetaData();
-    assert(activeMappingInfo_.notNull() && activeMetaData_.notNull());
+    activeFrameData_ = game->tryGetFrameData();
+    assert(activeMappingInfo_.notNull());
+    assert(activeMetaData_.notNull());
+    assert(activeFrameData_.notNull());
     assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
 
     auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
@@ -355,10 +395,12 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
     // Modify game/set numbers until we have a unique filename
     findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
 
-    meta->dispatcher.addListener(this);
+    activeMetaData_->dispatcher.addListener(this);
+    activeFrameData_->dispatcher.addListener(this);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFormatChanged, meta->setFormat());
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, meta->setFormat());
     if (meta->fighterCount() == 2)
     {
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
@@ -366,6 +408,8 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
                 1, meta->name(1));
     }
+
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameStarted, game);
 }
 
 // ----------------------------------------------------------------------------
@@ -411,10 +455,13 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
         p2Name_ = meta->name(1).cStr();
     }
 
-    meta->dispatcher.removeListener(this);
+    activeFrameData_->dispatcher.removeListener(this);
+    activeMetaData_->dispatcher.removeListener(this);
     pastGameMetaData_.push_back(meta);
     activeMappingInfo_.drop();
     activeMetaData_.drop();
+
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameEnded, game);
 }
 
 // ----------------------------------------------------------------------------
@@ -480,7 +527,7 @@ void ActiveSessionManager::onMetaDataGameNumberChanged(rfcommon::GameNumber numb
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFormatChanged, format);
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
@@ -492,7 +539,25 @@ void ActiveSessionManager::onMetaDataWinnerChanged(int winner)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
 {
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, number);
+}
 
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
+{
+    for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
+    {
+        const auto& state = frame[fighterIdx];
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFighterStateChanged, 
+            fighterIdx, state.damage(), state.stocks().count());
+    }
+
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTimeRemainingChanged, frame[0].framesLeft().secondsLeft());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
+{
 }
 
 }

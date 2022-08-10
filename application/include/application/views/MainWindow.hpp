@@ -27,9 +27,10 @@ class ReplayGroupView;
 class ReplayManager;
 class TrainingModeModel;
 
-class MainWindow : public QMainWindow
-                 , public CategoryListener
-                 , public rfcommon::ProtocolListener
+class MainWindow 
+    : public QMainWindow
+    , public CategoryListener
+    , public rfcommon::ProtocolListener
 {
     Q_OBJECT
 

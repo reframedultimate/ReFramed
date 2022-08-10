@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget* parent)
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
 
+    protocol_->dispatcher.addListener(this);
     categoryModel_->dispatcher.addListener(this);
 
     connect(ui_->action_connect, &QAction::triggered,
@@ -72,7 +73,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui_->action_disconnect, &QAction::triggered,
             this, &MainWindow::onDisconnectActionTriggered);
 
-    categoryModel_->selectTrainingModeCategory();
+    categoryModel_->selectReplayGroupsCategory();
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
@@ -83,6 +84,7 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow()
 {
     categoryModel_->dispatcher.removeListener(this);
+    protocol_->dispatcher.removeListener(this);
 
     // This is to fix an issue with listeners. The RunningGameSessionView (child of central widget)
     // will try to unregister as a listener of RunningGameSessionManager. The central widget

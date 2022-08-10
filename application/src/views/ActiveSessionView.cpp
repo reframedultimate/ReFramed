@@ -4,6 +4,10 @@
 #include "application/views/ReplayViewer.hpp"
 #include "application/Util.hpp"
 
+#include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Session.hpp"
+
 #include <QVBoxLayout>
 #include <QDateTime>
 
@@ -81,38 +85,48 @@ void ActiveSessionView::onLineEditP2TextChanged(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::onGameStarted(rfcommon::Session* game)
+void ActiveSessionView::onActiveSessionManagerConnected(const char* ip, uint16_t port)
 {
-    /*
+    ui_->label_connection->setText("<html><head/><body><p><span style=\"font-weight:600; color:#00A000;\">Connected to " + QString(ip) + "</span></p></body></html>");
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerDisconnected()
+{
+    ui_->label_connection->setText("<html><head/><body><p><span style=\"font-weight:600; color:#ff0000;\">Disconnected</span></p></body></html>");
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* game)
+{
     clearLayout(ui_->layout_playerInfo);
 
+    rfcommon::MappingInfo* map = game->tryGetMappingInfo();
+    rfcommon::MetaData* mdata = game->tryGetMetaData();
+
+    if (map == nullptr || mdata == nullptr)
+        return;
+
     // Create individual player UIs
-    int count = session->fighterCount();
+    int count = mdata->fighterCount();
     names_.resize(count);
     fighterName_.resize(count);
-    fighterStatus_.resize(count);
     fighterDamage_.resize(count);
     fighterStocks_.resize(count);
     for (int i = 0; i != count; ++i)
     {
-        fighterName_[i] = new QLabel();
-        const rfcommon::String* fighterNameStr = session->mappingInfo().fighterID.map(session->fighterID(i));
-        fighterName_[i]->setText(fighterNameStr ? fighterNameStr->cStr() : "(Unknown Fighter)");
+        fighterName_[i] = new QLabel(map->fighter.toName(mdata->fighterID(i)));
 
-        fighterStatus_[i] = new QLabel();
         fighterDamage_[i] = new QLabel();
         fighterStocks_[i] = new QLabel();
 
         names_[i] = new QGroupBox;
-        names_[i]->setTitle(session->name(i).cStr());
+        names_[i]->setTitle(mdata->name(i).cStr());
 
         QFormLayout* layout = new QFormLayout;
         layout->addRow(
             new QLabel("<html><head/><body><p><span style=\" font-weight:600;\">Fighter:</span></p></body></html>"),
             fighterName_[i]);
-        layout->addRow(
-            new QLabel("<html><head/><body><p><span style=\" font-weight:600;\">State:</span></p></body></html>"),
-            fighterStatus_[i]);
         layout->addRow(
             new QLabel("<html><head/><body><p><span style=\" font-weight:600;\">Damage:</span></p></body></html>"),
             fighterDamage_[i]);
@@ -124,23 +138,53 @@ void ActiveSessionView::onGameStarted(rfcommon::Session* game)
     }
 
     // Set game info
-    const rfcommon::String* stageStr = session->mappingInfo().stageID.map(session->stageID());
-    const uint64_t stamp = session->frameCount() > 0 ?
-                session->firstFrame().fighter(0).timeStamp().millis() :
-                QDateTime::currentMSecsSinceEpoch();
-    ui_->label_stage->setText(stageStr ? stageStr->cStr() : "(Unknown Stage)");
-    ui_->label_date->setText(QDateTime::fromMSecsSinceEpoch(stamp).toString());
-    ui_->label_timeRemaining->setText("");
-
-    // Show active page, if not already
-    ui_->stackedWidget->setCurrentWidget(ui_->page_active);
-    */
+    const uint64_t stamp = mdata->timeStarted().millisSinceEpoch();
+    ui_->label_stage->setText(map->stage.toName(mdata->stageID()));
+    ui_->label_started->setText(QDateTime::fromMSecsSinceEpoch(stamp).toString());
+    ui_->label_remaining->setText("--");
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::onTrainingStarted(rfcommon::Session* training)
+void ActiveSessionView::onActiveSessionManagerGameEnded(rfcommon::Session* game)
 {
+    ui_->label_stage->setText("--");
+    ui_->label_started->setText("--");
+    ui_->label_remaining->setText("--");
+}
 
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerTrainingStarted(rfcommon::Session* training)
+{
+    clearLayout(ui_->layout_playerInfo);
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerTrainingEnded(rfcommon::Session* training)
+{
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerTimeRemainingChanged(double seconds)
+{
+    ui_->label_remaining->setText(QTime(0, 0).addSecs(static_cast<int>(seconds)).toString());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerFighterStateChanged(int fighterIdx, float damage, int stocks)
+{
+    fighterDamage_[fighterIdx]->setText(QString::number(damage, 'f', 1) + "%");
+    fighterStocks_[fighterIdx]->setText(QString::number(stocks));
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerTimeStartedChanged(rfcommon::TimeStamp timeStarted)
+{
+    ui_->label_started->setText(QDateTime::fromMSecsSinceEpoch(timeStarted.millisSinceEpoch()).toString());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerTimeEndedChanged(rfcommon::TimeStamp timeEnded)
+{
 }
 
 // ----------------------------------------------------------------------------
@@ -164,18 +208,6 @@ void ActiveSessionView::onActiveSessionManagerPlayerNameChanged(int playerIdx, c
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::onActiveSessionManagerFormatChanged(const rfcommon::SetFormat& format)
-{
-    const QSignalBlocker blocker1(ui_->comboBox_format);
-    const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
-
-    ui_->comboBox_format->setCurrentIndex(format.index());
-
-    if (format.type() == rfcommon::SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(format.description().cStr());
-}
-
-// ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerSetNumberChanged(rfcommon::SetNumber number)
 {
     (void)number;
@@ -186,6 +218,18 @@ void ActiveSessionView::onActiveSessionManagerGameNumberChanged(rfcommon::GameNu
 {
     const QSignalBlocker blocker(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(number.value());
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::onActiveSessionManagerSetFormatChanged(const rfcommon::SetFormat& format)
+{
+    const QSignalBlocker blocker1(ui_->comboBox_format);
+    const QSignalBlocker blocker2(ui_->lineEdit_formatOther);
+
+    ui_->comboBox_format->setCurrentIndex(format.index());
+
+    if (format.type() == rfcommon::SetFormat::OTHER)
+        ui_->lineEdit_formatOther->setText(format.description().cStr());
 }
 
 // ----------------------------------------------------------------------------
@@ -203,7 +247,6 @@ void ActiveSessionView::onActiveSessionManagerWinnerChanged(int winner)
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTrainingSessionNumberChanged(rfcommon::GameNumber number)
 {
-
 }
 
 }

@@ -60,7 +60,10 @@ DamageTimePlotView::~DamageTimePlotView()
 void DamageTimePlotView::clearCurves()
 {
     for (auto& curve : curves_)
+    {
+        curve->detach();
         delete curve;
+    }
     curves_.clear();
 }
 

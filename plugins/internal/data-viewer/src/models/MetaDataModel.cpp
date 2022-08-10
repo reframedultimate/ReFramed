@@ -3,18 +3,31 @@
 #include "rfcommon/MetaData.hpp"
 #include <QDateTime>
 
-enum RowType
-{
-    TimeStarted,
-    TimeEnded,
-    Format,
-    SetNumber,
-    GameNumber,
-    Stage,
-    Winner,
+namespace Game {
+    enum GameRowType
+    {
+        TimeStarted,
+        TimeEnded,
+        Format,
+        SetNumber,
+        GameNumber,
+        Stage,
+        Winner,
 
-    FixedRowCount
-};
+        FixedRowCount
+    };
+}
+
+namespace Training {
+    enum TrainingRowType
+    {
+        TimeStarted,
+        TimeEnded,
+        Stage,
+
+        FixedRowCount
+    };
+}
 
 // ----------------------------------------------------------------------------
 MetaDataModel::~MetaDataModel()
@@ -42,7 +55,9 @@ void MetaDataModel::setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::Me
 int MetaDataModel::rowCount(const QModelIndex& parent) const
 {
     if (meta_)
-        return FixedRowCount + meta_->fighterCount();
+        return meta_->type() == rfcommon::MetaData::GAME ?
+            Game::FixedRowCount + meta_->fighterCount() :
+            Training::FixedRowCount + meta_->fighterCount();
     return 0;
 }
 
@@ -96,14 +111,14 @@ QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QMode
 
                 switch (index.row())
                 {
-                    case TimeStarted: return "Time Started";
-                    case TimeEnded: return "Time Ended";
-                    case Format: return "Format";
-                    case SetNumber: return "Set Number";
-                    case GameNumber: return "Game Number";
-                    case Stage: return "Stage ID";
-                    case Winner: return "Winner";
-                    default: return playerName(index.row() - FixedRowCount);
+                    case Game::TimeStarted: return "Time Started";
+                    case Game::TimeEnded: return "Time Ended";
+                    case Game::Format: return "Format";
+                    case Game::SetNumber: return "Set Number";
+                    case Game::GameNumber: return "Game Number";
+                    case Game::Stage: return "Stage ID";
+                    case Game::Winner: return "Winner";
+                    default: return playerName(index.row() - Game::FixedRowCount);
                 }
             }
             else if (index.column() == 1)
@@ -131,14 +146,14 @@ QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QMode
 
                 switch (index.row())
                 {
-                    case TimeStarted: return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
-                    case TimeEnded: return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
-                    case Format: return meta->setFormat().description().cStr();
-                    case SetNumber: return QString::number(meta->setNumber().value());
-                    case GameNumber: return QString::number(meta->gameNumber().value());
-                    case Stage: return formatStageID(meta->stageID());
-                    case Winner: return formatWinner(meta->winner());
-                    default: return formatPlayer(index.row() - FixedRowCount);
+                    case Game::TimeStarted: return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
+                    case Game::TimeEnded: return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
+                    case Game::Format: return meta->setFormat().description().cStr();
+                    case Game::SetNumber: return QString::number(meta->setNumber().value());
+                    case Game::GameNumber: return QString::number(meta->gameNumber().value());
+                    case Game::Stage: return formatStageID(meta->stageID());
+                    case Game::Winner: return formatWinner(meta->winner());
+                    default: return formatPlayer(index.row() - Game::FixedRowCount);
                 }
             }
             break;
@@ -162,49 +177,154 @@ QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QMode
 // ----------------------------------------------------------------------------
 QVariant MetaDataModel::trainingData(const rfcommon::TrainingMetaData* meta, const QModelIndex& index, int role) const
 {
+    switch (role)
+    {
+        case Qt::DisplayRole:
+            if (index.column() == 0)
+            {
+                auto playerName = [meta](int fighterIdx) -> QString {
+                    return meta->name(fighterIdx).cStr();
+                };
+
+                switch (index.row())
+                {
+                    case Training::TimeStarted: return "Time Started";
+                    case Training::TimeEnded: return "Time Ended";
+                    case Training::Stage: return "Stage ID";
+                    default: return playerName(index.row() - Training::FixedRowCount);
+                }
+            }
+            else if (index.column() == 1)
+            {
+                auto formatStageID = [this](rfcommon::StageID stageID) -> QString {
+                    if (map_)
+                        return QString::number(stageID.value()) + " (" + map_->stage.toName(stageID) + ")";
+                    else
+                        return QString::number(stageID.value()) + " (No mapping info)";
+                };
+
+                auto formatPlayer = [this, meta](int fighterIdx) -> QString {
+                    auto fighterID = meta->fighterID(fighterIdx);
+                    if (map_)
+                        return QString::number(fighterID.value()) + " (" + map_->fighter.toName(fighterID) + ")";
+                    else
+                        return QString::number(fighterID.value()) + " (No mapping info)";
+                };
+
+                switch (index.row())
+                {
+                    case Training::TimeStarted: return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
+                    case Training::TimeEnded: return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
+                    case Training::Stage: return formatStageID(meta->stageID());
+                    default: return formatPlayer(index.row() - Training::FixedRowCount);
+                }
+            }
+            break;
+
+        case Qt::TextAlignmentRole:
+            return Qt::AlignLeft + Qt::AlignVCenter;
+
+        case Qt::CheckStateRole:
+        case Qt::DecorationRole:
+        case Qt::EditRole:
+        case Qt::ToolTipRole:
+        case Qt::StatusTipRole:
+        case Qt::WhatsThisRole:
+        case Qt::SizeHintRole:
+            break;
+    }
+
     return QVariant();
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
 {
-    emit dataChanged(index(TimeStarted, 1), index(TimeStarted, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME: 
+            emit dataChanged(index(Game::TimeStarted, 1), index(Game::TimeStarted, 1)); 
+            break;
+        case rfcommon::MetaData::TRAINING: 
+            emit dataChanged(index(Training::TimeStarted, 1), index(Training::TimeStarted, 1));
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 {
-    emit dataChanged(index(TimeEnded, 1), index(TimeEnded, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::TimeEnded, 1), index(Game::TimeEnded, 1));
+            break;
+        case rfcommon::MetaData::TRAINING:
+            emit dataChanged(index(Training::TimeEnded, 1), index(Training::TimeEnded, 1));
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
-    emit dataChanged(index(FixedRowCount + fighterIdx, 0), index(FixedRowCount + fighterIdx, 0));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::FixedRowCount + fighterIdx, 0), index(Game::FixedRowCount + fighterIdx, 0));
+            break;
+        case rfcommon::MetaData::TRAINING:
+            emit dataChanged(index(Training::FixedRowCount + fighterIdx, 0), index(Training::FixedRowCount + fighterIdx, 0));
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
-    emit dataChanged(index(SetNumber, 1), index(SetNumber, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::SetNumber, 1), index(Game::SetNumber, 1));
+            break;
+        case rfcommon::MetaData::TRAINING: break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
-    emit dataChanged(index(GameNumber, 1), index(GameNumber, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::GameNumber, 1), index(Game::GameNumber, 1));
+            break;
+        case rfcommon::MetaData::TRAINING: break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
-    emit dataChanged(index(Format, 1), index(Format, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::Format, 1), index(Game::Format, 1));
+            break;
+        case rfcommon::MetaData::TRAINING: break;
+    }
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataWinnerChanged(int winnerPlayerIdx)
 {
-    emit dataChanged(index(Winner, 1), index(Winner, 1));
+    switch (meta_->type())
+    {
+        case rfcommon::MetaData::GAME:
+            emit dataChanged(index(Game::Winner, 1), index(Game::Winner, 1));
+            break;
+        case rfcommon::MetaData::TRAINING: break;
+    }
 }
 
 // ----------------------------------------------------------------------------

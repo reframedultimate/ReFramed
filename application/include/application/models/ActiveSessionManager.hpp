@@ -7,13 +7,15 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/FrameDataListener.hpp"
 #include <QObject>
 #include <QDir>
 #include <vector>
 
 namespace rfcommon {
-    class Session;
+    class FrameData;
     class GameMetaData;
+    class Session;
     class TrainingMetaData;
 }
 
@@ -29,10 +31,12 @@ class ReplayManager;
  * for a set of smash games, e.g. a Bo5 is a set of 3-5 games) and saving
  * sessions to files as they come in.
  */
-class ActiveSessionManager : public QObject
-                           , public ReplayManagerListener
-                           , public rfcommon::ProtocolListener
-                           , public rfcommon::MetaDataListener
+class ActiveSessionManager 
+    : public QObject
+    , public ReplayManagerListener
+    , public rfcommon::ProtocolListener
+    , public rfcommon::MetaDataListener
+    , public rfcommon::FrameDataListener
 {
     Q_OBJECT
 
@@ -58,13 +62,13 @@ private:
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
     void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
-    void onProtocolDisconnectedFromServer() override {}
+    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
+    void onProtocolDisconnectedFromServer() override;
 
-    void onProtocolTrainingStarted(rfcommon::Session* training) override {}
-    void onProtocolTrainingResumed(rfcommon::Session* training) override {}
-    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override {}
-    void onProtocolTrainingEnded(rfcommon::Session* training) override {}
+    void onProtocolTrainingStarted(rfcommon::Session* training) override;
+    void onProtocolTrainingResumed(rfcommon::Session* training) override;
+    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override;
+    void onProtocolTrainingEnded(rfcommon::Session* training) override;
     void onProtocolGameStarted(rfcommon::Session* game) override;
     void onProtocolGameResumed(rfcommon::Session* game) override;
     void onProtocolGameEnded(rfcommon::Session* game) override;
@@ -99,11 +103,16 @@ private:
     void onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) override;
 
 private:
+    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+
+private:
     Protocol* protocol_;
     ReplayManager* replayManager_;
     std::vector<rfcommon::Reference<rfcommon::GameMetaData>> pastGameMetaData_;
     rfcommon::Reference<rfcommon::MetaData> activeMetaData_;
     rfcommon::Reference<rfcommon::MappingInfo> activeMappingInfo_;
+    rfcommon::Reference<rfcommon::FrameData> activeFrameData_;
     QString gameSaveFormat_;
     QString trainingSaveFormat_;
     QString p1Name_;
