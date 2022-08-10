@@ -1,7 +1,8 @@
 #include "application/ui_ReplayGroupView.h"
-#include "application/views/ReplayGroupView.hpp"
-#include "application/models/ReplayManager.hpp"
 #include "application/models/ReplayGroup.hpp"
+#include "application/models/ReplayManager.hpp"
+#include "application/views/ReplayEditorDialog.hpp"
+#include "application/views/ReplayGroupView.hpp"
 #include "application/views/ReplayListWidget.hpp"
 #include "application/views/ReplayViewer.hpp"
 #include "rfcommon/Session.hpp"
@@ -12,6 +13,8 @@
 #include <QStringListModel>
 #include <QKeySequence>
 #include <QShortcut>
+#include <QMenu>
+#include <QAction>
 
 namespace rfapp {
 
@@ -101,6 +104,9 @@ ReplayGroupView::ReplayGroupView(
     ui_->layout_recordingList->addWidget(replayListWidget_);
     ui_->layout_data->addWidget(replayViewer_);
 
+    replayListWidget_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(replayListWidget_, &QListWidget::customContextMenuRequested, this, &ReplayGroupView::onItemRightClicked);
+
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
 
     QShortcut* shortcut = new QShortcut(QKeySequence(Qt::Key_Delete), replayListWidget_, nullptr, nullptr, Qt::WidgetShortcut);
@@ -160,6 +166,36 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
+void ReplayGroupView::onItemRightClicked(const QPoint& pos)
+{
+    QPoint item = replayListWidget_->mapToGlobal(pos);
+
+    const auto selected = replayListWidget_->selectedItems();
+    if (selected.size() == 1)
+    {
+        QMenu menu;
+        QAction* edit = menu.addAction("Edit Data...");
+        QAction* a = menu.exec(item);
+
+        if (a == edit)
+        {
+            for (const auto& fileName : currentGroup_->absFilePathList())
+                if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
+                {
+                    QByteArray ba = fileName.absoluteFilePath().toUtf8();
+                    rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                    if (session)
+                    {
+                        ReplayEditorDialog dialog(session);
+                        dialog.exec();
+                    }
+                    break;
+                }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
 void ReplayGroupView::onItemSelectionChanged()
 {
     if (currentGroup_ == nullptr)
@@ -168,7 +204,7 @@ void ReplayGroupView::onItemSelectionChanged()
     replayViewer_->clearReplays();
 
     const auto selected = replayListWidget_->selectedItems();
-    if (selected.length() == 1)
+    if (selected.size() == 1)
     {
         for (const auto& fileName : currentGroup_->absFilePathList())
             if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
@@ -178,7 +214,7 @@ void ReplayGroupView::onItemSelectionChanged()
                 break;
             }
     }
-    else if (selected.length() > 1)
+    else if (selected.size() > 1)
     {
         QStringList fileNames;
         for (auto item : selected)

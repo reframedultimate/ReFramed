@@ -50,6 +50,7 @@ public slots:
     void clearReplayGroup(ReplayGroup* group);
 
 private slots:
+    void onItemRightClicked(const QPoint& pos);
     void onItemSelectionChanged();
     void onFiltersTextChanged(const QString& text);
     void onDeleteKeyPressed();

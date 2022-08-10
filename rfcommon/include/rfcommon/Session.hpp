@@ -4,6 +4,7 @@
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/RefCounted.hpp"
 #include "rfcommon/FrameDataListener.hpp"
+#include "rfcommon/Vector.hpp"
 
 namespace rfcommon {
 

@@ -26,8 +26,9 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/DataSetFilterWidget_PlayerCount.hpp"
     "include/application/views/DataSetFilterWidget_Stage.hpp"
     "include/application/views/MainWindow.hpp"
-    "include/application/views/ReplayListWidget.hpp"
+    "include/application/views/ReplayEditorDialog.hpp"
     "include/application/views/ReplayGroupView.hpp"
+    "include/application/views/ReplayListWidget.hpp"
     "include/application/views/ReplayViewer.hpp"
     "include/application/views/VisualizerView.hpp")
 qt5_wrap_ui (APPLICATION_FORMS_MOC
@@ -41,6 +42,7 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/DataSetFilterWidget_Player.ui"
     "forms/DataSetFilterWidget_PlayerCount.ui"
     "forms/DataSetFilterWidget_Stage.ui"
+	"forms/ReplayEditorDialog.ui"
     "forms/ReplayGroupView.ui"
     "forms/TrainingModeView.ui"
     "forms/MainWindow.ui")
@@ -85,8 +87,9 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/DataSetFilterWidget_Player.cpp"
     "src/views/DataSetFilterWidget_PlayerCount.cpp"
     "src/views/DataSetFilterWidget_Stage.cpp"
-    "src/views/ReplayListWidget.cpp"
+    "src/views/ReplayEditorDialog.cpp"
     "src/views/ReplayGroupView.cpp"
+    "src/views/ReplayListWidget.cpp"
     "src/views/ReplayViewer.cpp"
     "src/views/VisualizerView.cpp"
     "src/views/MainWindow.cpp")
