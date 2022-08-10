@@ -25,7 +25,6 @@ class ActiveSessionManager;
 class ActiveSessionView;
 class ReplayGroupView;
 class ReplayManager;
-class TrainingModeModel;
 
 class MainWindow 
     : public QMainWindow
@@ -76,7 +75,6 @@ private:
     std::unique_ptr<PluginManager> pluginManager_;
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<ActiveSessionManager> activeSessionManager_;
-    std::unique_ptr<TrainingModeModel> trainingModeModel_;
     std::unique_ptr<CategoryModel> categoryModel_;
     CategoryView* categoryView_;
     ReplayGroupView* replayGroupView_;

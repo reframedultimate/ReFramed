@@ -2,7 +2,6 @@
 #include "application/models/CategoryModel.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/models/TrainingModeModel.hpp"
 
 #include <QMenu>
 #include <QDragMoveEvent>
@@ -19,19 +18,16 @@ namespace rfapp {
 CategoryView::CategoryView(
         CategoryModel* categoryModel,
         ReplayManager* replayManager,
-        TrainingModeModel* trainingModeModel,
         QWidget* parent)
     : QTreeWidget(parent)
     , categoryModel_(categoryModel)
     , replayManager_(replayManager)
-    , trainingModeModel_(trainingModeModel)
     , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
     , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
     , replayGroupsItem_(new QTreeWidgetItem({"Replay Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_GROUPS)))
     , replaySourcesItem_(new QTreeWidgetItem({"Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_SOURCES)))
     , videoSourcesItem_(new QTreeWidgetItem({"Video Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
     , sessionItem_(new QTreeWidgetItem({"Session"}, static_cast<int>(CategoryType::TOP_LEVEL_SESSION)))
-    , trainingModeItem_(new QTreeWidgetItem({"Plugins"}, static_cast<int>(CategoryType::TOP_LEVEL_TRAINING_MODE)))
 {
     setHeaderHidden(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -42,7 +38,6 @@ CategoryView::CategoryView(
     addTopLevelItem(replaySourcesItem_);
     addTopLevelItem(videoSourcesItem_);
     addTopLevelItem(sessionItem_);
-    addTopLevelItem(trainingModeItem_);
 
     // Configure which items accept drag/drop
     setAcceptDrops(true);
@@ -62,7 +57,6 @@ CategoryView::CategoryView(
 
     categoryModel_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
-    trainingModeModel_->dispatcher.addListener(this);
 
     connect(this, &QTreeWidget::customContextMenuRequested,
             this, &CategoryView::onCustomContextMenuRequested);
@@ -75,7 +69,6 @@ CategoryView::CategoryView(
 // ----------------------------------------------------------------------------
 CategoryView::~CategoryView()
 {
-    trainingModeModel_->dispatcher.removeListener(this);
     replayManager_->dispatcher.removeListener(this);
     categoryModel_->dispatcher.removeListener(this);
 }
@@ -277,14 +270,12 @@ void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetIte
         case CategoryType::TOP_LEVEL_REPLAY_SOURCES : categoryModel_->selectReplaySourcesCategory(); break;
         case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : categoryModel_->selectVideoSourcesCategory(); break;
         case CategoryType::TOP_LEVEL_SESSION        : categoryModel_->selectSessionCategory(); break;
-        case CategoryType::TOP_LEVEL_TRAINING_MODE  : categoryModel_->selectTrainingModeCategory(); break;
 
         case CategoryType::ITEM_DATA_SET            : /* TODO */ break;
         case CategoryType::ITEM_ANALYSIS            : /* TODO */ break;
         case CategoryType::ITEM_REPLAY_GROUP        : categoryModel_->selectReplayGroup(current->text(0)); break;
         case CategoryType::ITEM_REPLAY_SOURCE       : categoryModel_->selectReplaySource(current->text(0)); break;
         case CategoryType::ITEM_VIDEO_SOURCE        : categoryModel_->selectVideoSource(current->text(0)); break;
-        case CategoryType::ITEM_TRAINING_MODE       : categoryModel_->selectTrainingModePlugin(current->text(0)); break;
     }
 }
 
@@ -337,14 +328,12 @@ void CategoryView::onCategorySelected(CategoryType category)
         case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_ITEM(replaySourcesItem_)    break;
         case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_ITEM(videoSourcesItem_)     break;
         case CategoryType::TOP_LEVEL_SESSION        : SELECT_ITEM(sessionItem_)          break;
-        case CategoryType::TOP_LEVEL_TRAINING_MODE  : SELECT_ITEM(trainingModeItem_)     break;
 
         case CategoryType::ITEM_ANALYSIS:
         case CategoryType::ITEM_DATA_SET:
         case CategoryType::ITEM_REPLAY_GROUP:
         case CategoryType::ITEM_REPLAY_SOURCE:
         case CategoryType::ITEM_VIDEO_SOURCE:
-        case CategoryType::ITEM_TRAINING_MODE:
             break;
     }
 
@@ -376,14 +365,12 @@ void CategoryView::onCategoryItemSelected(CategoryType category, const QString& 
         case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_CHILD_OF(replaySourcesItem_);   break;
         case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_CHILD_OF(videoSourcesItem_)     break;
         case CategoryType::TOP_LEVEL_SESSION        : SELECT_CHILD_OF(sessionItem_)          break;
-        case CategoryType::TOP_LEVEL_TRAINING_MODE  : SELECT_CHILD_OF(trainingModeItem_)     break;
 
         case CategoryType::ITEM_ANALYSIS:
         case CategoryType::ITEM_DATA_SET:
         case CategoryType::ITEM_REPLAY_GROUP:
         case CategoryType::ITEM_REPLAY_SOURCE:
         case CategoryType::ITEM_VIDEO_SOURCE:
-        case CategoryType::ITEM_TRAINING_MODE:
             break;
     }
 
@@ -533,29 +520,6 @@ void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
         if (item->text(0) == name)
         {
             videoSourcesItem_->removeChild(item);
-            // TODO remove tooltip
-            break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin)
-{
-    // TODO tooltip containing plugin description
-    trainingModeItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_TRAINING_MODE)));
-    trainingModeItem_->setExpanded(true);
-}
-
-// ----------------------------------------------------------------------------
-void CategoryView::onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* plugin)
-{
-    for (int i = 0; i != trainingModeItem_->childCount(); ++i)
-    {
-        QTreeWidgetItem* item = trainingModeItem_->child(i);
-        if (item->text(0) == name)
-        {
-            trainingModeItem_->removeChild(item);
             // TODO remove tooltip
             break;
         }

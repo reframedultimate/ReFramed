@@ -2,7 +2,6 @@
 
 #include "application/listeners/CategoryListener.hpp"
 #include "application/listeners/ReplayManagerListener.hpp"
-#include "application/listeners/TrainingModeListener.hpp"
 #include "application/Util.hpp"
 #include <QHash>
 #include <QTreeWidget>
@@ -11,19 +10,16 @@ namespace rfapp {
 
 class CategoryModel;
 class ReplayManager;
-class TrainingModeModel;
 
 class CategoryView : public QTreeWidget
                    , public CategoryListener
                    , public ReplayManagerListener
-                   , public TrainingModeListener
 {
     Q_OBJECT
 public:
     explicit CategoryView(
             CategoryModel* categoryModel,
             ReplayManager* replayManager,
-            TrainingModeModel* trainingModeModel,
             QWidget* parent=nullptr
         );
     ~CategoryView();
@@ -56,24 +52,18 @@ private:
     void onReplayManagerVideoSourceRemoved(const QString& name) override;
 
 private:
-    void onTrainingModePluginLaunched(const QString& name, rfcommon::Plugin* plugin) override;
-    void onTrainingModePluginStopped(const QString& name, rfcommon::Plugin* plugin) override;
-
-private:
     void onCategorySelected(CategoryType category) override;
     void onCategoryItemSelected(CategoryType category, const QString& name) override;
 
 private:
     CategoryModel* categoryModel_;
     ReplayManager* replayManager_;
-    TrainingModeModel* trainingModeModel_;
     QTreeWidgetItem* dataSetsItem_;
     QTreeWidgetItem* analysisCategoryItem_;
     QTreeWidgetItem* replayGroupsItem_;
     QTreeWidgetItem* replaySourcesItem_;
     QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* sessionItem_;
-    QTreeWidgetItem* trainingModeItem_;
 
     QHash<QTreeWidgetItem*, QString> oldGroupNames_;
 };

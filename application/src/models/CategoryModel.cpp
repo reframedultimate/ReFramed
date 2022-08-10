@@ -53,14 +53,6 @@ void CategoryModel::selectSessionCategory()
 }
 
 // ----------------------------------------------------------------------------
-void CategoryModel::selectTrainingModeCategory()
-{
-    currentCategory_ = CategoryType::TOP_LEVEL_TRAINING_MODE;
-    currentItemName_ = "";
-    dispatcher.dispatch(&CategoryListener::onCategorySelected, currentCategory_);
-}
-
-// ----------------------------------------------------------------------------
 void CategoryModel::selectReplayGroup(const QString& name)
 {
     if (currentCategory_ != CategoryType::TOP_LEVEL_REPLAY_GROUPS)
@@ -90,19 +82,6 @@ void CategoryModel::selectReplaySource(const QString& name)
 void CategoryModel::selectVideoSource(const QString& name)
 {
     if (currentCategory_ != CategoryType::TOP_LEVEL_VIDEO_SOURCES)
-        selectReplayGroupsCategory();
-
-    if (currentItemName_ != name)
-    {
-        currentItemName_ = name;
-        dispatcher.dispatch(&CategoryListener::onCategoryItemSelected, currentCategory_, currentItemName_);
-    }
-}
-
-// ----------------------------------------------------------------------------
-void CategoryModel::selectTrainingModePlugin(const QString& name)
-{
-    if (currentCategory_ != CategoryType::TOP_LEVEL_TRAINING_MODE)
         selectReplayGroupsCategory();
 
     if (currentItemName_ != name)

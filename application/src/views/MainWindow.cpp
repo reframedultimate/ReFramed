@@ -6,7 +6,6 @@
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/models/ActiveSessionManager.hpp"
-#include "application/models/TrainingModeModel.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
@@ -14,7 +13,6 @@
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
-#include "application/views/TrainingModeView.hpp"
 #include "application/views/VisualizerView.hpp"
 
 #include "rfcommon/VisualizerPlugin.hpp"
@@ -36,9 +34,8 @@ MainWindow::MainWindow(QWidget* parent)
     , pluginManager_(new PluginManager)
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
-    , trainingModeModel_(new TrainingModeModel(pluginManager_.get()))
     , categoryModel_(new CategoryModel)
-    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get(), trainingModeModel_.get()))
+    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get()))
     , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get()))
     , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
@@ -56,7 +53,6 @@ MainWindow::MainWindow(QWidget* parent)
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeSessionView_);
-    mainView_->addWidget(new TrainingModeView(trainingModeModel_.get(), categoryModel_.get()));
     setCentralWidget(mainView_);
 
     QDockWidget* categoryDock = new QDockWidget(this);
@@ -191,10 +187,6 @@ void MainWindow::onCategorySelected(CategoryType category)
 
         case CategoryType::TOP_LEVEL_SESSION:
             mainView_->setCurrentIndex(5);
-            break;
-
-        case CategoryType::TOP_LEVEL_TRAINING_MODE:
-            mainView_->setCurrentIndex(6);
             break;
 
         default: break;

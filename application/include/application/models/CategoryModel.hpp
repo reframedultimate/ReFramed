@@ -1,7 +1,6 @@
 #pragma once
 
 #include "application/listeners/ReplayManagerListener.hpp"
-#include "application/listeners/TrainingModeListener.hpp"
 #include "application/models/CategoryType.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include <QVector>
@@ -12,7 +11,6 @@ namespace rfapp {
 class CategoryListener;
 class ReplayGroup;
 class ReplayManager;
-class TrainingModeModel;
 
 class CategoryModel
 {
@@ -24,7 +22,6 @@ public:
     void selectReplaySourcesCategory();
     void selectVideoSourcesCategory();
     void selectSessionCategory();
-    void selectTrainingModeCategory();
 
     CategoryType currentCategorySelected() const
         { return currentCategory_; }
@@ -43,8 +40,7 @@ public:
 
 private:
     ReplayManager* savedGameSessionManager_;
-    TrainingModeModel* trainingMode_;
-    CategoryType currentCategory_ = CategoryType::TOP_LEVEL_TRAINING_MODE;
+    CategoryType currentCategory_ = CategoryType::TOP_LEVEL_REPLAY_GROUPS;
     QString currentItemName_ = "";
 };
 
