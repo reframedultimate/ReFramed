@@ -7,7 +7,6 @@ project ("plugin-${PLUGIN_NAME}"
     LANGUAGES CXX)
 
 include (ReFramedPlugin)
-
 reframed_add_plugin (plugin-${PLUGIN_NAME}
     SOURCES
         "src/models/DamageTimeCurveData.cpp"

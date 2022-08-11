@@ -1,32 +1,27 @@
 #include "video-player/PluginConfig.hpp"
 #include "video-player/VideoPlayer.hpp"
-#include "rfcommon/PluginInterface.hpp"
-#include "rfcommon/PluginType.hpp"
+#include "uh/PluginInterface.hpp"
+#include "uh/PluginType.hpp"
 
 #include <QWidget>
 
-static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
+static uh::Plugin* createVideoPlayer()
 {
-    return new VideoPlayer(factory);
-}
-static void destroyPlugin(rfcommon::Plugin* model)
-{
-    delete model;
+    return new VideoPlayer;
 }
 
-static RFPluginFactory factories[] = {
-    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
-         "Video Player",
-         "misc",
-         "TheComet",
-         "TheComet#5387, @TheComet93",
-         "A video player"
-     }},
+static void destroy(uh::Plugin* plugin)
+{
+    delete plugin;
+}
 
-    {nullptr}
+static PluginFactory factories[] = {
+    {createVideoPlayer, destroy, uh::PluginType::VISUALIZER,
+     "Video Player", "TheComet", "alex.murray@gmx.ch", "A video player"},
+    {NULL}
 };
 
-static int start(uint32_t version, const char** error)
+static int start(uint32_t version)
 {
     return 0;
 }
@@ -35,4 +30,9 @@ static void stop()
 {
 }
 
-DEFINE_PLUGIN(factories, start, stop)
+PLUGIN_API PluginInterface plugin_interface = {
+    PLUGIN_VERSION,
+    factories,
+    start,
+    stop
+};
