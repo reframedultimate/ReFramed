@@ -14,12 +14,15 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "src/views/VideoPlayerView.cpp"
         "src/VideoPlayerPlugin.cpp"
         "src/Plugin.cpp"
-    MOC_HEADERS
+    HEADERS
         "include/${PLUGIN_NAME}/listeners/VideoPlayerListener.hpp"
         "include/${PLUGIN_NAME}/models/VideoDecoder.hpp"
         "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
         "include/${PLUGIN_NAME}/VideoPlayerPlugin.hpp"
+    MOC_HEADERS
+        "include/${PLUGIN_NAME}/models/VideoDecoder.hpp"
+        "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
     INCLUDE_DIRECTORIES
         "include")
 
@@ -31,4 +34,3 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
         PRIVATE FFMPEG::avformat
         PRIVATE FFMPEG::avdevice)
 endif ()
-

@@ -9,20 +9,15 @@ class QPlainTextEdit;
 class VideoSurface;
 class VideoDecoder;
 
-class VideoPlayer
-    : public QWidget
-    , public rfcommon::RealtimePlugin
+class VideoPlayerView : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit VideoPlayer(QWidget* parent=nullptr);
-    ~VideoPlayer();
+    explicit VideoPlayerView(QWidget* parent=nullptr);
+    ~VideoPlayerView();
 
     bool openFile(const QString& fileName);
-
-    QWidget* takeWidget() override { return this; }
-    void giveWidget(QWidget* widget) override {}
 
 private slots:
     void drawNextFrame();
@@ -35,4 +30,3 @@ private:
     VideoSurface* videoSurface_;
     VideoDecoder* decoder_;
 };
-

@@ -15,7 +15,7 @@ DataSetFilterWidget_Game::DataSetFilterWidget_Game(QWidget* parent)
     setExpanded(true);
 
     ui_->comboBox_format->addItem("Any");
-#define X(name, str) ui_->comboBox_format->addItem(str);
+#define X(name, shortstr, longstr) ui_->comboBox_format->addItem(longstr);
     SET_FORMAT_LIST
 #undef X
     ui_->lineEdit_formatName->setVisible(false);

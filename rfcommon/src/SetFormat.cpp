@@ -1,5 +1,6 @@
 #include "rfcommon/SetFormat.hpp"
 #include <cassert>
+#include <exception>
 
 namespace rfcommon {
 

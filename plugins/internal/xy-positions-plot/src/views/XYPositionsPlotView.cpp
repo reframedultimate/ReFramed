@@ -9,7 +9,7 @@
 
 #include <QListView>
 #include <QSplitter>
-#include <QVboxLayout>
+#include <QVBoxLayout>
 #include <QMenu>
 #include <QAction>
 #include <QPen>
@@ -42,7 +42,7 @@ XYPositionsPlotView::~XYPositionsPlotView()
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotView::onDataSetChanged() 
+void XYPositionsPlotView::onDataSetChanged()
 {
     if (model_->sessionCount() == 1)
     {

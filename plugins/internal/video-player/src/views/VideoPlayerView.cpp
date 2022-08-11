@@ -1,5 +1,5 @@
-#include "video-player/VideoPlayer.hpp"
-#include "video-player/VideoDecoder.hpp"
+#include "video-player/views/VideoPlayerView.hpp"
+#include "video-player/models/VideoDecoder.hpp"
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 #include <QPainter>
@@ -49,7 +49,7 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-VideoPlayer::VideoPlayer(QWidget *parent)
+VideoPlayerView::VideoPlayerView(QWidget *parent)
     : QWidget(parent)
     , logWidget_(new QPlainTextEdit)
     , videoSurface_(new VideoSurface)
@@ -64,11 +64,11 @@ VideoPlayer::VideoPlayer(QWidget *parent)
 
     //const char* videoFile = "/media/ssbu/Weekly 2021-04-05/2021-04-05_18-42-51.mkv";
     //const char* videoFile = "/media/ssbu/Weekly 2021-04-09/Weekly 2021-04-09.mp4";
-    const char* videoFile = "/media/ssbu/Weekly 2021-04-18/Weekly 2021-04-18 - Bo5 - TheComet (Pika) vs NullSpace (Wolf) Game 1.mp4";
+    const char* videoFile = "/media/ssbu/2022-08-05 - Jas1n/2022-08-05_22-13-07.mkv";
 
-    connect(&timer_, &QTimer::timeout, this, &VideoPlayer::drawNextFrame);
-    connect(decoder_, &VideoDecoder::info, this, &VideoPlayer::info);
-    connect(decoder_, &VideoDecoder::error, this, &VideoPlayer::error);
+    connect(&timer_, &QTimer::timeout, this, &VideoPlayerView::drawNextFrame);
+    connect(decoder_, &VideoDecoder::info, this, &VideoPlayerView::info);
+    connect(decoder_, &VideoDecoder::error, this, &VideoPlayerView::error);
 
     openFile(videoFile);
     timer_.setInterval(16);
@@ -76,18 +76,18 @@ VideoPlayer::VideoPlayer(QWidget *parent)
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayer::~VideoPlayer()
+VideoPlayerView::~VideoPlayerView()
 {
 }
 
 // ----------------------------------------------------------------------------
-bool VideoPlayer::openFile(const QString& fileName)
+bool VideoPlayerView::openFile(const QString& fileName)
 {
     return decoder_->openFile(fileName);
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayer::drawNextFrame()
+void VideoPlayerView::drawNextFrame()
 {
     videoSurface_->image = decoder_->currentFrameAsImage();
     videoSurface_->update();
@@ -95,14 +95,14 @@ void VideoPlayer::drawNextFrame()
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayer::info(const QString& msg)
+void VideoPlayerView::info(const QString& msg)
 {
     logWidget_->textCursor().insertText("[INFO] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayer::error(const QString& msg)
+void VideoPlayerView::error(const QString& msg)
 {
     logWidget_->textCursor().insertText("[ERROR] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
