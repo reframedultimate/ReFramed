@@ -148,7 +148,7 @@ QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QMode
                 {
                     case Game::TimeStarted: return QDateTime::fromMSecsSinceEpoch(meta->timeStarted().millisSinceEpoch()).toString();
                     case Game::TimeEnded: return QDateTime::fromMSecsSinceEpoch(meta->timeEnded().millisSinceEpoch()).toString();
-                    case Game::Format: return meta->setFormat().description().cStr();
+                    case Game::Format: return meta->setFormat().shortDescription();
                     case Game::SetNumber: return QString::number(meta->setNumber().value());
                     case Game::GameNumber: return QString::number(meta->gameNumber().value());
                     case Game::Stage: return formatStageID(meta->stageID());

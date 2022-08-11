@@ -222,7 +222,7 @@ uint32_t MetaData::save(FILE* fp) const
     if (type() == GAME)
     {
         const GameMetaData* meta = static_cast<const GameMetaData*>(this);
-        jGameInfo["format"] = meta->setFormat().description().cStr();
+        jGameInfo["format"] = meta->setFormat().shortDescription();
         jGameInfo["number"] = meta->gameNumber().value();
         jGameInfo["set"] = meta->setNumber().value();
         jGameInfo["winner"] = meta->winner();

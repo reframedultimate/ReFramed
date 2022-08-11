@@ -18,7 +18,7 @@ ReplayEditorDialog::ReplayEditorDialog(rfcommon::Session* session, QWidget* pare
 {
     ui_->setupUi(this);
 
-#define X(name, str) ui_->setFormat->addItem(str);
+#define X(name, shortstr, longstr) ui_->setFormat->addItem(longstr);
     SET_FORMAT_LIST
 #undef X
 
@@ -39,7 +39,7 @@ ReplayEditorDialog::ReplayEditorDialog(rfcommon::Session* session, QWidget* pare
             ui_->setFormat->setCurrentIndex(game->setFormat().index());
             ui_->customSetFormat->setVisible(game->setFormat().type() == rfcommon::SetFormat::OTHER);
             if (game->setFormat().type() == rfcommon::SetFormat::OTHER)
-                ui_->customSetFormat->setText(game->setFormat().description().cStr());
+                ui_->customSetFormat->setText(game->setFormat().longDescription());
         } break;
 
         case rfcommon::MetaData::TRAINING: {

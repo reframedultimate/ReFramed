@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.2)
 
+cmake_policy (SET CMP0074 NEW)
+
 project ("plugin-video-player"
     VERSION 0.0.1
     LANGUAGES CXX)
@@ -23,4 +25,3 @@ if (${REFRAMED_plugin-video-player})
         PRIVATE FFMPEG::avformat
         PRIVATE FFMPEG::avdevice)
 endif ()
-

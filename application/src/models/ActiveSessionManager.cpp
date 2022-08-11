@@ -28,7 +28,7 @@ static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::MetaD
     {
         const GameMetaData* gameMeta = static_cast<const GameMetaData*>(meta);
 
-        QString formatDesc = gameMeta->setFormat().description().cStr();
+        QString formatDesc = gameMeta->setFormat().shortDescription();
         QString setNumber = QString::number(gameMeta->setNumber().value());
         QString gameNumber = QString::number(gameMeta->gameNumber().value());
 

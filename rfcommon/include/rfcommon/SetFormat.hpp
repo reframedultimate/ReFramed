@@ -3,22 +3,22 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/String.hpp"
 
-#define SET_FORMAT_LIST                      \
-    X(FRIENDLIES, "Friendlies")              \
-    X(PRACTICE,   "Practice")                \
-    X(TRAINING,   "Training")                \
-    X(COACHING,   "Coaching")                \
-    X(BO3,        "Best of 3")               \
-    X(BO5,        "Best of 5")               \
-    X(BO7,        "Best of 7")               \
-    X(FT5,        "First to 5")              \
-    X(FT10,       "First to 10")             \
-    X(BO3MM,      "Best of 3 Money Match")   \
-    X(BO5MM,      "Best of 5 Money Match")   \
-    X(BO7MM,      "Best of 7 Money Match")   \
-    X(FT5MM,      "First to 5 Money Match")  \
-    X(FT10MM,     "First to 10 Money Match") \
-    X(OTHER,      "Other")
+#define SET_FORMAT_LIST                                 \
+    X(FRIENDLIES, "Friendlies", "Friendlies")           \
+    X(PRACTICE,   "Practice", "Practice")               \
+    X(TRAINING,   "Training", "Training")               \
+    X(COACHING,   "Coaching", "Coaching")               \
+    X(BO3,        "Bo3", "Best of 3")                   \
+    X(BO5,        "Bo5", "Best of 5")                   \
+    X(BO7,        "Bo7", "Best of 7")                   \
+    X(FT5,        "FT5", "First to 5")                  \
+    X(FT10,       "FT10", "First to 10")                \
+    X(BO3MM,      "Bo3 MM", "Best of 3 Money Match")    \
+    X(BO5MM,      "Bo5 MM", "Best of 5 Money Match")    \
+    X(BO7MM,      "Bo7 MM", "Best of 7 Money Match")    \
+    X(FT5MM,      "FT5 MM", "First to 5 Money Match")   \
+    X(FT10MM,     "FT10 MM", "First to 10 Money Match") \
+    X(OTHER,      "Other", "Other")
 
 namespace rfcommon {
 
@@ -26,7 +26,7 @@ class RFCOMMON_PUBLIC_API SetFormat
 {
 public:
     enum Type {
-#define X(name, str) name,
+#define X(name, shortstr, longstr) name,
         SET_FORMAT_LIST
 #undef X
     };
@@ -40,7 +40,8 @@ public:
     /*!
      * \brief Gets a string representation of the set's format.
      */
-    String description() const;
+    const char* shortDescription() const;
+    const char* longDescription() const;
 
     bool operator==(const SetFormat& rhs);
     bool operator!=(const SetFormat& rhs);
@@ -51,4 +52,3 @@ private:
 };
 
 }
-

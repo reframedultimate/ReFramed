@@ -13,7 +13,7 @@ SetFormat::SetFormat(Type type, const String& otherDesc)
 // ----------------------------------------------------------------------------
 SetFormat::SetFormat(const String& desc)
     : type_([&desc]() -> Type {
-#define X(type, str) if (desc == str) return type;
+#define X(type, shortstr, longstr) if (desc == shortstr || desc == longstr) return type;
         SET_FORMAT_LIST
 #undef X
         return OTHER;
@@ -24,16 +24,33 @@ SetFormat::SetFormat(const String& desc)
 }
 
 // ----------------------------------------------------------------------------
-String SetFormat::description() const
+const char* SetFormat::shortDescription() const
 {
     if (type_ == OTHER)
-        return otherDesc_;
+        return otherDesc_.cStr();
 
-#define X(type, str) if (type_ == type) return str;
-    SET_FORMAT_LIST
+    switch (type_)
+    {
+#define X(type, shortstr, longstr) case type: return shortstr;
+        SET_FORMAT_LIST
 #undef X
+        default: std::terminate();
+    }
+}
 
-    std::terminate();
+// ----------------------------------------------------------------------------
+const char* SetFormat::longDescription() const
+{
+    if (type_ == OTHER)
+        return otherDesc_.cStr();
+
+    switch (type_)
+    {
+#define X(type, shortstr, longstr) case type: return longstr;
+        SET_FORMAT_LIST
+#undef X
+        default: std::terminate();
+    }
 }
 
 // ----------------------------------------------------------------------------

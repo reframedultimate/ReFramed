@@ -26,7 +26,7 @@ ActiveSessionView::ActiveSessionView(
     ui_->lineEdit_formatOther->setVisible(false);
     ui_->layout_sessionViewer->addWidget(new ReplayViewer(activeSessionManager_->protocol(), pluginManager));
 
-#define X(type, str) ui_->comboBox_format->addItem(str);
+#define X(type, shortstr, longstr) ui_->comboBox_format->addItem(longstr);
     SET_FORMAT_LIST
 #undef X
 
@@ -229,7 +229,7 @@ void ActiveSessionView::onActiveSessionManagerSetFormatChanged(const rfcommon::S
     ui_->comboBox_format->setCurrentIndex(format.index());
 
     if (format.type() == rfcommon::SetFormat::OTHER)
-        ui_->lineEdit_formatOther->setText(format.description().cStr());
+        ui_->lineEdit_formatOther->setText(format.longDescription());
 }
 
 // ----------------------------------------------------------------------------

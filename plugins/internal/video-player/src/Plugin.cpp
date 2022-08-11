@@ -15,7 +15,7 @@ static void destroyPlugin(rfcommon::Plugin* model)
 }
 
 static RFPluginFactory factories[] = {
-    {createPlugin, destroyPlugin, RFPluginType::VISUALIZER, {
+    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
          "Video Player",
          "misc",
          "TheComet",

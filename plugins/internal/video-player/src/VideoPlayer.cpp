@@ -10,7 +10,7 @@ extern "C" {
 // ----------------------------------------------------------------------------
 VideoPlayer::VideoPlayer(RFPluginFactory* factory, QWidget *parent)
     : QWidget(parent)
-    , VisualizerPlugin(factory)
+    , RealtimePlugin(factory)
     , logWidget_(new QPlainTextEdit)
 {
     setLayout(new QVBoxLayout);
@@ -18,7 +18,7 @@ VideoPlayer::VideoPlayer(RFPluginFactory* factory, QWidget *parent)
     logWidget_->setReadOnly(true);
     layout()->addWidget(logWidget_);
 
-    const char* videoFile = "/media/ssbu/Weekly 2021-04-05/2021-04-05_18-42-51.mkv";
+    const char* videoFile = "F:\\2022-08-05 - Jas1n\\2022-08-05_22-13-07.mkv";
     openFile(videoFile);
 }
 
@@ -34,8 +34,8 @@ bool VideoPlayer::openFile(const QString& fileName)
 
     int videoStreamIdx = -1;
     int audioStreamIdx = -1;
-    AVCodec* videoCodec;
-    AVCodec* audioCodec;
+    const AVCodec* videoCodec;
+    const AVCodec* audioCodec;
     AVCodecContext* videoCodecContext;
     AVFrame* videoFrame;
     AVPacket* packet;
@@ -84,7 +84,7 @@ bool VideoPlayer::openFile(const QString& fileName)
     {
         AVStream* stream = formatContext_->streams[i];
         AVCodecParameters* codecParams = stream->codecpar;
-        AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
+        const AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
         if (codec == nullptr)
         {
             error("Unsupported codec");
@@ -224,3 +224,25 @@ void VideoPlayer::error(const QString& msg)
 {
     logWidget_->textCursor().insertText("[ERROR] " + msg + "\n");
 }
+
+// ----------------------------------------------------------------------------
+void VideoPlayer::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) {}
+void VideoPlayer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) {}
+void VideoPlayer::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) {}
+void VideoPlayer::onProtocolDisconnectedFromServer() {}
+
+void VideoPlayer::onProtocolTrainingStarted(rfcommon::Session* training) {}
+void VideoPlayer::onProtocolTrainingResumed(rfcommon::Session* training) {}
+void VideoPlayer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) {}
+void VideoPlayer::onProtocolTrainingEnded(rfcommon::Session* training) {}
+void VideoPlayer::onProtocolGameStarted(rfcommon::Session* game) {}
+void VideoPlayer::onProtocolGameResumed(rfcommon::Session* game) {}
+void VideoPlayer::onProtocolGameEnded(rfcommon::Session* game) {}
+
+void VideoPlayer::onGameSessionLoaded(rfcommon::Session* game) {}
+void VideoPlayer::onGameSessionUnloaded(rfcommon::Session* game) {}
+void VideoPlayer::onTrainingSessionLoaded(rfcommon::Session* training) {}
+void VideoPlayer::onTrainingSessionUnloaded(rfcommon::Session* training) {}
+
+void VideoPlayer::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
+void VideoPlayer::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
