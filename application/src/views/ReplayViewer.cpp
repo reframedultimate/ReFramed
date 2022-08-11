@@ -208,13 +208,19 @@ void ReplayViewer::onTabBarClicked(int index)
         return false;
     };
 
+    // Create a list of all available plugins that can be loaded. There are
+    // two modes here. Either this class was created with a valid protocol
+    // object, in which case we look for plugins that implement the realtime
+    // API, or we were not given a protocol (nullptr), in which case we
+    // assume we're in replay mode and look for plugins that implement the
+    // replay API
+    auto pluginNames = protocol_ ?
+            pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REALTIME) :
+            pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REPLAY);
+    qSort(pluginNames.begin(), pluginNames.end());
+
     // Open popup menu with all of the plugins that aren't loaded yet
     QMenu popup;
-    auto pluginNames = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REALTIME);
-    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REPLAY))
-        if (pluginNames.contains(name) == false)
-            pluginNames.push_back(name);
-    qSort(pluginNames.begin(), pluginNames.end());
     for (const auto& name : pluginNames)
     {
         if (pluginLoaded(name))
