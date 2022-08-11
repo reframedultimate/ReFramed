@@ -4,7 +4,7 @@
 
 // ----------------------------------------------------------------------------
 XYPositionsPlotPlugin::XYPositionsPlotPlugin(RFPluginFactory* factory)
-    : rfcommon::RealtimePlugin(factory)
+    : Plugin(factory)
     , model_(new XYPositionsPlotModel)
 {
 }
@@ -13,6 +13,12 @@ XYPositionsPlotPlugin::XYPositionsPlotPlugin(RFPluginFactory* factory)
 XYPositionsPlotPlugin::~XYPositionsPlotPlugin()
 {
 }
+
+// ----------------------------------------------------------------------------
+rfcommon::Plugin::UIInterface* XYPositionsPlotPlugin::uiInterface() { return this; }
+rfcommon::Plugin::RealtimeInterface* XYPositionsPlotPlugin::realtimeInterface() { return this; }
+rfcommon::Plugin::ReplayInterface* XYPositionsPlotPlugin::replayInterface() { return this; }
+rfcommon::Plugin::VisualizerInterface* XYPositionsPlotPlugin::visualizerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* XYPositionsPlotPlugin::createView()

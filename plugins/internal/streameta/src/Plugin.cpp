@@ -12,8 +12,12 @@ static void destroyStreametaPlugin(rfcommon::Plugin* plugin)
     delete plugin;
 }
 
+static const RFPluginType streametaPluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REALTIME;
+
 static RFPluginFactory factories[] = {
-    {createStreametaPlugin, destroyStreametaPlugin, RFPluginType::REALTIME,
+    {createStreametaPlugin, destroyStreametaPlugin, streametaPluginTypes,
     {"Streameta",
      "misc > misc",
      "TheComet",

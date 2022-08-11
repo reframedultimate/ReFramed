@@ -15,8 +15,6 @@
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/VisualizerView.hpp"
 
-#include "rfcommon/VisualizerPlugin.hpp"
-
 #include <QStackedWidget>
 #include <QDockWidget>
 #include <QStackedWidget>

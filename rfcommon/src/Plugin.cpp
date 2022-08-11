@@ -14,7 +14,7 @@ Plugin::~Plugin()
 }
 
 // ----------------------------------------------------------------------------
-RFPluginFactory* Plugin::factory() const
+const RFPluginFactory* Plugin::factory() const
 {
     return factory_;
 }

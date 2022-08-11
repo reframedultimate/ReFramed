@@ -22,8 +22,8 @@ struct RFPluginFactoryInfo
 
 struct RFPluginFactory
 {
-    rfcommon::Plugin* (*createModel)(RFPluginFactory*);
-    void (*destroyModel)(rfcommon::Plugin* plugin);
+    rfcommon::Plugin* (*create)(RFPluginFactory*);
+    void (*destroy)(rfcommon::Plugin* plugin);
 
     RFPluginType type;
     RFPluginFactoryInfo info;

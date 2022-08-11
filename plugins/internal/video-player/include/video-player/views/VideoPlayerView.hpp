@@ -1,6 +1,5 @@
 #pragma once
 
-#include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/String.hpp"
 #include <QWidget>
 #include <QTimer>

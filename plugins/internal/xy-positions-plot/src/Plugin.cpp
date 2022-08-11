@@ -12,8 +12,13 @@ static void destroyPlugin(rfcommon::Plugin* model)
     delete model;
 }
 
+static const RFPluginType xyPositionsPlotPluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REALTIME |
+    RFPluginType::REPLAY;
+
 static RFPluginFactory factories[] = {
-    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
+    {createPlugin, destroyPlugin, xyPositionsPlotPluginTypes, {
          "XY Positions Plot",
          "misc",
          "TheComet",

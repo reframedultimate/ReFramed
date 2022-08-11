@@ -4,10 +4,13 @@ extern "C" {
 
 enum class RFPluginType : unsigned char
 {
-    VISUALIZER    = 0x01,
-    ANALYZER      = 0x02,
-    REALTIME      = 0x04,
-    STANDALONE    = 0x08
+    UI            = 0x01,
+    REALTIME      = 0x02,
+    REPLAY        = 0x04,
+    VISUALIZER    = 0x08,
+    STANDALONE    = 0x10,
+
+    ALL           = 0xFF
 };
 
 }

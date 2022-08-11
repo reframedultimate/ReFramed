@@ -9,7 +9,7 @@
 
 namespace rfcommon {
     class Session;
-    class RealtimePlugin;
+    class Plugin;
 }
 
 namespace rfapp {
@@ -92,7 +92,7 @@ private:
 private:
     struct PluginData
     {
-        rfcommon::RealtimePlugin* plugin;
+        rfcommon::Plugin* plugin;
         QWidget* view;
         QString name;
     };

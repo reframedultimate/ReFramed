@@ -12,8 +12,13 @@ static void destroyPlugin(rfcommon::Plugin* model)
     delete model;
 }
 
+static const RFPluginType dataViewerPluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REALTIME |
+    RFPluginType::REPLAY;
+
 static RFPluginFactory factories[] = {
-    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
+    {createPlugin, destroyPlugin, dataViewerPluginTypes, {
          "Data Viewer",
          "misc",
          "TheComet",

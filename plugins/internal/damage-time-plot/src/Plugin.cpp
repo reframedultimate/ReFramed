@@ -12,8 +12,13 @@ static void destroyPlugin(rfcommon::Plugin* plugin)
     delete plugin;
 }
 
+static const RFPluginType damageTimePluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REALTIME |
+    RFPluginType::REPLAY;
+
 static RFPluginFactory factories[] = {
-    {createPlugin, destroyPlugin, RFPluginType::REALTIME, {
+    {createPlugin, destroyPlugin, damageTimePluginTypes, {
         "Damage vs Time Plot",
         "misc",
         "TheComet",

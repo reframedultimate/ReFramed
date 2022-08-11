@@ -1,16 +1,12 @@
 #pragma once
 
-#include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/MetaDataListener.hpp"
-#include "rfcommon/FrameDataListener.hpp"
-#include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/Reference.hpp"
+#include "rfcommon/Vector.hpp"
 #include <memory>
 
 namespace rfcommon {
-    class MetaData;
-    class FrameData;
+    class Session;
 }
 
 class XYPositionsPlotListener;

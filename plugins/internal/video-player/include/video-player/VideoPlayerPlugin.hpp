@@ -1,37 +1,31 @@
 #pragma once
 
-#include "rfcommon/RealtimePlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 
-class VideoPlayerPlugin : public rfcommon::RealtimePlugin
+class VideoPlayerPlugin
+        : public rfcommon::Plugin
+        , public rfcommon::Plugin::UIInterface
+        , private rfcommon::Plugin::ReplayInterface
 {
 public:
     VideoPlayerPlugin(RFPluginFactory* factory);
     ~VideoPlayerPlugin();
 
-private:
-    QWidget* createView() override;
-    void destroyView(QWidget* view) override;
+    Plugin::UIInterface* uiInterface() override final;
+    Plugin::ReplayInterface* replayInterface() override final;
+    Plugin::VisualizerInterface* visualizerInterface() override final;
+    Plugin::RealtimeInterface* realtimeInterface() override final;
 
 private:
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
-    void onProtocolDisconnectedFromServer() override;
-
-    void onProtocolTrainingStarted(rfcommon::Session* training) override;
-    void onProtocolTrainingResumed(rfcommon::Session* training) override;
-    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override;
-    void onProtocolTrainingEnded(rfcommon::Session* training) override;
-    void onProtocolGameStarted(rfcommon::Session* game) override;
-    void onProtocolGameResumed(rfcommon::Session* game) override;
-    void onProtocolGameEnded(rfcommon::Session* game) override;
+    QWidget* createView() override final;
+    void destroyView(QWidget* view) override final;
 
 private:
-    void onGameSessionLoaded(rfcommon::Session* game) override;
-    void onGameSessionUnloaded(rfcommon::Session* game) override;
-    void onTrainingSessionLoaded(rfcommon::Session* training) override;
-    void onTrainingSessionUnloaded(rfcommon::Session* training) override;
+    void onGameSessionLoaded(rfcommon::Session* game) override final;
+    void onGameSessionUnloaded(rfcommon::Session* game) override final;
+    void onTrainingSessionLoaded(rfcommon::Session* training) override final;
+    void onTrainingSessionUnloaded(rfcommon::Session* training) override final;
 
-    void onGameSessionSetLoaded(rfcommon::Session** games, int numGames) override;
-    void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override;
+    void onGameSessionSetLoaded(rfcommon::Session** games, int numGames) override final;
+    void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override final;
 };

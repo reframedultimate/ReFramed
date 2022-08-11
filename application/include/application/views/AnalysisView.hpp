@@ -11,7 +11,7 @@ namespace Ui {
 }
 
 namespace rfcommon {
-    class AnalyzerPlugin;
+    class Plugin;
 }
 
 namespace rfapp {
@@ -41,7 +41,7 @@ private:
 
     struct LoadedPlugin
     {
-        rfcommon::AnalyzerPlugin* model;
+        rfcommon::Plugin* plugin;
         QWidget* view;
     };
 

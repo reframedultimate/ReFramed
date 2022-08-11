@@ -4,7 +4,7 @@
 
 // ----------------------------------------------------------------------------
 DamageTimePlotPlugin::DamageTimePlotPlugin(RFPluginFactory* factory)
-    : rfcommon::RealtimePlugin(factory)
+    : Plugin(factory)
     , model_(new DamageTimePlotModel)
 {
 }
@@ -13,6 +13,12 @@ DamageTimePlotPlugin::DamageTimePlotPlugin(RFPluginFactory* factory)
 DamageTimePlotPlugin::~DamageTimePlotPlugin()
 {
 }
+
+// ----------------------------------------------------------------------------
+rfcommon::Plugin::UIInterface* DamageTimePlotPlugin::uiInterface() { return this; }
+rfcommon::Plugin::RealtimeInterface* DamageTimePlotPlugin::realtimeInterface() { return this; }
+rfcommon::Plugin::ReplayInterface* DamageTimePlotPlugin::replayInterface() { return this; }
+rfcommon::Plugin::VisualizerInterface* DamageTimePlotPlugin::visualizerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* DamageTimePlotPlugin::createView()

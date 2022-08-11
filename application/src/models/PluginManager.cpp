@@ -1,13 +1,10 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/AnalyzerPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
-#include "rfcommon/RealtimePlugin.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
-#include "rfcommon/StandalonePlugin.hpp"
-#include "rfcommon/VisualizerPlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 #include "rfcommon/dynlib.h"
 #include <cassert>
 #include <QDebug>
@@ -94,7 +91,7 @@ QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
     QVector<QString> list;
     for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
     {
-        if (!!(factory.value()->type & type))
+        if ((factory.value()->type & type) == type)
             list.push_back(factory.value()->info.name);
     }
     return list;
@@ -112,42 +109,14 @@ const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) co
 }
 
 // ----------------------------------------------------------------------------
-rfcommon::AnalyzerPlugin* PluginManager::createAnalyzerModel(const QString& name)
-{
-    // XXX is dynamic_cast required here due to some of these having multiple inheritance?
-    return static_cast<rfcommon::AnalyzerPlugin*>(createModel(name, RFPluginType::ANALYZER));
-}
-
-// ----------------------------------------------------------------------------
-rfcommon::VisualizerPlugin* PluginManager::createVisualizerModel(const QString& name)
-{
-    return static_cast<rfcommon::VisualizerPlugin*>(createModel(name, RFPluginType::VISUALIZER));
-}
-
-// ----------------------------------------------------------------------------
-rfcommon::RealtimePlugin* PluginManager::createRealtimeModel(const QString& name)
-{
-    return static_cast<rfcommon::RealtimePlugin*>(createModel(name, RFPluginType::REALTIME));
-}
-
-// ----------------------------------------------------------------------------
-rfcommon::StandalonePlugin* PluginManager::createStandaloneModel(const QString& name)
-{
-    return static_cast<rfcommon::StandalonePlugin*>(createModel(name, RFPluginType::STANDALONE));
-}
-
-// ----------------------------------------------------------------------------
-rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType type)
+rfcommon::Plugin* PluginManager::create(const QString& name)
 {
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
 
     RFPluginFactory* factory = it.value();
-    if (!(factory->type & type))
-        return nullptr;
-
-    rfcommon::Plugin* model = factory->createModel(factory);
+    rfcommon::Plugin* model = factory->create(factory);
     if (model == nullptr)
         return nullptr;
 
@@ -155,10 +124,10 @@ rfcommon::Plugin* PluginManager::createModel(const QString& name, RFPluginType t
 }
 
 // ----------------------------------------------------------------------------
-void PluginManager::destroyModel(rfcommon::Plugin* model)
+void PluginManager::destroy(rfcommon::Plugin* model)
 {
-    RFPluginFactory* factory = model->factory();
-    factory->destroyModel(model);
+    const RFPluginFactory* factory = model->factory();
+    factory->destroy(model);
 }
 
 }

@@ -56,7 +56,6 @@ configure_file ("cmake/templates/config.hpp.in" "include/rfcommon/config.hpp")
 configure_file ("cmake/templates/Endian.hpp.in" "include/rfcommon/Endian.hpp")
 
 add_library (rfcommon SHARED
-    "src/AnalyzerPlugin.cpp"
     "src/AnalysisResult.cpp"
     "src/crc32.c"
     "src/DataSet.cpp"
@@ -95,20 +94,16 @@ add_library (rfcommon SHARED
     "src/MetaData.cpp"
     "src/FighterState.cpp"
     "src/Plugin.cpp"
-    "src/RealtimePlugin.cpp"
     "src/RefCounted.cpp"
     "src/SetFormat.cpp"
     "src/SetNumber.cpp"
     "src/Session.cpp"
     "src/StageID.cpp"
-    "src/StandalonePlugin.cpp"
     "src/StreamBuffer.cpp"
-    "src/TemplateInstantiations.cpp"
     "src/TimeStamp.cpp"
     "src/UserLabels.cpp"
     "src/Vector.cpp"
     "src/Vec2.cpp"
-    "src/VisualizerPlugin.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
     "src/platform/time.cpp")

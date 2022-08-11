@@ -1,7 +1,7 @@
 #include "application/ui_AnalysisInputView.h"
 #include "application/views/AnalysisView.hpp"
 #include "application/models/PluginManager.hpp"
-#include "rfcommon/AnalyzerPlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 #include <QTabWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -22,8 +22,8 @@ AnalysisView::AnalysisView(PluginManager* pluginManager, QWidget* parent)
     setLayout(new QVBoxLayout);
     layout()->addWidget(tabWidget_);
 
-    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::ANALYZER))
-        addMenu_->addAction(name);
+    /*for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::ANALYZER))
+        addMenu_->addAction(name);*/
 
     QWidget* inputSettingsTab = new QWidget;
     inputUi_->setupUi(inputSettingsTab);
@@ -42,14 +42,14 @@ AnalysisView::~AnalysisView()
 {
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
-        rfcommon::AnalyzerPlugin* model = it.value().model;
+        rfcommon::Plugin* plugin = it.value().plugin;
         QWidget* view = it.value().view;
 
         int tabIndex = tabWidget_->indexOf(view);
         tabWidget_->removeTab(tabIndex);
 
-        model->destroyView(view);
-        pluginManager_->destroyModel(model);
+        plugin->uiInterface()->destroyView(view);
+        pluginManager_->destroy(plugin);
     }
 
     delete inputUi_;
@@ -68,14 +68,16 @@ void AnalysisView::onTabBarClicked(int index)
     int insertIdx = tabWidget_->count() - 1;
 
     const QString& name = action->text();
-    rfcommon::AnalyzerPlugin* model = pluginManager_->createAnalyzerModel(name);
-    if (model == nullptr)
+    rfcommon::Plugin* plugin = pluginManager_->create(name);
+    if (plugin == nullptr)
         return;
 
-    QWidget* view = model->createView();
+    QWidget* view = nullptr;
+    if (auto i = plugin->uiInterface())
+        view = i->createView();
     if (view == nullptr)
     {
-        pluginManager_->destroyModel(model);
+        pluginManager_->destroy(plugin);
         return;
     }
 
@@ -84,13 +86,13 @@ void AnalysisView::onTabBarClicked(int index)
         view,
         action->text()
     );
-    loadedPlugins_.insert(name, {model, view});
+    loadedPlugins_.insert(name, {plugin, view});
 
     QToolButton* closeButton = new QToolButton();
     closeButton->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
     tabWidget_->tabBar()->setTabButton(insertIdx, QTabBar::RightSide, closeButton);
 
-    connect(closeButton, &QToolButton::released, [this, model, view](){
+    connect(closeButton, &QToolButton::released, [this, view](){
         closeTab(view);
     });
 }
@@ -108,7 +110,7 @@ void AnalysisView::closeTab(QWidget* widget)
 {
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
-        rfcommon::AnalyzerPlugin* model = it.value().model;
+        rfcommon::Plugin* plugin = it.value().plugin;
         QWidget* view = it.value().view;
 
         if (view == widget)
@@ -116,8 +118,8 @@ void AnalysisView::closeTab(QWidget* widget)
             int tabIndex = tabWidget_->indexOf(widget);
             tabWidget_->removeTab(tabIndex);
 
-            model->destroyView(view);
-            pluginManager_->destroyModel(model);
+            plugin->uiInterface()->destroyView(view);
+            pluginManager_->destroy(plugin);
             loadedPlugins_.erase(it);
             break;
         }

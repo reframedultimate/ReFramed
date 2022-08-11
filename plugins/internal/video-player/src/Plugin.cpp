@@ -14,8 +14,12 @@ static void destroyVideoPlayerPlugin(rfcommon::Plugin* plugin)
     delete plugin;
 }
 
+static const RFPluginType videoPlayerPluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REPLAY;
+
 static RFPluginFactory factories[] = {
-    {createVideoPlayerPlugin, destroyVideoPlayerPlugin, RFPluginType::REALTIME, {
+    {createVideoPlayerPlugin, destroyVideoPlayerPlugin, videoPlayerPluginTypes, {
          "Video Player",
          "TheComet",
          "TheComet#5387, @TheComet93",

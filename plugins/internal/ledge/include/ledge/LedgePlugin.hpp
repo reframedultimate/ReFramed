@@ -1,9 +1,13 @@
 #pragma once
 
-#include "rfcommon/RealtimePlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 #include <memory>
 
-class LedgePlugin : public rfcommon::RealtimePlugin
+class LedgePlugin
+        : public rfcommon::Plugin
+        , private rfcommon::Plugin::UIInterface
+        , private rfcommon::Plugin::RealtimeInterface
+        , private rfcommon::Plugin::ReplayInterface
 {
 public:
     LedgePlugin(RFPluginFactory* factory);
@@ -12,6 +16,11 @@ public:
 private:
     QWidget* createView() override;
     void destroyView(QWidget* view) override;
+
+    Plugin::UIInterface* uiInterface() override final;
+    Plugin::ReplayInterface* replayInterface() override final;
+    Plugin::VisualizerInterface* visualizerInterface() override final;
+    Plugin::RealtimeInterface* realtimeInterface() override final;
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;

@@ -3,7 +3,7 @@
 
 // ----------------------------------------------------------------------------
 LedgePlugin::LedgePlugin(RFPluginFactory* factory)
-    : RealtimePlugin(factory)
+    : Plugin(factory)
 {
 }
 
@@ -11,6 +11,12 @@ LedgePlugin::LedgePlugin(RFPluginFactory* factory)
 LedgePlugin::~LedgePlugin()
 {
 }
+
+// ----------------------------------------------------------------------------
+rfcommon::Plugin::UIInterface* LedgePlugin::uiInterface() { return this; }
+rfcommon::Plugin::RealtimeInterface* LedgePlugin::realtimeInterface() { return this; }
+rfcommon::Plugin::ReplayInterface* LedgePlugin::replayInterface() { return this; }
+rfcommon::Plugin::VisualizerInterface* LedgePlugin::visualizerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* LedgePlugin::createView() 

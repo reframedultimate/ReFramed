@@ -56,13 +56,8 @@ public:
      */
     const RFPluginFactoryInfo* getFactoryInfo(const QString& name) const;
 
-    rfcommon::AnalyzerPlugin* createAnalyzerModel(const QString& name);
-    rfcommon::VisualizerPlugin* createVisualizerModel(const QString& name);
-    rfcommon::RealtimePlugin* createRealtimeModel(const QString& name);
-    rfcommon::StandalonePlugin* createStandaloneModel(const QString& name);
-
-    rfcommon::Plugin* createModel(const QString& name, RFPluginType type);
-    void destroyModel(rfcommon::Plugin* plugin);
+    rfcommon::Plugin* create(const QString& name);
+    void destroy(rfcommon::Plugin* plugin);
 
 private:
     QHash<QString, RFPluginFactory*> factories_;

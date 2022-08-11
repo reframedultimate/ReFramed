@@ -1,7 +1,7 @@
 #include "application/views/ReplayViewer.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/RealtimePlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
 #include <QTabBar>
@@ -59,8 +59,8 @@ ReplayViewer::~ReplayViewer()
     for (const auto& data : plugins_)
     {
         data.view->setParent(nullptr);
-        data.plugin->destroyView(data.view);
-        pluginManager_->destroyModel(data.plugin);
+        data.plugin->uiInterface()->destroyView(data.view);
+        pluginManager_->destroy(data.plugin);
     }
 }
 
@@ -71,7 +71,7 @@ int ReplayViewer::findInCache(const QString& fileName) const
         if (replayCache_[i].fileName == fileName)
             return i;
     return replayCache_.count();
-};
+}
 
 // ----------------------------------------------------------------------------
 void ReplayViewer::loadGameReplays(const QStringList& fileNames)
@@ -124,12 +124,14 @@ void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVect
     if (activeReplays_.size() == 1)
     {
         for (const auto& data : plugins_)
-            data.plugin->onGameSessionLoaded(activeReplays_[0]);
+            if (auto i = data.plugin->replayInterface())
+                i->onGameSessionLoaded(activeReplays_[0]);
     }
     else if (activeReplays_.size() > 1)
     {
         for (const auto& data : plugins_)
-            data.plugin->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+            if (auto i = data.plugin->replayInterface())
+                i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
     }
     
     replayState_ = GAME_LOADED;
@@ -141,12 +143,14 @@ void ReplayViewer::clearReplays()
     if (activeReplays_.size() == 1)
     {
         for (const auto& data : plugins_)
-            data.plugin->onGameSessionUnloaded(activeReplays_[0]);
+            if (auto i = data.plugin->replayInterface())
+                i->onGameSessionUnloaded(activeReplays_[0]);
     }
     else if (activeReplays_.size() > 1)
     {
         for (const auto& data : plugins_)
-            data.plugin->onGameSessionSetUnloaded(activeReplays_.data(), activeReplays_.size());
+            if (auto i = data.plugin->replayInterface())
+                i->onGameSessionSetUnloaded(activeReplays_.data(), activeReplays_.size());
     }
 
     activeReplays_.clear();
@@ -175,12 +179,14 @@ void ReplayViewer::clearActiveSession()
         {
             case rfcommon::MetaData::GAME:
                 for (const auto& data : plugins_)
-                    data.plugin->onProtocolGameEnded(activeSession_);
+                    if (auto i = data.plugin->realtimeInterface())
+                        i->onProtocolGameEnded(activeSession_);
                 break;
 
             case rfcommon::MetaData::TRAINING:
                 for (const auto& data : plugins_)
-                    data.plugin->onProtocolTrainingEnded(activeSession_);
+                    if (auto i = data.plugin->realtimeInterface())
+                        i->onProtocolTrainingEnded(activeSession_);
                 break;
         }
 
@@ -204,7 +210,10 @@ void ReplayViewer::onTabBarClicked(int index)
 
     // Open popup menu with all of the plugins that aren't loaded yet
     QMenu popup;
-    auto pluginNames = pluginManager_->availableFactoryNames(RFPluginType::REALTIME);
+    auto pluginNames = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REALTIME);
+    for (const auto& name : pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REPLAY))
+        if (pluginNames.contains(name) == false)
+            pluginNames.push_back(name);
     qSort(pluginNames.begin(), pluginNames.end());
     for (const auto& name : pluginNames)
     {
@@ -220,13 +229,16 @@ void ReplayViewer::onTabBarClicked(int index)
     // Create plugin
     PluginData data;
     data.name = action->text();
-    data.plugin = pluginManager_->createRealtimeModel(data.name);
+    data.plugin = pluginManager_->create(data.name);
     if (data.plugin == nullptr)
         return;
-    data.view = data.plugin->createView();
+
+    data.view = nullptr;
+    if (auto i = data.plugin->uiInterface())
+        data.view = i->createView();
     if (data.view == nullptr)
     {
-        pluginManager_->destroyModel(data.plugin);
+        pluginManager_->destroy(data.plugin);
         return;
     }
     plugins_.push_back(data);
@@ -252,46 +264,62 @@ void ReplayViewer::onTabBarClicked(int index)
     {
     case TRAINING_STARTED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolTrainingStarted(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolTrainingStarted(activeSession_);
         break;
 
     case TRAINING_RESUMED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolTrainingResumed(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolTrainingResumed(activeSession_);
         break;
 
     case TRAINING_STARTED_ENDED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolTrainingStarted(activeSession_);
-        data.plugin->onProtocolTrainingEnded(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+        {
+            i->onProtocolTrainingStarted(activeSession_);
+            i->onProtocolTrainingEnded(activeSession_);
+        }
         break;
 
     case TRAINING_RESUMED_ENDED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolTrainingResumed(activeSession_);
-        data.plugin->onProtocolTrainingEnded(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+        {
+            i->onProtocolTrainingResumed(activeSession_);
+            i->onProtocolTrainingEnded(activeSession_);
+        }
         break;
 
     case GAME_STARTED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolGameStarted(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolGameStarted(activeSession_);
         break;
 
     case GAME_RESUMED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolGameResumed(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolGameResumed(activeSession_);
         break;
 
     case GAME_STARTED_ENDED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolGameStarted(activeSession_);
-        data.plugin->onProtocolGameEnded(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+        {
+            i->onProtocolGameStarted(activeSession_);
+            i->onProtocolGameEnded(activeSession_);
+        }
         break;
 
     case GAME_RESUMED_ENDED:
         assert(activeSession_.notNull());
-        data.plugin->onProtocolGameResumed(activeSession_);
-        data.plugin->onProtocolGameEnded(activeSession_);
+        if (auto i = data.plugin->realtimeInterface())
+        {
+            i->onProtocolGameResumed(activeSession_);
+            i->onProtocolGameEnded(activeSession_);
+        }
         break;
 
     case NO_ACTIVE_SESSION:
@@ -300,15 +328,24 @@ void ReplayViewer::onTabBarClicked(int index)
         case GAME_LOADED:
             assert(activeReplays_.size() > 0);
             if (activeReplays_.size() == 1)
-                data.plugin->onGameSessionLoaded(activeReplays_[0]);
+            {
+                if (auto i = data.plugin->replayInterface())
+                    i->onGameSessionLoaded(activeReplays_[0]);
+            }
             else
-                data.plugin->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+            {
+                if (auto i = data.plugin->replayInterface())
+                    i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+            }
             break;
 
         case TRAINING_LOADED:
             assert(activeReplays_.size() == 1);
-            data.plugin->onTrainingSessionLoaded(activeReplays_[0]);
+            if (auto i = data.plugin->replayInterface())
+                i->onTrainingSessionLoaded(activeReplays_[0]);
             break;
+
+        case NONE_LOADED: break;
         }
     }
 }
@@ -338,8 +375,8 @@ void ReplayViewer::closeTabWithView(QWidget* view)
             continue;
 
         it->view->setParent(nullptr);
-        it->plugin->destroyView(it->view);
-        pluginManager_->destroyModel(it->plugin);
+        it->plugin->uiInterface()->destroyView(it->view);
+        pluginManager_->destroy(it->plugin);
         plugins_.erase(it);
         break;
     }
@@ -355,28 +392,32 @@ void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint1
     port_ = port;
 
     for (const auto& data : plugins_)
-        data.plugin->onProtocolAttemptConnectToServer(ipAddress, port);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolAttemptConnectToServer(ipAddress, port);
 }
 void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) 
 {
     sessionState_ = DISCONNECTED;
 
     for (const auto& data : plugins_)
-        data.plugin->onProtocolFailedToConnectToServer(errormsg, ipAddress, port);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolFailedToConnectToServer(errormsg, ipAddress, port);
 }
 void ReplayViewer::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
     sessionState_ = CONNECTED;
 
     for (const auto& data : plugins_)
-        data.plugin->onProtocolConnectedToServer(ipAddress, port);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolConnectedToServer(ipAddress, port);
 }
 void ReplayViewer::onProtocolDisconnectedFromServer() 
 {
     sessionState_ = DISCONNECTED;
 
     for (const auto& data : plugins_)
-        data.plugin->onProtocolDisconnectedFromServer();
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolDisconnectedFromServer();
 }
 
 // ----------------------------------------------------------------------------
@@ -389,7 +430,8 @@ void ReplayViewer::onProtocolTrainingStarted(rfcommon::Session* training)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolTrainingStarted(training);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolTrainingStarted(training);
 }
 void ReplayViewer::onProtocolTrainingResumed(rfcommon::Session* training)
 {
@@ -400,7 +442,8 @@ void ReplayViewer::onProtocolTrainingResumed(rfcommon::Session* training)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolTrainingResumed(training);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolTrainingResumed(training);
 }
 void ReplayViewer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
@@ -413,7 +456,8 @@ void ReplayViewer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcom
     if (replayState_ == NONE_LOADED)
     {
         for (const auto& data : plugins_)
-            data.plugin->onProtocolTrainingReset(oldTraining, newTraining);
+            if (auto i = data.plugin->realtimeInterface())
+                i->onProtocolTrainingReset(oldTraining, newTraining);
     }
 }
 void ReplayViewer::onProtocolTrainingEnded(rfcommon::Session* training)
@@ -427,7 +471,8 @@ void ReplayViewer::onProtocolTrainingEnded(rfcommon::Session* training)
     if (replayState_ == NONE_LOADED)
     {
         for (const auto& data : plugins_)
-            data.plugin->onProtocolTrainingEnded(training);
+            if (auto i = data.plugin->realtimeInterface())
+                i->onProtocolTrainingEnded(training);
     }
 }
 void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
@@ -439,7 +484,8 @@ void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolGameStarted(game);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolGameStarted(game);
 }
 void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
 {
@@ -450,7 +496,8 @@ void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
     // the active session. Seems to make sense from a user perspective
     clearReplays();
     for (const auto& data : plugins_)
-        data.plugin->onProtocolGameResumed(game);
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolGameResumed(game);
 }
 void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
 {
@@ -463,7 +510,8 @@ void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
     if (replayState_ == NONE_LOADED)
     {
         for (const auto& data : plugins_)
-            data.plugin->onProtocolGameEnded(game);
+            if (auto i = data.plugin->realtimeInterface())
+                i->onProtocolGameEnded(game);
     }
 }
 

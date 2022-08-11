@@ -4,7 +4,7 @@
 
 // ----------------------------------------------------------------------------
 DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory)
-    : RealtimePlugin(factory)
+    : Plugin(factory)
     , model_(new DataViewerModel)
 {
 }
@@ -13,6 +13,12 @@ DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory)
 DataViewerPlugin::~DataViewerPlugin()
 {
 }
+
+// ----------------------------------------------------------------------------
+rfcommon::Plugin::UIInterface* DataViewerPlugin::uiInterface() { return this; }
+rfcommon::Plugin::RealtimeInterface* DataViewerPlugin::realtimeInterface() { return this; }
+rfcommon::Plugin::ReplayInterface* DataViewerPlugin::replayInterface() { return this; }
+rfcommon::Plugin::VisualizerInterface* DataViewerPlugin::visualizerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* DataViewerPlugin::createView()
@@ -24,43 +30,6 @@ QWidget* DataViewerPlugin::createView()
 void DataViewerPlugin::destroyView(QWidget* view)
 {
     delete view;
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onGameSessionLoaded(rfcommon::Session* game)
-{
-    model_->setSession(game);
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onGameSessionUnloaded(rfcommon::Session* game)
-{
-    model_->clearSession();
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
-{
-    model_->setSession(training);
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
-{
-    model_->clearSession();
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
-{ 
-    model_->clearSession();
-}
-
-// ----------------------------------------------------------------------------
-void DataViewerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) 
-{ 
-    (void)games; 
-    (void)numGames; 
 }
 
 // ----------------------------------------------------------------------------
@@ -108,4 +77,41 @@ void DataViewerPlugin::onProtocolGameResumed(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void DataViewerPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onGameSessionLoaded(rfcommon::Session* game)
+{
+    model_->setSession(game);
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onGameSessionUnloaded(rfcommon::Session* game)
+{
+    model_->clearSession();
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
+{
+    model_->setSession(training);
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
+{
+    model_->clearSession();
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
+{
+    model_->clearSession();
+}
+
+// ----------------------------------------------------------------------------
+void DataViewerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
+{
+    (void)games;
+    (void)numGames;
 }

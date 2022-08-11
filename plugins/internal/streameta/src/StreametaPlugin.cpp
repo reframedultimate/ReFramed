@@ -3,7 +3,7 @@
 
 // ----------------------------------------------------------------------------
 StreametaPlugin::StreametaPlugin(RFPluginFactory* factory)
-    : RealtimePlugin(factory)
+    : Plugin(factory)
 {
 }
 
@@ -11,6 +11,12 @@ StreametaPlugin::StreametaPlugin(RFPluginFactory* factory)
 StreametaPlugin::~StreametaPlugin()
 {
 }
+
+// ----------------------------------------------------------------------------
+rfcommon::Plugin::UIInterface* StreametaPlugin::uiInterface() { return this; }
+rfcommon::Plugin::RealtimeInterface* StreametaPlugin::realtimeInterface() { return this; }
+rfcommon::Plugin::ReplayInterface* StreametaPlugin::replayInterface() { return nullptr; }
+rfcommon::Plugin::VisualizerInterface* StreametaPlugin::visualizerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* StreametaPlugin::createView() 
@@ -38,12 +44,3 @@ void StreametaPlugin::onProtocolTrainingEnded(rfcommon::Session* training) {}
 void StreametaPlugin::onProtocolGameStarted(rfcommon::Session* match) {}
 void StreametaPlugin::onProtocolGameResumed(rfcommon::Session* match) {}
 void StreametaPlugin::onProtocolGameEnded(rfcommon::Session* match) {}
-
-// ----------------------------------------------------------------------------
-void StreametaPlugin::onGameSessionLoaded(rfcommon::Session* session) {}
-void StreametaPlugin::onGameSessionUnloaded(rfcommon::Session* session) {}
-void StreametaPlugin::onTrainingSessionLoaded(rfcommon::Session* training) {}
-void StreametaPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
-
-void StreametaPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
-void StreametaPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}

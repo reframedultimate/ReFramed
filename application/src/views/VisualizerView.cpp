@@ -1,6 +1,6 @@
 #include "application/views/VisualizerView.hpp"
 #include "application/models/PluginManager.hpp"
-#include "rfcommon/VisualizerPlugin.hpp"
+#include "rfcommon/Plugin.hpp"
 
 #include <QVBoxLayout>
 #include <QMdiArea>
@@ -14,10 +14,11 @@ public:
         : manager_(manager)
     {
         setLayout(new QVBoxLayout);
-        model_ = manager_->createVisualizerModel(name);
-        if (model_)
+        plugin_ = manager_->create(name);
+        if (plugin_)
         {
-            view_ = model_->createView();
+            if (auto i = plugin_->uiInterface())
+                view_ = i->createView();
             if (view_)
                 layout()->addWidget(view_);
         }
@@ -25,18 +26,18 @@ public:
 
     ~PluginWidget()
     {
-        if (model_)
+        if (plugin_)
         {
             if (view_)
-                model_->destroyView(view_);
+                plugin_->uiInterface()->destroyView(view_);
 
-            manager_->destroyModel(model_);
+            manager_->destroy(plugin_);
         }
     }
 
 private:
     PluginManager* manager_;
-    rfcommon::VisualizerPlugin* model_ = nullptr;
+    rfcommon::Plugin* plugin_ = nullptr;
     QWidget* view_ = nullptr;
 };
 

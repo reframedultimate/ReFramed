@@ -12,8 +12,13 @@ static void destroyLedgePlugin(rfcommon::Plugin* plugin)
     delete plugin;
 }
 
+static const RFPluginType ledgePluginTypes =
+    RFPluginType::UI |
+    RFPluginType::REALTIME |
+    RFPluginType::REPLAY;
+
 static RFPluginFactory factories[] = {
-    {createLedgePlugin, destroyLedgePlugin, RFPluginType::REALTIME,
+    {createLedgePlugin, destroyLedgePlugin, ledgePluginTypes,
     {"Ledge",
      "misc > misc",
      "TheComet",
