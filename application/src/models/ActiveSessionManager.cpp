@@ -549,7 +549,7 @@ void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommo
     {
         const auto& state = frame[fighterIdx];
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFighterStateChanged, 
-            fighterIdx, state.damage(), state.stocks().count());
+            fighterIdx, state.damage(), int(state.stocks().count()));
     }
 
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTimeRemainingChanged, frame[0].framesLeft().secondsLeft());

@@ -69,8 +69,8 @@ bool VideoDecoder::openFile(const QString& fileName)
 {
     emit info("Opening file " + fileName);
 
-    AVCodec* videoCodec;
-    AVCodec* audioCodec;
+    const AVCodec* videoCodec;
+    const AVCodec* audioCodec;
     int bufSize;
 
     // AVFormatContext holds the header information from the format (Container)
@@ -116,7 +116,7 @@ bool VideoDecoder::openFile(const QString& fileName)
     {
         AVStream* stream = ctx_->streams[i];
         AVCodecParameters* codecParams = stream->codecpar;
-        AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
+        const AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
         if (codec == nullptr)
         {
             emit error("Unsupported codec");

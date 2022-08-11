@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 3.2)
 
 set (PLUGIN_NAME "video-player")
 
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 project ("plugin-${PLUGIN_NAME}"
     VERSION 0.0.1
     LANGUAGES CXX)
@@ -27,10 +29,11 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "include")
 
 if (${REFRAMED_plugin-${PLUGIN_NAME}})
-    find_package (FFMPEG COMPONENTS avcodec avformat avutil avdevice REQUIRED)
+    find_package (FFMPEG COMPONENTS avcodec avformat avutil avdevice swscale REQUIRED)
     target_link_libraries (plugin-${PLUGIN_NAME}
         PRIVATE FFMPEG::avutil
         PRIVATE FFMPEG::avcodec
         PRIVATE FFMPEG::avformat
-        PRIVATE FFMPEG::avdevice)
+        PRIVATE FFMPEG::avdevice
+        PRIVATE FFMPEG::swscale)
 endif ()
