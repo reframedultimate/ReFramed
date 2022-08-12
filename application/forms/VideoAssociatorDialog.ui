@@ -61,9 +61,6 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="1" rowspan="4">
-    <layout class="QHBoxLayout" name="layout_videoPlugin"/>
-   </item>
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_videoOffset">
      <property name="title">
@@ -93,7 +90,7 @@
       <item row="0" column="0" colspan="2">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Adjust these values until you see the first possible active frame, right after the &quot;GO&quot; text. This makes sure the frame data aligns with the video.</string>
+         <string>Adjust these values until you see the first active frame, right after the &quot;GO&quot; text. This makes sure the frame data aligns with the video.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -111,26 +108,13 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>366</height>
+       <height>392</height>
       </size>
      </property>
     </spacer>
    </item>
    <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item>
       <widget class="QPushButton" name="pushButton_save">
        <property name="text">
@@ -145,7 +129,23 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
+   </item>
+   <item row="0" column="1" rowspan="4">
+    <layout class="QHBoxLayout" name="layout_videoPlugin"/>
    </item>
   </layout>
  </widget>
