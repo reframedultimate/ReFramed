@@ -16,6 +16,7 @@ public:
     Plugin::ReplayInterface* replayInterface() override final;
     Plugin::VisualizerInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
+    Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
 private:
     QWidget* createView() override final;

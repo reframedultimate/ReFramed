@@ -64,7 +64,7 @@ VideoPlayerView::VideoPlayerView(QWidget *parent)
 
     //const char* videoFile = "/media/ssbu/Weekly 2021-04-05/2021-04-05_18-42-51.mkv";
     //const char* videoFile = "/media/ssbu/Weekly 2021-04-09/Weekly 2021-04-09.mp4";
-    const char* videoFile = "/media/ssbu/2022-08-05 - Jas1n/2022-08-05_22-13-07.mkv";
+    const char* videoFile = "F:\\2022-08-05 - Jas1n\\2022-08-05_22-13-07.mkv";
 
     connect(&timer_, &QTimer::timeout, this, &VideoPlayerView::drawNextFrame);
     connect(decoder_, &VideoDecoder::info, this, &VideoPlayerView::info);

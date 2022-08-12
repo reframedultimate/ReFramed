@@ -17,6 +17,7 @@ rfcommon::Plugin::UIInterface* StreametaPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* StreametaPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* StreametaPlugin::replayInterface() { return nullptr; }
 rfcommon::Plugin::VisualizerInterface* StreametaPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VideoPlayerInterface* StreametaPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* StreametaPlugin::createView() 

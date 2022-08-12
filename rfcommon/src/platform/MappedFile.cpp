@@ -44,11 +44,11 @@ bool MappedFile::open(const char* fileName)
         OPEN_EXISTING,          // File must exist
         FILE_ATTRIBUTE_NORMAL,  // Default attributes
         NULL);                  // No attribute template
-    if (hFile == INVALID_FILE_HANDLE)
+    if (hFile == INVALID_HANDLE_VALUE)
         goto open_failed;
 
     // Determine file size in bytes
-    if (!GetFileSize(hFile, &liFileSize))
+    if (!GetFileSizeEx(hFile, &liFileSize))
         goto get_file_size_failed;
 
     mapping = CreateFileMapping(
