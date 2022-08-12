@@ -38,6 +38,8 @@ static const char* magic               = "RFR1";
 static const char* blobTypeMeta        = "META";
 static const char* blobTypeMappingInfo = "MAPI";
 static const char* blobTypeFrameData   = "FDAT";
+static const char* blobTypeVideoMeta   = "VIDM";
+static const char* blobTypeVideoEmbed  = "VIDE";
 
 // ----------------------------------------------------------------------------
 static std::string decompressGZFile(const char* fileName)
@@ -863,6 +865,10 @@ bool Session::save(const char* fileName)
         contentTable_.emplace(blobTypeMeta);
     if (frameData_.notNull())
         contentTable_.emplace(blobTypeFrameData);
+    if (videoMeta_.notNull())
+        contentTable_.emplace(blobTypeVideoMeta);
+    if (videoEmbed_.notNull())
+        contentTable_.emplace(blobTypeVideoEmbed);
 
     const int headerSize = 5 + 12 * contentTable_.count();
     uint8_t numEntries = static_cast<uint8_t>(contentTable_.count());
@@ -903,6 +909,22 @@ bool Session::save(const char* fileName)
         {
             entry.offset = offset;
             entry.size = frameData_->save(file);
+            if (entry.size == 0)
+                goto write_fail;
+            offset += entry.size;
+        }
+        else if (memcmp(entry.type, blobTypeVideoMeta, 4) == 0)
+        {
+            entry.offset = offset;
+            entry.size = videoMeta_->save(file);
+            if (entry.size == 0)
+                goto write_fail;
+            offset += entry.size;
+        }
+        else if (memcmp(entry.type, blobTypeVideoEmbed, 4) == 0)
+        {
+            entry.offset = offset;
+            entry.size = fwrite(videoEmbed_->address(), 1, videoEmbed_->size(), file);
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;

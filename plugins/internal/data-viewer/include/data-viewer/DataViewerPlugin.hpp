@@ -28,6 +28,7 @@ private:
     Plugin::ReplayInterface* replayInterface() override final;
     Plugin::VisualizerInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
+    Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override final;

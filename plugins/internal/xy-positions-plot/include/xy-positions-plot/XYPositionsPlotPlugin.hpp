@@ -35,6 +35,7 @@ private:
     Plugin::ReplayInterface* replayInterface() override final;
     Plugin::VisualizerInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
+    Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
 private:
     // These get called by the main application when connecting/disconnecting

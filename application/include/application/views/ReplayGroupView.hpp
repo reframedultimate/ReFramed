@@ -26,7 +26,7 @@ class ReplayNameCompleter;
 class ReplayListWidget;
 class ReplayViewer;
 
-class ReplayGroupView 
+class ReplayGroupView
     : public QWidget
     , public ReplayManagerListener
     , public ReplayGroupListener
@@ -77,6 +77,7 @@ private:
 
 private:
     Ui::ReplayGroupView* ui_;
+    PluginManager* pluginManager_;
     ReplayManager* replayManager_;
     ReplayGroup* currentGroup_ = nullptr;
     ReplayListWidget* replayListWidget_;

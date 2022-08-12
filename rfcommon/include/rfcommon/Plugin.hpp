@@ -42,6 +42,11 @@ public:
     public:
     };
 
+    class VideoPlayerInterface
+    {
+    public:
+    };
+
     Plugin(RFPluginFactory* factory);
     virtual ~Plugin();
 
@@ -49,6 +54,7 @@ public:
     virtual ReplayInterface* replayInterface() = 0;
     virtual VisualizerInterface* visualizerInterface() = 0;
     virtual RealtimeInterface* realtimeInterface() = 0;
+    virtual VideoPlayerInterface* videoPlayerInterface() = 0;
 
     const RFPluginFactory* factory() const;
 

@@ -17,17 +17,18 @@ rfcommon::Plugin::UIInterface* LedgePlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* LedgePlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* LedgePlugin::replayInterface() { return this; }
 rfcommon::Plugin::VisualizerInterface* LedgePlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VideoPlayerInterface* LedgePlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
-QWidget* LedgePlugin::createView() 
-{ 
+QWidget* LedgePlugin::createView()
+{
     return new QWidget();
 }
 
 // ----------------------------------------------------------------------------
-void LedgePlugin::destroyView(QWidget* view) 
-{ 
-    delete view; 
+void LedgePlugin::destroyView(QWidget* view)
+{
+    delete view;
 }
 
 // ----------------------------------------------------------------------------

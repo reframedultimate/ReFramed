@@ -5,6 +5,7 @@
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/ReplayListWidget.hpp"
 #include "application/views/ReplayViewer.hpp"
+#include "application/views/VideoAssociatorDialog.hpp"
 #include "rfcommon/Session.hpp"
 
 #include <QListWidget>
@@ -92,6 +93,7 @@ ReplayGroupView::ReplayGroupView(
         QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::ReplayGroupView)
+    , pluginManager_(pluginManager)
     , replayManager_(replayManager)
     , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
@@ -175,6 +177,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     {
         QMenu menu;
         QAction* edit = menu.addAction("Edit...");
+        QAction* associateVideo = menu.addAction("Associate Video...");
         QAction* a = menu.exec(item);
 
         if (a == edit)
@@ -188,6 +191,22 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
                     if (session)
                     {
                         ReplayEditorDialog dialog(replayManager_, session, absFileName);
+                        dialog.exec();
+                    }
+                    break;
+                }
+        }
+        else if (a == associateVideo)
+        {
+            for (const auto& fileName : currentGroup_->absFilePathList())
+                if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
+                {
+                    QString absFileName = fileName.absoluteFilePath();
+                    QByteArray ba = absFileName.toUtf8();
+                    rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                    if (session)
+                    {
+                        VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
                         dialog.exec();
                     }
                     break;

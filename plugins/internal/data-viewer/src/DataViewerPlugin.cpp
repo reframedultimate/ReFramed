@@ -19,6 +19,7 @@ rfcommon::Plugin::UIInterface* DataViewerPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* DataViewerPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* DataViewerPlugin::replayInterface() { return this; }
 rfcommon::Plugin::VisualizerInterface* DataViewerPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VideoPlayerInterface* DataViewerPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* DataViewerPlugin::createView()

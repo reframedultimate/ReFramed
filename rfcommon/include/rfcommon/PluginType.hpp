@@ -9,6 +9,7 @@ enum class RFPluginType : unsigned char
     REPLAY        = 0x04,
     VISUALIZER    = 0x08,
     STANDALONE    = 0x10,
+    VIDEO_PLAYER  = 0x20,
 
     ALL           = 0xFF
 };

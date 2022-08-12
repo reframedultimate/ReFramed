@@ -19,6 +19,7 @@ rfcommon::Plugin::UIInterface* DamageTimePlotPlugin::uiInterface() { return this
 rfcommon::Plugin::RealtimeInterface* DamageTimePlotPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* DamageTimePlotPlugin::replayInterface() { return this; }
 rfcommon::Plugin::VisualizerInterface* DamageTimePlotPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VideoPlayerInterface* DamageTimePlotPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* DamageTimePlotPlugin::createView()
@@ -39,21 +40,21 @@ void DamageTimePlotPlugin::onProtocolConnectedToServer(const char* ipAddress, ui
 void DamageTimePlotPlugin::onProtocolDisconnectedFromServer() {}
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotPlugin::onProtocolTrainingStarted(rfcommon::Session* training) 
+void DamageTimePlotPlugin::onProtocolTrainingStarted(rfcommon::Session* training)
 {
     model_->clearAll();
     model_->addSession(training);
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotPlugin::onProtocolTrainingResumed(rfcommon::Session* training) 
+void DamageTimePlotPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 {
     model_->clearAll();
     model_->addSession(training);
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) 
+void DamageTimePlotPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
     model_->clearAll();
     model_->addSession(newTraining);
@@ -106,7 +107,7 @@ void DamageTimePlotPlugin::onTrainingSessionUnloaded(rfcommon::Session* training
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) 
+void DamageTimePlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
 {
     model_->clearAll();
     while (numGames--)
@@ -114,7 +115,7 @@ void DamageTimePlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int
 }
 
 // ----------------------------------------------------------------------------
-void DamageTimePlotPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) 
+void DamageTimePlotPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
 {
     model_->clearAll();
 }

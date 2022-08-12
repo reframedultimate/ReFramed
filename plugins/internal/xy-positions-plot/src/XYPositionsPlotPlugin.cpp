@@ -19,6 +19,7 @@ rfcommon::Plugin::UIInterface* XYPositionsPlotPlugin::uiInterface() { return thi
 rfcommon::Plugin::RealtimeInterface* XYPositionsPlotPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* XYPositionsPlotPlugin::replayInterface() { return this; }
 rfcommon::Plugin::VisualizerInterface* XYPositionsPlotPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VideoPlayerInterface* XYPositionsPlotPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
 QWidget* XYPositionsPlotPlugin::createView()
@@ -46,7 +47,7 @@ void XYPositionsPlotPlugin::onProtocolTrainingStarted(rfcommon::Session* trainin
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotPlugin::onProtocolTrainingResumed(rfcommon::Session* training) 
+void XYPositionsPlotPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 {
     model_->clearAll();
     model_->addSession(training);
@@ -111,7 +112,7 @@ void XYPositionsPlotPlugin::onTrainingSessionUnloaded(rfcommon::Session* trainin
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) 
+void XYPositionsPlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
 {
     model_->clearAll();
     for (int i = 0; i != numGames; ++i)
@@ -119,7 +120,7 @@ void XYPositionsPlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, in
 }
 
 // ----------------------------------------------------------------------------
-void XYPositionsPlotPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) 
+void XYPositionsPlotPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
 {
     model_->clearAll();
 }

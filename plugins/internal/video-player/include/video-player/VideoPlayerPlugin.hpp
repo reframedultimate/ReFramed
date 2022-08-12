@@ -4,8 +4,9 @@
 
 class VideoPlayerPlugin
         : public rfcommon::Plugin
-        , public rfcommon::Plugin::UIInterface
+        , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::ReplayInterface
+        , private rfcommon::Plugin::VideoPlayerInterface
 {
 public:
     VideoPlayerPlugin(RFPluginFactory* factory);
@@ -15,6 +16,7 @@ public:
     Plugin::ReplayInterface* replayInterface() override final;
     Plugin::VisualizerInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
+    Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
 private:
     QWidget* createView() override final;
