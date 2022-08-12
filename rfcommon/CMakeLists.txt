@@ -104,6 +104,8 @@ add_library (rfcommon SHARED
     "src/UserLabels.cpp"
     "src/Vector.cpp"
     "src/Vec2.cpp"
+    "src/VideoEmbed.cpp"
+    "src/VideoMeta.cpp"
     "src/platform/dynlib.c"
     "src/platform/tcp_socket.c"
     "src/platform/time.cpp")

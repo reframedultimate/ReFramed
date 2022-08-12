@@ -1700,6 +1700,18 @@ FrameData* Session::tryGetFrameData()
 }
 
 // ----------------------------------------------------------------------------
+VideoMeta* Session::tryGetVideoMeta()
+{
+    return nullptr;
+}
+
+// ----------------------------------------------------------------------------
+VideoEmbed* Session::tryGetVideoEmbed()
+{
+    return nullptr;
+}
+
+// ----------------------------------------------------------------------------
 void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 {
     (void)frameIdx;

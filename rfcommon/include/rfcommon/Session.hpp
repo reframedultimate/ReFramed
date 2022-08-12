@@ -11,6 +11,8 @@ namespace rfcommon {
 class MappingInfo;
 class MetaData;
 class FrameData;
+class VideoMeta;
+class VideoEmbed;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
@@ -46,6 +48,10 @@ public:
     MetaData* tryGetMetaData();
 
     FrameData* tryGetFrameData();
+
+    VideoMeta* tryGetVideoMeta();
+
+    VideoEmbed* tryGetVideoEmbed();
 
 private:
     void onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame) override;
