@@ -1,20 +1,21 @@
 #include "rfcommon/SetFormat.hpp"
 #include <cassert>
 #include <exception>
+#include <cstring>
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(Type type, const String& otherDesc)
+SetFormat::SetFormat(Type type, const char* otherDesc)
     : type_(type)
     , otherDesc_(otherDesc)
 {
 }
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(const String& desc)
+SetFormat::SetFormat(const char* desc)
     : type_([&desc]() -> Type {
-#define X(type, shortstr, longstr) if (desc == shortstr || desc == longstr) return type;
+#define X(type, shortstr, longstr) if (strcmp(desc, shortstr) == 0 || strcmp(desc, longstr) == 0) return type;
         SET_FORMAT_LIST
 #undef X
         return OTHER;
@@ -23,6 +24,11 @@ SetFormat::SetFormat(const String& desc)
     if (type_ == OTHER)
         otherDesc_ = desc;
 }
+
+SetFormat SetFormat::makeOther(const char* description) { return SetFormat(OTHER, description); }
+SetFormat SetFormat::fromDescription(const char* description) { return SetFormat(description); }
+SetFormat SetFormat::fromType(Type type) { assert(type != OTHER); return SetFormat(type, ""); }
+SetFormat SetFormat::fromIndex(int index) { assert(index < OTHER); return SetFormat(static_cast<Type>(index), ""); }
 
 // ----------------------------------------------------------------------------
 const char* SetFormat::shortDescription() const

@@ -49,21 +49,25 @@ ActiveSessionView::~ActiveSessionView()
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onComboBoxFormatIndexChanged(int index)
 {
-    if (static_cast<rfcommon::SetFormat::Type>(index) == rfcommon::SetFormat::OTHER)
+    if (index == rfcommon::SetFormat::OTHER)
+    {
+        activeSessionManager_->setSetFormat(rfcommon::SetFormat::fromIndex(index));
         ui_->lineEdit_formatOther->setVisible(true);
+    }
     else
+    {
+        QByteArray ba = ui_->lineEdit_formatOther->text().toUtf8();
+        activeSessionManager_->setSetFormat(rfcommon::SetFormat::fromDescription(ba.constData()));
         ui_->lineEdit_formatOther->setVisible(false);
-    activeSessionManager_->setSetFormat(rfcommon::SetFormat(
-        static_cast<rfcommon::SetFormat::Type>(index),
-        ui_->lineEdit_formatOther->text().toStdString().c_str()
-    ));
+    }
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onLineEditFormatChanged(const QString& formatDesc)
 {
-    activeSessionManager_->setSetFormat(rfcommon::SetFormat(rfcommon::SetFormat::OTHER, formatDesc.toStdString().c_str()));
-    ui_->comboBox_format->setCurrentIndex(static_cast<int>(rfcommon::SetFormat::OTHER));
+    QByteArray ba = formatDesc.toUtf8();
+    activeSessionManager_->setSetFormat(rfcommon::SetFormat::makeOther(ba.constData()));
+    ui_->comboBox_format->setCurrentIndex(rfcommon::SetFormat::OTHER);
 }
 
 // ----------------------------------------------------------------------------

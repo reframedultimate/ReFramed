@@ -29,7 +29,7 @@ public:
     rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
 private:
-    // Only the saved game session manager is allowed to change names of
+    // Only the replay manager is allowed to change names of
     // groups because the hash table keys must remain in sync with the name
     // stored in the group object
     friend class ReplayManager;

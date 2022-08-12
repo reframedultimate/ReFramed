@@ -31,7 +31,7 @@ class ReplayManager;
  * for a set of smash games, e.g. a Bo5 is a set of 3-5 games) and saving
  * sessions to files as they come in.
  */
-class ActiveSessionManager 
+class ActiveSessionManager
     : public QObject
     , public ReplayManagerListener
     , public rfcommon::ProtocolListener
@@ -55,8 +55,6 @@ public:
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
-    void findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameMetaData* meta);
-    void findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingMetaData* meta);
     bool shouldStartNewSet(const rfcommon::GameMetaData* meta);
 
 private:
@@ -113,8 +111,6 @@ private:
     rfcommon::Reference<rfcommon::MetaData> activeMetaData_;
     rfcommon::Reference<rfcommon::MappingInfo> activeMappingInfo_;
     rfcommon::Reference<rfcommon::FrameData> activeFrameData_;
-    QString gameSaveFormat_;
-    QString trainingSaveFormat_;
     QString p1Name_;
     QString p2Name_;
     rfcommon::SetFormat format_;

@@ -109,19 +109,19 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QDateTimeEdit" name="timeStarted"/>
+       <widget class="QDateTimeEdit" name="timeStarted">
+        <property name="displayFormat">
+         <string>yyyy-MM-dd HH:mm:ss</string>
+        </property>
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Time Ended:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QDateTimeEdit" name="timeEnded">
-        <property name="readOnly">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -132,30 +132,20 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="gameNumber">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Set Number:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Set Format:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QComboBox" name="setFormat"/>
-      </item>
-      <item row="6" column="0" colspan="2">
-       <widget class="QLineEdit" name="customSetFormat"/>
-      </item>
-      <item row="7" column="0" colspan="2">
-       <widget class="QLabel" name="label_Info">
-        <property name="text">
-         <string>All OK.</string>
         </property>
        </widget>
       </item>
@@ -169,15 +159,38 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QSpinBox" name="gameNumber">
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Set Format:</string>
         </property>
        </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="setFormat"/>
+      </item>
+      <item row="7" column="0" colspan="2">
+       <widget class="QLabel" name="label_Info">
+        <property name="text">
+         <string>All OK.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDateTimeEdit" name="timeEnded">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="displayFormat">
+         <string>yyyy-MM-dd HH:mm:ss</string>
+        </property>
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QLineEdit" name="customSetFormat"/>
       </item>
      </layout>
     </widget>

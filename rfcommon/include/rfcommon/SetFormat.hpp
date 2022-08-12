@@ -31,8 +31,10 @@ public:
 #undef X
     };
 
-    SetFormat(Type type, const String& otherDesc="");
-    SetFormat(const String& description);
+    static SetFormat makeOther(const char* description);
+    static SetFormat fromDescription(const char* description);
+    static SetFormat fromType(Type type);
+    static SetFormat fromIndex(int index);
 
     Type type() const { return type_; }
     int index() const { return static_cast<int>(type_); }
@@ -45,6 +47,10 @@ public:
 
     bool operator==(const SetFormat& rhs);
     bool operator!=(const SetFormat& rhs);
+
+private:
+    SetFormat(Type type, const char* otherDesc);
+    SetFormat(const char* description);
 
 private:
     Type type_;

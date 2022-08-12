@@ -277,7 +277,7 @@ static bool loadLegacy_1_0(
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat(jSetFormat.get<std::string>().c_str()),
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
         0);
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -480,7 +480,7 @@ static bool loadLegacy_1_1(
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat(jSetFormat.get<std::string>().c_str()),
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
         0);
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -700,7 +700,7 @@ static bool loadLegacy_1_2(
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str()),
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
         0);
 
     const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -941,7 +941,7 @@ static bool loadLegacy_1_3(
         std::move(playerNames),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat(jSetFormat.get<std::string>().c_str()),
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
         jWinner.get<int>());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -1199,7 +1199,7 @@ static bool loadLegacy_1_4(
     const auto setNumber = jSetNumber.is_number_integer() ?
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()) : SetNumber::fromValue(1);
     const auto format = jSetFormat.is_string() ?
-        SetFormat(jSetFormat.get<std::string>().c_str()) : SetFormat::FRIENDLIES;
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FRIENDLIES);
     int winner = jWinner.is_number_unsigned() ?
         jWinner.get<int>() : -1;
     if (winner > fighterCount)

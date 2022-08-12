@@ -10,11 +10,18 @@
 #include <unordered_map>
 #include <memory>
 
+namespace rfcommon {
+    class GameNumber;
+    class MappingInfo;
+    class MetaData;
+    class Session;
+}
+
 namespace rfapp {
 
 class ReplayManagerListener;
 
-class ReplayManager 
+class ReplayManager
     : public ConfigAccessor
     , public ReplayGroupListener
 {
@@ -78,8 +85,9 @@ public:
     int replayGroupsCount() const;
 
     /*!
-     * \brief Individual recordings can be organized into named groups by the
-     * user. Gets the "all" group.
+     * \brief Individual replays can be organized into named groups by the
+     * user. The "all" group is a special group that cannot be renamed or
+     * deleted, and it contains all accessible replays.
      * \return The "all" group.
      */
     ReplayGroup* allReplayGroup() const;
@@ -92,6 +100,11 @@ public:
     int videoSourcesCount() const;
     QString videoSourceName(int idx) const;
     QDir videoSourcePath(int idx) const;
+
+    QString composeFileName(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata, QString formatString);
+    bool findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
+    bool saveReplayOver(rfcommon::Session* session, const QFileInfo& oldFile);
+    bool saveReplayWithDefaultSettings(rfcommon::Session* session);
 
     rfcommon::ListenerDispatcher<ReplayManagerListener> dispatcher;
 

@@ -27,7 +27,7 @@ MetaData* MetaData::newActiveGameSession(
             std::move(names),
             GameNumber::fromValue(1),
             SetNumber::fromValue(1),
-            SetFormat::FRIENDLIES,
+            SetFormat::fromType(SetFormat::FRIENDLIES),
             -1);
 }
 
@@ -141,7 +141,7 @@ static MetaData* load_1_5(json& j)
     const auto timeStarted = jTimeStarted.is_number_integer() ?
         TimeStamp::fromMillisSinceEpoch(jTimeStarted.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
     const auto timeEnded = jTimeEnded.is_number_integer() ?
-        TimeStamp::fromMillisSinceEpoch(jGameInfo["timestampend"].get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
+        TimeStamp::fromMillisSinceEpoch(jTimeEnded.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
     const auto stageID = jStageID.is_number_integer() ?
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
@@ -178,14 +178,14 @@ static MetaData* load_1_5(json& j)
         const auto setNumber = jSet.is_number_integer() ?
             SetNumber::fromValue(jSet.get<SetNumber::Type>()) : SetNumber::fromValue(1);
         const auto format = jFormat.is_string() ?
-            SetFormat(jFormat.get<std::string>().c_str()) : SetFormat::FRIENDLIES;
+            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FRIENDLIES);
         int winner = jWinner.is_number_unsigned() ?
             jWinner.get<int>() : -1;
         if (winner > fighterCount)
             winner = -1;
 
         return MetaData::newSavedGameSession(
-            timeStarted, timeStarted, stageID, std::move(fighterIDs), std::move(tags),
+            timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags),
             std::move(names), gameNumber, setNumber, format, winner);
     }
     if (type == "training")
@@ -312,7 +312,7 @@ void MetaData::setTimeEnded(TimeStamp timeStamp)
 // ----------------------------------------------------------------------------
 DeltaTime MetaData::length() const
 {
-    return timeStarted_ - timeEnded_;
+    return timeEnded_ - timeStarted_;
 }
 
 // ----------------------------------------------------------------------------

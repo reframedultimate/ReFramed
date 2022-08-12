@@ -2,6 +2,13 @@
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/models/ReplayManager.hpp"
 
+#include "rfcommon/FighterState.hpp"
+#include "rfcommon/FrameData.hpp"
+#include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/TimeStamp.hpp"
+
 #include <QStandardPaths>
 #include <QJsonObject>
 
@@ -329,6 +336,226 @@ QDir ReplayManager::videoSourcePath(int idx) const
             return dir;
 
     std::terminate();
+}
+
+// ----------------------------------------------------------------------------
+QString ReplayManager::composeFileName(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata, QString formatString)
+{
+    using namespace rfcommon;
+
+    // We absolutely need the metadata, otherwise there's no way to create
+    // any reasonable filename
+    if (mdata == nullptr)
+        return "";
+    auto stampMs = mdata->timeStarted().millisSinceEpoch();
+    const auto date = QDateTime::fromMSecsSinceEpoch(stampMs);
+
+    // If there is no metadata, then we simply name the file after the date
+    if (mdata == nullptr)
+        return date.toString("yyyy-MM-dd HH:mm:ss.rfr");
+
+    // Training mode case
+    if (mdata->type() == MetaData::TRAINING)
+    {
+        const TrainingMetaData* trainingMeta = static_cast<const TrainingMetaData*>(mdata);
+        QString sessionNumber = QString::number(trainingMeta->sessionNumber().value());
+
+        // We assume there are only 2 fighters: Player and CPU
+        // Try to get fighter names
+        if (map)
+        {
+            const char* p1char = map->fighter.toName(mdata->fighterID(0));
+            const char* p2char = map->fighter.toName(mdata->fighterID(1));
+
+            return formatString
+                    .replace("%date", date.toString("yyyy-MM-dd"))
+                    .replace("%session", sessionNumber)
+                    .replace("%p1name", mdata->name(0).cStr())
+                    .replace("%p1char", p1char)
+                    .replace("%p2char", p2char)
+                    + ".rfr";
+        }
+
+        // Fallback filename for when there is no mapping info
+        return date.toString("yyyy-MM-dd")
+                + " - Training - "
+                + mdata->name(0).cStr()
+                + " vs CPU Session "
+                + sessionNumber
+                + ".rfr";
+    }
+
+    // Game session case
+    if (mdata->type() == MetaData::GAME)
+    {
+        const GameMetaData* gameMeta = static_cast<const GameMetaData*>(mdata);
+
+        QString formatDesc = gameMeta->setFormat().shortDescription();
+        QString setNumber = QString::number(gameMeta->setNumber().value());
+        QString gameNumber = QString::number(gameMeta->gameNumber().value());
+
+        // Create a list of character names if possible
+        QStringList characters;
+        for (int i = 0; i != mdata->fighterCount(); ++i)
+            characters.append(map ? map->fighter.toName(mdata->fighterID(i)) : "");
+
+        // 1v1 case
+        if (mdata->fighterCount() == 2)
+        {
+            return formatString
+                .replace("%date", date.toString("yyyy-MM-dd"))
+                .replace("%format", formatDesc)
+                .replace("%set", setNumber)
+                .replace("%game", gameNumber)
+                .replace("%p1name", gameMeta->name(0).cStr())
+                .replace("%p2name", gameMeta->name(1).cStr())
+                .replace("%p1char", characters[0])
+                .replace("%p2char", characters[1])
+                + ".rfr";
+        }
+        else
+        {
+            QStringList playerList;
+            for (int i = 0; i < mdata->fighterCount(); ++i)
+                playerList.append(QString(mdata->name(i).cStr()) + " (" + characters[i] + ")");
+            QString players = playerList.join(" vs ");
+
+            return date.toString("yyyy-MM-dd")
+                    + " - "
+                    + formatDesc
+                    + " ("
+                    + setNumber
+                    + ") - "
+                    + players
+                    + " Game "
+                    + gameNumber
+                    + ".rfr";
+        }
+    }
+
+    return "";
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+{
+    auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
+    const char* formatStr = type == rfcommon::MetaData::GAME ?
+                "%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game" :
+                "%date - Training - %p1name (%p1char) on %p2char Session %session";
+
+    const QDir& dir = defaultGameSessionSourceDirectory();
+    while (true)
+    {
+        QString fileName = composeFileName(map, mdata, formatStr);
+        if (fileName == "")
+            return false;
+        if (QFileInfo::exists(dir.absoluteFilePath(fileName)) == false)
+            return true;
+
+        if (mdata == nullptr)
+            return false;
+
+        switch (mdata->type())
+        {
+            case rfcommon::MetaData::GAME: {
+                auto gameMeta = static_cast<rfcommon::GameMetaData*>(mdata);
+                switch (gameMeta->setFormat().type())
+                {
+                    case rfcommon::SetFormat::FRIENDLIES:
+                    case rfcommon::SetFormat::PRACTICE:
+                    case rfcommon::SetFormat::TRAINING:
+                    case rfcommon::SetFormat::COACHING:
+                    case rfcommon::SetFormat::OTHER:
+                        gameMeta->setGameNumber(gameMeta->gameNumber() + 1);
+                        break;
+
+                    case rfcommon::SetFormat::BO3:
+                    case rfcommon::SetFormat::BO3MM:
+                    case rfcommon::SetFormat::BO5:
+                    case rfcommon::SetFormat::BO5MM:
+                    case rfcommon::SetFormat::BO7:
+                    case rfcommon::SetFormat::BO7MM:
+                    case rfcommon::SetFormat::FT5:
+                    case rfcommon::SetFormat::FT5MM:
+                    case rfcommon::SetFormat::FT10:
+                    case rfcommon::SetFormat::FT10MM:
+                        gameMeta->setSetNumber(gameMeta->setNumber() + 1);
+                        break;
+                }
+            } break;
+
+            case rfcommon::MetaData::TRAINING: {
+                auto trainingMeta = static_cast<rfcommon::TrainingMetaData*>(mdata);
+                trainingMeta->setSessionNumber(trainingMeta->sessionNumber() + 1);
+            } break;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& oldFile)
+{
+    QString oldFileName = oldFile.fileName();
+    QDir dir(oldFile.path());
+
+    // Determine format string based on type
+    auto mdata = session->tryGetMetaData();
+    auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
+    const char* formatStr = type == rfcommon::MetaData::GAME ?
+                "%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game" :
+                "%date - Training - %p1name (%p1char) on %p2char Session %session";
+
+    QFileInfo newFile(dir, composeFileName(session->tryGetMappingInfo(), mdata, formatStr));
+
+    if (dir.rename(oldFileName, "." + oldFileName) == false)
+        return false;
+
+    QByteArray ba = newFile.absoluteFilePath().toUtf8();
+    if (session->save(ba.constData()) == false)
+    {
+        dir.rename("." + oldFileName, oldFileName);
+        return false;
+    }
+
+    dir.remove("." + oldFileName);
+
+    for (auto& group : groups_)
+        if (group.second->removeFile(oldFile.absoluteFilePath()))
+            group.second->addFile(newFile.absoluteFilePath());
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
+{
+    auto map = session->tryGetMappingInfo();
+    auto mdata = session->tryGetMetaData();
+    auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
+
+    // Determine target directory based on type
+    QDir dir = type == rfcommon::MetaData::TRAINING ?
+            defaultGameSessionSourceDirectory() :
+            defaultTrainingSessionSourceDirectory();
+
+    // Determine format string based on type
+    const char* formatStr = type == rfcommon::MetaData::GAME ?
+                "%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game" :
+                "%date - Training - %p1name (%p1char) on %p2char Session %session";
+
+    if (dir.exists() == false)
+        dir.mkpath(".");
+    QFileInfo fileInfo(dir, composeFileName(map, mdata, formatStr));
+    QByteArray ba = fileInfo.absoluteFilePath().toUtf8();
+    if (session->save(ba.constData()))
+    {
+        // Add the session to the "All" recording group
+        allReplayGroup()->addFile(fileInfo.absoluteFilePath());
+        return true;
+    }
+
+    return false;
 }
 
 // ----------------------------------------------------------------------------

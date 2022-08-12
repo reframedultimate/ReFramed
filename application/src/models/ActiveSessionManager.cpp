@@ -13,79 +13,11 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-static QString composeFileName(rfcommon::MappingInfo* map, const rfcommon::MetaData* meta, QString saveFormat)
-{
-    using namespace rfcommon;
-
-    // Create date from metadata if possible.
-    const TimeStamp::Type stampMs = meta->timeStarted().millisSinceEpoch();
-    const QString date = QDateTime::fromMSecsSinceEpoch(stampMs).toString("yyyy-MM-dd");
-
-    const char* p1char = map->fighter.toName(meta->fighterID(0));
-    const char* p2char = map->fighter.toName(meta->fighterID(1));
-
-    if (meta->type() == MetaData::GAME)
-    {
-        const GameMetaData* gameMeta = static_cast<const GameMetaData*>(meta);
-
-        QString formatDesc = gameMeta->setFormat().shortDescription();
-        QString setNumber = QString::number(gameMeta->setNumber().value());
-        QString gameNumber = QString::number(gameMeta->gameNumber().value());
-
-        if (meta->fighterCount() == 2)  // 1v1
-        {
-            saveFormat
-                .replace("%date", date)
-                .replace("%format", formatDesc)
-                .replace("%set", setNumber)
-                .replace("%game", gameNumber)
-                .replace("%p1name", gameMeta->name(0).cStr())
-                .replace("%p2name", gameMeta->name(1).cStr())
-                .replace("%p1char", p1char)
-                .replace("%p2char", p2char)
-                ;
-        }
-        else
-        {
-            QStringList playerList;
-            for (int i = 0; i < meta->fighterCount(); ++i)
-            {
-                const char* fighter = map->fighter.toName(meta->fighterID(i));
-                const char* name = meta->name(i).cStr();
-                playerList.append(QString(name) + " (" + fighter + ")");
-            }
-            QString players = playerList.join(" vs ");
-
-            saveFormat = date + " - " + formatDesc + " (" + setNumber + ") - " + players + " Game " + gameNumber;
-        }
-    }
-    else
-    {
-        assert(meta->type() == MetaData::TRAINING);
-        const TrainingMetaData* trainingMeta = static_cast<const TrainingMetaData*>(meta);
-
-        QString sessionNumber = QString::number(trainingMeta->sessionNumber().value());
-
-        saveFormat
-                .replace("%date", date)
-                .replace("%session", sessionNumber)
-                .replace("%p1name", trainingMeta->name(0).cStr())
-                .replace("%p1char", p1char)
-                .replace("%p2char", p2char)
-                ;
-    }
-
-    return saveFormat + ".rfr";
-}
-
-// ----------------------------------------------------------------------------
 ActiveSessionManager::ActiveSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent)
     : QObject(parent)
     , protocol_(protocol)
     , replayManager_(manager)
-    , gameSaveFormat_("%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game")
-    , trainingSaveFormat_("%date - Training - %p1name (%p1char) on %p2char Session %session")
-    , format_(rfcommon::SetFormat::FRIENDLIES)
+    , format_(rfcommon::SetFormat::fromType(rfcommon::SetFormat::FRIENDLIES))
     , gameNumber_(rfcommon::GameNumber::fromValue(1))
     , setNumber_(rfcommon::SetNumber::fromValue(1))
 {
@@ -169,7 +101,7 @@ void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
         auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         meta->setGameNumber(number);
 
-        findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
+        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
 
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
@@ -189,7 +121,7 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
         auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
         meta->setSessionNumber(number);
 
-        findUniqueTrainingSessionNumber(activeMappingInfo_, meta);
+        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
 
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
     }
@@ -204,39 +136,6 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 Protocol* ActiveSessionManager::protocol() const
 {
     return protocol_;
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::findUniqueGameAndSetNumbers(rfcommon::MappingInfo* map, rfcommon::GameMetaData* meta)
-{
-    assert(meta->type() == rfcommon::MetaData::GAME);
-
-    const QDir& dir = replayManager_->defaultGameSessionSourceDirectory();
-    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(map, meta, gameSaveFormat_))))
-    {
-        switch (format_.type())
-        {
-            case rfcommon::SetFormat::FRIENDLIES:
-            case rfcommon::SetFormat::PRACTICE:
-            case rfcommon::SetFormat::OTHER:
-                meta->setGameNumber(meta->gameNumber() + 1);
-                break;
-
-            default:
-                meta->setSetNumber(meta->setNumber() + 1);
-                break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::findUniqueTrainingSessionNumber(rfcommon::MappingInfo* map, rfcommon::TrainingMetaData* meta)
-{
-    assert(meta->type() == rfcommon::MetaData::TRAINING);
-
-    const QDir& dir = replayManager_->defaultGameSessionSourceDirectory();
-    while (QFileInfo::exists(dir.absoluteFilePath(composeFileName(map, meta, trainingSaveFormat_))))
-        meta->setSessionNumber(meta->sessionNumber() + 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -393,7 +292,7 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
     }
 
     // Modify game/set numbers until we have a unique filename
-    findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
+    replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
 
     activeMetaData_->dispatcher.addListener(this);
     activeFrameData_->dispatcher.addListener(this);
@@ -425,27 +324,17 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
     assert(activeMetaData_ == game->tryGetMetaData());
     assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
 
-    auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-
-    // Save as replay
-    QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
-    if (gamesDir.exists() == false)
-        gamesDir.mkpath(".");
-    QFileInfo fileInfo(gamesDir, composeFileName(activeMappingInfo_, activeMetaData_, gameSaveFormat_));
-    if (game->save(fileInfo.absoluteFilePath().toStdString().c_str()))
+    // Save as replay. This will also add the session to the "All" replay group
+    if (replayManager_->saveReplayWithDefaultSettings(game) == false)
     {
-        // Add the new recording to the "All" recording group
-        replayManager_->allReplayGroup()->addFile(fileInfo.absoluteFilePath());
-    }
-    else
-    {
-        // TODO: Need to handle this somehow
+        // TODO need to handle this somehow
     }
 
     // In between sessions (when players are in the menu) there is no active
     // session, but it's still possible to edit the names/format/game number/etc
     // so copy the data out of the session here so it can be edited, and when
     // a new session starts again we copy the data into the session.
+    auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
     format_ = meta->setFormat();
     gameNumber_ = meta->gameNumber();
     setNumber_ = meta->setNumber();
@@ -475,7 +364,7 @@ void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const
     {
         case rfcommon::MetaData::GAME: {
             auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-            findUniqueGameAndSetNumbers(activeMappingInfo_, meta);
+            replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
 
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
@@ -483,7 +372,7 @@ void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const
 
         case rfcommon::MetaData::TRAINING: {
             auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
-            findUniqueTrainingSessionNumber(activeMappingInfo_, meta);
+            replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
 
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
         } break;
@@ -548,7 +437,7 @@ void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommo
     for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
     {
         const auto& state = frame[fighterIdx];
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFighterStateChanged, 
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFighterStateChanged,
             fighterIdx, state.damage(), int(state.stocks().count()));
     }
 

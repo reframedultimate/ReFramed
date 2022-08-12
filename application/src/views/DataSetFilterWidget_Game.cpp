@@ -57,9 +57,12 @@ void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
         rfcommon::SetFormat::Type type = static_cast<rfcommon::SetFormat::Type>(index - 1);
         f->setAnySetFormat(false);
         if (type == rfcommon::SetFormat::OTHER)
-            f->setSetFormat(rfcommon::SetFormat(type, ui_->lineEdit_formatName->text().toStdString().c_str()));
+        {
+            QByteArray ba = ui_->lineEdit_formatName->text().toUtf8();
+            f->setSetFormat(rfcommon::SetFormat::makeOther(ba.constData()));
+        }
         else
-            f->setSetFormat(rfcommon::SetFormat(type));
+            f->setSetFormat(rfcommon::SetFormat::fromType(type));
     }
 
     // Handle UI changes

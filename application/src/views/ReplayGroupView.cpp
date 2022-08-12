@@ -174,7 +174,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     if (selected.size() == 1)
     {
         QMenu menu;
-        QAction* edit = menu.addAction("Edit Data...");
+        QAction* edit = menu.addAction("Edit...");
         QAction* a = menu.exec(item);
 
         if (a == edit)
@@ -182,11 +182,12 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
             for (const auto& fileName : currentGroup_->absFilePathList())
                 if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
                 {
-                    QByteArray ba = fileName.absoluteFilePath().toUtf8();
+                    QString absFileName = fileName.absoluteFilePath();
+                    QByteArray ba = absFileName.toUtf8();
                     rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
                     if (session)
                     {
-                        ReplayEditorDialog dialog(session);
+                        ReplayEditorDialog dialog(replayManager_, session, absFileName);
                         dialog.exec();
                     }
                     break;
