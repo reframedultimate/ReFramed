@@ -8,6 +8,7 @@
 
 namespace rfcommon {
 
+class MappedFile;
 class MappingInfo;
 class MetaData;
 class FrameData;
@@ -16,7 +17,7 @@ class VideoEmbed;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
-    Session(FILE* fp, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
+    Session(MappedFile* file, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
 
 public:
     enum LoadFlags
@@ -24,12 +25,15 @@ public:
         MAPPING_INFO = 0x01,
         META_DATA = 0x02,
         FRAME_DATA = 0x04,
-        ALL = 0x07
+        VIDEO_META = 0x08,
+        VIDEO_EMBED = 0x10,
+
+        ALL = 0xFF
     };
 
     ~Session();
 
-    static Session* newModernSavedSession(FILE* fp);
+    static Session* newModernSavedSession(MappedFile* file);
     static Session* newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
     static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
     static Session* load(const char* fileName, uint8_t loadFlags=0);
@@ -67,13 +71,14 @@ private:
         uint32_t offset;
         uint32_t size;
     };
-
-    FILE* fp_;
     SmallVector<ContentTableEntry, 4> contentTable_;
 
+    Reference<MappedFile> file_;
     Reference<MappingInfo> mappingInfo_;
     Reference<MetaData> metaData_;
     Reference<FrameData> frameData_;
+    Reference<VideoMeta> videoMeta_;
+    Reference<VideoEmbed> videoEmbed_;
 };
 
 }

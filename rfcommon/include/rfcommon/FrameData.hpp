@@ -19,7 +19,7 @@ public:
     FrameData(int fighterCount);
     ~FrameData();
 
-    static FrameData* load(FILE* fp, uint32_t size);
+    static FrameData* load(const void* data, uint64_t len);
     uint32_t save(FILE* fp) const;
 
     int fighterCount() const;

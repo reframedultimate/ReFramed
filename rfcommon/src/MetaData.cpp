@@ -112,15 +112,12 @@ MetaData::~MetaData()
 {}
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::load(FILE* fp, uint32_t size)
+MetaData* MetaData::load(const void* data, uint32_t size)
 {
-    // Load json into memory
-    auto jsonBlob = Vector<char>::makeResized(size);
-    if (fread(jsonBlob.data(), 1, size, fp) != (size_t)size)
-        return nullptr;
-
     // Parse
-    json j = json::parse(jsonBlob.begin(), jsonBlob.end(), nullptr, false);
+    const unsigned char* const begin = static_cast<const unsigned char*>(data);
+    const unsigned char* const end = static_cast<const unsigned char*>(data) + size;
+    json j = json::parse(begin, end, nullptr, false);
     if (j == json::value_t::discarded)
         return nullptr;
 

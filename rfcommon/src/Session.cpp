@@ -1,3 +1,4 @@
+#include "rfcommon/Deserializer.hpp"
 #include "rfcommon/Endian.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
@@ -5,10 +6,12 @@
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/FighterFlags.hpp"
 #include "rfcommon/FighterStocks.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
-#include "rfcommon/StreamBuffer.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/VideoMeta.hpp"
+#include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
@@ -19,21 +22,6 @@ namespace rfcommon {
 
 using nlohmann::json;
 
-static bool loadLegacy_1_0(
-        json& jptr,
-        Reference<MetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData);
-static bool loadLegacy_1_1(
-        json& jptr,
-        Reference<MetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData);
-static bool loadLegacy_1_2(
-        json& jptr,
-        Reference<MetaData>* metaData,
-        Reference<MappingInfo>* mappingInfo,
-        Reference<FrameData>* frameData);
 static bool loadLegacy_1_3(
         json& jptr,
         Reference<MetaData>* metaData,
@@ -202,604 +190,6 @@ static std::string readUncompressedFile(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-static bool loadLegacy_1_0(
-        json& j,
-        Reference<MetaData>* metaDataOut,
-        Reference<MappingInfo>* mappingInfoOut,
-        Reference<FrameData>* frameDataOut)
-{
-    json jMappingInfo = j["mappinginfo"];
-    json jGameInfo = j["gameinfo"];
-    json jPlayerInfo = j["playerinfo"];
-    json jPlayerStates = j["playerstates"];
-
-    json jFighterStatuses = jMappingInfo["fighterstatus"];
-    json jFighterIDs = jMappingInfo["fighterid"];
-    json jStageIDs = jMappingInfo["stageid"];
-
-    Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
-    for (const auto& [key, value] : jFighterIDs.items())
-    {
-        std::size_t pos;
-        auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
-    }
-
-    for (const auto& [key, value] : jStageIDs.items())
-    {
-        std::size_t pos;
-        auto stageID = StageID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
-    }
-
-    // skip loading status mappings, it was broken in 1.0
-
-    SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<String, 2> playerTags;
-    SmallVector<String, 2> playerNames;
-    for (const auto& info : jPlayerInfo)
-    {
-        json jFighterID = info["fighterid"];
-        json jTag = info["tag"];
-
-        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
-        playerTags.emplace(jTag.get<std::string>().c_str());
-        playerNames.emplace(jTag.get<std::string>().c_str());  // "name" property didn't exist in 1.0
-    }
-
-    // There must be at least 2 fighters, otherwise the data is invalid
-    if (playerFighterIDs.count() < 2)
-        return false;
-    if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
-        return false;
-
-    json jDate = jGameInfo["date"];
-    json jSetFormat = jGameInfo["format"];
-    json jGameNumber = jGameInfo["number"];
-    json jStageID = jGameInfo["stageid"];
-
-    Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        TimeStamp::fromMillisSinceEpoch(0),
-        TimeStamp::fromMillisSinceEpoch(0),
-        StageID::fromValue(jStageID.get<StageID::Type>()),
-        std::move(playerFighterIDs),
-        std::move(playerTags),
-        std::move(playerNames),
-        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
-        SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
-        0);
-
-    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
-        time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
-
-    std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
-    for (int i = 0; i < metaData->fighterCount(); ++i)
-    {
-        int error = 0;
-        const FramesLeft::Type stateCount = stream.readBU32(&error);
-        if (error)
-            return false;
-
-        // zero states are invalid
-        if (stateCount == 0)
-            return false;
-
-        FramesLeft::Type frameCounter = 0;
-        for (FramesLeft::Type f = 0; f < stateCount; ++f)
-        {
-            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
-            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
-            const float damage = static_cast<float>(stream.readBF64(&error));
-            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
-            const auto flags = FighterFlags::fromFlags(false, false, false);
-
-            if (error)
-                return false;
-            if (framesLeft.count() == 0)
-                return false;
-
-            // Usually only unique states are saved, which means there will be
-            // gaps in between frames. Duplicate the current frame as many times
-            // as necessary and make sure to update the time stamp and frame
-            // counter
-            for (; frameCounter < framesLeft.count(); ++frameCounter)
-            {
-                // Version 1.0 did not timestamp each frame so we have to make a guesstimate
-                // based on the timestamp of when the recording started and how many
-                // frames passed since. This will not account for game pauses or
-                // lag, but it should be good enough.
-                const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-                frameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(frameCounter), framesLeft, Vec2::makeZero(), damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
-            }
-        }
-    }
-
-    // Ensure that every fighter has the same number of frames
-    const int highestFrameIdx = std::max_element(frameData.begin(), frameData.end(),
-        [](const Vector<FighterState>& a, const Vector<FighterState>& b){
-            return a.count() < b.count();
-    })->count();
-    for (auto& frames : frameData)
-        while (frames.count() < highestFrameIdx)
-            frames.emplace(frames.back());
-
-    // Calculate start and end times
-    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
-            frameData[0].back().timeStamp() : firstFrameTimeStamp;
-    metaData->setTimeStarted(firstFrameTimeStamp);
-    metaData->setTimeEnded(lastFrameTimeStamp);
-
-    // Cache winner
-    if (frameData.count() > 0)
-    {
-        Frame<4> frame;
-        for (const auto& state : frameData.back())
-            frame.push(state);
-        const int winner = findWinner(frame);
-        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
-    }
-
-    *metaDataOut = metaData;
-    *mappingInfoOut = mappingInfo;
-    *frameDataOut = new FrameData(std::move(frameData));
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-static bool loadLegacy_1_1(
-        json& j,
-        Reference<MetaData>* metaDataOut,
-        Reference<MappingInfo>* mappingInfoOut,
-        Reference<FrameData>* frameDataOut)
-{
-    json jMappingInfo = j["mappinginfo"];
-    json jGameInfo = j["gameinfo"];
-    json jPlayerInfo = j["playerinfo"];
-    json jPlayerStates = j["playerstates"];
-
-    json jFighterStatuses = jMappingInfo["fighterstatus"];
-    json jFighterIDs = jMappingInfo["fighterid"];
-    json jStageIDs = jMappingInfo["stageid"];
-
-    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
-
-    Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
-    for (const auto& [key, value] : jFighterBaseStatusMapping.items())
-    {
-        std::size_t pos;
-        auto status = FighterStatus::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_array() == false)
-            return false;
-
-        if (value.size() != 3)
-            return false;
-        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-            return false;
-
-        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
-    }
-    for (const auto& [fighter, jSpecificMapping] : jFighterSpecificStatusMapping.items())
-    {
-        std::size_t pos;
-        auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
-        if (pos != fighter.length())
-            return false;
-        if (jSpecificMapping.is_object() == false)
-            return false;
-
-        for (const auto& [key, value] : jSpecificMapping.items())
-        {
-            auto status = FighterStatus::fromValue(std::stoul(key, &pos));
-            if (pos != key.length())
-                return false;
-            if (value.is_array() == false)
-                return false;
-
-            if (value.size() != 3)
-                return false;
-            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-                return false;
-
-            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
-        }
-    }
-
-    for (const auto& [key, value] : jFighterIDs.items())
-    {
-        std::size_t pos;
-        auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
-    }
-
-    for (const auto& [key, value] : jStageIDs.items())
-    {
-        std::size_t pos;
-        auto stageID = StageID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
-    }
-
-    SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<String, 2> playerTags;
-    SmallVector<String, 2> playerNames;
-    for (const auto& info : jPlayerInfo)
-    {
-        json jFighterID = info["fighterid"];
-        json jTag = info["tag"];
-
-        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
-        playerTags.emplace(jTag.get<std::string>().c_str());
-        playerNames.emplace(jTag.get<std::string>().c_str());  // "name" property didn't exist in 1.1
-    }
-
-    // There must be at least 2 fighters, otherwise the data is invalid
-    if (playerFighterIDs.count() < 2)
-        return false;
-    if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
-        return false;
-
-    json jDate = jGameInfo["date"];
-    json jSetFormat = jGameInfo["format"];
-    json jGameNumber = jGameInfo["number"];
-    json jStageID = jGameInfo["stageid"];
-
-    Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        TimeStamp::fromMillisSinceEpoch(0),
-        TimeStamp::fromMillisSinceEpoch(0),
-        StageID::fromValue(jStageID.get<StageID::Type>()),
-        std::move(playerFighterIDs),
-        std::move(playerTags),
-        std::move(playerNames),
-        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
-        SetNumber::fromValue(1), // SetNumber did not exist in 1.0 yet
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
-        0);
-
-    const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
-        time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
-
-    const std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
-    for (int i = 0; i < metaData->fighterCount(); ++i)
-    {
-        int error = 0;
-        const FramesLeft::Type stateCount = stream.readBU32(&error);
-        if (error)
-            return false;
-
-        // zero states are invalid
-        if (stateCount == 0)
-            return false;
-
-        FrameIndex::Type frameCounter = 0;
-        FrameIndex::Type highestFramesLeft = 0;
-        for (FrameIndex::Type f = 0; f < stateCount; ++f)
-        {
-            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
-            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
-            const float damage = static_cast<float>(stream.readBF64(&error));
-            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
-            const auto flags = FighterFlags::fromFlags(false, false, false);
-
-            if (error)
-                return false;
-            if (framesLeft.count() == 0)
-                return false;
-
-            // Usually only unique states are saved, which means there will be
-            // gaps in between frames. Duplicate the current frame as many times
-            // as necessary and make sure to update the time stamp and frame
-            // counters
-            if (highestFramesLeft < framesLeft.count())
-                highestFramesLeft = framesLeft.count();
-            while (frameCounter <= highestFramesLeft - framesLeft.count())
-            {
-                // Version 1.3 did not timestamp each frame so we have to make a guesstimate
-                // based on the timestamp of when the recording started and how many
-                // frames passed since. This will not account for game pauses or
-                // lag, but it should be good enough.
-                const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-
-                const auto framesDiff = highestFramesLeft - framesLeft.count() - frameCounter;
-                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.count() + framesDiff);
-                const auto actualTimeStamp = frameTimeStamp -
-                        DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, Vec2::makeZero(), damage, 0.0f, 50.0f, status, FighterMotion::makeInvalid(), FighterHitStatus::makeInvalid(), stocks, flags);
-                frameCounter++;
-            }
-        }
-    }
-
-    // Ensure that every fighter has the same number of frames
-    const int highestFrameIdx = std::max_element(frameData.begin(), frameData.end(),
-        [](const Vector<FighterState>& a, const Vector<FighterState>& b){
-            return a.count() < b.count();
-    })->count();
-    for (auto& frames : frameData)
-        while (frames.count() < highestFrameIdx)
-            frames.emplace(frames.back());
-
-    // Calculate start and end times
-    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
-            frameData[0].back().timeStamp() : firstFrameTimeStamp;
-    metaData->setTimeStarted(firstFrameTimeStamp);
-    metaData->setTimeEnded(lastFrameTimeStamp);
-
-    // Cache winner
-    if (frameData.count() > 0)
-    {
-        Frame<4> frame;
-        for (const auto& state : frameData.back())
-            frame.push(state);
-        const int winner = findWinner(frame);
-        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
-    }
-
-    *metaDataOut = metaData;
-    *mappingInfoOut = mappingInfo;
-    *frameDataOut = new FrameData(std::move(frameData));
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-static bool loadLegacy_1_2(
-        json& j,
-        Reference<MetaData>* metaDataOut,
-        Reference<MappingInfo>* mappingInfoOut,
-        Reference<FrameData>* frameDataOut)
-{
-    json jMappingInfo = j["mappinginfo"];
-    json jGameInfo = j["gameinfo"];
-    json jPlayerInfo = j["playerinfo"];
-    json jPlayerStates = j["playerstates"];
-
-    json jFighterStatuses = jMappingInfo["fighterstatus"];
-    json jFighterIDs = jMappingInfo["fighterid"];
-    json jStageIDs = jMappingInfo["stageid"];
-
-    json jFighterStatusMapping = jMappingInfo["fighterstatus"];
-    json jFighterBaseStatusMapping = jFighterStatusMapping["base"];
-    json jFighterSpecificStatusMapping = jFighterStatusMapping["specific"];
-
-    Reference<MappingInfo> mappingInfo(new MappingInfo(0));  // Since we're loading it, checksum is irrelevant
-    for (const auto& [key, value] : jFighterBaseStatusMapping.items())
-    {
-        std::size_t pos;
-        const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_array() == false)
-            return false;
-
-        if (value.size() != 3)
-            return false;
-        if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-            return false;
-
-        /*QString shortName  = arr[1].get<std::string>();
-        QString customName = arr[2].get<std::string>();*/
-
-        mappingInfo->status.addBaseName(status, value[0].get<std::string>().c_str());
-    }
-    for (const auto& [fighter, jSpecificMapping] : jFighterSpecificStatusMapping.items())
-    {
-        std::size_t pos;
-        const auto fighterID = FighterID::fromValue(std::stoul(fighter, &pos));
-        if (pos != fighter.length())
-            return false;
-        if (jSpecificMapping.is_object() == false)
-            return false;
-
-        for (const auto& [key, value] : jSpecificMapping.items())
-        {
-            const auto status = FighterStatus::fromValue(std::stoul(key, &pos));
-            if (pos != key.length())
-                return false;
-            if (value.is_array() == false)
-                return false;
-
-            if (value.size() != 3)
-                return false;
-            if (value[0].is_string() == false || value[1].is_string() == false || value[2].is_string() == false)
-                return false;
-
-            /*QString shortName  = arr[1].get<std::string>();
-            QString customName = arr[2].get<std::string>();*/
-
-            mappingInfo->status.addSpecificName(fighterID, status, value[0].get<std::string>().c_str());
-        }
-    }
-
-    for (const auto& [key, value] : jFighterIDs.items())
-    {
-        std::size_t pos;
-        const auto fighterID = FighterID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->fighter.add(fighterID, value.get<std::string>().c_str());
-    }
-
-    for (const auto& [key, value] : jStageIDs.items())
-    {
-        std::size_t pos;
-        const auto stageID = StageID::fromValue(std::stoul(key, &pos));
-        if (pos != key.length())
-            return false;
-        if (value.is_string() == false)
-            return false;
-
-        mappingInfo->stage.add(stageID, value.get<std::string>().c_str());
-    }
-
-    SmallVector<FighterID, 2> playerFighterIDs;
-    SmallVector<String, 2> playerTags;
-    SmallVector<String, 2> playerNames;
-    for (const auto& info : jPlayerInfo)
-    {
-        json jFighterID = info["fighterid"];
-        json jTag = info["tag"];
-        json jName = info["name"];
-
-        playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
-        playerTags.emplace(jTag.get<std::string>().c_str());
-        playerNames.emplace(jName.get<std::string>().c_str());
-    }
-
-    // There must be at least 2 fighters, otherwise the data is invalid
-    if (playerFighterIDs.count() < 2)
-        return false;
-    if (playerFighterIDs.count() != playerTags.count() || playerFighterIDs.count() != playerNames.count())
-        return false;
-
-    json jStageID = jGameInfo["stageid"];
-    json jDate = jGameInfo["date"];
-    json jSetFormat = jGameInfo["format"];
-    json jGameNumber = jGameInfo["number"];
-    json jSetNumber = jGameInfo["set"];
-
-    Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        TimeStamp::fromMillisSinceEpoch(0),
-        TimeStamp::fromMillisSinceEpoch(0),
-        StageID::fromValue(jStageID.get<StageID::Type>()),
-        std::move(playerFighterIDs),
-        std::move(playerTags),
-        std::move(playerNames),
-        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
-        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
-        0);
-
-    const TimeStamp firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
-        time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
-
-    const std::string streamDecoded = base64_decode(jPlayerStates.get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
-    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
-    for (int i = 0; i < metaData->fighterCount(); ++i)
-    {
-        int error = 0;
-        const FramesLeft::Type stateCount = stream.readBU32(&error);
-        if (error)
-            return false;
-
-        // zero states are invalid
-        if (stateCount == 0)
-            return false;
-
-        FrameIndex::Type frameCounter = 0;
-        FrameIndex::Type highestFramesLeft = 0;
-        for (FrameIndex::Type f = 0; f < stateCount; ++f)
-        {
-            const auto framesLeft = FramesLeft::fromValue(stream.readBU32(&error));
-            const float posx = static_cast<float>(stream.readBF64(&error));
-            const float posy = static_cast<float>(stream.readBF64(&error));
-            const auto pos = Vec2::fromValues(posx, posy);
-            const float damage = static_cast<float>(stream.readBF64(&error));
-            const float hitstun = static_cast<float>(stream.readBF64(&error));
-            const float shield = static_cast<float>(stream.readBF64(&error));
-            const auto status = FighterStatus::fromValue(stream.readBU16(&error));
-            const auto motion = FighterMotion::fromValue(stream.readBU64(&error));
-            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
-            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
-            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
-
-            if (error)
-                return false;
-            if (framesLeft.count() == 0)
-                return false;
-
-            // Usually only unique states are saved, which means there will be
-            // gaps in between frames. Duplicate the current frame as many times
-            // as necessary and make sure to update the time stamp and frame
-            // counters
-            if (highestFramesLeft < framesLeft.count())
-                highestFramesLeft = framesLeft.count();
-            while (frameCounter <= highestFramesLeft - framesLeft.count())
-            {
-                // Version 1.3 did not timestamp each frame so we have to make a guesstimate
-                // based on the timestamp of when the recording started and how many
-                // frames passed since. This will not account for game pauses or
-                // lag, but it should be good enough.
-                const TimeStamp frameTimeStamp =  firstFrameTimeStamp +
-                        DeltaTime::fromMillis(frameCounter * 1000.0 / 60.0);
-
-                const auto framesDiff = highestFramesLeft - framesLeft.count() - frameCounter;
-                const auto actualFramesLeft = FramesLeft::fromValue(framesLeft.count() + framesDiff);
-                const auto actualTimeStamp = frameTimeStamp -
-                        DeltaTime::fromMillis(framesDiff * 1000.0 / 60.0);
-                frameData[i].emplace(actualTimeStamp, FrameIndex::fromValue(frameCounter), actualFramesLeft, pos, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
-                frameCounter++;
-            }
-        }
-    }
-
-    // Ensure that every fighter has the same number of frames
-    const int highestFrameIdx = std::max_element(frameData.begin(), frameData.end(),
-        [](const Vector<FighterState>& a, const Vector<FighterState>& b){
-            return a.count() < b.count();
-    })->count();
-    for (auto& frames : frameData)
-        while (frames.count() < highestFrameIdx)
-            frames.emplace(frames.back());
-
-    // Calculate start and end times
-    const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
-            frameData[0].back().timeStamp() : firstFrameTimeStamp;
-    metaData->setTimeStarted(firstFrameTimeStamp);
-    metaData->setTimeEnded(lastFrameTimeStamp);
-
-    // Cache winner
-    if (frameData.count() > 0)
-    {
-        Frame<4> frame;
-        for (const auto& state : frameData.back())
-            frame.push(state);
-        const int winner = findWinner(frame);
-        static_cast<GameMetaData*>(metaData.get())->setWinner(winner);
-    }
-
-    *metaDataOut = metaData;
-    *mappingInfoOut = mappingInfo;
-    *frameDataOut = new FrameData(std::move(frameData));
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
 static bool loadLegacy_1_3(
         json& j,
         Reference<MetaData>* metaDataOut,
@@ -948,14 +338,11 @@ static bool loadLegacy_1_3(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
-    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
+    Deserializer stream(streamDecoded.data(), streamDecoded.length());
     auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
     for (int i = 0; i < metaData->fighterCount(); ++i)
     {
-        int error = 0;
-        const FramesLeft::Type stateCount = stream.readLU32(&error);
-        if (error)
-            return false;
+        const FramesLeft::Type stateCount = stream.readLU32();
 
         // zero states are invalid
         if (stateCount == 0)
@@ -965,23 +352,21 @@ static bool loadLegacy_1_3(
         FrameIndex::Type highestFramesLeft = 0;
         for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
-            const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
-            const float posx = stream.readLF32(&error);
-            const float posy = stream.readLF32(&error);
+            const auto framesLeft = FramesLeft::fromValue(stream.readLU32());
+            const float posx = stream.readLF32();
+            const float posy = stream.readLF32();
             const auto pos = Vec2::fromValues(posx, posy);
-            const float damage = stream.readLF32(&error);
-            const float hitstun = stream.readLF32(&error);
-            const float shield = stream.readLF32(&error);
-            const auto status = FighterStatus::fromValue(stream.readLU16(&error));
-            const uint32_t motion_l = stream.readLU32(&error);
-            const uint8_t motion_h = stream.readU8(&error);
+            const float damage = stream.readLF32();
+            const float hitstun = stream.readLF32();
+            const float shield = stream.readLF32();
+            const auto status = FighterStatus::fromValue(stream.readLU16());
+            const uint32_t motion_l = stream.readLU32();
+            const uint8_t motion_h = stream.readU8();
             const auto motion = FighterMotion::fromParts(motion_h, motion_l);
-            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
-            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
-            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
+            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8());
+            const auto stocks = FighterStocks::fromValue(stream.readU8());
+            const auto flags = FighterFlags::fromValue(stream.readU8());
 
-            if (error)
-                return false;
             if (framesLeft.count() == 0)
                 return false;
 
@@ -1212,14 +597,11 @@ static bool loadLegacy_1_4(
 
     const std::string streamDecoded = jPlayerStates.is_string() ?
         base64_decode(jPlayerStates.get<std::string>()) : "";
-    StreamBuffer stream(streamDecoded.data(), static_cast<int>(streamDecoded.length()));
+    Deserializer stream(streamDecoded.data(), streamDecoded.length());
     auto uniqueFrameData = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
     for (int i = 0; i < fighterCount; ++i)
     {
-        int error = 0;
-        const FrameIndex::Type stateCount = stream.readLU32(&error);
-        if (error)
-            return false;
+        const FrameIndex::Type stateCount = stream.readLU32();
 
         // zero states are invalid
         if (stateCount == 0)
@@ -1227,24 +609,21 @@ static bool loadLegacy_1_4(
 
         for (FrameIndex::Type f = 0; f < stateCount; ++f)
         {
-            const auto frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64(&error));
-            const auto framesLeft = FramesLeft::fromValue(stream.readLU32(&error));
-            const float posx = stream.readLF32(&error);
-            const float posy = stream.readLF32(&error);
+            const auto frameTimeStamp = TimeStamp::fromMillisSinceEpoch(stream.readLU64());
+            const auto framesLeft = FramesLeft::fromValue(stream.readLU32());
+            const float posx = stream.readLF32();
+            const float posy = stream.readLF32();
             const auto pos = Vec2::fromValues(posx, posy);
-            const float damage = stream.readLF32(&error);
-            const float hitstun = stream.readLF32(&error);
-            const float shield = stream.readLF32(&error);
-            const auto status = FighterStatus::fromValue(stream.readLU16(&error));
-            const uint32_t motion_l = stream.readLU32(&error);
-            const uint8_t motion_h = stream.readU8(&error);
+            const float damage = stream.readLF32();
+            const float hitstun = stream.readLF32();
+            const float shield = stream.readLF32();
+            const auto status = FighterStatus::fromValue(stream.readLU16());
+            const uint32_t motion_l = stream.readLU32();
+            const uint8_t motion_h = stream.readU8();
             const auto motion = FighterMotion::fromParts(motion_h, motion_l);
-            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8(&error));
-            const auto stocks = FighterStocks::fromValue(stream.readU8(&error));
-            const auto flags = FighterFlags::fromValue(stream.readU8(&error));
-
-            if (error)
-                return false;
+            const auto hitStatus = FighterHitStatus::fromValue(stream.readU8());
+            const auto stocks = FighterStocks::fromValue(stream.readU8());
+            const auto flags = FighterFlags::fromValue(stream.readU8());
 
             uniqueFrameData[i].emplace(frameTimeStamp, FrameIndex::fromValue(0),  // We update the frame number later
                 framesLeft, pos, damage, hitstun, shield, status, motion, hitStatus, stocks, flags);
@@ -1319,17 +698,6 @@ static bool loadLegacy_1_4(
         }
     }
 
-    // Winner sanity check
-#ifndef NDEBUG
-    if (frameData.count() > 0)
-    {
-        Frame<4> frame;
-        for (const auto& states : frameData)
-            frame.push(states.back());
-        const int winner = findWinner(frame);
-    }
-#endif
-
     *metaDataOut = metaData;
     *mappingInfoOut = mappingInfo;
     *frameDataOut = new FrameData(std::move(frameData));
@@ -1338,8 +706,8 @@ static bool loadLegacy_1_4(
 }
 
 // ----------------------------------------------------------------------------
-Session::Session(FILE* fp, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
-    : fp_(fp)
+Session::Session(MappedFile* file, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
+    : file_(file)
     , mappingInfo_(mappingInfo)
     , metaData_(metaData)
     , frameData_(frameData)
@@ -1351,17 +719,15 @@ Session::Session(FILE* fp, MappingInfo* mappingInfo, MetaData* metaData, FrameDa
 // ----------------------------------------------------------------------------
 Session::~Session()
 {
-    if (fp_)
-        fclose(fp_);
     if (frameData_.notNull())
         frameData_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newModernSavedSession(FILE* fp)
+Session* Session::newModernSavedSession(MappedFile* file)
 {
     return new Session(
-        fp,
+        file,
         nullptr,
         nullptr,
         nullptr);
@@ -1391,38 +757,26 @@ Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* met
 Session* Session::load(const char* fileName, uint8_t loadFlags)
 {
     // Assume we're dealing with a modern format first
-    FILE* fp = fopen(fileName, "rb");
-    if (fp == nullptr)
+    Reference<MappedFile> file(new MappedFile);
+    if (file->open(fileName) == false)
         return nullptr;
+
+    Deserializer deserializer(file->address(), file->size());
 
     // If this is a modern file, it will start with "RFR1"
-    char magic[4];
-    if (fread(magic, 1, 4, fp) != 4)
-    {
-        fclose(fp);
-        return nullptr;
-    }
+    const void* magic = deserializer.readFromPtr(4);
     if (memcmp(magic, "RFR1", 4) == 0)
     {
-        Reference<Session> session = newModernSavedSession(fp);
+        Reference<Session> session = newModernSavedSession(file);
 
         // Read content table
-        uint8_t numEntries;
-        if (fread(&numEntries, 1, 1, fp) != 1)
-            return nullptr;
+        uint8_t numEntries = deserializer.readU8();
         for (int i = 0; i != numEntries; ++i)
         {
-            Session::ContentTableEntry entry;
-            if (fread(entry.type, 1, 4, fp) != 4)
-                return nullptr;
-            if (fread(&entry.offset, 1, 4, fp) != 4)
-                return nullptr;
-            if (fread(&entry.size, 1, 4, fp) != 4)
-                return nullptr;
-
-            entry.offset = fromLittleEndian32(entry.offset);
-            entry.size = fromLittleEndian32(entry.size);
-            session->contentTable_.push(entry);
+            Session::ContentTableEntry& entry = session->contentTable_.emplace();
+            memcpy(entry.type, deserializer.readFromPtr(4), 4);
+            entry.offset = deserializer.readLU32();
+            entry.size = deserializer.readLU32();
         }
 
         if (loadFlags & MAPPING_INFO)
@@ -1435,6 +789,14 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
 
         if (loadFlags & FRAME_DATA)
             if (session->tryGetFrameData() == nullptr)
+                return nullptr;
+
+        if (loadFlags & VIDEO_META)
+            if (session->tryGetVideoMeta() == nullptr)
+                return nullptr;
+
+        if (loadFlags & VIDEO_EMBED)
+            if (session->tryGetVideoEmbed() == nullptr)
                 return nullptr;
 
         return session.detach();
@@ -1470,21 +832,6 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
     else if (version == "1.3")
     {
         if (loadLegacy_1_3(j, &metaData, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metaData, frameData);
-    }
-    else if (version == "1.2")
-    {
-        if (loadLegacy_1_2(j, &metaData, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metaData, frameData);
-    }
-    else if (version == "1.1")
-    {
-        if (loadLegacy_1_1(j, &metaData, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metaData, frameData);
-    }
-    else if (version == "1.0")
-    {
-        if (loadLegacy_1_0(j, &metaData, &mappingInfo, &frameData))
             return newLegacySavedSession(mappingInfo, metaData, frameData);
     }
 
@@ -1632,14 +979,11 @@ MappingInfo* Session::tryGetMappingInfo()
 {
     if (mappingInfo_.isNull())
     {
-        assert(fp_ != nullptr);
+        assert(file_.notNull());
         for (const auto& entry : contentTable_)
             if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
             {
-                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
-                    return nullptr;
-
-                mappingInfo_ = MappingInfo::load(fp_, entry.size);
+                mappingInfo_ = MappingInfo::load(file_->addressAtOffset(entry.offset), entry.size);
                 break;
             }
     }
@@ -1652,14 +996,11 @@ MetaData* Session::tryGetMetaData()
 {
     if (metaData_.isNull())
     {
-        assert(fp_ != nullptr);
+        assert(file_.notNull());
         for (const auto& entry : contentTable_)
             if (memcmp(entry.type, blobTypeMeta, 4) == 0)
             {
-                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
-                    return nullptr;
-
-                metaData_ = MetaData::load(fp_, entry.size);
+                metaData_ = MetaData::load(file_->addressAtOffset(entry.offset), entry.size);
                 break;
             }
 
@@ -1678,14 +1019,11 @@ FrameData* Session::tryGetFrameData()
 {
     if (frameData_.isNull())
     {
-        assert(fp_ != nullptr);
+        assert(file_.notNull());
         for (const auto& entry : contentTable_)
             if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
             {
-                if (fseek(fp_, entry.offset, SEEK_SET) != 0)
-                    return nullptr;
-
-                frameData_ = FrameData::load(fp_, entry.size);
+                frameData_ = FrameData::load(file_->addressAtOffset(entry.offset), entry.size);
                 break;
             }
 

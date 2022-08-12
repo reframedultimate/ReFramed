@@ -5,6 +5,7 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MetaData.hpp"
 #include <QTimer>
 #include <QStandardPaths>
@@ -424,25 +425,11 @@ void Protocol::tryLoadGlobalMappingInfo()
 {
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
-    FILE* fp = fopen(ba.constData(), "rb");
-    if (fp == nullptr)
+    rfcommon::MappedFile file;
+    if (file.open(ba.constData()) == false)
         return;
 
-    if (fseek(fp, 0, SEEK_END) != 0)
-    {
-        fclose(fp);
-        return;
-    }
-
-    uint32_t size = ftell(fp);
-    if (fseek(fp, 0, SEEK_SET) != 0)
-    {
-        fclose(fp);
-        return;
-    }
-
-    globalMappingInfo_ = rfcommon::MappingInfo::load(fp, size);
-    fclose(fp);
+    globalMappingInfo_ = rfcommon::MappingInfo::load(file.address(), file.size());
 }
 
 // ----------------------------------------------------------------------------

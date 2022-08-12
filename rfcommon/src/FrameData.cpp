@@ -1,14 +1,16 @@
+#include "rfcommon/Deserializer.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FighterState.hpp"
-#include "rfcommon/StreamBuffer.hpp"
+#include "rfcommon/MemoryBuffer.hpp"
+#include "rfcommon/Serializer.hpp"
 #include <cassert>
 #include "zlib.h"
 
 namespace rfcommon {
 
-static FrameData* load_1_5(StreamBuffer* data);
+static FrameData* load_1_5(Deserializer& data);
 
 // ----------------------------------------------------------------------------
 FrameData::FrameData(SmallVector<Vector<FighterState>, 2>&& fighterFrames)
@@ -25,67 +27,55 @@ FrameData::~FrameData()
 {}
 
 // ----------------------------------------------------------------------------
-FrameData* FrameData::load(FILE* fp, uint32_t size)
+FrameData* FrameData::load(const void* data, uint64_t len)
 {
-    StreamBuffer compressed(size);
-    size_t bytesRead = fread(compressed.writeToPtr(size), 1, size, fp);
-    if (bytesRead != (size_t)size)
-        return nullptr;
-
-    int error = 0;
-    const uint8_t major = compressed.readU8(&error); if (error) return nullptr;
-    const uint8_t minor = compressed.readU8(&error); if (error) return nullptr;
+    Deserializer compressed(data, len);
+    const uint8_t major = compressed.readU8();
+    const uint8_t minor = compressed.readU8();
 
     if (major == 1 && minor == 5)
     {
-        uLongf decompressedSize = compressed.readLU32(&error);
-        if (error)
-            return nullptr;
+        uLongf decompressedSize = compressed.readLU32();
+        MemoryBuffer decompressed(decompressedSize);
 
-        StreamBuffer buffer(decompressedSize);
         int result = uncompress(
-                static_cast<uint8_t*>(buffer.writeToPtr(0)), &decompressedSize,
-                static_cast<const uint8_t*>(compressed.get()) + 6, compressed.capacity() - 6);
-        buffer.writeToPtr(decompressedSize);
+                static_cast<unsigned char*>(decompressed.address()), &decompressedSize,
+                static_cast<const unsigned char*>(compressed.currentPtr()), compressed.bytesLeft());
         if (result != Z_OK)
             return nullptr;
-        if (decompressedSize != (uLongf)buffer.capacity())
+        if (decompressedSize != (uLongf)decompressed.size())
             return nullptr;
-        return load_1_5(&buffer);
+
+        Deserializer deserializer(decompressed.address(), decompressed.size());
+        return load_1_5(deserializer);
     }
 
     // Unsupported version
     return nullptr;
 }
-FrameData* load_1_5(StreamBuffer* data)
+FrameData* load_1_5(Deserializer& data)
 {
-    int error = 0;
-    FrameIndex::Type frameCount = data->readLU32(&error);
-    int fighterCount = data->readU8(&error);
-    if (error)
-        return nullptr;
+    FrameIndex::Type frameCount = data.readLU32();
+    int fighterCount = data.readU8();
 
     auto frames = SmallVector<Vector<FighterState>, 2>::makeResized(fighterCount);
     for (int fighter = 0; fighter != fighterCount; ++fighter)
         for (FrameIndex::Type frame = 0; frame < frameCount; ++frame)
         {
-            const auto timeStamp = TimeStamp::fromMillisSinceEpoch(data->readLU64(&error));
-            const auto framesLeft = FramesLeft::fromValue(data->readLU32(&error));
-            const float posx = data->readLF32(&error);
-            const float posy = data->readLF32(&error);
-            const float damage = data->readLF32(&error);
-            const float hitstun = data->readLF32(&error);
-            const float shield = data->readLF32(&error);
-            const auto status = FighterStatus::fromValue(data->readLU16(&error));
-            const uint32_t motion_l = data->readLU32(&error);
-            const uint8_t motion_h = data->readU8(&error);
+            const auto timeStamp = TimeStamp::fromMillisSinceEpoch(data.readLU64());
+            const auto framesLeft = FramesLeft::fromValue(data.readLU32());
+            const float posx = data.readLF32();
+            const float posy = data.readLF32();
+            const float damage = data.readLF32();
+            const float hitstun = data.readLF32();
+            const float shield = data.readLF32();
+            const auto status = FighterStatus::fromValue(data.readLU16());
+            const uint32_t motion_l = data.readLU32();
+            const uint8_t motion_h = data.readU8();
             const auto motion = FighterMotion::fromParts(motion_h, motion_l);
-            const auto hitStatus = FighterHitStatus::fromValue(data->readU8(&error));
-            const auto stocks = FighterStocks::fromValue(data->readU8(&error));
-            const auto flags = FighterFlags::fromValue(data->readU8(&error));
-
-            if (error)
-                return nullptr;
+            const auto hitStatus = FighterHitStatus::fromValue(data.readU8());
+            const auto stocks = FighterStocks::fromValue(data.readU8());
+            const auto flags = FighterFlags::fromValue(data.readU8());
 
             frames[fighter].push(FighterState(
                 timeStamp,
@@ -122,46 +112,49 @@ uint32_t FrameData::save(FILE* fp) const
             sizeof(FighterFlags::Type);
     const int frameSize = fighterStateSize * fighterCount();
 
-    StreamBuffer buffer(5 + frameSize * frameCount());
-    buffer.writeLU32(frameCount());
-    buffer.writeU8(fighterCount());
+    MemoryBuffer uncompressed(5 + frameSize * frameCount());
+    Serializer serializer(uncompressed.address(), uncompressed.size());
+
+    serializer.writeLU32(frameCount());
+    serializer.writeU8(fighterCount());
     for (const auto& fighter : fighters_)
         for (const auto& frame : fighter)
         {
-            buffer
-                .writeLU64(frame.timeStamp().millisSinceEpoch())
-                .writeLU32(frame.framesLeft().count())
-                .writeLF32(frame.pos().x())
-                .writeLF32(frame.pos().y())
-                .writeLF32(frame.damage())
-                .writeLF32(frame.hitstun())
-                .writeLF32(frame.shield())
-                .writeLU16(frame.status().value())
-                .writeLU32(frame.motion().lower())
-                .writeU8(frame.motion().upper())
-                .writeU8(frame.hitStatus().value())
-                .writeU8(frame.stocks().count())
-                .writeU8(frame.flags().value());
+            serializer.writeLU64(frame.timeStamp().millisSinceEpoch());
+            serializer.writeLU32(frame.framesLeft().count());
+            serializer.writeLF32(frame.pos().x());
+            serializer.writeLF32(frame.pos().y());
+            serializer.writeLF32(frame.damage());
+            serializer.writeLF32(frame.hitstun());
+            serializer.writeLF32(frame.shield());
+            serializer.writeLU16(frame.status().value());
+            serializer.writeLU32(frame.motion().lower());
+            serializer.writeU8(frame.motion().upper());
+            serializer.writeU8(frame.hitStatus().value());
+            serializer.writeU8(frame.stocks().count());
+            serializer.writeU8(frame.flags().value());
         }
-    assert(buffer.bytesWritten() == 5 + frameSize * frameCount());
+    assert(serializer.bytesWritten() == uncompressed.size());
 
-    uLongf compressedSize = compressBound(buffer.bytesWritten());
-    StreamBuffer compressed(compressedSize + 6);
-    compressed.writeU8(1);  // Major version
-    compressed.writeU8(5);  // Minor version
-    compressed.writeLU32(buffer.bytesWritten());  // Decompressed size
+    uLongf compressedSize = compressBound(uncompressed.size());
+    MemoryBuffer compressed(compressedSize + 6);
+    Serializer compressedSerializer(compressed.address(), compressed.size());
+    compressedSerializer.writeU8(1);  // Major version
+    compressedSerializer.writeU8(5);  // Minor version
+    compressedSerializer.writeLU32(uncompressed.size());  // Decompressed size
     if (compress2(
-            static_cast<uint8_t*>(compressed.writeToPtr(0)), &compressedSize,  // Don't advance write pointer until we know the actual compressed size
-            static_cast<const uint8_t*>(buffer.get()), buffer.bytesWritten(), 9) != Z_OK)
+            static_cast<uint8_t*>(compressedSerializer.writeToPtr(0)), &compressedSize,
+            static_cast<const uint8_t*>(uncompressed.address()), uncompressed.size(),
+            9) != Z_OK)
     {
         return 0;
     }
-    compressed.writeToPtr(compressedSize);  // Move write pointer to the correct location so bytesWritten() is correct
+    compressedSerializer.writeToPtr(compressedSize);  // Move write pointer to the correct location so bytesWritten() is correct
 
-    if (fwrite(compressed.get(), 1, compressed.bytesWritten(), fp) != compressed.bytesWritten())
+    if (fwrite(compressed.address(), 1, compressedSerializer.bytesWritten(), fp) != compressedSerializer.bytesWritten())
         return 0;
 
-    return compressed.bytesWritten();
+    return compressedSerializer.bytesWritten();
 }
 
 // ----------------------------------------------------------------------------

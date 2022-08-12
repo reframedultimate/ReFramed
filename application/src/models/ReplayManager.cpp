@@ -536,8 +536,8 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
 
     // Determine target directory based on type
     QDir dir = type == rfcommon::MetaData::TRAINING ?
-            defaultGameSessionSourceDirectory() :
-            defaultTrainingSessionSourceDirectory();
+            defaultTrainingSessionSourceDirectory() :
+            defaultGameSessionSourceDirectory();
 
     // Determine format string based on type
     const char* formatStr = type == rfcommon::MetaData::GAME ?

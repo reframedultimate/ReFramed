@@ -83,7 +83,7 @@ public:
 
     virtual Type type() const = 0;
 
-    static MetaData* load(FILE* fp, uint32_t size);
+    static MetaData* load(const void*, uint32_t size);
     uint32_t save(FILE* fp) const;
 
     /*!

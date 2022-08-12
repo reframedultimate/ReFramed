@@ -69,10 +69,12 @@ add_library (rfcommon SHARED
     "src/DataSetFilterChain.cpp"
     "src/DataSetProcessor.cpp"
     "src/DeltaTime.cpp"
+    "src/Deserializer.cpp"
     "src/FighterFlags.cpp"
     "src/FighterHitStatus.cpp"
     "src/FighterID.cpp"
     "src/FighterMotion.cpp"
+    "src/FighterState.cpp"
     "src/FighterStatus.cpp"
     "src/FighterStocks.cpp"
     "src/FrameData.cpp"
@@ -91,15 +93,15 @@ add_library (rfcommon SHARED
     "src/MappingInfoMotion.cpp"
     "src/MappingInfoStage.cpp"
     "src/MappingInfoStatus.cpp"
+    "src/MemoryBuffer.cpp"
     "src/MetaData.cpp"
-    "src/FighterState.cpp"
     "src/Plugin.cpp"
     "src/RefCounted.cpp"
     "src/SetFormat.cpp"
     "src/SetNumber.cpp"
+    "src/Serializer.cpp"
     "src/Session.cpp"
     "src/StageID.cpp"
-    "src/StreamBuffer.cpp"
     "src/TimeStamp.cpp"
     "src/UserLabels.cpp"
     "src/Vector.cpp"
@@ -107,25 +109,29 @@ add_library (rfcommon SHARED
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
     "src/platform/dynlib.c"
+    "src/platform/MappedFile.cpp"
     "src/platform/tcp_socket.c"
     "src/platform/time.cpp")
 target_include_directories (rfcommon
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-    PUBLIC $<INSTALL_INTERFACE:include>)
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
 target_compile_definitions (rfcommon
-    PRIVATE RFCOMMON_BUILDING
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>)
+    PRIVATE
+        RFCOMMON_BUILDING
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>)
 target_compile_options (rfcommon
-    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic>
-    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/wd4910>)  # '__declspec(dllexport)' and 'extern' are incompatible on an explicit instantation -> MSVC is wrong about this.
+    PRIVATE
+        $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>)
 target_compile_features (rfcommon
     PUBLIC cxx_std_17)
 target_link_libraries (rfcommon 
-    PRIVATE nlohmann_json::nlohmann_json
-    PRIVATE zlibstatic
-    PRIVATE cpp-base64)
+    PRIVATE
+        nlohmann_json::nlohmann_json
+        zlibstatic
+        cpp-base64)
 set_target_properties (rfcommon
     PROPERTIES
         DEBUG_POSTFIX "d"

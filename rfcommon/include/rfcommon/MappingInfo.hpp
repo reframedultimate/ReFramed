@@ -20,7 +20,7 @@ public:
     MappingInfo(uint32_t checksum);
     ~MappingInfo();
 
-    static MappingInfo* load(FILE* fp, uint32_t size);
+    static MappingInfo* load(const void* data, uint32_t size);
     uint32_t save(FILE* fp) const;
     uint32_t saveNecessary(FILE* fp, const MetaData* metaData, const FrameData* frameData) const;
 
