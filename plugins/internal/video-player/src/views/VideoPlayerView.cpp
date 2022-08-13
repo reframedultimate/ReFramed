@@ -49,7 +49,7 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-VideoPlayerView::VideoPlayerView(QWidget *parent)
+VideoPlayerView::VideoPlayerView(VideoPlayerModel* model, QWidget *parent)
     : QWidget(parent)
     , logWidget_(new QPlainTextEdit)
     , videoSurface_(new VideoSurface)
@@ -62,15 +62,10 @@ VideoPlayerView::VideoPlayerView(QWidget *parent)
     layout()->addWidget(logWidget_);
     layout()->addWidget(videoSurface_);
 
-    //const char* videoFile = "/media/ssbu/Weekly 2021-04-05/2021-04-05_18-42-51.mkv";
-    //const char* videoFile = "/media/ssbu/Weekly 2021-04-09/Weekly 2021-04-09.mp4";
-    const char* videoFile = "F:\\2022-08-05 - Jas1n\\2022-08-05_22-13-07.mkv";
-
     connect(&timer_, &QTimer::timeout, this, &VideoPlayerView::drawNextFrame);
     connect(decoder_, &VideoDecoder::info, this, &VideoPlayerView::info);
     connect(decoder_, &VideoDecoder::error, this, &VideoPlayerView::error);
 
-    openFile(videoFile);
     timer_.setInterval(16);
     timer_.start();
 }

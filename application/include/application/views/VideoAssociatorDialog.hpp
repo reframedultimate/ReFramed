@@ -19,6 +19,8 @@ class ReplayManager;
 
 class VideoAssociatorDialog : public QDialog
 {
+    Q_OBJECT
+
 public:
     VideoAssociatorDialog(
             PluginManager* pluginManager,
@@ -27,6 +29,9 @@ public:
             const QString& currentFileName,
             QWidget* parent=nullptr);
     ~VideoAssociatorDialog();
+
+private slots:
+    void onSaveReleased();
 
 private:
     Ui::VideoAssociatorDialog* ui_;

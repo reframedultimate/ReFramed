@@ -1,0 +1,23 @@
+Enhancements
+- Improved plugin API
+- Much faster replay loading. New file format allows only the parts that need to be loaded to be read from disk.
+- Replays are now saved and appear in the replay list
+- Multi-replay selection and processing
+- New session/replay viewer that manages loading/unloading of all plugins
+- Improved active session manager
+- Replay editor that lets you change player names, date/time set number and other meta-data
+- New statistics plugin (see license)
+- Plugins are sorted in dropdown
+- "Frame Data List" plugin is now called "Data Viewer"
+- Re-wrote Data Viewer plugin to use the new Qt model-view approach. Should be faster.
+- Improved JSON loaders to be more robust
+
+BridgeLab
+- Ported to new plugin API
+- Fixed issue where goals weren't hidden when switching away from goals tab
+
+Statistics
+- Fixed neutral openings/kill statistic to only include neutral openings that actually lead to a kill
+- Added ability to export to OBS continuously
+- Added ability to run statistics over multiple replay files
+- Colored labels into groups to make it easier (still looks horrible)

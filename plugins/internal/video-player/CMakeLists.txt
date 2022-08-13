@@ -36,6 +36,7 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
         PRIVATE FFMPEG::avcodec
         PRIVATE FFMPEG::avformat
         PRIVATE FFMPEG::avdevice
+        PRIVATE FFMPEG::swresample
         PRIVATE FFMPEG::swscale)
 
     # On Windows we have to copy the DLLs to our binary directory

@@ -1,22 +1,24 @@
 #pragma once
 
+#include "video-player/listeners/VideoPlayerListener.hpp"
 #include "rfcommon/String.hpp"
 #include <QWidget>
 #include <QTimer>
 
 class QPlainTextEdit;
-class VideoSurface;
 class VideoDecoder;
+class VideoSurface;
+class VideoPlayerModel;
 
-class VideoPlayerView : public QWidget
+class VideoPlayerView 
+    : public QWidget
+    , public VideoPlayerListener
 {
     Q_OBJECT
 
 public:
-    explicit VideoPlayerView(QWidget* parent=nullptr);
+    explicit VideoPlayerView(VideoPlayerModel* model, QWidget* parent=nullptr);
     ~VideoPlayerView();
-
-    bool openFile(const QString& fileName);
 
 private slots:
     void drawNextFrame();

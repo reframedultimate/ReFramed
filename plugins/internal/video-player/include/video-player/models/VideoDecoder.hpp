@@ -6,6 +6,7 @@
 #include <QWaitCondition>
 
 extern "C" {
+typedef struct AVIOContext AVIOContext;
 typedef struct AVFormatContext AVFormatContext;
 typedef struct AVCodec AVCodec;
 typedef struct AVCodecContext AVCodecContext;
@@ -174,7 +175,7 @@ public:
     QImage currentFrameAsImage();
 
 public slots:
-    bool openFile(const QString& fileName);
+    bool openFile(const void* address, uint64_t size);
     bool closeFile();
 
     void nextFrame();
@@ -194,6 +195,7 @@ private:
     int sourceHeight_ = 0;
     int videoStreamIdx_ = -1;
     int audioStreamIdx_ = -1;
+    AVIOContext* ioCtx_ = nullptr;
     AVFormatContext* ctx_ = nullptr;
     AVCodecContext* videoCodecCtx_ = nullptr;
     SwsContext* videoScaleCtx_ = nullptr;

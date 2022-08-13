@@ -65,13 +65,15 @@ QImage VideoDecoder::currentFrameAsImage()
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::openFile(const QString& fileName)
+bool VideoDecoder::openFile(const void* address, uint64_t size)
 {
-    emit info("Opening file " + fileName);
+    emit info("Opening file from memory");
 
     const AVCodec* videoCodec;
     const AVCodec* audioCodec;
     int bufSize;
+
+    ioCtx_ = avio_alloc_context(address, size, )
 
     // AVFormatContext holds the header information from the format (Container)
     // Allocating memory for this component

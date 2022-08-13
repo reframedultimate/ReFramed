@@ -1,6 +1,9 @@
 #pragma once
 
 #include "rfcommon/Plugin.hpp"
+#include <memory>
+
+class VideoPlayerModel;
 
 class VideoPlayerPlugin
         : public rfcommon::Plugin
@@ -30,4 +33,16 @@ private:
 
     void onGameSessionSetLoaded(rfcommon::Session** games, int numGames) override final;
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override final;
+
+private:
+    bool openVideoFromMemory(const void* data, uint64_t size) override final;
+    void close() override final;
+    void play() override final;
+    void pause() override final;
+    void setVolume(int percent) override final;
+    void advanceVideoFrames(int videoFrames) override final;
+    void seekToGameFrame(rfcommon::FrameIndex frameNumber) override final;
+
+private:
+    std::unique_ptr<VideoPlayerModel> videoPlayer_;
 };
