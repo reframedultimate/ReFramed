@@ -51,13 +51,13 @@ void ActiveSessionView::onComboBoxFormatIndexChanged(int index)
 {
     if (index == rfcommon::SetFormat::OTHER)
     {
-        activeSessionManager_->setSetFormat(rfcommon::SetFormat::fromIndex(index));
+        QByteArray ba = ui_->lineEdit_formatOther->text().toUtf8();
+        activeSessionManager_->setSetFormat(rfcommon::SetFormat::makeOther(ba.constData()));
         ui_->lineEdit_formatOther->setVisible(true);
     }
     else
     {
-        QByteArray ba = ui_->lineEdit_formatOther->text().toUtf8();
-        activeSessionManager_->setSetFormat(rfcommon::SetFormat::fromDescription(ba.constData()));
+        activeSessionManager_->setSetFormat(rfcommon::SetFormat::fromIndex(index));
         ui_->lineEdit_formatOther->setVisible(false);
     }
 }
