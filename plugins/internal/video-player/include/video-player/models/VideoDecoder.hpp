@@ -169,24 +169,24 @@ class VideoDecoder : public QThread
     Q_OBJECT
 
 public:
-    explicit VideoDecoder(QObject* parent=nullptr);
+    explicit VideoDecoder(const void* address, uint64_t size, QObject* parent=nullptr);
     ~VideoDecoder();
 
-    QImage currentFrameAsImage();
+    bool isOpen() const { return isOpen_; }
 
-public slots:
-    bool openFile(const void* address, uint64_t size);
-    bool closeFile();
-
-    void nextFrame();
-    void prevFrame();
+    bool nextFrame();
+    bool prevFrame();
     void seekToMs(uint64_t offsetFromStart);
+
+    QImage currentFrameAsImage();
 
 signals:
     void info(const QString& msg);
     void error(const QString& msg);
 
 private:
+    bool openFile(const void* address, uint64_t size);
+    void closeFile();
     bool decodeNextFrame(FrameDequeEntry* entry);
     void run() override;
 
@@ -196,7 +196,7 @@ private:
     int videoStreamIdx_ = -1;
     int audioStreamIdx_ = -1;
     AVIOContext* ioCtx_ = nullptr;
-    AVFormatContext* ctx_ = nullptr;
+    AVFormatContext* inputCtx_ = nullptr;
     AVCodecContext* videoCodecCtx_ = nullptr;
     SwsContext* videoScaleCtx_ = nullptr;
     AVFrame* rgbFrame_ = nullptr;
@@ -213,4 +213,5 @@ private:
     FrameDequeEntry* currentFrame_;
 
     bool requestShutdown_ = false;
+    bool isOpen_ = false;
 };

@@ -1,9 +1,14 @@
 #pragma once
 
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Reference.hpp"
 #include <memory>
 
 class VideoPlayerModel;
+
+namespace rfcommon {
+    class VideoEmbed;
+}
 
 class VideoPlayerPlugin
         : public rfcommon::Plugin
@@ -36,13 +41,14 @@ private:
 
 private:
     bool openVideoFromMemory(const void* data, uint64_t size) override final;
-    void close() override final;
-    void play() override final;
-    void pause() override final;
-    void setVolume(int percent) override final;
+    void closeVideo() override final;
+    void playVideo() override final;
+    void pauseVideo() override final;
+    void setVideoVolume(int percent) override final;
     void advanceVideoFrames(int videoFrames) override final;
-    void seekToGameFrame(rfcommon::FrameIndex frameNumber) override final;
+    void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
 
 private:
     std::unique_ptr<VideoPlayerModel> videoPlayer_;
+    rfcommon::Reference<rfcommon::VideoEmbed> activeVideo_;
 };

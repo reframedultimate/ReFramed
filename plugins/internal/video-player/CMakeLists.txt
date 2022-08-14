@@ -25,6 +25,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "include/${PLUGIN_NAME}/VideoPlayerPlugin.hpp"
     MOC_HEADERS
         "include/${PLUGIN_NAME}/models/VideoDecoder.hpp"
+        "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
     INCLUDE_DIRECTORIES
         "include")

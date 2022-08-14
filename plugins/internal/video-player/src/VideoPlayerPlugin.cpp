@@ -1,13 +1,20 @@
 #include "video-player/VideoPlayerPlugin.hpp"
 #include "video-player/models/VideoPlayerModel.hpp"
 #include "video-player/views/VideoPlayerView.hpp"
+#include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/VideoEmbed.hpp"
+#include "rfcommon/VideoMeta.hpp"
 
+// ----------------------------------------------------------------------------
 VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory)
     : Plugin(factory)
     , videoPlayer_(new VideoPlayerModel)
 {}
 
-VideoPlayerPlugin::~VideoPlayerPlugin() {}
+// ----------------------------------------------------------------------------
+VideoPlayerPlugin::~VideoPlayerPlugin() 
+{}
 
 // ----------------------------------------------------------------------------
 rfcommon::Plugin::UIInterface* VideoPlayerPlugin::uiInterface() { return this; }
@@ -29,8 +36,42 @@ void VideoPlayerPlugin::destroyView(QWidget* view)
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game) {}
-void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game) {}
+void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game) 
+{
+    auto vmeta = game->tryGetVideoMeta();
+    if (!vmeta)
+        return;
+
+    if (vmeta->isEmbedded())
+    {
+        if (auto embed = game->tryGetVideoEmbed())
+            activeVideo_ = embed;
+    }
+    else
+    {
+#if defined(_WIN32)
+#   define SEPARATOR "\\"
+#else
+#   define SEPARATOR "/"
+#endif
+        rfcommon::String absFileName = rfcommon::String(vmeta->filePath()) + SEPARATOR + vmeta->fileName();
+        rfcommon::Reference<rfcommon::MappedFile> videoFile = new rfcommon::MappedFile;
+        if (videoFile->open(absFileName.cStr()) == false)
+            return;
+
+        activeVideo_ = new rfcommon::VideoEmbed(videoFile, videoFile->address(), videoFile->size());
+    }
+
+    if (activeVideo_)
+        openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
+}
+
+// ----------------------------------------------------------------------------
+void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game) 
+{
+    closeVideo();
+}
+
 void VideoPlayerPlugin::onTrainingSessionLoaded(rfcommon::Session* training) {}
 void VideoPlayerPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 
@@ -40,29 +81,29 @@ void VideoPlayerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int 
 // ----------------------------------------------------------------------------
 bool VideoPlayerPlugin::openVideoFromMemory(const void* address, uint64_t size) 
 {
-    videoPlayer_->open(address, size);
+    return videoPlayer_->open(address, size);
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::close()
+void VideoPlayerPlugin::closeVideo()
 {
     videoPlayer_->close();
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::play() 
+void VideoPlayerPlugin::playVideo()
 {
     videoPlayer_->play();
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::pause() 
+void VideoPlayerPlugin::pauseVideo()
 {
     videoPlayer_->pause();
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::setVolume(int percent) 
+void VideoPlayerPlugin::setVideoVolume(int percent)
 {
 }
 
@@ -73,6 +114,6 @@ void VideoPlayerPlugin::advanceVideoFrames(int videoFrames)
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::seekToGameFrame(rfcommon::FrameIndex frameNumber) 
+void VideoPlayerPlugin::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 {
 }

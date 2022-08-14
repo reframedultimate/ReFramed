@@ -1,4 +1,5 @@
 #include "video-player/models/VideoDecoder.hpp"
+#include "rfcommon/Deserializer.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -16,13 +17,14 @@ struct FrameDequeEntry
 };
 
 // ----------------------------------------------------------------------------
-VideoDecoder::VideoDecoder(QObject* parent)
+VideoDecoder::VideoDecoder(const void* address, uint64_t size, QObject* parent)
     : QThread(parent)
     , currentFrameIndex_(-1)
     , bufSize_(64)
     , frameFreeList_(bufSize_)
     , currentFrame_(nullptr)
 {
+    // We maintain a double ended queue of AVFrames that are filled asynchronously
     FrameDequeEntry* entries = frameFreeList_.entries();
     for (int i = 0; i != bufSize_; ++i)
     {
@@ -30,13 +32,36 @@ VideoDecoder::VideoDecoder(QObject* parent)
         entry->frame = av_frame_alloc();
         entry->number = -1;
     }
+
+    // Open file from memory and start decoder thread
+    isOpen_ = openFile(address, size);
+    if (isOpen_)
+    {
+        // Decode the very first frame before starting the decoder thread,
+        // so the calling code has a valid frame to show
+        FrameDequeEntry* entry = frameFreeList_.take();
+        if (decodeNextFrame(entry))
+        {
+            currentFrame_ = entry;
+            start();
+        }
+        else
+        {
+            frameFreeList_.put(entry);
+            closeFile();
+            isOpen_ = false;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
 VideoDecoder::~VideoDecoder()
 {
-    closeFile();
+    // Joins decoding thread and cleans up everything
+    if (isOpen_)
+        closeFile();
 
+    // Free AVFrames in double ended queue
     FrameDequeEntry* entries = frameFreeList_.entries();
     for (int i = 0; i != bufSize_; ++i)
     {
@@ -64,37 +89,77 @@ QImage VideoDecoder::currentFrameAsImage()
     return QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
 }
 
+static int read_callback(void* opaque, uint8_t* buf, int buf_size)
+{
+    auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
+    return ioChunkReader->read(buf, buf_size);
+}
+
+static int64_t seek_callback(void* opaque, int64_t offset, int whence)
+{
+    auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
+    switch (whence)
+    {
+        case SEEK_SET: ioChunkReader->seekSet(offset); return ioChunkReader->bytesRead();
+        case SEEK_CUR: ioChunkReader->seekCur(offset); return ioChunkReader->bytesRead();
+        case SEEK_END: ioChunkReader->seekEnd(offset); return ioChunkReader->bytesRead();
+        case AVSEEK_SIZE: return ioChunkReader->bytesTotal();
+    }
+
+    return AVERROR(EIO); // unexpected seek request, treat it as error
+}
+
 // ----------------------------------------------------------------------------
 bool VideoDecoder::openFile(const void* address, uint64_t size)
 {
     emit info("Opening file from memory");
 
+    int result;
     const AVCodec* videoCodec;
     const AVCodec* audioCodec;
+    rfcommon::Deserializer* ioChunkReader;
+    unsigned char* ioBuffer;
     int bufSize;
 
-    ioCtx_ = avio_alloc_context(address, size, )
+    ioChunkReader = new rfcommon::Deserializer(address, size);
+
+    ioBuffer = static_cast<unsigned char*>(av_malloc(8192));
+    ioCtx_ = avio_alloc_context(
+        ioBuffer,
+        8192,
+        0,     // 0 for reading, 1 for writing. We're only reading.
+        reinterpret_cast<void*>(ioChunkReader),  // opaque pointer, will be passed to read callback
+        &read_callback,
+        NULL,  // write callback
+        &seek_callback   // seek callback
+    );
 
     // AVFormatContext holds the header information from the format (Container)
     // Allocating memory for this component
     // http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
-    ctx_ = avformat_alloc_context();
-    if (ctx_ == nullptr)
+    inputCtx_ = avformat_alloc_context();
+    if (inputCtx_ == nullptr)
     {
         emit error("Failed to allocate avformat context");
         goto alloc_context_failed;
     }
+    inputCtx_->pb = ioCtx_;
+
+    // tell our input context that we're using custom i/o and there's no backing file
+    inputCtx_->flags |= AVFMT_FLAG_CUSTOM_IO | AVFMT_NOFILE;
 
     // Open the file and read its header. The codecs are not opened.
     // The function arguments are:
     // AVFormatContext (the component we allocated memory for),
-    // url (filename),
+    // url (filename), or some non-empty placeholder for when we use a custom IO
     // AVInputFormat (if you pass NULL it'll do the auto detect)
     // and AVDictionary (which are options to the demuxer)
     // http://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga31d601155e9035d5b0e7efedc894ee49
-    if (avformat_open_input(&ctx_, fileName.toStdString().c_str(), NULL, NULL) != 0)
+    if ((result = avformat_open_input(&inputCtx_, "ReFramed Video", NULL, NULL)) != 0)
     {
-        emit error("Failed to open input file \"" + fileName + "\"");
+        char buf[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(result, buf, AV_ERROR_MAX_STRING_SIZE);
+        emit error(buf);
         goto open_input_failed;
     }
 
@@ -106,7 +171,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     // and options contains options for codec corresponding to i-th stream.
     // On return each dictionary will be filled with options that were not found.
     // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#gad42172e27cddafb81096939783b157bb
-    if (avformat_find_stream_info(ctx_, NULL) < 0)
+    if (avformat_find_stream_info(inputCtx_, NULL) < 0)
     {
         emit error("Failed to find stream info");
         goto find_stream_info_failed;
@@ -114,9 +179,9 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
 
     videoCodec = nullptr;
     audioCodec = nullptr;
-    for (int i = 0; i < ctx_->nb_streams; ++i)
+    for (int i = 0; i < inputCtx_->nb_streams; ++i)
     {
-        AVStream* stream = ctx_->streams[i];
+        AVStream* stream = inputCtx_->streams[i];
         AVCodecParameters* codecParams = stream->codecpar;
         const AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
         if (codec == nullptr)
@@ -146,7 +211,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
         goto video_stream_not_found;
     }
     if (audioStreamIdx_ == -1)
-        info("Input does not contain an audio stream");
+        emit info("Input does not contain an audio stream");
 
     // https://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     videoCodecCtx_ = avcodec_alloc_context3(videoCodec);
@@ -158,7 +223,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
 
     // Fill the codec context based on the values from the supplied codec parameters
     // https://ffmpeg.org/doxygen/trunk/group__lavc__core.html#gac7b282f51540ca7a99416a3ba6ee0d16
-    if (avcodec_parameters_to_context(videoCodecCtx_, ctx_->streams[videoStreamIdx_]->codecpar) < 0)
+    if (avcodec_parameters_to_context(videoCodecCtx_, inputCtx_->streams[videoStreamIdx_]->codecpar) < 0)
     {
         emit error("Failed to copy video codec params to video codec context");
         goto copy_video_codec_params_failed;
@@ -199,7 +264,6 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     sourceHeight_ = videoCodecCtx_->height;
     requestShutdown_ = false;
     currentFrameIndex_ = 0;
-    start();
 
     return true;
 
@@ -207,13 +271,13 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     copy_video_codec_params_failed   : avcodec_free_context(&videoCodecCtx_);
     alloc_video_codec_context_failed :
     video_stream_not_found           :
-    find_stream_info_failed          : avformat_close_input(&ctx_);
-    open_input_failed                : avformat_free_context(ctx_);
+    find_stream_info_failed          : avformat_close_input(&inputCtx_);
+    open_input_failed                : avformat_free_context(inputCtx_);
     alloc_context_failed             : return false;
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::closeFile()
+void VideoDecoder::closeFile()
 {
     mutex_.lock();
         requestShutdown_ = true;
@@ -250,38 +314,43 @@ bool VideoDecoder::closeFile()
     av_frame_free(&rgbFrame_);
     avcodec_close(videoCodecCtx_);
     avcodec_free_context(&videoCodecCtx_);
-    avformat_close_input(&ctx_);
-    avformat_free_context(ctx_);
-
-    return true;
+    avformat_close_input(&inputCtx_);
+    avformat_free_context(inputCtx_);
+    delete reinterpret_cast<rfcommon::Deserializer*>(ioCtx_->opaque);
+    av_free(ioCtx_->buffer);
+    avio_context_free(&ioCtx_);
 }
 
 // ----------------------------------------------------------------------------
-void VideoDecoder::nextFrame()
+bool VideoDecoder::nextFrame()
 {
     QMutexLocker guard(&mutex_);
 
     if (frontQueue_.count() == 0)
-        return;
+        return false;
 
     if (currentFrame_)
         backQueue_.putFront(currentFrame_);
     currentFrame_ = frontQueue_.takeBack();
     cond_.wakeOne();
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-void VideoDecoder::prevFrame()
+bool VideoDecoder::prevFrame()
 {
     QMutexLocker guard(&mutex_);
 
     if (backQueue_.count() == 0)
-        return;
+        return false;
 
     if (currentFrame_)
         frontQueue_.putBack(currentFrame_);
     currentFrame_ = backQueue_.takeFront();
     cond_.wakeOne();
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -318,16 +387,29 @@ bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
 
     // Returns <0 if an error occurred, or if end of file was reached
     int response;
-    while ((response = av_read_frame(ctx_, &packet)) >= 0)
+    while (true)
     {
+        response = av_read_frame(inputCtx_, &packet);
+        if (response < 0) 
+        {
+            if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
+                break;
+            if (inputCtx_->pb && inputCtx_->pb->error)
+                break;
+            continue;
+        }
+
         if (packet.stream_index == videoStreamIdx_)
         {
             // Send packet to video decoder
             response = avcodec_send_packet(videoCodecCtx_, &packet);
             if (response < 0)
             {
-                emit error("Failed to send packet to video decoder");
-                goto exit;
+                if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
+                    goto exit;
+                if (inputCtx_->pb && inputCtx_->pb->error)
+                    goto exit;
+                goto need_next_packet;
             }
 
             response = avcodec_receive_frame(videoCodecCtx_, entry->frame);
@@ -336,7 +418,7 @@ bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
             else if (response == AVERROR_EOF)
                 goto exit;
             else if (response < 0)
-                error("Decoder error");
+                emit error("Decoder error");
 
             // Frame is successfully decoded here
 

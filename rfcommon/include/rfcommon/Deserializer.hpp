@@ -24,11 +24,19 @@ public:
     float readBF32();
     double readBF64();
 
+    uint64_t read(void* dst, uint64_t len);
+
     const void* readFromPtr(int len);
     const void* currentPtr() const;
 
     uint64_t bytesRead() const;
     uint64_t bytesLeft() const;
+    uint64_t bytesTotal() const;
+
+    void seekSet(int64_t offset);
+    void seekCur(int64_t offset);
+    void seekEnd(int64_t offset);
+    int64_t currentOffset() const;
 
 private:
     const unsigned char* readPtr_;

@@ -1,5 +1,5 @@
 #include "video-player/views/VideoPlayerView.hpp"
-#include "video-player/models/VideoDecoder.hpp"
+#include "video-player/models/VideoPlayerModel.hpp"
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 #include <QPainter>
@@ -51,9 +51,9 @@ public:
 // ----------------------------------------------------------------------------
 VideoPlayerView::VideoPlayerView(VideoPlayerModel* model, QWidget *parent)
     : QWidget(parent)
+    , model_(model)
     , logWidget_(new QPlainTextEdit)
     , videoSurface_(new VideoSurface)
-    , decoder_(new VideoDecoder(this))
 {
     setLayout(new QVBoxLayout);
 
@@ -62,42 +62,31 @@ VideoPlayerView::VideoPlayerView(VideoPlayerModel* model, QWidget *parent)
     layout()->addWidget(logWidget_);
     layout()->addWidget(videoSurface_);
 
-    connect(&timer_, &QTimer::timeout, this, &VideoPlayerView::drawNextFrame);
-    connect(decoder_, &VideoDecoder::info, this, &VideoPlayerView::info);
-    connect(decoder_, &VideoDecoder::error, this, &VideoPlayerView::error);
-
-    timer_.setInterval(16);
-    timer_.start();
+    model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 VideoPlayerView::~VideoPlayerView()
 {
+    model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-bool VideoPlayerView::openFile(const QString& fileName)
+void VideoPlayerView::onPresentCurrentFrame()
 {
-    return decoder_->openFile(fileName);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerView::drawNextFrame()
-{
-    videoSurface_->image = decoder_->currentFrameAsImage();
+    videoSurface_->image = model_->currentFrameAsImage();
     videoSurface_->update();
-    decoder_->nextFrame();
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerView::info(const QString& msg)
+void VideoPlayerView::onInfo(const QString& msg)
 {
     logWidget_->textCursor().insertText("[INFO] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerView::error(const QString& msg)
+void VideoPlayerView::onError(const QString& msg)
 {
     logWidget_->textCursor().insertText("[ERROR] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());

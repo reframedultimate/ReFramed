@@ -5,8 +5,10 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
+#include "rfcommon/MappedFile.hpp"
 
 #include <QPushButton>
+#include <QFileDialog>
 
 namespace rfapp {
 
@@ -34,9 +36,10 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     {
         videoPlugin_ = pluginManager_->create(factoryName);
         if (videoPlugin_)
-            if (auto i = videoPlugin_->uiInterface())
-                if ((videoView_ = i->createView()))
-                    break;
+            if (videoPlugin_->videoPlayerInterface())
+                if (auto i = videoPlugin_->uiInterface())
+                    if ((videoView_ = i->createView()))
+                        break;
 
         if (videoPlugin_)
             pluginManager_->destroy(videoPlugin_);
@@ -56,7 +59,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     }
 
     // Fill in UI with values from the session object
-    /*
     auto vmeta = session_->tryGetVideoMeta();
     auto embed = session_->tryGetVideoEmbed();
     if (embed)
@@ -69,12 +71,13 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     {
         if (vmeta)
         {
-            ui_->lineEdit_fileName->setText(vmeta->fileName().cStr());
-            ui_->lineEdit_filePath->setText(vmeta->filePath().cStr());
+            ui_->lineEdit_fileName->setText(vmeta->fileName());
+            ui_->lineEdit_filePath->setText(vmeta->filePath());
         }
         ui_->pushButton_extractOrEmbed->setText("Embed File");
     }
 
+    /*
     if (vmeta)
     {
         QTime time; 
@@ -86,6 +89,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &VideoAssociatorDialog::close);
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
+    connect(ui_->pushButton_chooseFile, &QPushButton::released, this, &VideoAssociatorDialog::onChooseFileReleased);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,6 +109,25 @@ VideoAssociatorDialog::~VideoAssociatorDialog()
 void VideoAssociatorDialog::onSaveReleased()
 {
 
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onChooseFileReleased()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this, "Open Video File", "", "Video Files (*.mp4 *.mkv *.avi *.webm)");
+    if (fileName.length() == 0)
+        return;
+
+    rfcommon::Reference<rfcommon::MappedFile> f = new rfcommon::MappedFile;
+    QByteArray ba = fileName.toUtf8();
+    if (f->open(ba.constData()) == false)
+        return;
+
+    currentVideoFile_ = f;
+
+    if (videoPlugin_)
+        videoPlugin_->videoPlayerInterface()->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
 }
 
 }

@@ -106,7 +106,7 @@ bool MappedFile::open(const char* fileName)
     // be opened in read-only mode and thus we don't need to worry about
     // propagating changes to the file to other processes mapping the same
     // region.
-    address = mmap(nullptr, stbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    address = mmap(nullptr, stbuf.st_size, PROT_READ, MAP_PRIVATE | MAP_NORESERVE, fd, 0);
     if (address == MAP_FAILED)
         goto mmap_failed;
 

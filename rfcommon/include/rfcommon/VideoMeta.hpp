@@ -15,6 +15,11 @@ public:
 
     static VideoMeta* load(const void* data, uint32_t size);
     uint32_t save(FILE* fp);
+
+    const char* fileName() const { return ""; }
+    const char* filePath() const { return ""; }
+
+    bool isEmbedded() const { return false; }
 };
 
 }

@@ -135,6 +135,17 @@ double Deserializer::readBF64()
 }
 
 // ----------------------------------------------------------------------------
+uint64_t Deserializer::read(void* dst, uint64_t len)
+{
+    int actual = bytesLeft();
+    if (len > actual)
+        len = actual;
+    memcpy(dst, readPtr_, len);
+    readPtr_ += len;
+    return len;
+}
+
+// ----------------------------------------------------------------------------
 const void* Deserializer::readFromPtr(int len)
 {
     assert(readPtr_ + len <= end_);
@@ -159,6 +170,33 @@ uint64_t Deserializer::bytesRead() const
 uint64_t Deserializer::bytesLeft() const
 {
     return end_ - readPtr_;
+}
+
+// ----------------------------------------------------------------------------
+uint64_t Deserializer::bytesTotal() const
+{
+    return end_ - begin_;
+}
+
+// ----------------------------------------------------------------------------
+void Deserializer::seekSet(int64_t offset)
+{
+    readPtr_ = begin_ + offset;
+    assert(readPtr_ <= end_ && readPtr_ >= begin_);
+}
+
+// ----------------------------------------------------------------------------
+void Deserializer::seekCur(int64_t offset)
+{
+    readPtr_ += offset;
+    assert(readPtr_ <= end_ && readPtr_ >= begin_);
+}
+
+// ----------------------------------------------------------------------------
+void Deserializer::seekEnd(int64_t offset)
+{
+    readPtr_ = end_ - offset;
+    assert(readPtr_ <= end_ && readPtr_ >= begin_);
 }
 
 }

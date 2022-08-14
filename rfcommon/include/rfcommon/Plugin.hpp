@@ -65,22 +65,22 @@ public:
          * \note ReFramed will guarantee that this function won't be called
          * twice in a row.
          */
-        virtual void close() = 0;
+        virtual void closeVideo() = 0;
 
         /*!
          * \brief Begin normal playback of the video stream.
          */
-        virtual void play() = 0;
+        virtual void playVideo() = 0;
 
         /*!
          * \brief Pause the video stream.
          */
-        virtual void pause() = 0;
+        virtual void pauseVideo() = 0;
 
         /*!
          * \brief Set the volume in percent.
          */
-        virtual void setVolume(int percent) = 0;
+        virtual void setVideoVolume(int percent) = 0;
 
         /*!
          * \brief Advance by N number of video-frames (not game-frames).
@@ -100,7 +100,7 @@ public:
          * to the nature of decoding video streams, it's OK to not be 100% 
          * accurate here, but you should try for best effort.
          */
-        virtual void seekToGameFrame(rfcommon::FrameIndex frameNumber) = 0;
+        virtual void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) = 0;
     };
 
     Plugin(RFPluginFactory* factory);

@@ -20,14 +20,13 @@ public:
     explicit VideoPlayerView(VideoPlayerModel* model, QWidget* parent=nullptr);
     ~VideoPlayerView();
 
-private slots:
-    void drawNextFrame();
-    void info(const QString& msg);
-    void error(const QString& msg);
+private:
+    void onPresentCurrentFrame() override final;
+    void onInfo(const QString& msg) override final;
+    void onError(const QString& msg) override final;
 
 private:
-    QTimer timer_;
+    VideoPlayerModel* model_;
     QPlainTextEdit* logWidget_;
     VideoSurface* videoSurface_;
-    VideoDecoder* decoder_;
 };

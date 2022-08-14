@@ -8,6 +8,7 @@ namespace Ui {
 }
 
 namespace rfcommon {
+    class MappedFile;
     class Plugin;
     class Session;
 }
@@ -32,6 +33,7 @@ public:
 
 private slots:
     void onSaveReleased();
+    void onChooseFileReleased();
 
 private:
     Ui::VideoAssociatorDialog* ui_;
@@ -40,6 +42,7 @@ private:
     rfcommon::Plugin* videoPlugin_;
     QWidget* videoView_;
     rfcommon::Reference<rfcommon::Session> session_;
+    rfcommon::Reference<rfcommon::MappedFile> currentVideoFile_;
     const QString currentFileName_;
 };
 
