@@ -91,11 +91,10 @@ const char* Hash40Strings::stringOf(FighterMotion motion) const
 // ----------------------------------------------------------------------------
 FighterMotion Hash40Strings::motionOf(const char* str) const
 {
+    // Have to do 1 lookup to avoid hash collisions
     const FighterMotion motion = hash40(str);
-#ifndef NDEBUG
     if (entries_.find(motion) == entries_.end())
-        fprintf(stderr, "Motion string \"%s\" was not found in the table. Returning the hash40 value anyway...\n", str);
-#endif
+        return FighterMotion::makeInvalid();
     return motion;
 }
 

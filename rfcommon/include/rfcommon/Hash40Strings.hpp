@@ -31,12 +31,14 @@ public:
      * \return If the motion value is unknown, then this method will return
      * nullptr. Otherwise, a valid string is returned.
      */
-    const char* stringOf(FighterMotion motion) const;
+    const char* toString(FighterMotion motion) const;
 
     /*!
-     * \brief Does the exact same thing as @see hash40().
+     * \brief Runs the string through @see hash40(), but only returns the
+     * motion value if it exists in the list of known values. If you need
+     * to hash unknown values, use @see hash40().
      */
-    FighterMotion motionOf(const char* str) const;
+    FighterMotion toMotion(const char* str) const;
 
 private:
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> entries_;
