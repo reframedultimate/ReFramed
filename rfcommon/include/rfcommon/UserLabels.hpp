@@ -21,7 +21,9 @@
 
 namespace rfcommon {
 
-class RFCOMMON_PUBLIC_API FighterUserLabels
+class Hash40Strings;
+
+class RFCOMMON_PUBLIC_API FighterUserMotionLabels
 {
 public:
     enum MatchFlags
@@ -42,27 +44,32 @@ public:
     {
         String userLabel;
         FighterMotion motion;
-        FighterStatus status;
         Category category;
-        uint8_t matchFlags;
     };
+
+    FighterUserMotionLabels();
+    ~FighterUserMotionLabels();
+
+    SmallVector<Entry, 4> toEntry(const char* userLabel) const;
+    SmallVector<FighterMotion, 4> toMotion(const char* userLabel) const;
+    const char* toUserLabel(FighterMotion motion) const;
 
 private:
     Vector<Entry> entries_;
-    HashMap<FighterMotion, int, FighterMotion::Hasher> motionMap_;
     HashMap<String, SmallVector<int, 4>> userMap_;
 };
 
-class RFCOMMON_PUBLIC_API UserLabels
+class RFCOMMON_PUBLIC_API UserMotionLabels
 {
 public:
-    bool loadJSON(const char* fileName);
+    UserMotionLabels(Hash40Strings* hash40Strings);
+    ~UserMotionLabels();
 
-    const FighterUserLabels& fighter(FighterID fighterID) const
-        { assert(fighterID.value() < fighters_.count()); return fighters_[fighterID.value()]; }
+    const FighterUserMotionLabels& fighter(FighterID fighterID) const;
 
 private:
-    Vector<FighterUserLabels> fighters_;
+    Hash40Strings* hash40Strings_;
+    Vector<FighterUserMotionLabels> fighters_;
 };
 
 }

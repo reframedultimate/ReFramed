@@ -91,21 +91,25 @@ public:
         return lhs.count_ == rhs.count_ && (memcmp(lhs.begin_, rhs.begin_, lhs.count_) == 0);
     }
 
-    template <int N2, typename S2>
-    friend inline bool operator!=(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs)
-    {
-        return !operator==(lhs, rhs);
-    }
-
     friend inline bool operator==(const SmallString<N, S>& lhs, const char* rhs)
     {
         return strcmp(lhs.begin_, rhs) == 0;
     }
 
-    friend inline bool operator!=(const SmallString<N, S>& lhs, const char* rhs)
+    template <int N2, typename S2>
+    friend inline bool operator<(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs)
     {
-        return !operator==(lhs, rhs);
+        return memcmp(lhs.begin_, rhs.begin_, lhs.count_ < rhs.count_ ? lhs.count_ : rhs.count_) < 0;
     }
+
+    friend inline bool operator<(const SmallString<N, S>& lhs, const char* rhs)
+    {
+        return strcmp(lhs.begin_, rhs) < 0;
+    }
+
+    template <int N2, typename S2>
+    friend inline bool operator!=(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs) { return !operator==(lhs, rhs); }
+    friend inline bool operator!=(const SmallString<N, S>& lhs, const char* rhs) { return !operator==(lhs, rhs); }
 };
 
 template <int N1, int N2, typename S>

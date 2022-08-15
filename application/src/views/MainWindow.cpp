@@ -13,6 +13,7 @@
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
+#include "application/views/UserLabelsEditor.hpp"
 #include "application/views/VisualizerView.hpp"
 
 #include <QStackedWidget>
@@ -21,6 +22,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QStandardPaths>
 
 namespace rfapp {
 
@@ -66,6 +68,8 @@ MainWindow::MainWindow(QWidget* parent)
             this, &MainWindow::onConnectActionTriggered);
     connect(ui_->action_disconnect, &QAction::triggered,
             this, &MainWindow::onDisconnectActionTriggered);
+    connect(ui_->action_userLabelsEditor, &QAction::triggered,
+            this, &MainWindow::onUserLabelsEditorActionTriggered);
 
     categoryModel_->selectReplayGroupsCategory();
 
@@ -129,10 +133,9 @@ void MainWindow::onProtocolDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup)
+static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup, QRect popupRect)
 {
     QRect mainRect = main->geometry();
-    QRect popupRect = popup->geometry();
 
     return QRect(
         mainRect.left() + mainRect.width() / 2 - popupRect.width() / 2,
@@ -145,10 +148,9 @@ static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup)
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
-    ConnectView* c = new ConnectView(config_.get(), protocol_.get(), Qt::Popup | Qt::Dialog);
-    c->setAttribute(Qt::WA_DeleteOnClose);
-    c->show();
-    c->setGeometry(calculatePopupGeometry(this, c));
+    ConnectView c(config_.get(), protocol_.get(), Qt::Popup | Qt::Dialog);
+    c.setGeometry(calculatePopupGeometry(this, &c, c.geometry()));
+    c.exec();
 }
 
 // ----------------------------------------------------------------------------
@@ -156,6 +158,29 @@ void MainWindow::onDisconnectActionTriggered()
 {
     // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
     protocol_->disconnectFromServer();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onUserLabelsEditorActionTriggered()
+{
+    rfcommon::MappingInfo* map = protocol_->globalMappingInfo();
+    if (map == nullptr)
+    {
+        QDir configPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+        QString mappingFileName = configPath.absoluteFilePath("mappingInfo.json");
+        QMessageBox::critical(this, "Error",
+                "Global mapping information file is missing: " + mappingFileName + "\n\n"
+                "Connecting to your Nintendo Switch will re-download this file.");
+        return;
+    }
+
+    QRect popupGeometry = geometry();
+    popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
+    popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
+
+    UserLabelsEditor editor(userLabels_.get());
+    editor.setGeometry(calculatePopupGeometry(this, &editor, popupGeometry));
+    editor.exec();
 }
 
 // ----------------------------------------------------------------------------

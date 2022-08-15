@@ -9,6 +9,7 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
 
+#include <QDateTime>
 #include <QStandardPaths>
 #include <QJsonObject>
 

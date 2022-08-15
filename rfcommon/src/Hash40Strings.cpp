@@ -80,7 +80,7 @@ bool Hash40Strings::loadCSV(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-const char* Hash40Strings::stringOf(FighterMotion motion) const
+const char* Hash40Strings::toString(FighterMotion motion) const
 {
     auto it = entries_.find(motion);
     if (it != entries_.end())
@@ -89,7 +89,7 @@ const char* Hash40Strings::stringOf(FighterMotion motion) const
 }
 
 // ----------------------------------------------------------------------------
-FighterMotion Hash40Strings::motionOf(const char* str) const
+FighterMotion Hash40Strings::toMotion(const char* str) const
 {
     // Have to do 1 lookup to avoid hash collisions
     const FighterMotion motion = hash40(str);

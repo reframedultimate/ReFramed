@@ -36,7 +36,7 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
     task_.reset(new ProtocolTask(ipAddress, port, mappingInfoChecksum));
 
     QByteArray ba = ipAddress.toUtf8();
-    const char* ipCstr = ba.data();
+    const char* ipCstr = ba.constData();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolAttemptConnectToServer, ipCstr, port);
 
     connect(task_.get(), &ProtocolTask::connectionSuccess,
@@ -70,6 +70,12 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 void Protocol::disconnectFromServer()
 {
     task_.reset();
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::MappingInfo* Protocol::globalMappingInfo() const
+{
+    return globalMappingInfo_;
 }
 
 // ----------------------------------------------------------------------------

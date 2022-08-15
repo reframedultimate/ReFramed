@@ -36,7 +36,7 @@ const FighterID MappingInfoFighter::toID(const char* name) const
 // ----------------------------------------------------------------------------
 void MappingInfoFighter::add(FighterID fighterID, const char* name)
 {
-    if (fighterID.isValid() == false)
+    if (fighterID.isValid() == false || strlen(name) == 0)
         return;
     if (nameMap_.insertIfNew(fighterID, name) == nameMap_.end())
         return;

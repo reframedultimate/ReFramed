@@ -49,6 +49,7 @@ private:
 private slots:
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
+    void onUserLabelsEditorActionTriggered();
 
 private:
     void onCategorySelected(CategoryType category) override;

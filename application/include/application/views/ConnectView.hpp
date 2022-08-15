@@ -14,9 +14,10 @@ namespace rfapp {
 
 class Protocol;
 
-class ConnectView : public QDialog
-                  , public ConfigAccessor
-                  , public rfcommon::ProtocolListener
+class ConnectView
+        : public QDialog
+        , public ConfigAccessor
+        , public rfcommon::ProtocolListener
 {
     Q_OBJECT
 public:
