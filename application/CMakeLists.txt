@@ -122,6 +122,16 @@ target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/../>)
 
 ###############################################################################
+# Copy data files to bin directory
+###############################################################################
+
+add_custom_command (TARGET application POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_DATADIR}
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/ParamLabels.csv" ${REFRAMED_BUILD_DATADIR}
+	COMMENT "Copying data files to ${REFRAMED_BUILD_DATADIR}"
+	VERBATIM)
+
+###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
 ###############################################################################
 

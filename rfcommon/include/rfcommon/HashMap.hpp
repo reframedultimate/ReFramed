@@ -599,6 +599,27 @@ public:
         return ConstIterator(table_, keys_, values_, findImpl(key));
     }
 
+    V& find(const K& key, V& defaultValue)
+    {
+        S pos = findImpl(key);
+        if (pos == table_.count())
+            return defaultValue;
+        return values_[pos];
+    }
+
+    const V& find(const K& key, const V& defaultValue) const
+    {
+        S pos = findImpl(key);
+        if (pos == table_.count())
+            return defaultValue;
+        return values_[pos];
+    }
+
+    bool exists(const K& key) const
+    {
+        return find(key) != end();
+    }
+
 private:
     S findBeginPos() const
     {

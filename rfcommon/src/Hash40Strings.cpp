@@ -33,12 +33,21 @@ static uint64_t hexStringToValue(const char* hex, int* error)
 }
 
 // ----------------------------------------------------------------------------
-bool Hash40Strings::loadCSV(const char* fileName)
+Hash40Strings::Hash40Strings()
+{}
+
+// ----------------------------------------------------------------------------
+Hash40Strings::~Hash40Strings()
+{}
+
+// ----------------------------------------------------------------------------
+Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
 {
     FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
-        return false;
+        return nullptr;
 
+    Hash40Strings* hash40Strings = new Hash40Strings();
     char line[128];
     while (fgets(line, sizeof(line), fp))
     {
@@ -54,6 +63,12 @@ bool Hash40Strings::loadCSV(const char* fileName)
         for (delim++; *delim != '\r' && *delim != '\n' && *delim; ++delim) {}
         *delim = '\0';
 
+        if (labelStr[0] == '\0')
+        {
+            fprintf(stderr, "Label string empty for \"%s\"", line);
+            continue;
+        }
+
         int error = 0;
         const auto motion = FighterMotion::fromValue(hexStringToValue(line, &error));
         if (motion.value() == 0)
@@ -65,8 +80,8 @@ bool Hash40Strings::loadCSV(const char* fileName)
             continue;
         }
 
-        auto motionMapResult = entries_.insertIfNew(motion, labelStr);
-        if (motionMapResult == entries_.end())
+        auto motionMapResult = hash40Strings->entries_.insertIfNew(motion, labelStr);
+        if (motionMapResult == hash40Strings->entries_.end())
         {
             fprintf(stderr, "Duplicate motion value: %s\n", line);
             continue;
@@ -74,9 +89,15 @@ bool Hash40Strings::loadCSV(const char* fileName)
     }
     fclose(fp);
 
-    fprintf(stderr, "Loaded %d motion labels\n", entries_.count());
+    fprintf(stderr, "Loaded %d motion labels\n", hash40Strings->entries_.count());
 
-    return true;
+    return hash40Strings;
+}
+
+// ----------------------------------------------------------------------------
+Hash40Strings* Hash40Strings::makeEmpty()
+{
+    return new Hash40Strings();
 }
 
 // ----------------------------------------------------------------------------
@@ -84,8 +105,8 @@ const char* Hash40Strings::toString(FighterMotion motion) const
 {
     auto it = entries_.find(motion);
     if (it != entries_.end())
-        return it->value().count() ? it->value().cStr() : nullptr;
-    return nullptr;
+        return it->value().cStr();
+    return "(unknown)";
 }
 
 // ----------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 #include "application/Util.hpp"
+
 #include <QLayout>
 #include <QLayoutItem>
 #include <QWidget>
@@ -6,6 +7,9 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QApplication>
+#include <QScreen>
+
 #include <cstring>
 
 // ----------------------------------------------------------------------------
@@ -42,6 +46,35 @@ void clearStackedWidget(QStackedWidget* sw)
         sw->removeWidget(widget);
         widget->deleteLater();
     }
+}
+
+// ----------------------------------------------------------------------------
+QRect calculatePopupGeometryKeepSize(const QWidget* main, const QWidget* popup, QRect popupRect)
+{
+    QRect mainRect = main->geometry();
+
+    return QRect(
+        mainRect.left() + mainRect.width() / 2 - popupRect.width() / 2,
+        mainRect.top() + mainRect.height() / 2 - popupRect.height() / 2,
+        popupRect.width(),
+        popupRect.height()
+    );
+}
+
+// ----------------------------------------------------------------------------
+QRect calculatePopupGeometryActiveScreen()
+{
+    QScreen* screen = QApplication::screenAt(QCursor::pos());
+    if (screen == nullptr)
+        screen = QApplication::primaryScreen();
+
+    QRect screenRect = screen->geometry();
+    int width = screenRect.width() * 3 / 4;
+    int height = screenRect.height() * 3 / 4;
+    int x = (screenRect.width() - width) / 2 + screenRect.x();
+    int y = (screenRect.height() - height) / 2 + screenRect.y();
+
+    return QRect(x, y, width, height);
 }
 
 }

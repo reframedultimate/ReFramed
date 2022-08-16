@@ -2,7 +2,6 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/RefCounted.hpp"
-#include "rfcommon/MappingInfoMotion.hpp"
 #include "rfcommon/MappingInfoStatus.hpp"
 #include "rfcommon/MappingInfoHitStatus.hpp"
 #include "rfcommon/MappingInfoStage.hpp"
@@ -31,7 +30,6 @@ public:
      */
     uint32_t checksum() const;
 
-    MappingInfoMotion motion;
     MappingInfoStatus status;
     MappingInfoHitStatus hitStatus;
     MappingInfoStage stage;

@@ -15,6 +15,11 @@
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/UserLabelsEditor.hpp"
 #include "application/views/VisualizerView.hpp"
+#include "application/Util.hpp"
+
+#include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/UserLabels.hpp"
+#include "rfcommon/MappedFile.hpp"
 
 #include <QStackedWidget>
 #include <QDockWidget>
@@ -27,8 +32,24 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MainWindow::MainWindow(QWidget* parent)
+static rfcommon::UserMotionLabels* loadUserMotionLabelsOrMakeDefault(rfcommon::Hash40Strings* hash40Strings)
+{
+    QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QString fileName = dir.absoluteFilePath("userMotionLabels.json");
+    QByteArray ba = fileName.toUtf8();
+
+    rfcommon::MappedFile f;
+    if (f.open(ba.constData()))
+        if (auto userMotionLabels = rfcommon::UserMotionLabels::load(hash40Strings, f.address(), f.size()))
+            return userMotionLabels;
+    return rfcommon::UserMotionLabels::makeEmpty(hash40Strings);
+}
+
+// ----------------------------------------------------------------------------
+MainWindow::MainWindow(std::unique_ptr<rfcommon::Hash40Strings>&& hash40Strings, QWidget* parent)
     : QMainWindow(parent)
+    , hash40Strings_(std::move(hash40Strings))
+    , userMotionLabels_(loadUserMotionLabelsOrMakeDefault(hash40Strings_.get()))
     , config_(new Config)
     , protocol_(new Protocol)
     , pluginManager_(new PluginManager)
@@ -36,16 +57,16 @@ MainWindow::MainWindow(QWidget* parent)
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
     , categoryModel_(new CategoryModel)
     , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get()))
-    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get()))
+    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get(), userMotionLabels_.get(), hash40Strings_.get()))
     , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
-    ui_->setupUi(this);
-
     // Window icon and title
     setWindowTitle("ReFramed - " APP_VERSION_STR);
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
+
+    ui_->setupUi(this);
 
     mainView_->addWidget(replayGroupView_);
     mainView_->addWidget(new DataSetFilterView(replayManager_.get()));
@@ -133,23 +154,10 @@ void MainWindow::onProtocolDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-static QRect calculatePopupGeometry(const QWidget* main, const QWidget* popup, QRect popupRect)
-{
-    QRect mainRect = main->geometry();
-
-    return QRect(
-        mainRect.left() + mainRect.width() / 2 - popupRect.width() / 2,
-        mainRect.top() + mainRect.height() / 2 - popupRect.height() / 2,
-        popupRect.width(),
-        popupRect.height()
-    );
-}
-
-// ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
     ConnectView c(config_.get(), protocol_.get(), Qt::Popup | Qt::Dialog);
-    c.setGeometry(calculatePopupGeometry(this, &c, c.geometry()));
+    c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
     c.exec();
 }
 
@@ -178,8 +186,9 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
-    UserLabelsEditor editor(userLabels_.get());
-    editor.setGeometry(calculatePopupGeometry(this, &editor, popupGeometry));
+    UserLabelsEditor editor(userMotionLabels_.get(), hash40Strings_.get());
+    editor.populateFromGlobalData(protocol_->globalMappingInfo());
+    editor.setGeometry(calculatePopupGeometryActiveScreen());
     editor.exec();
 }
 

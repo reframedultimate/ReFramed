@@ -90,7 +90,6 @@ add_library (rfcommon SHARED
     "src/MappingInfo.cpp"
     "src/MappingInfoFighter.cpp"
     "src/MappingInfoHitStatus.cpp"
-    "src/MappingInfoMotion.cpp"
     "src/MappingInfoStage.cpp"
     "src/MappingInfoStatus.cpp"
     "src/MemoryBuffer.cpp"

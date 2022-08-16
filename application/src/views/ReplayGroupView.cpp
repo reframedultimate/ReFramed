@@ -5,8 +5,11 @@
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/ReplayListWidget.hpp"
 #include "application/views/ReplayViewer.hpp"
+#include "application/views/UserLabelsEditor.hpp"
 #include "application/views/VideoAssociatorDialog.hpp"
+
 #include "rfcommon/Session.hpp"
+#include "rfcommon/Vector.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -90,11 +93,15 @@ QStringList ReplayNameCompleter::splitPath(const QString &path) const
 ReplayGroupView::ReplayGroupView(
         ReplayManager* replayManager,
         PluginManager* pluginManager,
+        rfcommon::UserMotionLabels* userMotionLabels,
+        rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::ReplayGroupView)
     , pluginManager_(pluginManager)
     , replayManager_(replayManager)
+    , userMotionLabels_(userMotionLabels)
+    , hash40Strings_(hash40Strings)
     , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
     , replayViewer_(new ReplayViewer(pluginManager))
@@ -172,45 +179,88 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
 {
     QPoint item = replayListWidget_->mapToGlobal(pos);
 
+    QMenu menu;
+    QAction* editMetaData = nullptr; 
+    QAction* associateVideo = nullptr;
+    QAction* editLabels = nullptr;
+    QAction* a = nullptr;
+
     const auto selected = replayListWidget_->selectedItems();
     if (selected.size() == 1)
     {
-        QMenu menu;
-        QAction* edit = menu.addAction("Edit...");
-        QAction* associateVideo = menu.addAction("Associate Video...");
-        QAction* a = menu.exec(item);
+        editMetaData = menu.addAction("Edit Meta Data...");
+        associateVideo = menu.addAction("Associate Video...");
+        editLabels = menu.addAction("Edit User Labels...");
+        a = menu.exec(item);
+    }
+    else if (selected.size() > 1)
+    {
+        editLabels = menu.addAction("Edit User Labels...");
+        a = menu.exec(item);
+    }
 
-        if (a == edit)
-        {
+    if (a == nullptr)
+        return;
+
+    if (a == editMetaData)
+    {
+        for (const auto& fileName : currentGroup_->absFilePathList())
+            if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
+            {
+                QString absFileName = fileName.absoluteFilePath();
+                QByteArray ba = absFileName.toUtf8();
+                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                if (session)
+                {
+                    ReplayEditorDialog dialog(replayManager_, session, absFileName);
+                    dialog.exec();
+                }
+                break;
+            }
+    }
+    else if (a == associateVideo)
+    {
+        for (const auto& fileName : currentGroup_->absFilePathList())
+            if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
+            {
+                QString absFileName = fileName.absoluteFilePath();
+                QByteArray ba = absFileName.toUtf8();
+                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                if (session)
+                {
+                    VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
+                    dialog.exec();
+                }
+                break;
+            }
+    }
+    else if (a == editLabels)
+    {
+        rfcommon::Vector<rfcommon::Session*> sessions;
+        for (const auto& selectedItem : selected)
             for (const auto& fileName : currentGroup_->absFilePathList())
-                if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
+                if (replayListWidget_->itemMatchesReplayFileName(selectedItem, fileName))
                 {
                     QString absFileName = fileName.absoluteFilePath();
                     QByteArray ba = absFileName.toUtf8();
-                    rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
-                    if (session)
-                    {
-                        ReplayEditorDialog dialog(replayManager_, session, absFileName);
-                        dialog.exec();
-                    }
+                    if (auto session = rfcommon::Session::load(ba.constData()))
+                        sessions.push(session);
                     break;
                 }
-        }
-        else if (a == associateVideo)
+
+        if (sessions.count() > 0)
         {
-            for (const auto& fileName : currentGroup_->absFilePathList())
-                if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
-                {
-                    QString absFileName = fileName.absoluteFilePath();
-                    QByteArray ba = absFileName.toUtf8();
-                    rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
-                    if (session)
-                    {
-                        VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
-                        dialog.exec();
-                    }
-                    break;
-                }
+            QRect popupGeometry = QRect(mapFromGlobal(geometry().topLeft()), geometry().size());
+            popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
+            popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
+
+            UserLabelsEditor editor(userMotionLabels_, hash40Strings_);
+            editor.populateFromSessions(sessions.data(), sessions.count());
+            editor.setGeometry(calculatePopupGeometryActiveScreen());
+            editor.exec();
+
+            for (auto session : sessions)
+                delete session;
         }
     }
 }

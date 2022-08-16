@@ -18,13 +18,18 @@ namespace rfcommon {
  */
 class RFCOMMON_PUBLIC_API Hash40Strings : public RefCounted
 {
+    Hash40Strings();
 public:
+    ~Hash40Strings();
+
     /*!
      * \brief Load all hash40 strings from the specified file.
      * \param fileName Path to the paramLabels.csv file.
      * \return Returns true if all labels were loaded successfully.
      */
-    bool loadCSV(const char* fileName);
+    static Hash40Strings* loadCSV(const char* fileName);
+
+    static Hash40Strings* makeEmpty();
 
     /*!
      * \brief Reverse-lookup the original string for the given motion value.
@@ -39,6 +44,8 @@ public:
      * to hash unknown values, use @see hash40().
      */
     FighterMotion toMotion(const char* str) const;
+
+    const HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher>& entries() const { return entries_; }
 
 private:
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> entries_;

@@ -14,6 +14,11 @@ namespace Ui {
     class MainWindow;
 }
 
+namespace rfcommon {
+    class Hash40Strings;
+    class UserMotionLabels;
+}
+
 namespace rfapp {
 
 class CategoryView;
@@ -34,7 +39,7 @@ class MainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent=nullptr);
+    explicit MainWindow(std::unique_ptr<rfcommon::Hash40Strings>&& hash40Strings, QWidget* parent=nullptr);
     ~MainWindow();
 
 private slots:
@@ -71,6 +76,8 @@ private:
     void onProtocolGameEnded(rfcommon::Session* game) override { (void)game; }
 
 private:
+    std::unique_ptr<rfcommon::Hash40Strings> hash40Strings_;
+    std::unique_ptr<rfcommon::UserMotionLabels> userMotionLabels_;
     std::unique_ptr<Config> config_;
     std::unique_ptr<Protocol> protocol_;
     std::unique_ptr<PluginManager> pluginManager_;

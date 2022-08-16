@@ -1,15 +1,18 @@
 #pragma once
 
 #include "rfcommon/Vector.hpp"
+#include "rfcommon/FighterID.hpp"
 #include <QDialog>
 
+class QAbstractTableModel;
 class QTableView;
 class QComboBox;
 
 namespace rfcommon {
+    class Hash40Strings;
     class MappingInfo;
     class Session;
-    class UserLabels;
+    class UserMotionLabels;
 }
 
 namespace rfapp {
@@ -19,7 +22,7 @@ class UserLabelsEditor : public QDialog
     Q_OBJECT
 
 public:
-    explicit UserLabelsEditor(rfcommon::UserLabels* userLabels, QWidget* parent=nullptr);
+    explicit UserLabelsEditor(rfcommon::UserMotionLabels* userMotionLabels, rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
     ~UserLabelsEditor();
 
     void populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo);
@@ -29,11 +32,15 @@ protected:
     void closeEvent(QCloseEvent* event);
 
 private slots:
+    void onFighterSelected(int index);
 
 private:
-    rfcommon::UserLabels* userLabels_;
+    rfcommon::UserMotionLabels* userMotionLabels_;
+    rfcommon::Hash40Strings* hash40Strings_;
     QComboBox* comboBox_fighters;
-    rfcommon::Vector<QTableView*> tables_;
+    rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;
+    rfcommon::Vector<QAbstractTableModel*> tableModels_;
+    rfcommon::Vector<QTableView*> tableViews_;
 };
 
 }

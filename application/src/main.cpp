@@ -1,9 +1,13 @@
 #include "application/views/MainWindow.hpp"
+#include "application/Util.hpp"
+
 #include "rfcommon/init.h"
+#include "rfcommon/Hash40Strings.hpp"
+
 #include <QApplication>
 #include <QStyleFactory>
-#include <QCursor>
-#include <QScreen>
+#include <QMessageBox>
+
 #include <iostream>
 
 int processOptions(int argc, char** argv)
@@ -32,34 +36,55 @@ int processOptions(int argc, char** argv)
     return 0;
 }
 
+struct RFCommonLib
+{
+    RFCommonLib() { result = rfcommon_init(); }
+    ~RFCommonLib() { rfcommon_deinit(); }
+
+    int result;
+};
+
 int main(int argc, char** argv)
 {
-    int result;
-    if (rfcommon_init() != 0)
-        return -1;
-
     processOptions(argc, argv);
 
 #ifdef _WIN32
     QApplication::setStyle("fusion");
 #endif
     QApplication app(argc, argv);
-    rfapp::MainWindow mainWindow;    
+
+    RFCommonLib rfcommonLib;
+    if (rfcommonLib.result != 0)
+    {
+        QMessageBox::critical(nullptr, "Error", "Failed to initialize rfcommon library");
+        return -1;
+    }
+
+    // Load hash40 strings. These are pretty much required for the
+    // plugin API to work, and for user motion labels to work.
+    std::unique_ptr<rfcommon::Hash40Strings> hash40Strings;
+    {
+#if defined(_WIN32)
+        const char* file = "share\\reframed\\data\\ParamLabels.csv";
+#else
+        const char* file = "share/reframed/data/ParamLabels.csv";
+#endif
+        hash40Strings.reset(rfcommon::Hash40Strings::loadCSV(file));
+        if (hash40Strings == nullptr)
+        {
+            QMessageBox::critical(nullptr,
+                "Error", "Could not load file \"" + QString(file) + "\"\n\n"
+                "This is an essential file and ReFramed cannot run without it. Maybe try downloading it from here?\n"
+                "https://github.com/ultimate-research/param-labels");
+            return -1;
+        }
+    }
+
+    rfapp::MainWindow mainWindow(std::move(hash40Strings));
     
     // Make the main window as large as possible when not maximized
-    QScreen* screen = QApplication::screenAt(QCursor::pos());
-    if (screen == nullptr)
-        screen = QApplication::primaryScreen();
-    QRect screenRect = screen->geometry();
-    int width = screenRect.width() * 3 / 4;
-    int height = screenRect.height() * 3 / 4;
-    int x = (screenRect.width() - width) / 2 + screenRect.x();
-    int y = (screenRect.height() - height) / 2 + screenRect.y();
-    mainWindow.setGeometry(x, y, width, height);
+    mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());
 
     mainWindow.showMaximized();
-    result = app.exec();
-
-    rfcommon_deinit();
-    return result;
+    return app.exec();
 }
