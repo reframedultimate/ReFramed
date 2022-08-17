@@ -7,7 +7,9 @@
 
 namespace rfcommon {
     class FrameData;
+    class Hash40Strings;
     class MappingInfo;
+    class UserMotionLabels;
 }
 
 class FighterStatesModel
@@ -15,7 +17,13 @@ class FighterStatesModel
         , public rfcommon::FrameDataListener
 {
 public:
-    FighterStatesModel(rfcommon::FrameData* frameData, rfcommon::MappingInfo* mappingInfo, int fighterIdx, rfcommon::FighterID fighterID);
+    FighterStatesModel(
+        rfcommon::FrameData* frameData,
+        rfcommon::MappingInfo* mappingInfo,
+        int fighterIdx, 
+        rfcommon::FighterID fighterID, 
+        rfcommon::UserMotionLabels* userLabels,
+        rfcommon::Hash40Strings* hash40Strings);
     ~FighterStatesModel();
 
     int rowCount(const QModelIndex& parent=QModelIndex()) const override;
@@ -30,6 +38,8 @@ private:
 private:
     rfcommon::Reference<rfcommon::FrameData> frameData_;
     rfcommon::Reference<rfcommon::MappingInfo> mappingInfo_;
+    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     const int fighterIdx_;
     const rfcommon::FighterID fighterID_;
 };

@@ -1,11 +1,13 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/PluginInterface.hpp"
-#include "rfcommon/Session.hpp"
+#include "rfcommon/dynlib.h"
+#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Plugin.hpp"
-#include "rfcommon/dynlib.h"
+#include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/UserMotionLabels.hpp"
 #include <cassert>
 #include <QDebug>
 #include <QWidget>
@@ -14,7 +16,9 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-PluginManager::PluginManager()
+PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+    : userLabels_(userLabels)
+    , hash40Strings_(hash40Strings)
 {
     QDir pluginDir("share/reframed/plugins");
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
@@ -116,7 +120,7 @@ rfcommon::Plugin* PluginManager::create(const QString& name)
         return nullptr;
 
     RFPluginFactory* factory = it.value();
-    rfcommon::Plugin* model = factory->create(factory);
+    rfcommon::Plugin* model = factory->create(factory, userLabels_, hash40Strings_);
     if (model == nullptr)
         return nullptr;
 

@@ -3,6 +3,7 @@
 
 #include "rfcommon/init.h"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Reference.hpp"
 
 #include <QApplication>
 #include <QStyleFactory>
@@ -62,14 +63,14 @@ int main(int argc, char** argv)
 
     // Load hash40 strings. These are pretty much required for the
     // plugin API to work, and for user motion labels to work.
-    std::unique_ptr<rfcommon::Hash40Strings> hash40Strings;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings;
     {
 #if defined(_WIN32)
         const char* file = "share\\reframed\\data\\ParamLabels.csv";
 #else
         const char* file = "share/reframed/data/ParamLabels.csv";
 #endif
-        hash40Strings.reset(rfcommon::Hash40Strings::loadCSV(file));
+        hash40Strings = rfcommon::Hash40Strings::loadCSV(file);
         if (hash40Strings == nullptr)
         {
             QMessageBox::critical(nullptr,
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
         }
     }
 
-    rfapp::MainWindow mainWindow(std::move(hash40Strings));
+    rfapp::MainWindow mainWindow(hash40Strings);
     
     // Make the main window as large as possible when not maximized
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());

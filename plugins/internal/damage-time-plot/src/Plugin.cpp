@@ -2,7 +2,7 @@
 #include "damage-time-plot/DamageTimePlotPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
-static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
     return new DamageTimePlotPlugin(factory);
 }

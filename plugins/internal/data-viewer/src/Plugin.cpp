@@ -2,9 +2,9 @@
 #include "data-viewer/DataViewerPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
-static rfcommon::Plugin* createPlugin(RFPluginFactory* factory)
+static rfcommon::Plugin* createPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
-    return new DataViewerPlugin(factory);
+    return new DataViewerPlugin(factory, userLabels, hash40Strings);
 }
 
 static void destroyPlugin(rfcommon::Plugin* model)

@@ -8,15 +8,20 @@
 #include "data-viewer/models/StageIDModel.hpp"
 #include "data-viewer/views/DataViewerView.hpp"
 #include "data-viewer/listeners/DataViewerListener.hpp"
+
 #include "rfcommon/Frame.hpp"
-#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/Session.hpp"
+#include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/UserMotionLabels.hpp"
 
 // ----------------------------------------------------------------------------
-DataViewerModel::DataViewerModel()
-    : baseStatusIDModel_(new BaseStatusIDModel)
+DataViewerModel::DataViewerModel(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+    : userLabels_(userLabels)
+    , hash40Strings_(hash40Strings)
+    , baseStatusIDModel_(new BaseStatusIDModel)
     , fighterIDModel_(new FighterIDModel)
     , hitStatusIDModel_(new HitStatusIDModel)
     , metaDataModel_(new MetaDataModel)
@@ -52,7 +57,12 @@ void DataViewerModel::setSession(rfcommon::Session* session)
     {
         for (int i = 0; i != frameData_->fighterCount(); ++i)
             fighterStatesModels_.emplace_back(new FighterStatesModel(
-                    frameData_, mappingInfo_, i, metaData_ ? metaData_->fighterID(i) : rfcommon::FighterID::makeInvalid()));
+                    frameData_,
+                    mappingInfo_,
+                    i,
+                    metaData_ ? metaData_->fighterID(i) : rfcommon::FighterID::makeInvalid(),
+                    userLabels_,
+                    hash40Strings_));
         frameData_->dispatcher.addListener(this);
     }
 

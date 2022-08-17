@@ -4,7 +4,7 @@
 
 #include <QWidget>
 
-static rfcommon::Plugin* createVideoPlayerPlugin(RFPluginFactory* factory)
+static rfcommon::Plugin* createVideoPlayerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
     return new VideoPlayerPlugin(factory);
 }

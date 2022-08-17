@@ -1,10 +1,13 @@
 #pragma once
 
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Reference.hpp"
 #include <memory>
 
 namespace rfcommon {
+    class Hash40Strings;
     class Session;
+    class UserMotionLabels;
 }
 
 class DataViewerListener;
@@ -17,7 +20,7 @@ class DataViewerPlugin
         , private rfcommon::Plugin::ReplayInterface
 {
 public:
-    DataViewerPlugin(RFPluginFactory* factory);
+    DataViewerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
     ~DataViewerPlugin();
 
 private:

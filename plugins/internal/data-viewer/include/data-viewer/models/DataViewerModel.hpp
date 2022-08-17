@@ -8,9 +8,11 @@
 
 namespace rfcommon {
     class FrameData;
+    class Hash40Strings;
     class MappingInfo;
-    class Session;
     class MetaData;
+    class Session;
+    class UserMotionLabels;
 }
 
 class QAbstractTableModel;
@@ -27,7 +29,7 @@ class StageIDModel;
 class DataViewerModel : public rfcommon::FrameDataListener
 {
 public:
-    DataViewerModel();
+    DataViewerModel(rfcommon::UserMotionLabels* motionLabels, rfcommon::Hash40Strings* hash40Strings);
     ~DataViewerModel();
 
     void setSession(rfcommon::Session* session);
@@ -54,6 +56,9 @@ private:
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
+    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+
     std::unique_ptr<BaseStatusIDModel> baseStatusIDModel_;
     std::unique_ptr<FighterIDModel> fighterIDModel_;
     std::unique_ptr<HitStatusIDModel> hitStatusIDModel_;

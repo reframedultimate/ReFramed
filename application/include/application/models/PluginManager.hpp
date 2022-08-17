@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rfcommon/PluginType.hpp"
+#include "rfcommon/Reference.hpp"
 #include <QString>
 #include <QVector>
 #include <QHash>
@@ -13,11 +14,13 @@ struct RFPluginFactoryInfo;
 class QWidget;
 
 namespace rfcommon {
+    class Hash40Strings;
     class Plugin;
     class AnalyzerPlugin;
     class VisualizerPlugin;
     class RealtimePlugin;
     class StandalonePlugin;
+    class UserMotionLabels;
 }
 
 namespace rfapp {
@@ -32,7 +35,7 @@ class Protocol;
 class PluginManager
 {
 public:
-    PluginManager();
+    PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
     ~PluginManager();
 
     /*!
@@ -60,6 +63,8 @@ public:
     void destroy(rfcommon::Plugin* plugin);
 
 private:
+    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     QHash<QString, RFPluginFactory*> factories_;
     QVector<rfcommon_dynlib*> libraries_;
 };

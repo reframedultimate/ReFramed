@@ -32,13 +32,13 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MainWindow::MainWindow(std::unique_ptr<rfcommon::Hash40Strings>&& hash40Strings, QWidget* parent)
+MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     : QMainWindow(parent)
-    , hash40Strings_(std::move(hash40Strings))
+    , hash40Strings_(hash40Strings)
     , config_(new Config)
     , protocol_(new Protocol)
     , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
-    , pluginManager_(new PluginManager)
+    , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
     , categoryModel_(new CategoryModel)
@@ -172,7 +172,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
-    UserMotionLabelsEditor editor(userMotionLabelsManager_.get(), hash40Strings_.get());
+    UserMotionLabelsEditor editor(userMotionLabelsManager_.get(), hash40Strings_);
     editor.populateFromGlobalData(protocol_->globalMappingInfo());
     editor.setGeometry(calculatePopupGeometryActiveScreen());
     editor.exec();

@@ -3,6 +3,7 @@
 #include "application/models/CategoryType.hpp"
 #include "application/listeners/CategoryListener.hpp"
 #include "rfcommon/ProtocolListener.hpp"
+#include "rfcommon/Reference.hpp"
 #include <QMainWindow>
 #include <QDir>
 #include <memory>
@@ -39,7 +40,7 @@ class MainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(std::unique_ptr<rfcommon::Hash40Strings>&& hash40Strings, QWidget* parent=nullptr);
+    explicit MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
     ~MainWindow();
 
 private slots:
@@ -76,7 +77,7 @@ private:
     void onProtocolGameEnded(rfcommon::Session* game) override { (void)game; }
 
 private:
-    std::unique_ptr<rfcommon::Hash40Strings> hash40Strings_;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     std::unique_ptr<Config> config_;
     std::unique_ptr<Protocol> protocol_;
     std::unique_ptr<UserMotionLabelsManager> userMotionLabelsManager_;

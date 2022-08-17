@@ -1,7 +1,11 @@
 #include "data-viewer/models/FighterStatesModel.hpp"
-#include "rfcommon/MappingInfo.hpp"
+
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/UserMotionLabels.hpp"
+
 #include <algorithm>
 
 enum ColumnType
@@ -29,9 +33,17 @@ enum ColumnType
 };
 
 // ----------------------------------------------------------------------------
-FighterStatesModel::FighterStatesModel(rfcommon::FrameData* frameData, rfcommon::MappingInfo* mappingInfo, int fighterIdx, rfcommon::FighterID fighterID)
+FighterStatesModel::FighterStatesModel(
+        rfcommon::FrameData* frameData,
+        rfcommon::MappingInfo* mappingInfo,
+        int fighterIdx,
+        rfcommon::FighterID fighterID,
+        rfcommon::UserMotionLabels* userLabels,
+        rfcommon::Hash40Strings* hash40Strings)
     : frameData_(frameData)
     , mappingInfo_(mappingInfo)
+    , userLabels_(userLabels)
+    , hash40Strings_(hash40Strings)
     , fighterIdx_(fighterIdx)
     , fighterID_(fighterID)
 {
@@ -146,9 +158,9 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case Status: return QString::number(state.status().value());
                 case StatusName: return statusName(state.status());
                 case Motion: return "0x" + QString::number(state.motion().value(), 16);
-                case MotionLabel: return "";
-                case MotionUserLabel: return "";
-                case HitStatus: return "";
+                case MotionLabel: return hash40Strings_->toString(state.motion());
+                case MotionUserLabel: return userLabels_->toUserLabel(fighterID_, state.motion());
+                case HitStatus: return QString::number(state.hitStatus().value());
                 case HitStatusName: return formatHitStatusName(state.hitStatus());
                 case Stocks: return QString::number(state.stocks().count());
                 case AttackConnected: return state.flags().attackConnected() ? "True" : "False";

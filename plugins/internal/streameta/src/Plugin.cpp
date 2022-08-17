@@ -2,7 +2,7 @@
 #include "streameta/StreametaPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
-static rfcommon::Plugin* createStreametaPlugin(RFPluginFactory* factory)
+static rfcommon::Plugin* createStreametaPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
     return new StreametaPlugin(factory);
 }
