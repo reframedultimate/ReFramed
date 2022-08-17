@@ -59,8 +59,6 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
         if (jMotions.size() != jLabels.size() || jMotions.size() != jCategories.size())
             continue;
 
-        if (fighters_.count() <= fighterID.value())
-            fighters_.resize(fighterID.value() + 1);
         for (int i = 0; i != jMotions.size(); ++i)
         {
             if (jMotions[i].is_number_integer() == false)
@@ -71,8 +69,6 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
                 continue;
 
             const auto category = static_cast<FighterUserMotionLabels::Category>(jCategories[i].get<int>());
-            if (category >= FighterUserMotionLabels::UNLABELED)
-                continue;
             const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
             const auto label = jLabels[i].get<std::string>();
 
@@ -131,12 +127,10 @@ bool UserMotionLabels::loadUnlabeled(const void* address, uint32_t size)
 // ----------------------------------------------------------------------------
 uint32_t UserMotionLabels::saveLayer(FILE* fp, const int layerIdx) const
 {
-    json jFighters;
+    json jFighters = json::object();
     for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
     {
         const auto fighterID = FighterID::fromValue(fighterIdx);
-        if (entryCount(fighterID) == 0)  // Empty table
-            continue;
 
         json jMotions = json::array();
         json jLabels = json::array();
@@ -154,11 +148,14 @@ uint32_t UserMotionLabels::saveLayer(FILE* fp, const int layerIdx) const
             jCategories += static_cast<int>(category);
         }
 
-        jFighters[fighterID.value()] = {
-            {"motions", jMotions},
-            {"labels", jLabels},
-            {"categories", jCategories}
-        };
+        if (jMotions.size() > 0)
+        {
+            jFighters[std::to_string(fighterID.value())] = {
+                {"motions", jMotions},
+                {"labels", jLabels},
+                {"categories", jCategories}
+            };
+        }
     }
 
     json j = {
@@ -191,7 +188,7 @@ uint32_t UserMotionLabels::saveUnlabeled(FILE* fp) const
             {
                 const char* label = userLabelAt(fighterID, layerIdx, entryIdx);
                 if (strlen(label) > 0)  // This entry has a label, so skip
-                    goto skip_layer;
+                    continue;
             }
 
             const auto motion = motionAt(fighterID, entryIdx);
@@ -201,8 +198,6 @@ uint32_t UserMotionLabels::saveUnlabeled(FILE* fp) const
         jFighters[std::to_string(fighterID.value())] = {
             {"motions", jMotions}
         };
-
-        skip_layer:;
     }
 
     json j = {
@@ -224,10 +219,13 @@ int UserMotionLabels::newEmptyLayer(const char* name)
     const int layerIdx = layerNames_.count();
     layerNames_.push(name);
 
-    for (auto& fighter : fighters_)
+    for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
     {
-        fighter.layers.emplace();
-        fighter.layerMaps.emplace();
+        fighters_[fighterIdx].layers.emplace();
+        fighters_[fighterIdx].layerMaps.emplace();
+
+        const int fighterEntryCount = entryCount(rfcommon::FighterID::fromValue(fighterIdx));
+        fighters_[fighterIdx].layers.back().userLabels.resize(fighterEntryCount);
     }
 
     dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsLayerAdded, int(layerIdx), name);
@@ -288,31 +286,44 @@ bool UserMotionLabels::addEntry(
 {
     expandTablesUpTo(fighterID);
 
-    // Our new entry index is at the end of the table
-    const int entryIdx = entryCount(fighterID);
-
-    // Create new entry only if the key didn't exist yet
-    auto& motionMap = fighters_[fighterID.value()].motionMap;
-    if (motionMap.insertIfNew(motion, entryIdx) == motionMap.end())
-        return false;
-
     auto& motions = fighters_[fighterID.value()].motions;
     auto& categories = fighters_[fighterID.value()].categories;
     auto& layers = fighters_[fighterID.value()].layers;
 
-    // Add entry to end of table. Map above stored entryCount() as the value
-    motions.push(motion);
-    categories.push(category);
-    for (auto& layer : layers)
-        layer.userLabels.emplace();
-    layers[layerIdx].userLabels[entryIdx] = userLabel;
+    // If the key doesn't exist, we create a new entry at the end of the table
+    auto& motionMap = fighters_[fighterID.value()].motionMap;
+    const int entryIdx = motionMap.insertOrGet(motion, entryCount(fighterID))->value();
+    if (entryIdx == entryCount(fighterID))
+    {
+        // Add entry to end of table. Map above stored entryCount() as the value
+        motions.push(motion);
+        categories.push(category);
+        for (auto& layer : layers)
+            layer.userLabels.emplace();
+        layers[layerIdx].userLabels[entryIdx] = userLabel;
 
-    // Create entry in user map so user label -> motion lookup works
-    auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
-    auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
-    entryIndices.push(entryIdx);
+        // Create entry in user map so user label -> motion lookup works
+        auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
+        auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
+        entryIndices.push(entryIdx);
 
-    dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsNewEntry, fighterID, int(entryIdx));
+        dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsNewEntry, fighterID, int(entryIdx));
+    }
+    else
+    {
+        // The table entry exists, but maybe the layer entry is still empty. If
+        // not then we fail, because the label already exists.
+        if (layers[layerIdx].userLabels[entryIdx].length() > 0)
+            return false;
+
+        // Set user label for this layer
+        layers[layerIdx].userLabels[entryIdx] = userLabel;
+
+        // Create entry in user map so user label -> motion lookup works
+        auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
+        auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
+        entryIndices.push(entryIdx);
+    }
 
     return true;
 }
@@ -333,23 +344,32 @@ bool UserMotionLabels::modifyEntry(
         return false;
 
     // Modify user map with new key so label -> motion lookup works
+    // NOTE: We allow labels to be empty strings, in which case there won't
+    // be an entry in the user map. If this is the case, then there's nothing
+    // to remove
     auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
     auto oldEntryIndicesIt = userMap.find(oldUserLabel);
-    if (oldEntryIndicesIt == userMap.end())
-        return false;
-    auto& oldEntryIndices = oldEntryIndicesIt->value();
+    if (oldEntryIndicesIt != userMap.end())
+    {
+        auto& oldEntryIndices = oldEntryIndicesIt->value();
 
-    // User labels can map to multiple indices in the table. This list
-    // contains all of these indices. Since the label is being changed,
-    // we have to remove just that one entry that maps to the currenty
-    // entry index
-    oldEntryIndices.erase(oldEntryIndices.findFirst(entryIdx));
-    if (oldEntryIndices.count() == 0)
-        userMap.erase(oldEntryIndicesIt);
+        // User labels can map to multiple indices in the table. This list
+        // contains all of these indices. Since the label is being changed,
+        // we have to remove just that one entry that maps to the currenty
+        // entry index
+        oldEntryIndices.erase(oldEntryIndices.findFirst(entryIdx));
+        if (oldEntryIndices.count() == 0)
+            userMap.erase(oldEntryIndicesIt);
+    }
 
     // Now, create a new entry in the user map
-    auto& newEntryIndices = userMap.insertOrGet(newUserLabel, SmallVector<int, 4>())->value();
-    newEntryIndices.push(entryIdx);
+    // NOTE: We allow labels to be empty strings. In this case, we don't create
+    // an entry in the user map
+    if (strlen(newUserLabel) > 0)
+    {
+        auto& newEntryIndices = userMap.insertOrGet(newUserLabel, SmallVector<int, 4>())->value();
+        newEntryIndices.push(entryIdx);
+    }
 
     // Modify table entries
     auto& categories = fighters_[fighterID.value()].categories;
@@ -448,6 +468,8 @@ void UserMotionLabels::expandTablesUpTo(FighterID fighterID)
         auto& fighter = fighters_.emplace();
         while (fighter.layers.count() < layerCount())
             fighter.layers.emplace();
+        while (fighter.layerMaps.count() < layerCount())
+            fighter.layerMaps.emplace();
     }
 }
 

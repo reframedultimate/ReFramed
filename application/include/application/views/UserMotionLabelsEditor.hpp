@@ -37,6 +37,7 @@ protected:
 
 private slots:
     void onFighterSelected(int index);
+    void onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos);
 
 private:
     UserMotionLabelsManager* manager_;
