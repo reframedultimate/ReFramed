@@ -102,116 +102,6 @@ MainWindow::~MainWindow()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::setStateConnected()
-{
-    // Replace the "connect" action in the dropdown menu with "disconnect"
-    ui_->action_connect->setVisible(false);
-    ui_->action_disconnect->setVisible(true);
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::setStateDisconnected()
-{
-    // Replace the "disconnect" action in the dropdown menu with "connect"
-    ui_->action_connect->setVisible(true);
-    ui_->action_disconnect->setVisible(false);
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
-{
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onProtocolFailedToConnectToServer(const char* errorMsg, const char* ipAddress, uint16_t port)
-{
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
-{
-    setStateConnected();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onProtocolDisconnectedFromServer()
-{
-    setStateDisconnected();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onConnectActionTriggered()
-{
-    ConnectView c(config_.get(), protocol_.get());
-    c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
-    c.exec();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onDisconnectActionTriggered()
-{
-    // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
-    protocol_->disconnectFromServer();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onUserLabelsEditorActionTriggered()
-{
-    rfcommon::MappingInfo* map = protocol_->globalMappingInfo();
-    if (map == nullptr)
-    {
-        QDir configPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-        QString mappingFileName = configPath.absoluteFilePath("mappingInfo.json");
-        QMessageBox::critical(this, "Error",
-                "Global mapping information file is missing: " + mappingFileName + "\n\n"
-                "Connecting to your Nintendo Switch will re-download this file.");
-        return;
-    }
-
-    QRect popupGeometry = geometry();
-    popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
-    popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
-
-    UserMotionLabelsEditor editor(userMotionLabelsManager_.get(), hash40Strings_);
-    editor.populateFromGlobalData(protocol_->globalMappingInfo());
-    editor.setGeometry(calculatePopupGeometryActiveScreen());
-    editor.exec();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onCategorySelected(CategoryType category)
-{
-    switch (category)
-    {
-        case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
-            mainView_->setCurrentIndex(0);
-            break;
-
-        case CategoryType::TOP_LEVEL_DATA_SETS:
-            mainView_->setCurrentIndex(1);
-            break;
-
-        case CategoryType::TOP_LEVEL_ANALYSIS:
-            mainView_->setCurrentIndex(2);
-            break;
-
-        case CategoryType::TOP_LEVEL_REPLAY_SOURCES:
-            mainView_->setCurrentIndex(3);
-            break;
-
-        case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
-            mainView_->setCurrentIndex(4);
-            break;
-
-        case CategoryType::TOP_LEVEL_SESSION:
-            mainView_->setCurrentIndex(5);
-            break;
-
-        default: break;
-    }
-}
-
-// ----------------------------------------------------------------------------
 void MainWindow::negotiateDefaultRecordingLocation()
 {
     auto askForDir = [this](const QString& path) -> QString {
@@ -232,8 +122,8 @@ void MainWindow::negotiateDefaultRecordingLocation()
             this,
             "Default directory for replays not found",
             QString("The directory for saving replays was not found or has not been configured yet.\n"
-                    "Would you like to create the directory now?\n\n") +
-                    replayDir.path(),
+                "Would you like to create the directory now?\n\n") +
+            replayDir.path(),
             QMessageBox::Yes | QMessageBox::Open
         );
 
@@ -273,8 +163,8 @@ void MainWindow::negotiateDefaultRecordingLocation()
                     this,
                     "Failed to create directory",
                     QString("Could not create the directory:\n") +
-                            replayDir.path() +
-                            "\n\nWould you like to choose a directory?",
+                    replayDir.path() +
+                    "\n\nWould you like to choose a directory?",
                     QMessageBox::Yes | QMessageBox::No
                 );
 
@@ -308,6 +198,125 @@ void MainWindow::negotiateDefaultRecordingLocation()
 void MainWindow::populateCategories()
 {
 
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onConnectActionTriggered()
+{
+    ConnectView c(config_.get(), protocol_.get());
+    c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
+    c.exec();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onDisconnectActionTriggered()
+{
+    // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
+    protocol_->disconnectFromServer();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onUserLabelsEditorActionTriggered()
+{
+    if (userMotionLabelsEditor_)
+        return;
+
+    rfcommon::MappingInfo* map = protocol_->globalMappingInfo();
+    if (map == nullptr)
+    {
+        QDir configPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+        QString mappingFileName = configPath.absoluteFilePath("mappingInfo.json");
+        QMessageBox::critical(this, "Error",
+            "Global mapping information file is missing: " + mappingFileName + "\n\n"
+            "Connecting to your Nintendo Switch will re-download this file.");
+        return;
+    }
+
+    QRect popupGeometry = geometry();
+    popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
+    popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
+
+    // NOTE: This editor manages its own deletion when it closes via deleteLater()
+    userMotionLabelsEditor_ = new UserMotionLabelsEditor(userMotionLabelsManager_.get(), map, hash40Strings_, this);
+    userMotionLabelsEditor_->setGeometry(calculatePopupGeometryActiveScreen());
+    userMotionLabelsEditor_->show();
+    userMotionLabelsEditor_->raise();
+
+    // Disable action in dropdown so user can't open this more than once
+    ui_->action_userLabelsEditor->setEnabled(false);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (userMotionLabelsEditor_)
+        userMotionLabelsEditor_->close();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onCategorySelected(CategoryType category)
+{
+    switch (category)
+    {
+    case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
+        mainView_->setCurrentIndex(0);
+        break;
+
+    case CategoryType::TOP_LEVEL_DATA_SETS:
+        mainView_->setCurrentIndex(1);
+        break;
+
+    case CategoryType::TOP_LEVEL_ANALYSIS:
+        mainView_->setCurrentIndex(2);
+        break;
+
+    case CategoryType::TOP_LEVEL_REPLAY_SOURCES:
+        mainView_->setCurrentIndex(3);
+        break;
+
+    case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
+        mainView_->setCurrentIndex(4);
+        break;
+
+    case CategoryType::TOP_LEVEL_SESSION:
+        mainView_->setCurrentIndex(5);
+        break;
+
+    default: break;
+    }
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onProtocolFailedToConnectToServer(const char* errorMsg, const char* ipAddress, uint16_t port)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
+{
+    // Replace the "connect" action in the dropdown menu with "disconnect"
+    ui_->action_connect->setVisible(false);
+    ui_->action_disconnect->setVisible(true);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onProtocolDisconnectedFromServer()
+{
+    // Replace the "disconnect" action in the dropdown menu with "connect"
+    ui_->action_connect->setVisible(true);
+    ui_->action_disconnect->setVisible(false);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onUserMotionLabelsEditorClosed()
+{
+    ui_->action_userLabelsEditor->setEnabled(true);
+    userMotionLabelsEditor_ = nullptr;
 }
 
 }

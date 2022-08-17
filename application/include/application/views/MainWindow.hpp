@@ -47,21 +47,20 @@ private slots:
     void negotiateDefaultRecordingLocation();
     void populateCategories();
 
-private:
-    // Changes the UI to reflect connected/disconnected state
-    void setStateConnected();
-    void setStateDisconnected();
-
-private slots:
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
     void onUserLabelsEditorActionTriggered();
 
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
 private:
+    // Category callbacks
     void onCategorySelected(CategoryType category) override;
     void onCategoryItemSelected(CategoryType category, const QString& name) override { (void)category; (void)name; }
 
 private:
+    // Protocol callbacks
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolFailedToConnectToServer(const char* errorMsg, const char* ipAddress, uint16_t port) override;
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
@@ -77,6 +76,12 @@ private:
     void onProtocolGameEnded(rfcommon::Session* game) override { (void)game; }
 
 private:
+    // Non-modal editors in separate windows will call the main window
+    // to notify when they close, so menu items can be updated
+    friend class UserMotionLabelsEditor;
+    void onUserMotionLabelsEditorClosed();
+
+private:
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     std::unique_ptr<Config> config_;
     std::unique_ptr<Protocol> protocol_;
@@ -90,6 +95,9 @@ private:
     ActiveSessionView* activeSessionView_;
     QStackedWidget* mainView_;
     Ui::MainWindow* ui_;
+
+    // Non-modal views that appear in a separate window
+    UserMotionLabelsEditor* userMotionLabelsEditor_ = nullptr;
 };
 
 }

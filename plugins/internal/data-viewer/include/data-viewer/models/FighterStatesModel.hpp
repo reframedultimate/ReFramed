@@ -43,8 +43,8 @@ private:
     void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
     void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
     void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsEntryChanged(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsEntryRemoved(rfcommon::FighterID fighterID, int entryIdx) override;
+    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
+    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
 
 private:
     rfcommon::Reference<rfcommon::FrameData> frameData_;

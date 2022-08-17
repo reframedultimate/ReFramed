@@ -68,7 +68,7 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
             if (jCategories[i].is_number_unsigned() == false)
                 continue;
 
-            const auto category = static_cast<FighterUserMotionLabels::Category>(jCategories[i].get<int>());
+            const auto category = static_cast<UserMotionLabelsCategory>(jCategories[i].get<int>());
             const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
             const auto label = jLabels[i].get<std::string>();
 
@@ -256,7 +256,7 @@ void UserMotionLabels::removeLayer(int layerIdx)
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
+bool UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
@@ -269,14 +269,15 @@ void UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motio
 
     auto& map = fighters_[fighterID.value()].motionMap;
     if (map.insertIfNew(motion, entryCount(fighterID)) == map.end())
-        return;
+        return false;
 
     motions.push(motion);
-    categories.push(FighterUserMotionLabels::UNLABELED);
+    categories.push(UserMotionLabelsCategory::UNLABELED);
     for (auto& layer : layers)
         layer.userLabels.emplace();
 
     dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsNewEntry, fighterID, motions.count() - 1);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -285,7 +286,7 @@ bool UserMotionLabels::addEntry(
         int layerIdx,
         FighterMotion motion, 
         const char* userLabel, 
-        FighterUserMotionLabels::Category category)
+        UserMotionLabelsCategory category)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
@@ -309,9 +310,12 @@ bool UserMotionLabels::addEntry(
         layers[layerIdx].userLabels[entryIdx] = userLabel;
 
         // Create entry in user map so user label -> motion lookup works
-        auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
-        auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
-        entryIndices.push(entryIdx);
+        if (strlen(userLabel) > 0)
+        {
+            auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
+            auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
+            entryIndices.push(entryIdx);
+        }
 
         dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsNewEntry, fighterID, int(entryIdx));
     }
@@ -323,25 +327,29 @@ bool UserMotionLabels::addEntry(
             return false;
 
         // Set user label for this layer
+        const String oldLabel = layers[layerIdx].userLabels[entryIdx];
         layers[layerIdx].userLabels[entryIdx] = userLabel;
 
         // Create entry in user map so user label -> motion lookup works
-        auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
-        auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
-        entryIndices.push(entryIdx);
+        if (strlen(userLabel) > 0)
+        {
+            auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
+            auto& entryIndices = userMap.insertOrGet(userLabel, SmallVector<int, 4>())->value();
+            entryIndices.push(entryIdx);
+
+            dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsUserLabelChanged, fighterID, int(entryIdx), "", userLabel);
+        }
     }
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool UserMotionLabels::modifyEntry(
+bool UserMotionLabels::changeUserLabel(
         FighterID fighterID, 
         int layerIdx, 
         FighterMotion motion, 
-        const char* oldUserLabel, 
-        const char* newUserLabel, 
-        FighterUserMotionLabels::Category newCategory)
+        const char* newUserLabel)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
@@ -356,6 +364,8 @@ bool UserMotionLabels::modifyEntry(
     // NOTE: We allow labels to be empty strings, in which case there won't
     // be an entry in the user map. If this is the case, then there's nothing
     // to remove
+    auto& layers = fighters_[fighterID.value()].layers;
+    const String oldUserLabel = layers[layerIdx].userLabels[entryIdx];
     auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
     auto oldEntryIndicesIt = userMap.find(oldUserLabel);
     if (oldEntryIndicesIt != userMap.end())
@@ -380,49 +390,37 @@ bool UserMotionLabels::modifyEntry(
         newEntryIndices.push(entryIdx);
     }
 
-    // Modify table entries
-    auto& categories = fighters_[fighterID.value()].categories;
-    auto& layers = fighters_[fighterID.value()].layers;
-    categories[entryIdx] = newCategory;
+    // Modify label
     layers[layerIdx].userLabels[entryIdx] = newUserLabel;
 
-    dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsEntryChanged, fighterID, int(entryIdx));
+    if (oldUserLabel != newUserLabel)
+        dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsUserLabelChanged, fighterID, int(entryIdx), oldUserLabel.cStr(), newUserLabel);
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool UserMotionLabels::clearEntry(FighterID fighterID, int layerIdx, FighterMotion motion)
+bool UserMotionLabels::changeCategory(
+    FighterID fighterID,
+    FighterMotion motion,
+    UserMotionLabelsCategory newCategory)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
 
+    // Look up entry index using motion map
     auto& motionMap = fighters_[fighterID.value()].motionMap;
-    auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
-
-    auto& userLabels = fighters_[fighterID.value()].layers[layerIdx].userLabels;
-
-    // This must exist or something is wrong
-    auto motionIt = motionMap.find(motion);
-    if (motionIt == motionMap.end())
+    const int entryIdx = motionMap.find(motion, entryCount(fighterID));
+    if (entryIdx == entryCount(fighterID))
         return false;
-    const int entryIdx = motionIt->value();
 
-    // Get user label for this motion value
-    const char* label = userLabels[entryIdx].cStr();
+    // Modify category in table
+    auto& categories = fighters_[fighterID.value()].categories;
+    UserMotionLabelsCategory oldCategory = categories[entryIdx];
+    categories[entryIdx] = newCategory;
 
-    // Remove label from user map
-    auto entryIndicesIt = userMap.find(label);
-    assert(entryIndicesIt != userMap.end());
-    auto& entryIndices = entryIndicesIt->value();
-    entryIndices.erase(entryIndices.findFirst(entryIdx));
-    if (entryIndices.count() == 0)
-        userMap.erase(entryIndicesIt);
-
-    // Finally, remove from motion map
-    motionMap.erase(motionIt);
-
-    dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsEntryChanged, fighterID, int(entryIdx));
+    if (oldCategory != newCategory)
+        dispatcher.dispatch(&UserMotionLabelsListener::onUserMotionLabelsCategoryChanged, fighterID, int(entryIdx), oldCategory, newCategory);
 
     return true;
 }

@@ -2,10 +2,13 @@
 
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/FighterID.hpp"
-#include <QDialog>
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/UserMotionLabelsListener.hpp"
+#include <QWidget>
 
 class QAbstractTableModel;
 class QTableView;
+class QTabWidget;
 class QComboBox;
 
 namespace rfcommon {
@@ -16,17 +19,21 @@ namespace rfcommon {
 
 namespace rfapp {
 
+class MainWindow;
 class UserMotionLabelsManager;
 
-class UserMotionLabelsEditor : public QDialog
+class UserMotionLabelsEditor 
+        : public QWidget
+        , public rfcommon::UserMotionLabelsListener
 {
     Q_OBJECT
 
 public:
     explicit UserMotionLabelsEditor(
-            UserMotionLabelsManager* manager, 
+            UserMotionLabelsManager* manager,
+            rfcommon::MappingInfo* globalMappingInfo,
             rfcommon::Hash40Strings* hash40Strings, 
-            QWidget* parent=nullptr);
+            MainWindow* mainWindow);
     ~UserMotionLabelsEditor();
 
     void populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo);
@@ -40,9 +47,23 @@ private slots:
     void onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos);
 
 private:
+    void updateFightersDropdown(rfcommon::FighterID fighterID);
+
+private:
+    void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
+    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
+
+    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
+    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
+    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
+
+private:
     UserMotionLabelsManager* manager_;
-    rfcommon::Hash40Strings* hash40Strings_;
+    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+    rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
+    MainWindow* mainWindow_;
     QComboBox* comboBox_fighters;
+    QTabWidget* tabWidget_categories;
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;
     rfcommon::Vector<QAbstractTableModel*> tableModels_;
     rfcommon::Vector<QTableView*> tableViews_;

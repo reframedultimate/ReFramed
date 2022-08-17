@@ -1,11 +1,14 @@
 #pragma once
 
-#include "rfcommon/Reference.hpp"
+#include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/ProtocolListener.hpp"
+#include "rfcommon/Reference.hpp"
 #include "rfcommon/UserMotionLabelsListener.hpp"
 
 namespace rfcommon {
     class Hash40Strings;
+    class MetaData;
+    class Session;
     class UserMotionLabels;
 }
 
@@ -14,8 +17,9 @@ namespace rfapp {
 class Protocol;
 
 class UserMotionLabelsManager 
-    : public rfcommon::UserMotionLabelsListener
-    , public rfcommon::ProtocolListener
+        : public rfcommon::UserMotionLabelsListener
+        , public rfcommon::ProtocolListener
+        , public rfcommon::FrameDataListener
 {
 public:
     UserMotionLabelsManager(Protocol* protocol);
@@ -31,10 +35,12 @@ private:
     void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
 
     void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsEntryChanged(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsEntryRemoved(rfcommon::FighterID fighterID, int entryIdx) override;
+    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
+    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
 
 private:
+    void setActiveSession(rfcommon::Session* session);
+    void clearActiveSession();
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
@@ -49,8 +55,15 @@ private:
     void onProtocolGameEnded(rfcommon::Session* game) override;
 
 private:
+    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+
+private:
     Protocol* protocol_;
     rfcommon::Reference<rfcommon::UserMotionLabels> userMotionLabels_;
+    rfcommon::Reference<rfcommon::Session> activeSession_;
+
+    bool motionLabelsModified_ = false;
 };
 
 }

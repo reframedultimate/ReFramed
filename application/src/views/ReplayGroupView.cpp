@@ -190,13 +190,10 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     {
         editMetaData = menu.addAction("Edit Meta Data...");
         associateVideo = menu.addAction("Associate Video...");
-        editLabels = menu.addAction("Edit User Labels...");
         a = menu.exec(item);
     }
     else if (selected.size() > 1)
     {
-        editLabels = menu.addAction("Edit User Labels...");
-        a = menu.exec(item);
     }
 
     if (a == nullptr)
@@ -233,35 +230,6 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
                 }
                 break;
             }
-    }
-    else if (a == editLabels)
-    {
-        rfcommon::Vector<rfcommon::Session*> sessions;
-        for (const auto& selectedItem : selected)
-            for (const auto& fileName : currentGroup_->absFilePathList())
-                if (replayListWidget_->itemMatchesReplayFileName(selectedItem, fileName))
-                {
-                    QString absFileName = fileName.absoluteFilePath();
-                    QByteArray ba = absFileName.toUtf8();
-                    if (auto session = rfcommon::Session::load(ba.constData()))
-                        sessions.push(session);
-                    break;
-                }
-
-        if (sessions.count() > 0)
-        {
-            QRect popupGeometry = QRect(mapFromGlobal(geometry().topLeft()), geometry().size());
-            popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
-            popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
-
-            UserMotionLabelsEditor editor(userMotionLabelsManager_, hash40Strings_);
-            editor.populateFromSessions(sessions.data(), sessions.count());
-            editor.setGeometry(calculatePopupGeometryActiveScreen());
-            editor.exec();
-
-            for (auto session : sessions)
-                delete session;
-        }
     }
 }
 

@@ -215,5 +215,5 @@ void FighterStatesModel::updateMotionUserLabelsColumn()
 void FighterStatesModel::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
 void FighterStatesModel::onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
 void FighterStatesModel::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsEntryChanged(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsEntryRemoved(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) { updateMotionUserLabelsColumn(); }
