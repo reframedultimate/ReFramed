@@ -1,9 +1,10 @@
 #pragma once
 
-#include <QAbstractTableModel>
-#include "rfcommon/Reference.hpp"
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FighterID.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/UserMotionLabelsListener.hpp"
+#include <QAbstractTableModel>
 
 namespace rfcommon {
     class FrameData;
@@ -15,6 +16,7 @@ namespace rfcommon {
 class FighterStatesModel
         : public QAbstractTableModel
         , public rfcommon::FrameDataListener
+        , public rfcommon::UserMotionLabelsListener
 {
 public:
     FighterStatesModel(
@@ -34,6 +36,15 @@ public:
 private:
     void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+
+private:
+    // user labels changing means we need to update the user labels column
+    void updateMotionUserLabelsColumn();
+    void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
+    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
+    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
+    void onUserMotionLabelsEntryChanged(rfcommon::FighterID fighterID, int entryIdx) override;
+    void onUserMotionLabelsEntryRemoved(rfcommon::FighterID fighterID, int entryIdx) override;
 
 private:
     rfcommon::Reference<rfcommon::FrameData> frameData_;

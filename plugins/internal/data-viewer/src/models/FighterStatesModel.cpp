@@ -47,6 +47,7 @@ FighterStatesModel::FighterStatesModel(
     , fighterIdx_(fighterIdx)
     , fighterID_(fighterID)
 {
+    userLabels_->dispatcher.addListener(this);
     frameData_->dispatcher.addListener(this);
 }
 
@@ -54,6 +55,7 @@ FighterStatesModel::FighterStatesModel(
 FighterStatesModel::~FighterStatesModel()
 {
     frameData_->dispatcher.removeListener(this);
+    userLabels_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -204,3 +206,14 @@ void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame
     beginInsertRows(QModelIndex(), frameIdx, frameIdx);
     endInsertRows();
 }
+
+// ----------------------------------------------------------------------------
+void FighterStatesModel::updateMotionUserLabelsColumn()
+{
+    emit dataChanged(index(0, MotionUserLabel), index(frameData_->frameCount() - 1, MotionUserLabel));
+}
+void FighterStatesModel::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsEntryChanged(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::onUserMotionLabelsEntryRemoved(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
