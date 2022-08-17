@@ -6,13 +6,17 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ConnectView::ConnectView(Config* config, Protocol* protocol, Qt::WindowFlags flags)
-    : QDialog(nullptr, flags)
+ConnectView::ConnectView(Config* config, Protocol* protocol, QWidget* parent)
+    : QDialog(parent)
     , ConfigAccessor(config)
     , protocol_(protocol)
     , ui_(new Ui::ConnectView)
 {
     ui_->setupUi(this);
+
+    // Window icon and title
+    setWindowTitle("Connect to Nintendo Switch");
+    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
     QJsonObject& cfg = getConfig();
     if (cfg["connectview"].isObject() == false)

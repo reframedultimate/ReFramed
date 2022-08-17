@@ -16,7 +16,6 @@ namespace Ui {
 
 namespace rfcommon {
     class Hash40Strings;
-    class UserMotionLabels;
 }
 
 namespace rfapp {
@@ -30,11 +29,12 @@ class ActiveSessionManager;
 class ActiveSessionView;
 class ReplayGroupView;
 class ReplayManager;
+class UserMotionLabelsManager;
 
 class MainWindow 
-    : public QMainWindow
-    , public CategoryListener
-    , public rfcommon::ProtocolListener
+        : public QMainWindow
+        , public CategoryListener
+        , public rfcommon::ProtocolListener
 {
     Q_OBJECT
 
@@ -77,9 +77,9 @@ private:
 
 private:
     std::unique_ptr<rfcommon::Hash40Strings> hash40Strings_;
-    std::unique_ptr<rfcommon::UserMotionLabels> userMotionLabels_;
     std::unique_ptr<Config> config_;
     std::unique_ptr<Protocol> protocol_;
+    std::unique_ptr<UserMotionLabelsManager> userMotionLabelsManager_;
     std::unique_ptr<PluginManager> pluginManager_;
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<ActiveSessionManager> activeSessionManager_;

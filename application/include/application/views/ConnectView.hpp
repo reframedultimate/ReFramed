@@ -24,8 +24,7 @@ public:
     explicit ConnectView(
             Config* config,
             Protocol* protocol,
-            Qt::WindowFlags flags=Qt::Popup | Qt::Dialog
-    );
+            QWidget* parent=nullptr);
     ~ConnectView();
 
     void setConnecting();

@@ -12,18 +12,22 @@ namespace rfcommon {
     class Hash40Strings;
     class MappingInfo;
     class Session;
-    class UserMotionLabels;
 }
 
 namespace rfapp {
 
-class UserLabelsEditor : public QDialog
+class UserMotionLabelsManager;
+
+class UserMotionLabelsEditor : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit UserLabelsEditor(rfcommon::UserMotionLabels* userMotionLabels, rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
-    ~UserLabelsEditor();
+    explicit UserMotionLabelsEditor(
+            UserMotionLabelsManager* manager, 
+            rfcommon::Hash40Strings* hash40Strings, 
+            QWidget* parent=nullptr);
+    ~UserMotionLabelsEditor();
 
     void populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo);
     void populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount);
@@ -35,7 +39,7 @@ private slots:
     void onFighterSelected(int index);
 
 private:
-    rfcommon::UserMotionLabels* userMotionLabels_;
+    UserMotionLabelsManager* manager_;
     rfcommon::Hash40Strings* hash40Strings_;
     QComboBox* comboBox_fighters;
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;

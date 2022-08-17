@@ -343,6 +343,24 @@ public:
         return value;
     }
 
+    Iterator findFirst(const T& value)
+    {
+        Iterator it = this->begin();
+        for (; it != this->end(); ++it)
+            if (*it == value)
+                break;
+        return it;
+    }
+
+    ConstIterator findFirst(const T& value) const
+    {
+        Iterator it = this->begin();
+        for (; it != this->end(); ++it)
+            if (*it == value)
+                break;
+        return it;
+    }
+
     void reserve(S count)
     {
         ensureCapacity(count, this->count_, 0);
@@ -620,6 +638,20 @@ public:
         this->relocateElementsTo(it, it + 1, this->end());
         this->count_--;
         return pos;
+    }
+
+    T take(Iterator it)
+    {
+        return take(this->indexOf(it));
+    }
+
+    T take(S pos)
+    {
+        Iterator it = this->begin() + pos;
+        T value(std::move(*it));
+        this->relocateElementsTo(it, it + 1, this->end());
+        this->count_--;
+        return value;
     }
 
     void reserve(S count)

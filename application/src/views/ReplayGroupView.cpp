@@ -5,7 +5,7 @@
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/ReplayListWidget.hpp"
 #include "application/views/ReplayViewer.hpp"
-#include "application/views/UserLabelsEditor.hpp"
+#include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/views/VideoAssociatorDialog.hpp"
 
 #include "rfcommon/Session.hpp"
@@ -93,14 +93,14 @@ QStringList ReplayNameCompleter::splitPath(const QString &path) const
 ReplayGroupView::ReplayGroupView(
         ReplayManager* replayManager,
         PluginManager* pluginManager,
-        rfcommon::UserMotionLabels* userMotionLabels,
+        UserMotionLabelsManager* userMotionLabelsManager,
         rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QWidget(parent)
     , ui_(new Ui::ReplayGroupView)
     , pluginManager_(pluginManager)
     , replayManager_(replayManager)
-    , userMotionLabels_(userMotionLabels)
+    , userMotionLabelsManager_(userMotionLabelsManager)
     , hash40Strings_(hash40Strings)
     , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
@@ -254,7 +254,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
             popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
             popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
-            UserLabelsEditor editor(userMotionLabels_, hash40Strings_);
+            UserMotionLabelsEditor editor(userMotionLabelsManager_, hash40Strings_);
             editor.populateFromSessions(sessions.data(), sessions.count());
             editor.setGeometry(calculatePopupGeometryActiveScreen());
             editor.exec();

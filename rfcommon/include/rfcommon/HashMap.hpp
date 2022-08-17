@@ -490,7 +490,8 @@ public:
             return end();
 
         S oldPos = findImpl(oldKey);
-        assert(oldPos != table_.count());
+        if (oldPos == table_.count())
+            return end();
 
         H newHash;
         S newPos;

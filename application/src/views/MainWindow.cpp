@@ -1,11 +1,12 @@
 #include "application/ui_MainWindow.h"
 #include "application/config.hpp"
+#include "application/models/ActiveSessionManager.hpp"
 #include "application/models/Config.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/models/ActiveSessionManager.hpp"
+#include "application/models/UserMotionLabelsManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
@@ -13,12 +14,11 @@
 #include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
-#include "application/views/UserLabelsEditor.hpp"
+#include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/views/VisualizerView.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/Hash40Strings.hpp"
-#include "rfcommon/UserLabels.hpp"
 #include "rfcommon/MappedFile.hpp"
 
 #include <QStackedWidget>
@@ -32,32 +32,18 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-static rfcommon::UserMotionLabels* loadUserMotionLabelsOrMakeDefault(rfcommon::Hash40Strings* hash40Strings)
-{
-    QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    QString fileName = dir.absoluteFilePath("userMotionLabels.json");
-    QByteArray ba = fileName.toUtf8();
-
-    rfcommon::MappedFile f;
-    if (f.open(ba.constData()))
-        if (auto userMotionLabels = rfcommon::UserMotionLabels::load(hash40Strings, f.address(), f.size()))
-            return userMotionLabels;
-    return rfcommon::UserMotionLabels::makeEmpty(hash40Strings);
-}
-
-// ----------------------------------------------------------------------------
 MainWindow::MainWindow(std::unique_ptr<rfcommon::Hash40Strings>&& hash40Strings, QWidget* parent)
     : QMainWindow(parent)
     , hash40Strings_(std::move(hash40Strings))
-    , userMotionLabels_(loadUserMotionLabelsOrMakeDefault(hash40Strings_.get()))
     , config_(new Config)
     , protocol_(new Protocol)
+    , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
     , pluginManager_(new PluginManager)
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
     , categoryModel_(new CategoryModel)
     , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get()))
-    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get(), userMotionLabels_.get(), hash40Strings_.get()))
+    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
     , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
@@ -156,7 +142,7 @@ void MainWindow::onProtocolDisconnectedFromServer()
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
-    ConnectView c(config_.get(), protocol_.get(), Qt::Popup | Qt::Dialog);
+    ConnectView c(config_.get(), protocol_.get());
     c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
     c.exec();
 }
@@ -186,7 +172,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setWidth(popupGeometry.width() * 3 / 4);
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
-    UserLabelsEditor editor(userMotionLabels_.get(), hash40Strings_.get());
+    UserMotionLabelsEditor editor(userMotionLabelsManager_.get(), hash40Strings_.get());
     editor.populateFromGlobalData(protocol_->globalMappingInfo());
     editor.setGeometry(calculatePopupGeometryActiveScreen());
     editor.exec();

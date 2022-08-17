@@ -16,7 +16,6 @@ namespace Ui {
 namespace rfcommon {
     class Hash40Strings;
     class Session;
-    class UserMotionLabels;
 }
 
 namespace rfapp {
@@ -27,6 +26,7 @@ class ReplayGroup;
 class ReplayNameCompleter;
 class ReplayListWidget;
 class ReplayViewer;
+class UserMotionLabelsManager;
 
 class ReplayGroupView
     : public QWidget
@@ -39,7 +39,7 @@ public:
     explicit ReplayGroupView(
             ReplayManager* manager,
             PluginManager* pluginManager,
-            rfcommon::UserMotionLabels* userMotionLabels,
+            UserMotionLabelsManager* userMotionLabelsManager,
             rfcommon::Hash40Strings* hash40Strings,
             QWidget* parent=nullptr);
     ~ReplayGroupView();
@@ -83,7 +83,7 @@ private:
     Ui::ReplayGroupView* ui_;
     PluginManager* pluginManager_;
     ReplayManager* replayManager_;
-    rfcommon::UserMotionLabels* userMotionLabels_;
+    UserMotionLabelsManager* userMotionLabelsManager_;
     rfcommon::Hash40Strings* hash40Strings_;
     ReplayGroup* currentGroup_ = nullptr;
     ReplayListWidget* replayListWidget_;

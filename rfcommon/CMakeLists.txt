@@ -102,7 +102,7 @@ add_library (rfcommon SHARED
     "src/Session.cpp"
     "src/StageID.cpp"
     "src/TimeStamp.cpp"
-    "src/UserLabels.cpp"
+    "src/UserMotionLabels.cpp"
     "src/Vector.cpp"
     "src/Vec2.cpp"
     "src/VideoEmbed.cpp"

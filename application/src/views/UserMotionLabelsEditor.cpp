@@ -1,4 +1,5 @@
-#include "application/views/UserLabelsEditor.hpp"
+#include "application/views/UserMotionLabelsEditor.hpp"
+#include "application/models/UserMotionLabelsManager.hpp"
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
@@ -6,7 +7,7 @@
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/UserLabels.hpp"
+#include "rfcommon/UserMotionLabels.hpp"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -48,20 +49,30 @@ public:
     }
 
     int rowCount(const QModelIndex& parent=QModelIndex()) const override { return table_.count(); }
-    int columnCount(const QModelIndex& parent=QModelIndex()) const override { return 3; }
+    int columnCount(const QModelIndex& parent=QModelIndex()) const override { return labels_->layerCount() + 2; }
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
     {
-        if (role == Qt::DisplayRole)
+        switch (role)
         {
-            if (orientation == Qt::Horizontal)
-            {
-                if (section == 0) return "Hash40";
-                if (section == 1) return "String";
-                if (section == 2) return "User Label";
-            }
-            else if (orientation == Qt::Vertical)
-                return QString::number(section + 1);
+            case Qt::DisplayRole:
+                switch (orientation)
+                {
+                    case Qt::Horizontal:
+                        switch (section)
+                        {
+                            case 0: return "Hash40";
+                            case 1: return "String";
+                            case 2:
+                                return labels_->layerName(section - 2);
+                        }
+                        break;
+
+                    case Qt::Vertical:
+                        return QString::number(section + 1);
+                        break;
+                }
+                break;
         }
 
         return QVariant();
@@ -99,16 +110,21 @@ private:
     void repopulateEntries()
     {
         table_.clear();
+        if (fighterID_.isValid() == false)
+            return;
+
         for (int i = 0; i != labels_->entryCount(fighterID_); ++i)
-            if (labels_->categoryAt(fighterID_, i) == category_)
-            {
-                auto motion = labels_->motionAt(fighterID_, i);
-                table_.push({
-                    "0x" + QString::number(motion.value(), 16),
-                    hash40Strings_->toString(motion),
-                    labels_->userLabelAt(fighterID_, i)
-                });
-            }
+        {
+            if (labels_->categoryAt(fighterID_, i) != category_)
+                continue;
+
+            auto motion = labels_->motionAt(fighterID_, i);
+            auto& entry = table_.emplace();
+            entry.value = "0x" + QString::number(motion.value(), 16);
+            entry.string = hash40Strings_->toString(motion);
+            if (labels_->layerCount() > 0)
+                entry.label = labels_->userLabelAt(fighterID_, 0, i);
+        }
 
         std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b){
             return a.string < b.string;
@@ -133,12 +149,19 @@ private:
 }
 
 // ----------------------------------------------------------------------------
-UserLabelsEditor::UserLabelsEditor(rfcommon::UserMotionLabels* userMotionLabels, rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
+UserMotionLabelsEditor::UserMotionLabelsEditor(
+        UserMotionLabelsManager* manager, 
+        rfcommon::Hash40Strings* hash40Strings, 
+        QWidget* parent)
     : QDialog(parent)
-    , userMotionLabels_(userMotionLabels)
+    , manager_(manager)
     , hash40Strings_(hash40Strings)
     , comboBox_fighters(new QComboBox)
 {
+    // Window icon and title
+    setWindowTitle("User Motion Labels Editor");
+    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
+
     QVBoxLayout* mainLayout = new QVBoxLayout;
 
     // Search box
@@ -159,7 +182,7 @@ UserLabelsEditor::UserLabelsEditor(rfcommon::UserMotionLabels* userMotionLabels,
     QTabWidget* tabWidget = new QTabWidget;
 #define X(category, name) \
         tableViews_.push(new QTableView); \
-        tableModels_.push(new TableModel(rfcommon::FighterID::makeInvalid(), userMotionLabels, hash40Strings, rfcommon::FighterUserMotionLabels::category)); \
+        tableModels_.push(new TableModel(rfcommon::FighterID::makeInvalid(), manager_->userMotionLabels(), hash40Strings, rfcommon::FighterUserMotionLabels::category)); \
         tableViews_.back()->setModel(tableModels_.back()); \
         tabWidget->addTab(tableViews_.back(), name);
     RFCOMMON_USER_LABEL_CATEGORIES_LIST
@@ -175,16 +198,16 @@ UserLabelsEditor::UserLabelsEditor(rfcommon::UserMotionLabels* userMotionLabels,
 
     setLayout(mainLayout);
 
-    connect(closeButton, &QPushButton::released, this, &UserLabelsEditor::close);
-    connect(comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &UserLabelsEditor::onFighterSelected);
+    connect(closeButton, &QPushButton::released, this, &UserMotionLabelsEditor::close);
+    connect(comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &UserMotionLabelsEditor::onFighterSelected);
 }
 
 // ----------------------------------------------------------------------------
-UserLabelsEditor::~UserLabelsEditor()
+UserMotionLabelsEditor::~UserMotionLabelsEditor()
 {}
 
 // ----------------------------------------------------------------------------
-void UserLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo)
+void UserMotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo)
 {
     // Create sorted list of all fighters
     struct FighterData {
@@ -200,9 +223,12 @@ void UserLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappi
         return a.name < b.name;
     });
 
-    // Add to dropdown
+    // Add to dropdown, but only if there are entries in the user motion labels
     for (const auto& fighter : fighterData)
     {
+        if (manager_->userMotionLabels()->entryCount(fighter.id) == 0)
+            continue;
+
         indexToFighterID_.push(fighter.id);
         comboBox_fighters->addItem(fighter.name.cStr());
     }
@@ -212,7 +238,7 @@ void UserLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappi
 }
 
 // ----------------------------------------------------------------------------
-void UserLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount)
+void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount)
 {
     auto idAlreadyAdded = [this](rfcommon::FighterID fighterID) -> bool {
         for (auto entry : indexToFighterID_)
@@ -248,7 +274,7 @@ void UserLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, 
                     for (int frameIdx = 0; frameIdx != fdata->frameCount(); ++frameIdx)
                     {
                         const auto motion = fdata->stateAt(fighterIdx, frameIdx).motion();
-                        userMotionLabels_->addUnknownMotion(mdata->fighterID(fighterIdx), motion);
+                        manager_->userMotionLabels()->addUnknownMotion(mdata->fighterID(fighterIdx), motion);
                     }
 
     auto model = static_cast<TableModel*>(tableModels_[rfcommon::FighterUserMotionLabels::UNLABELED]);
@@ -257,13 +283,13 @@ void UserLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, 
 }
 
 // ----------------------------------------------------------------------------
-void UserLabelsEditor::closeEvent(QCloseEvent* event)
+void UserMotionLabelsEditor::closeEvent(QCloseEvent* event)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void UserLabelsEditor::onFighterSelected(int index)
+void UserMotionLabelsEditor::onFighterSelected(int index)
 {
     auto model = static_cast<TableModel*>(tableModels_[rfcommon::FighterUserMotionLabels::UNLABELED]);
     model->setFighter(indexToFighterID_[index]);
