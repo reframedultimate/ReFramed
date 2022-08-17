@@ -165,6 +165,9 @@ if (WIN32 OR CYGWIN)
 endif ()
 
 install (
+	DIRECTORY ${PROJECT_SOURCE_DIR}/data/
+	DESTINATION ${REFRAMED_INSTALL_DATADIR})
+install (
     TARGETS application
     RUNTIME DESTINATION "${REFRAMED_INSTALL_BINDIR}")
 set_target_properties (application

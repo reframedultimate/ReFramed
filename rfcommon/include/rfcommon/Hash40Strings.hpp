@@ -37,6 +37,7 @@ public:
      * nullptr. Otherwise, a valid string is returned.
      */
     const char* toString(FighterMotion motion) const;
+    const char* toString(FighterMotion motion, const char* fallback) const;
 
     /*!
      * \brief Runs the string through @see hash40(), but only returns the

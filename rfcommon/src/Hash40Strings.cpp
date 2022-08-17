@@ -103,10 +103,16 @@ Hash40Strings* Hash40Strings::makeEmpty()
 // ----------------------------------------------------------------------------
 const char* Hash40Strings::toString(FighterMotion motion) const
 {
+    return toString(motion, "(unknown)");
+}
+
+// ----------------------------------------------------------------------------
+const char* Hash40Strings::toString(FighterMotion motion, const char* fallback) const
+{
     auto it = entries_.find(motion);
     if (it != entries_.end())
         return it->value().cStr();
-    return "(unknown)";
+    return fallback;
 }
 
 // ----------------------------------------------------------------------------

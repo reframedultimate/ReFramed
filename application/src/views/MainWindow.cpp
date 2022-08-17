@@ -48,11 +48,11 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
+    ui_->setupUi(this);
+
     // Window icon and title
     setWindowTitle("ReFramed - " APP_VERSION_STR);
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
-
-    ui_->setupUi(this);
 
     mainView_->addWidget(replayGroupView_);
     mainView_->addWidget(new DataSetFilterView(replayManager_.get()));

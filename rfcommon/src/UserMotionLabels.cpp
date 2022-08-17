@@ -258,6 +258,9 @@ void UserMotionLabels::removeLayer(int layerIdx)
 // ----------------------------------------------------------------------------
 void UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 {
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
     expandTablesUpTo(fighterID);
 
     auto& motions = fighters_[fighterID.value()].motions;
@@ -284,6 +287,9 @@ bool UserMotionLabels::addEntry(
         const char* userLabel, 
         FighterUserMotionLabels::Category category)
 {
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
     expandTablesUpTo(fighterID);
 
     auto& motions = fighters_[fighterID.value()].motions;
@@ -337,6 +343,9 @@ bool UserMotionLabels::modifyEntry(
         const char* newUserLabel, 
         FighterUserMotionLabels::Category newCategory)
 {
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
     // Look up entry index using motion map
     auto& motionMap = fighters_[fighterID.value()].motionMap;
     const int entryIdx = motionMap.find(motion, entryCount(fighterID));
@@ -385,6 +394,9 @@ bool UserMotionLabels::modifyEntry(
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::clearEntry(FighterID fighterID, int layerIdx, FighterMotion motion)
 {
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
     auto& motionMap = fighters_[fighterID.value()].motionMap;
     auto& userMap = fighters_[fighterID.value()].layerMaps[layerIdx].userMap;
 
@@ -418,6 +430,8 @@ bool UserMotionLabels::clearEntry(FighterID fighterID, int layerIdx, FighterMoti
 // ----------------------------------------------------------------------------
 SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, const char* userLabel) const
 {
+    assert(fighterID.isValid());
+
     // A user label can map to multiple motion values. Additionally, there
     // can be multiple layers of user labels. What makes the most sense is
     // to prioritize layers with higher indices (layers that were added later), 
@@ -448,6 +462,9 @@ const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion mot
 // ----------------------------------------------------------------------------
 const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
     const auto& map = fighters_[fighterID.value()].motionMap;
     const auto& layers = fighters_[fighterID.value()].layers;
 
@@ -463,6 +480,8 @@ const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion mot
 // ----------------------------------------------------------------------------
 void UserMotionLabels::expandTablesUpTo(FighterID fighterID)
 {
+    assert(fighterID.isValid());
+
     while (fighters_.count() < fighterID.value() + 1)
     {
         auto& fighter = fighters_.emplace();
