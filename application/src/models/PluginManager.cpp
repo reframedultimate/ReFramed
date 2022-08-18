@@ -13,6 +13,10 @@
 #include <QWidget>
 #include <QDir>
 
+#if defined(_WIN32)
+#include "Windows.h"
+#endif
+
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
@@ -20,7 +24,18 @@ PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::H
     : userLabels_(userLabels)
     , hash40Strings_(hash40Strings)
 {
-    QDir pluginDir("share/reframed/plugins");
+    // On Windows, add a directory to the search path so plugins
+    // that depend on additional DLLs can load those from this "deps" directory
+#if defined(_WIN32)
+    CHAR buf[MAX_PATH];
+    strcpy(buf, APP_PLUGINDEPSDIR);
+    for (CHAR* p = buf; *p; ++p)
+        if (*p == '/')
+            *p = '\\';
+    SetDllDirectoryA(buf);
+#endif
+
+    QDir pluginDir(APP_PLUGINDIR);
     for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
         loadPlugin(pluginDir.absoluteFilePath(pluginFile));
 }
