@@ -31,7 +31,7 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
     const unsigned char* const end = static_cast<const unsigned char*>(address) + size;
     json j = json::parse(begin, end, nullptr, false);
     if (j == json::value_t::discarded)
-        return nullptr;
+        return false;
 
     if (j["version"] != "1.0")
         return false;
@@ -87,7 +87,7 @@ bool UserMotionLabels::loadUnlabeled(const void* address, uint32_t size)
     const unsigned char* const end = static_cast<const unsigned char*>(address) + size;
     json j = json::parse(begin, end, nullptr, false);
     if (j == json::value_t::discarded)
-        return nullptr;
+        return false;
 
     if (j["version"] != "1.0")
         return false;

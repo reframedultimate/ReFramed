@@ -31,6 +31,7 @@ class ActiveSessionView;
 class ReplayGroupView;
 class ReplayManager;
 class UserMotionLabelsManager;
+class UserMotionLabelsEditor;
 
 class MainWindow 
         : public QMainWindow

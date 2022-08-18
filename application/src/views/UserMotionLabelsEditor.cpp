@@ -176,7 +176,7 @@ public:
         if (index.column() < 2)
             return QAbstractTableModel::flags(index);
 
-        return Qt::ItemIsSelectable + Qt::ItemIsEditable + Qt::ItemIsEnabled;
+        return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     }
 
 private:
