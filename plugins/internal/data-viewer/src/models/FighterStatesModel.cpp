@@ -161,7 +161,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case StatusName: return statusName(state.status());
                 case Motion: return "0x" + QString::number(state.motion().value(), 16);
                 case MotionLabel: return hash40Strings_->toString(state.motion());
-                case MotionUserLabel: return userLabels_->toUserLabel(fighterID_, state.motion());
+                case MotionUserLabel: return QString(userLabels_->toStringAllLayers(fighterID_, state.motion()).cStr());
                 case HitStatus: return QString::number(state.hitStatus().value());
                 case HitStatusName: return formatHitStatusName(state.hitStatus());
                 case Stocks: return QString::number(state.stocks().count());

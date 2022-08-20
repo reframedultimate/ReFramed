@@ -69,8 +69,10 @@ public:
     bool changeCategory(FighterID fighterID, FighterMotion motion, UserMotionLabelsCategory newCategory);
 
     SmallVector<FighterMotion, 4> toMotion(FighterID fighterID, const char* userLabel) const;
-    const char* toUserLabel(FighterID fighterID, FighterMotion motion) const;
-    const char* toUserLabel(FighterID fighterID, FighterMotion motion, const char* fallback) const;
+    const char* toStringHighestLayer(FighterID fighterID, FighterMotion motion) const;
+    const char* toStringHighestLayer(FighterID fighterID, FighterMotion motion, const char* fallback) const;
+    String toStringAllLayers(FighterID fighterID, FighterMotion motion) const;
+    String toStringAllLayers(FighterID fighterID, FighterMotion motion, const char* fallback) const;
 
     int entryCount(FighterID fighterID) const 
         { return fighterID.value() < fighters_.count() ? fighters_[fighterID.value()].motions.count() : 0; }

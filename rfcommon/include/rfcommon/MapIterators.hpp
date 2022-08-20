@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/Vector.hpp"
+#include <cassert>
 
 namespace rfcommon {
 

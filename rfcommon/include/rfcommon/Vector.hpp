@@ -3,6 +3,7 @@
 #include "rfcommon/config.hpp"
 #include <cstdint>
 #include <cstddef>
+#include <cassert>
 #include <utility>
 #include <new>
 
@@ -298,11 +299,20 @@ public:
 
     void pop()
     {
-        if (this->count_ == 0)
-            return;
+        assert(this->count_ > 0);
+
+        this->back().~T();
+        this->count_--;
+    }
+
+    T popValue()
+    {
+        assert(this->count_ > 0);
 
         this->count_--;
+        T value = std::move(this->begin_[this->count_]);
         this->begin_[this->count_].~T();
+        return value;
     }
 
     template <typename... Args>
@@ -609,11 +619,20 @@ public:
 
     void pop()
     {
-        if (this->count_ == 0)
-            return;
+        assert(this->count_ > 0);
 
         this->back().~T();
         this->count_--;
+    }
+
+    T popValue()
+    {
+        assert(this->count_ > 0);
+
+        this->count_--;
+        T value = std::move(this->begin_[this->count_]);
+        this->begin_[this->count_].~T();
+        return value;
     }
 
     template <typename... Args>

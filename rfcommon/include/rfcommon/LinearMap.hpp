@@ -70,14 +70,18 @@ public:
 
     Iterator findKey(const K& key)
     {
-        auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
-        return Iterator(keys_, values_, static_cast<S>(it - keys_.begin()));
+        S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
+        if (offset == keys_.count() || keys_[offset] != key)
+            return end();
+        return Iterator(keys_, values_, offset);
     }
 
     ConstIterator findKey(const K& key) const
     {
-        auto it = std::lower_bound(keys_.begin(), keys_.end(), key);
-        return ConstIterator(keys_, values_, static_cast<S>(it - keys_.begin()));
+        S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
+        if (offset == keys_.count() || keys_[offset] != key)
+            return end();
+        return ConstIterator(keys_, values_, offset);
     }
 
     Iterator findValue(const V& value)

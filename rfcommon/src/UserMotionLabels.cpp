@@ -452,16 +452,18 @@ SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, co
 }
 
 // ----------------------------------------------------------------------------
-const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion motion) const
+const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion) const
 {
-    return toUserLabel(fighterID, motion, "(unlabeled)");
+    return toStringHighestLayer(fighterID, motion, "(unlabeled)");
 }
 
 // ----------------------------------------------------------------------------
-const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion motion, const char* fallback) const
+const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
     assert(fighterID.isValid());
-    assert(motion.isValid());
+    
+    if (motion.isValid() == false)
+        return fallback;
 
     const auto& map = fighters_[fighterID.value()].motionMap;
     const auto& layers = fighters_[fighterID.value()].layers;
@@ -473,6 +475,41 @@ const char* UserMotionLabels::toUserLabel(FighterID fighterID, FighterMotion mot
                 return layers[layerIdx].userLabels[it->value()].cStr();   // Map value is an index into the user label table
 
     return fallback;
+}
+
+// ----------------------------------------------------------------------------
+String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion motion) const
+{
+    return toStringAllLayers(fighterID, motion, "(unlabeled)");
+}
+
+// ----------------------------------------------------------------------------
+String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion motion, const char* fallback) const
+{
+    assert(fighterID.isValid());
+
+    if (motion.isValid() == false)
+        return fallback;
+
+    const auto& map = fighters_[fighterID.value()].motionMap;
+    const auto& layers = fighters_[fighterID.value()].layers;
+
+    const auto it = map.find(motion);
+    String result;
+    if (it != map.end())
+        for (int layerIdx = layerCount() - 1; layerIdx >= 0; --layerIdx)  // Prioritize higher layers first
+            if (layers[layerIdx].userLabels[it->value()].length() > 0)    // Found a non-empty string
+            {
+                const auto& label = layers[layerIdx].userLabels[it->value()];   // Map value is an index into the user label table
+                if (result.length() > 0)
+                    result += ", ";
+                result += label;
+            }
+
+    if (result.length() == 0 && fallback != nullptr)
+        result = fallback;
+
+    return result;
 }
 
 // ----------------------------------------------------------------------------
