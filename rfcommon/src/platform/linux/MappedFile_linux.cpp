@@ -1,4 +1,5 @@
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #if defined(_WIN32)
 #   include <Windows.h>
@@ -29,6 +30,8 @@ MappedFile::~MappedFile()
 // ----------------------------------------------------------------------------
 bool MappedFile::open(const char* fileName)
 {
+    PROFILE(MappedFile, open);
+
 #if defined(_WIN32)
     HANDLE hFile;
     LARGE_INTEGER liFileSize;
@@ -129,6 +132,8 @@ bool MappedFile::open(const char* fileName)
 // ----------------------------------------------------------------------------
 void MappedFile::close()
 {
+    PROFILE(MappedFile, close);
+
 #if defined(_WIN32)
     if (address_)
         UnmapViewOfFile(address_);

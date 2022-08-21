@@ -3,10 +3,13 @@
 #include "data-viewer/models/DataViewerModel.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QDateTime>
 
 static void clearStackedWidget(QStackedWidget* sw)
 {
+    PROFILE(DataViewerViewGlobal, clearStackedWidget);
+
     while (sw->count())
     {
         QWidget* widget = sw->widget(0);
@@ -51,6 +54,8 @@ DataViewerView::~DataViewerView()
 // ----------------------------------------------------------------------------
 void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
+    PROFILE(DataViewerView, onNewData);
+
     populatePlayerDataTables();
     populateTree(map, meta, frames);
 
@@ -65,6 +70,8 @@ void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* m
 // ----------------------------------------------------------------------------
 void DataViewerView::onClear()
 {
+    PROFILE(DataViewerView, onClear);
+
     playerDataTableIdxOnClear_ = ui_->stackedWidget_playerData->currentIndex();
     selectedTreeItemOnClear_ = [this]() -> int {
         const auto item = ui_->treeWidget->currentItem();
@@ -99,6 +106,8 @@ void DataViewerView::onClear()
 // ----------------------------------------------------------------------------
 void DataViewerView::onNewFrame()
 {
+    PROFILE(DataViewerView, onNewFrame);
+
     for (auto table : playerDataTables_)
         table->scrollToBottom();
 }
@@ -106,6 +115,8 @@ void DataViewerView::onNewFrame()
 // ----------------------------------------------------------------------------
 void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
+    PROFILE(DataViewerView, onCurrentItemChanged);
+
     (void)previous;
 
     if (current == nullptr)
@@ -161,6 +172,8 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
 // ----------------------------------------------------------------------------
 void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
+    PROFILE(DataViewerView, populateTree);
+
     // Meta Data
     if (meta)
     {
@@ -228,6 +241,8 @@ void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData
 // ----------------------------------------------------------------------------
 void DataViewerView::populatePlayerDataTables()
 {
+    PROFILE(DataViewerView, populatePlayerDataTables);
+
     for (int i = 0; i != model_->fighterStatesModelCount(); ++i)
     {
         QTableView* view = new QTableView;

@@ -1,4 +1,5 @@
 #include "rfcommon/RefCounted.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <cassert>
 
 namespace rfcommon {
@@ -29,6 +30,8 @@ RefCounted::~RefCounted()
 // ----------------------------------------------------------------------------
 void RefCounted::incRef()
 {
+    NOPROFILE();
+
     assert(refs_ >= 0);
     refs_++;
 }
@@ -36,6 +39,8 @@ void RefCounted::incRef()
 // ----------------------------------------------------------------------------
 void RefCounted::decRef()
 {
+    NOPROFILE();
+
     assert(refs_ > 0);
     refs_--;
     if (refs_ == 0)
@@ -45,6 +50,8 @@ void RefCounted::decRef()
 // ----------------------------------------------------------------------------
 void RefCounted::decRefNoSeppuku()
 {
+    NOPROFILE();
+
     assert(refs_ > 0);
     refs_--;
 }
@@ -52,6 +59,8 @@ void RefCounted::decRefNoSeppuku()
 // ----------------------------------------------------------------------------
 void RefCounted::touchRef()
 {
+    NOPROFILE();
+
     incRef();
     decRef();
 }
@@ -59,6 +68,8 @@ void RefCounted::touchRef()
 // ----------------------------------------------------------------------------
 void RefCounted::seppuku()
 {
+    NOPROFILE();
+
     delete this;
 }
 

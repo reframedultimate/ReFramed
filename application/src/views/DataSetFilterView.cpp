@@ -13,6 +13,7 @@
 #include "rfcommon/DataSetFilterChain.hpp"
 #include "rfcommon/DataSet.hpp"
 #include "rfcommon/DataSetFilter.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 
 #include <QMenu>
@@ -90,6 +91,8 @@ DataSetFilterView::~DataSetFilterView()
 // ----------------------------------------------------------------------------
 bool DataSetFilterView::eventFilter(QObject* target, QEvent* e)
 {
+    PROFILE(DataSetFilterView, eventFilter);
+
     // Stops the scroll wheel from interfering with the elements in each
     // modifier widget
     if(e->type() == QEvent::Wheel)
@@ -101,6 +104,8 @@ bool DataSetFilterView::eventFilter(QObject* target, QEvent* e)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onToolButtonAddFilterTriggered(QAction* action)
 {
+    PROFILE(DataSetFilterView, onToolButtonAddFilterTriggered);
+
     if (0) {}
 #define X(filter) \
     else if (action == ui_->action##filter) \
@@ -114,6 +119,8 @@ void DataSetFilterView::onToolButtonAddFilterTriggered(QAction* action)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onInputGroupItemChanged(QListWidgetItem* item)
 {
+    PROFILE(DataSetFilterView, onInputGroupItemChanged);
+
     ReplayGroup* group = savedGameSessionManager_->replayGroup(item->text());
     if (group == nullptr)
         return;
@@ -134,6 +141,8 @@ void DataSetFilterView::onInputGroupItemChanged(QListWidgetItem* item)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterEnabled(DataSetFilterWidget* widget, bool enable)
 {
+    PROFILE(DataSetFilterView, onFilterEnabled);
+
     widget->filter()->setEnabled(enable);
     widget->contentWidget()->setEnabled(enable);
 }
@@ -141,12 +150,16 @@ void DataSetFilterView::onFilterEnabled(DataSetFilterWidget* widget, bool enable
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterInverted(DataSetFilterWidget* widget, bool inverted)
 {
+    PROFILE(DataSetFilterView, onFilterInverted);
+
     widget->filter()->setInverted(inverted);
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterMoveUp(DataSetFilterWidget* widget)
 {
+    PROFILE(DataSetFilterView, onFilterMoveUp);
+
     int newIndex = dataSetFilterChain_->moveEarlier(widget->filter());
     moveFilterWidgetInLayout(widget, newIndex);
 
@@ -156,6 +169,8 @@ void DataSetFilterView::onFilterMoveUp(DataSetFilterWidget* widget)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onFilterMoveDown(DataSetFilterWidget* widget)
 {
+    PROFILE(DataSetFilterView, onFilterMoveDown);
+
     int newIndex = dataSetFilterChain_->moveLater(widget->filter());
     moveFilterWidgetInLayout(widget, newIndex);
 
@@ -165,6 +180,8 @@ void DataSetFilterView::onFilterMoveDown(DataSetFilterWidget* widget)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onRemoveFilterRequested(DataSetFilterWidget* widget)
 {
+    PROFILE(DataSetFilterView, onRemoveFilterRequested);
+
     widget->filter()->dispatcher.removeListener(this);
     int wasIndex = dataSetFilterChain_->remove(widget->filter());
     QWidget* at = filterWidgetsLayout_->itemAt(wasIndex)->widget();
@@ -178,6 +195,8 @@ void DataSetFilterView::onRemoveFilterRequested(DataSetFilterWidget* widget)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::moveFilterWidgetInLayout(DataSetFilterWidget* widget, int layoutIndex)
 {
+    PROFILE(DataSetFilterView, moveFilterWidgetInLayout);
+
     for (int i = 0; i != filterWidgetsLayout_->count(); ++i)
     {
         if (filterWidgetsLayout_->itemAt(i)->widget() == widget)
@@ -194,6 +213,8 @@ void DataSetFilterView::moveFilterWidgetInLayout(DataSetFilterWidget* widget, in
 // ----------------------------------------------------------------------------
 void DataSetFilterView::reprocessInputDataSet()
 {
+    PROFILE(DataSetFilterView, reprocessInputDataSet);
+
     if (dataSetFiltersDirty_ == false)
         return;
 
@@ -218,6 +239,8 @@ void DataSetFilterView::reprocessInputDataSet()
 // ----------------------------------------------------------------------------
 void DataSetFilterView::dirtyDataSetFilters()
 {
+    PROFILE(DataSetFilterView, dirtyDataSetFilters);
+
     dataSetFiltersDirty_ = true;
     QMetaObject::invokeMethod(this, "reprocessInputDataSet", Qt::QueuedConnection);
 }
@@ -225,6 +248,8 @@ void DataSetFilterView::dirtyDataSetFilters()
 // ----------------------------------------------------------------------------
 void DataSetFilterView::addNewFilterWidget(DataSetFilterWidget* widget)
 {
+    PROFILE(DataSetFilterView, addNewFilterWidget);
+
     filterWidgetsLayout_->addWidget(widget);
     //recursivelyInstallEventFilter(widget);
 
@@ -241,6 +266,8 @@ void DataSetFilterView::addNewFilterWidget(DataSetFilterWidget* widget)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::recursivelyInstallEventFilter(QObject* obj)
 {
+    PROFILE(DataSetFilterView, recursivelyInstallEventFilter);
+
     const QObjectList& children = obj->children();
     for(QObjectList::const_iterator child = children.begin(); child != children.end(); ++child)
         recursivelyInstallEventFilter(*child);
@@ -252,6 +279,8 @@ void DataSetFilterView::recursivelyInstallEventFilter(QObject* obj)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::addGroupToInputRecordingsList(ReplayGroup* group)
 {
+    PROFILE(DataSetFilterView, addGroupToInputRecordingsList);
+
     for (const auto& fileInfo : group->absFilePathList())
         onReplayGroupFileAdded(group, fileInfo);
 }
@@ -259,6 +288,8 @@ void DataSetFilterView::addGroupToInputRecordingsList(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::removeGroupFromInputRecordingsList(ReplayGroup* group)
 {
+    PROFILE(DataSetFilterView, removeGroupFromInputRecordingsList);
+
     for (const auto& fileInfo : group->absFilePathList())
         onReplayGroupFileRemoved(group, fileInfo);
 }
@@ -266,6 +297,8 @@ void DataSetFilterView::removeGroupFromInputRecordingsList(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::removeGroupFromInputDataSet(ReplayGroup* group)
 {
+    PROFILE(DataSetFilterView, removeGroupFromInputDataSet);
+
     inputDataSets_.erase(group);
 
     /*inputDataSetMerged_->clear();
@@ -278,6 +311,8 @@ void DataSetFilterView::removeGroupFromInputDataSet(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
+    PROFILE(DataSetFilterView, onReplayGroupFileAdded);
+
     (void)group;
     ui_->listWidget_inputRecordings->addItem(absPathToFile.completeBaseName());
     ui_->listWidget_inputRecordings->sortItems(Qt::DescendingOrder);
@@ -286,6 +321,8 @@ void DataSetFilterView::onReplayGroupFileAdded(ReplayGroup* group, const QFileIn
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
+    PROFILE(DataSetFilterView, onReplayGroupFileRemoved);
+
     (void)group;
     for (const auto& item : ui_->listWidget_inputRecordings->findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
         delete item;
@@ -294,6 +331,8 @@ void DataSetFilterView::onReplayGroupFileRemoved(ReplayGroup* group, const QFile
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
+    PROFILE(DataSetFilterView, onReplayManagerGroupAdded);
+
     QListWidgetItem* item = new QListWidgetItem(group->name());
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
     item->setCheckState(Qt::Unchecked);
@@ -305,6 +344,8 @@ void DataSetFilterView::onReplayManagerGroupAdded(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
+    PROFILE(DataSetFilterView, onReplayManagerGroupNameChanged);
+
     (void)group;
     for (int i = 0; i != ui_->listWidget_inputGroups->count(); ++i)
     {
@@ -320,6 +361,8 @@ void DataSetFilterView::onReplayManagerGroupNameChanged(ReplayGroup* group, cons
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
+    PROFILE(DataSetFilterView, onReplayManagerGroupRemoved);
+
     group->dispatcher.removeListener(this);
     for (const auto& item : ui_->listWidget_inputGroups->findItems(group->name(), Qt::MatchExactly))
         delete item;
@@ -328,6 +371,8 @@ void DataSetFilterView::onReplayManagerGroupRemoved(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* group, rfcommon::DataSet* dataSet)
 {
+    PROFILE(DataSetFilterView, onDataSetBackgroundLoaderDataSetLoaded);
+
     /*inputDataSets_.emplace(group, dataSet);
     inputDataSetMerged_->mergeDataFrom(dataSet);*/
 
@@ -337,6 +382,8 @@ void DataSetFilterView::onDataSetBackgroundLoaderDataSetLoaded(ReplayGroup* grou
 // ----------------------------------------------------------------------------
 void DataSetFilterView::onDataSetFilterDirtied(rfcommon::DataSetFilter* filter)
 {
+    PROFILE(DataSetFilterView, onDataSetFilterDirtied);
+
     (void)filter;
     dirtyDataSetFilters();
 }

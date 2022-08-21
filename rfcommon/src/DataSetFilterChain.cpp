@@ -1,6 +1,7 @@
 #include "rfcommon/DataSetFilterChain.hpp"
 #include "rfcommon/DataSetFilter.hpp"
 #include "rfcommon/DataSet.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <algorithm>
 
 namespace rfcommon {
@@ -8,6 +9,8 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 int DataSetFilterChain::add(DataSetFilter* filter)
 {
+    PROFILE(DataSetFilterChain, add);
+
     filters_.emplace(filter);
     return filterCount() - 1;
 }
@@ -15,6 +18,8 @@ int DataSetFilterChain::add(DataSetFilter* filter)
 // ----------------------------------------------------------------------------
 int DataSetFilterChain::remove(DataSetFilter* filter)
 {
+    PROFILE(DataSetFilterChain, remove);
+
     const auto it = std::find(filters_.begin(), filters_.end(), filter);
     if (it == filters_.end())
         return -1;
@@ -26,6 +31,8 @@ int DataSetFilterChain::remove(DataSetFilter* filter)
 // ----------------------------------------------------------------------------
 int DataSetFilterChain::moveLater(DataSetFilter* filter)
 {
+    PROFILE(DataSetFilterChain, moveLater);
+
     const auto it = std::find(filters_.begin(), filters_.end(), filter);
     if (it == filters_.end())
         return -1;
@@ -41,6 +48,8 @@ int DataSetFilterChain::moveLater(DataSetFilter* filter)
 // ----------------------------------------------------------------------------
 int DataSetFilterChain::moveEarlier(DataSetFilter* filter)
 {
+    PROFILE(DataSetFilterChain, moveEarlier);
+
     const auto it = std::find(filters_.begin(), filters_.end(), filter);
     if (it == filters_.end())
         return -1;
@@ -56,18 +65,24 @@ int DataSetFilterChain::moveEarlier(DataSetFilter* filter)
 // ----------------------------------------------------------------------------
 int DataSetFilterChain::filterCount() const
 {
+    PROFILE(DataSetFilterChain, filterCount);
+
     return static_cast<int>(filters_.count());
 }
 
 // ----------------------------------------------------------------------------
 DataSetFilter* DataSetFilterChain::filter(int idx) const
 {
+    PROFILE(DataSetFilterChain, filter);
+
     return filters_[idx];
 }
 
 // ----------------------------------------------------------------------------
 DataSet* DataSetFilterChain::apply(const DataSet* ds)
 {
+    PROFILE(DataSetFilterChain, apply);
+
     DataSet* out = nullptr;
     for (const auto& filter : filters_)
     {

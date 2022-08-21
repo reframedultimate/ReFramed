@@ -309,12 +309,16 @@ void Log::deinit()
 // ----------------------------------------------------------------------------
 Log* Log::root()
 {
+    NOPROFILE();
+
     return rootLog;
 }
 
 // ----------------------------------------------------------------------------
 Log* Log::child(const char* logName)
 {
+    NOPROFILE();
+
     for (auto log : d_->children)
         if (strcmp(log->name(), logName) == 0)
             return log;

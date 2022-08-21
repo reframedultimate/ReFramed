@@ -1,14 +1,22 @@
-#include "common/Profiler.hpp"
-#include "common/Thread.hpp"
-#include "common/Logger.hpp"
+#include "rfcommon/Profiler.hpp"
+#include "rfcommon/Log.hpp"
 
 #include <limits>
-#include <stdio.h>
 
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+#   define WIN32_LEAN_AND_MEAN
+#   include <Windows.h>
+#else
+#   include <sys/syscall.h>
+#endif
 
-namespace common {
+#if defined(max)
+#   undef max
+#endif
 
-Profiler g_profiler;
+namespace rfcommon {
+
+Profiler* profiler = nullptr;
 
 // ----------------------------------------------------------------------------
 ProfileBlock::ProfileBlock(const char* blockName) :
@@ -17,7 +25,7 @@ ProfileBlock::ProfileBlock(const char* blockName) :
     executions_(0),
     accumulated_(0),
     max_(0),
-    min_(std::numeric_limits<double>::max())
+    min_(std::numeric_limits<uint64_t>::max())
 {
 }
 
@@ -41,7 +49,7 @@ void ProfileBlock::end()
 
     timer_.stop();
 
-    double passed = double(timer_.getTimePassedInNanoSeconds()) / 1000000000.0;
+    uint64_t passed = timer_.getTimePassedInNanoSeconds();
     accumulated_ += passed;
     executions_++;
 
@@ -71,7 +79,7 @@ ProfileBlock* ProfileBlock::getChild(const char* childName)
 }
 
 // ----------------------------------------------------------------------------
-int ProfileBlock::getExecutions() const
+int ProfileBlock::executions() const
 {
     NOPROFILE();
 
@@ -79,47 +87,47 @@ int ProfileBlock::getExecutions() const
 }
 
 // ----------------------------------------------------------------------------
-ParameterD ProfileBlock::getAverageTime() const
+uint64_t ProfileBlock::averageTimeNS() const
 {
     NOPROFILE();
 
-    if(executions_ == 0)
-        return ParameterD(0.0, Metric::SECONDS);
+    if (executions_ == 0)
+        return 0;
 
-    return ParameterD(accumulated_ / executions_, Metric::SECONDS);
+    return accumulated_ / executions_;
 }
 
 // ----------------------------------------------------------------------------
-ParameterD ProfileBlock::getAccumulatedTime() const
+uint64_t ProfileBlock::accumulatedTimeNS() const
 {
     NOPROFILE();
 
-    if(executions_ == 0)
-        return ParameterD(0.0, Metric::SECONDS);
+    if (executions_ == 0)
+        return 0;
 
-    return ParameterD(accumulated_, Metric::SECONDS);
+    return accumulated_;
 }
 
 // ----------------------------------------------------------------------------
-ParameterD ProfileBlock::getMaxTime() const
+uint64_t ProfileBlock::maxTimeNS() const
 {
     NOPROFILE();
 
-    if(executions_ == 0)
-        return ParameterD(0.0, Metric::SECONDS);
+    if (executions_ == 0)
+        return 0;
 
-    return ParameterD(max_, Metric::SECONDS);
+    return max_;
 }
 
 // ----------------------------------------------------------------------------
-ParameterD ProfileBlock::getMinTime() const
+uint64_t ProfileBlock::minTimeNS() const
 {
     NOPROFILE();
 
-    if(executions_ == 0)
-        return ParameterD(0.0, Metric::SECONDS);
+    if (executions_ == 0)
+        return 0;
 
-    return ParameterD(min_, Metric::SECONDS);
+    return min_;
 }
 
 // ----------------------------------------------------------------------------
@@ -157,6 +165,21 @@ ProfileBlock* ProfileRootBlock::getRoot()
 }
 
 // ----------------------------------------------------------------------------
+void Profiler::init()
+{
+    if (profiler)
+        return;
+    profiler = new Profiler;
+}
+
+// ----------------------------------------------------------------------------
+void Profiler::deinit()
+{
+    delete profiler;
+    profiler = nullptr;
+}
+
+// ----------------------------------------------------------------------------
 void Profiler::beginBlock(const char* blockName)
 {
     NOPROFILE();
@@ -177,9 +200,13 @@ ProfileRootBlock* Profiler::getThreadSpecificRootBlock()
 {
     NOPROFILE();
 
-    Lock lock(&mutex_);
+    std::lock_guard<std::mutex> guard(mutex_);
 
-    uint32_t tid = Thread::getTID();
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+    uint32_t tid = (uint32_t)GetCurrentThreadId();
+#else
+    uint32_t tid = (uint32_t)syscall(SYS_gettid);
+#endif
     ContainerType::iterator it = rootBlocks_.find(tid);
 
     if(it != rootBlocks_.end())
@@ -197,32 +224,11 @@ void Profiler::exportGraph(FILE* stream, Profiler::ExportType exportType)
 {
     NOPROFILE();
 
-    Lock lock(&mutex_);
+    std::lock_guard<std::mutex> guard(mutex_);
 
     switch(exportType)
     {
-        case TEXT_GRAPH:       exportGraph_Text(stream);       break;
-        case TEXT_HIGHEST_ACC: exportGraph_HighestAcc(stream); break;
-        case XML:              g_defaultLogger.logError("Not implemented. Use a common::File* instead."); break;
-        case DOT:              g_defaultLogger.logError("Not implemented. Use a common::File* instead."); break;
-        case CODE_FLOWER:      g_defaultLogger.logError("Not implemented. Use a common::File* instead."); break;
-    };
-}
-
-// ----------------------------------------------------------------------------
-void Profiler::exportGraph(File* file, Profiler::ExportType exportType)
-{
-    NOPROFILE();
-
-    Lock lock(&mutex_);
-
-    switch(exportType)
-    {
-        case TEXT_GRAPH:       g_defaultLogger.logError("Not implemented. Use a FILE* instead."); break;
-        case TEXT_HIGHEST_ACC: g_defaultLogger.logError("Not implemented. Use a FILE* instead."); break;
-        case XML:              exportGraph_XML(file);        break;
-        case DOT:              exportGraph_DOT(file);        break;
-        case CODE_FLOWER:      exportGraph_CodeFlower(file); break;
+        case DOT: exportGraph_DOT(stream); break;
     };
 }
 

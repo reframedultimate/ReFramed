@@ -1,11 +1,31 @@
-#include "common/Profiler.hpp"
-#include "common/File.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <set>
+#include <sstream>
+#include <iomanip>
 
-namespace common {
+namespace rfcommon {
+
+// ----------------------------------------------------------------------------
+static std::string nsToEng(uint64_t ns)
+{
+    NOPROFILE();
+
+    static const char* table[] = { "ns", "us", "ms", "s" };
+    int i = 0;
+    double result = ns;
+    while (result > 1000 && i < 3)
+    {
+        result /= 1000;
+        i++;
+    }
+
+    std::ostringstream ss;
+    ss << std::setprecision(3) << result << table[i];
+    return ss.str();
+}
 
 // ----------------------------------------------------------------------------
 static std::string removeIllegalDOTChars(const std::string& str)
@@ -48,7 +68,7 @@ static void makeProfileBlockNamesUnique(ProfileBlock* block, std::set<std::strin
 }
 
 // ----------------------------------------------------------------------------
-static void exportGraph_DOTRecursive(const ProfileBlock* block, File* file, double min, double max)
+static void exportGraph_DOTRecursive(const ProfileBlock* block, FILE* fp, double min, double max)
 {
     NOPROFILE();
 
@@ -59,15 +79,15 @@ static void exportGraph_DOTRecursive(const ProfileBlock* block, File* file, doub
         ProfileBlock* childBlock = *it;
         std::string childName = removeIllegalDOTChars(childBlock->name);
         std::string dotSyntax = "\t" + nodeName + " -> " + childName + " [len=5];\n";
-        file->writeString(dotSyntax.c_str());
+        fprintf(fp, dotSyntax.c_str());
 
-        exportGraph_DOTRecursive(childBlock, file, min, max);
+        exportGraph_DOTRecursive(childBlock, fp, min, max);
     }
 
     // Calculate colour depending on the accumulated time of the block
     std::string colorAttribute;
     {
-        double acc = block->getAccumulatedTime().toSI();
+        double acc = block->accumulatedTimeNS() / 1e9;
         double weight = (acc - min) / (max - min);   // scale to [0..1]
         if (weight > 0)
             weight = std::pow(weight, 0.1);          // better distribution
@@ -81,16 +101,16 @@ static void exportGraph_DOTRecursive(const ProfileBlock* block, File* file, doub
     {
         std::ostringstream ss;
         ss << "label=\"{ " << nodeName << " | "
-           << "Executions: " << block->getExecutions() << " | "
-           << "Accumulated: " << block->getAccumulatedTime().toHumanReadable(3) << " |{ "
-           << "min: " << block->getMinTime().toHumanReadable(3) << " | "
-           << "avg: " << block->getAverageTime().toHumanReadable(3) << " | "
-           << "max: " << block->getMaxTime().toHumanReadable(3) << "} }\"";
+           << "Executions: " << block->executions() << " | "
+           << "Accumulated: " << nsToEng(block->accumulatedTimeNS()) << " |{ "
+           << "min: " << nsToEng(block->minTimeNS()) << " | "
+           << "avg: " << nsToEng(block->averageTimeNS()) << " | "
+           << "max: " << nsToEng(block->maxTimeNS()) << "} }\"";
         labelAttribute = ss.str();
     }
 
     std::string dotSyntax = "\t" + nodeName + " [shape=record," + colorAttribute + "," + labelAttribute + "];\n";
-    file->writeString(dotSyntax.c_str());
+    fprintf(fp, dotSyntax.c_str());
 }
 
 // ----------------------------------------------------------------------------
@@ -98,7 +118,7 @@ static void determineMinMaxAcc(const ProfileBlock* block, double* min, double* m
 {
     NOPROFILE();
 
-    double acc = block->getAccumulatedTime().toSI();
+    double acc = block->accumulatedTimeNS() / 1e9;
     if(acc != 0.0)
     {
         if(acc < *min)
@@ -114,10 +134,11 @@ static void determineMinMaxAcc(const ProfileBlock* block, double* min, double* m
 }
 
 // ----------------------------------------------------------------------------
-void Profiler::exportGraph_DOT(File* file)
+void Profiler::exportGraph_DOT(FILE* fp)
 {
     NOPROFILE();
 
+    fprintf(fp, "digraph graphname {\n");
     for(ContainerType::const_iterator it = rootBlocks_.begin(); it != rootBlocks_.end(); ++it)
     {
         ProfileBlock* rootBlock = it->second->getRoot();
@@ -127,10 +148,9 @@ void Profiler::exportGraph_DOT(File* file)
         std::set<std::string> uniqueNames;
         makeProfileBlockNamesUnique(rootBlock, &uniqueNames);
 
-        file->writeString("digraph graphname {\n");
-        exportGraph_DOTRecursive(rootBlock, file, min, max);
-        file->writeString("}\n\n");
+        exportGraph_DOTRecursive(rootBlock, fp, min, max);
     }
+    fprintf(fp, "}\n");
 }
 
 }

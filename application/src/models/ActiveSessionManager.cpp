@@ -6,6 +6,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/tcp_socket.h"
 #include <QDateTime>
@@ -38,6 +39,8 @@ ActiveSessionManager::~ActiveSessionManager()
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setSetFormat(const rfcommon::SetFormat& format)
 {
+    PROFILE(ActiveSessionManager, setSetFormat);
+
     if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
         auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
@@ -52,6 +55,8 @@ void ActiveSessionManager::setSetFormat(const rfcommon::SetFormat& format)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setP1Name(const QString& name)
 {
+    PROFILE(ActiveSessionManager, setP1Name);
+
     if (activeMetaData_
         && activeMetaData_->fighterCount() == 2
         && activeMetaData_->type() == rfcommon::MetaData::GAME)
@@ -74,6 +79,8 @@ void ActiveSessionManager::setP1Name(const QString& name)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setP2Name(const QString& name)
 {
+    PROFILE(ActiveSessionManager, setP2Name);
+
     if (activeMetaData_
         && activeMetaData_->fighterCount() == 2
         && activeMetaData_->type() == rfcommon::MetaData::GAME)
@@ -96,6 +103,8 @@ void ActiveSessionManager::setP2Name(const QString& name)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
 {
+    PROFILE(ActiveSessionManager, setGameNumber);
+
     if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
         auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
@@ -116,6 +125,8 @@ void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 {
+    PROFILE(ActiveSessionManager, setTrainingSessionNumber);
+
     if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::TRAINING)
     {
         auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
@@ -135,12 +146,16 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 // ----------------------------------------------------------------------------
 Protocol* ActiveSessionManager::protocol() const
 {
+    PROFILE(ActiveSessionManager, protocol);
+
     return protocol_;
 }
 
 // ----------------------------------------------------------------------------
 bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 {
+    PROFILE(ActiveSessionManager, shouldStartNewSet);
+
     // For any game that doesn't have exactly 2 players we don't care about sets
     if (meta->fighterCount() != 2)
         return true;
@@ -221,41 +236,55 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(ActiveSessionManager, onProtocolConnectedToServer);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerConnected, ipAddress, port);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolDisconnectedFromServer()
 {
+    PROFILE(ActiveSessionManager, onProtocolDisconnectedFromServer);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerDisconnected);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolTrainingStarted(rfcommon::Session* training)
 {
+    PROFILE(ActiveSessionManager, onProtocolTrainingStarted);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolTrainingResumed(rfcommon::Session* training)
 {
+    PROFILE(ActiveSessionManager, onProtocolTrainingResumed);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
+    PROFILE(ActiveSessionManager, onProtocolTrainingReset);
+
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolTrainingEnded(rfcommon::Session* training)
 {
+    PROFILE(ActiveSessionManager, onProtocolTrainingEnded);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingEnded, training);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 {
+    PROFILE(ActiveSessionManager, onProtocolGameStarted);
+
     activeMappingInfo_ = game->tryGetMappingInfo();
     activeMetaData_ = game->tryGetMetaData();
     activeFrameData_ = game->tryGetFrameData();
@@ -314,12 +343,16 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameResumed(rfcommon::Session* game)
 {
+    PROFILE(ActiveSessionManager, onProtocolGameResumed);
+
     ActiveSessionManager::onProtocolGameStarted(game);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 {
+    PROFILE(ActiveSessionManager, onProtocolGameEnded);
+
     assert(activeMappingInfo_ == game->tryGetMappingInfo());
     assert(activeMetaData_ == game->tryGetMetaData());
     assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
@@ -356,6 +389,8 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
 {
+    PROFILE(ActiveSessionManager, onReplayManagerDefaultReplaySaveLocationChanged);
+
     (void)path;
     if (activeMetaData_.isNull())
         return;
@@ -382,16 +417,22 @@ void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
 {
+    PROFILE(ActiveSessionManager, onMetaDataTimeStartedChanged);
+
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 {
+    PROFILE(ActiveSessionManager, onMetaDataTimeEndedChanged);
+
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommon::String& name)
 {
+    PROFILE(ActiveSessionManager, onMetaDataPlayerNameChanged);
+
     if (activeMetaData_->fighterCount() == 2)
     {
         if (player == 0)
@@ -404,36 +445,48 @@ void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommo
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
+    PROFILE(ActiveSessionManager, onMetaDataSetNumberChanged);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
+    PROFILE(ActiveSessionManager, onMetaDataGameNumberChanged);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
+    PROFILE(ActiveSessionManager, onMetaDataSetFormatChanged);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, format);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataWinnerChanged(int winner)
 {
+    PROFILE(ActiveSessionManager, onMetaDataWinnerChanged);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerWinnerChanged, winner);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
 {
+    PROFILE(ActiveSessionManager, onMetaDataTrainingSessionNumberChanged);
+
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, number);
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(ActiveSessionManager, onFrameDataNewUniqueFrame);
+
     for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
     {
         const auto& state = frame[fighterIdx];
@@ -447,6 +500,8 @@ void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommo
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(ActiveSessionManager, onFrameDataNewFrame);
+
 }
 
 }

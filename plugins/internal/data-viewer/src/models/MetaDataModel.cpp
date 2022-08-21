@@ -1,6 +1,7 @@
 #include "data-viewer/models/MetaDataModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QDateTime>
 
 namespace Game {
@@ -39,6 +40,8 @@ MetaDataModel::~MetaDataModel()
 // ----------------------------------------------------------------------------
 void MetaDataModel::setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::MetaData* metaData)
 {
+    PROFILE(MetaDataModel, setMetaData);
+
     beginResetModel();
         if (meta_)
             meta_->dispatcher.removeListener(this);
@@ -54,6 +57,8 @@ void MetaDataModel::setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::Me
 // ----------------------------------------------------------------------------
 int MetaDataModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(MetaDataModel, rowCount);
+
     if (meta_)
         return meta_->type() == rfcommon::MetaData::GAME ?
             Game::FixedRowCount + meta_->fighterCount() :
@@ -64,12 +69,16 @@ int MetaDataModel::rowCount(const QModelIndex& parent) const
 // ----------------------------------------------------------------------------
 int MetaDataModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(MetaDataModel, columnCount);
+
     return 2;
 }
 
 // ----------------------------------------------------------------------------
 QVariant MetaDataModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(MetaDataModel, headerData);
+
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
         if (section == 0) return "Key";
@@ -82,6 +91,8 @@ QVariant MetaDataModel::headerData(int section, Qt::Orientation orientation, int
 // ----------------------------------------------------------------------------
 QVariant MetaDataModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(MetaDataModel, data);
+
     if (meta_.notNull())
     {
         switch (meta_->type())
@@ -100,6 +111,8 @@ QVariant MetaDataModel::data(const QModelIndex& index, int role) const
 // ----------------------------------------------------------------------------
 QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QModelIndex& index, int role) const
 {
+    PROFILE(MetaDataModel, gameData);
+
     switch (role)
     {
         case Qt::DisplayRole:
@@ -177,6 +190,8 @@ QVariant MetaDataModel::gameData(const rfcommon::GameMetaData* meta, const QMode
 // ----------------------------------------------------------------------------
 QVariant MetaDataModel::trainingData(const rfcommon::TrainingMetaData* meta, const QModelIndex& index, int role) const
 {
+    PROFILE(MetaDataModel, trainingData);
+
     switch (role)
     {
         case Qt::DisplayRole:
@@ -240,6 +255,8 @@ QVariant MetaDataModel::trainingData(const rfcommon::TrainingMetaData* meta, con
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
 {
+    PROFILE(MetaDataModel, onMetaDataTimeStartedChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME: 
@@ -254,6 +271,8 @@ void MetaDataModel::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 {
+    PROFILE(MetaDataModel, onMetaDataTimeEndedChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -268,6 +287,8 @@ void MetaDataModel::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
+    PROFILE(MetaDataModel, onMetaDataPlayerNameChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -282,6 +303,8 @@ void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
 {
+    PROFILE(MetaDataModel, onMetaDataSetNumberChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -294,6 +317,8 @@ void MetaDataModel::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
 {
+    PROFILE(MetaDataModel, onMetaDataGameNumberChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -306,6 +331,8 @@ void MetaDataModel::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
 {
+    PROFILE(MetaDataModel, onMetaDataSetFormatChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -318,6 +345,8 @@ void MetaDataModel::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataWinnerChanged(int winnerPlayerIdx)
 {
+    PROFILE(MetaDataModel, onMetaDataWinnerChanged);
+
     switch (meta_->type())
     {
         case rfcommon::MetaData::GAME:
@@ -330,5 +359,7 @@ void MetaDataModel::onMetaDataWinnerChanged(int winnerPlayerIdx)
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
 {
+    PROFILE(MetaDataModel, onMetaDataTrainingSessionNumberChanged);
+
     (void)number;
 }

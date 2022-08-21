@@ -1,14 +1,19 @@
 #include "xy-positions-plot/PluginConfig.hpp"
 #include "xy-positions-plot/XYPositionsPlotPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 
 static rfcommon::Plugin* createPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
+    PROFILE(PluginGlobal, createPlugin);
+
     return new XYPositionsPlotPlugin(factory);
 }
 
 static void destroyPlugin(rfcommon::Plugin* model)
 {
+    PROFILE(PluginGlobal, destroyPlugin);
+
     delete model;
 }
 
@@ -31,11 +36,15 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
+    PROFILE(PluginGlobal, start);
+
     return 0;
 }
 
 static void stop()
 {
+    PROFILE(PluginGlobal, stop);
+
 }
 
 DEFINE_PLUGIN(factories, start, stop)

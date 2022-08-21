@@ -2,6 +2,7 @@
 #include "application/views/AnalysisView.hpp"
 #include "application/models/PluginManager.hpp"
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QTabWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -58,6 +59,8 @@ AnalysisView::~AnalysisView()
 // ----------------------------------------------------------------------------
 void AnalysisView::onTabBarClicked(int index)
 {
+    PROFILE(AnalysisView, onTabBarClicked);
+
     if (index != tabWidget_->count() - 1)
         return;
 
@@ -100,6 +103,8 @@ void AnalysisView::onTabBarClicked(int index)
 // ----------------------------------------------------------------------------
 void AnalysisView::onTabIndexChanged(int index)
 {
+    PROFILE(AnalysisView, onTabIndexChanged);
+
     // Prevent the "+" tab from ever being selected
     if (index == tabWidget_->count() - 1)
         tabWidget_->setCurrentIndex(index - 1);
@@ -108,6 +113,8 @@ void AnalysisView::onTabIndexChanged(int index)
 // ----------------------------------------------------------------------------
 void AnalysisView::closeTab(QWidget* widget)
 {
+    PROFILE(AnalysisView, closeTab);
+
     for (auto it = loadedPlugins_.begin(); it != loadedPlugins_.end(); ++it)
     {
         rfcommon::Plugin* plugin = it.value().plugin;

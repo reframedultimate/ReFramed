@@ -2,6 +2,7 @@
 #include "video-player/models/VideoPlayerModel.hpp"
 #include "video-player/views/VideoPlayerView.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
@@ -26,18 +27,24 @@ rfcommon::Plugin::VideoPlayerInterface* VideoPlayerPlugin::videoPlayerInterface(
 // ----------------------------------------------------------------------------
 QWidget* VideoPlayerPlugin::createView()
 {
+    PROFILE(VideoPlayerPlugin, createView);
+
     return new VideoPlayerView(videoPlayer_.get());
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::destroyView(QWidget* view)
 {
+    PROFILE(VideoPlayerPlugin, destroyView);
+
     delete view;
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game) 
 {
+    PROFILE(VideoPlayerPlugin, onGameSessionLoaded);
+
     auto vmeta = game->tryGetVideoMeta();
     if (!vmeta)
         return;
@@ -69,6 +76,8 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game) 
 {
+    PROFILE(VideoPlayerPlugin, onGameSessionUnloaded);
+
     closeVideo();
 }
 
@@ -81,39 +90,53 @@ void VideoPlayerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int 
 // ----------------------------------------------------------------------------
 bool VideoPlayerPlugin::openVideoFromMemory(const void* address, uint64_t size) 
 {
+    PROFILE(VideoPlayerPlugin, openVideoFromMemory);
+
     return videoPlayer_->open(address, size);
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::closeVideo()
 {
+    PROFILE(VideoPlayerPlugin, closeVideo);
+
     videoPlayer_->close();
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::playVideo()
 {
+    PROFILE(VideoPlayerPlugin, playVideo);
+
     videoPlayer_->play();
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::pauseVideo()
 {
+    PROFILE(VideoPlayerPlugin, pauseVideo);
+
     videoPlayer_->pause();
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::setVideoVolume(int percent)
 {
+    PROFILE(VideoPlayerPlugin, setVideoVolume);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::advanceVideoFrames(int videoFrames)
 {
+    PROFILE(VideoPlayerPlugin, advanceVideoFrames);
+
     videoPlayer_->advanceFrames(videoFrames);
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerPlugin::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 {
+    PROFILE(VideoPlayerPlugin, seekVideoToGameFrame);
+
 }

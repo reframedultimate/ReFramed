@@ -1,4 +1,5 @@
 #include "rfcommon/TimeStamp.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <cassert>
 
 namespace rfcommon {
@@ -6,12 +7,16 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 TimeStamp TimeStamp::fromMillisSinceEpoch(Type value)
 {
+    NOPROFILE();
+
     return TimeStamp(value);
 }
 
 // ----------------------------------------------------------------------------
 TimeStamp TimeStamp::makeInvalid()
 {
+    NOPROFILE();
+
     return TimeStamp(0);
 }
 

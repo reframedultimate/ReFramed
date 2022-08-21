@@ -2,6 +2,7 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
 #include <QTabBar>
@@ -67,6 +68,8 @@ ReplayViewer::~ReplayViewer()
 // ----------------------------------------------------------------------------
 int ReplayViewer::findInCache(const QString& fileName) const
 {
+    PROFILE(ReplayViewer, findInCache);
+
     for (int i = 0; i != replayCache_.size(); ++i)
         if (replayCache_[i].fileName == fileName)
             return i;
@@ -76,6 +79,8 @@ int ReplayViewer::findInCache(const QString& fileName) const
 // ----------------------------------------------------------------------------
 void ReplayViewer::loadGameReplays(const QStringList& fileNames)
 {
+    PROFILE(ReplayViewer, loadGameReplays);
+
     clearReplays();
     pendingReplays_ = fileNames;
 
@@ -102,6 +107,8 @@ void ReplayViewer::loadGameReplays(const QStringList& fileNames)
 // ----------------------------------------------------------------------------
 void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions)
 {
+    PROFILE(ReplayViewer, onGameReplaysLoaded);
+
     assert(fileNames.size() == sessions.size());
 
     // Go through cache and find the replays that were already loaded, and add
@@ -140,6 +147,8 @@ void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVect
 // ----------------------------------------------------------------------------
 void ReplayViewer::clearReplays()
 {
+    PROFILE(ReplayViewer, clearReplays);
+
     if (activeReplays_.size() == 1)
     {
         for (const auto& data : plugins_)
@@ -170,6 +179,8 @@ void ReplayViewer::clearReplays()
 // ----------------------------------------------------------------------------
 void ReplayViewer::clearActiveSession()
 {
+    PROFILE(ReplayViewer, clearActiveSession);
+
     if (activeSessionState_ != NO_ACTIVE_SESSION)
     {
         assert(activeSession_.notNull());
@@ -198,6 +209,8 @@ void ReplayViewer::clearActiveSession()
 // ----------------------------------------------------------------------------
 void ReplayViewer::onTabBarClicked(int index)
 {
+    PROFILE(ReplayViewer, onTabBarClicked);
+
     if (index < count() - 1 || index < 0)
         return;
 
@@ -359,6 +372,8 @@ void ReplayViewer::onTabBarClicked(int index)
 // ----------------------------------------------------------------------------
 void ReplayViewer::onCurrentTabChanged(int index)
 {
+    PROFILE(ReplayViewer, onCurrentTabChanged);
+
     if (index >= 0 && index < count() - 1)
         previousTab_ = index;
     else
@@ -368,6 +383,8 @@ void ReplayViewer::onCurrentTabChanged(int index)
 // ----------------------------------------------------------------------------
 void ReplayViewer::closeTabWithView(QWidget* view)
 {
+    PROFILE(ReplayViewer, closeTabWithView);
+
     int currentTab = currentIndex();
     int tabCount = count();
     if (currentTab == tabCount - 2 && currentTab > 0)
@@ -393,6 +410,8 @@ void ReplayViewer::closeTabWithView(QWidget* view)
 // ----------------------------------------------------------------------------
 void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) 
 {
+    PROFILE(ReplayViewer, onProtocolAttemptConnectToServer);
+
     sessionState_ = ATTEMPT_CONNECT;
     ipAddress_ = ipAddress;
     port_ = port;
@@ -403,6 +422,8 @@ void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint1
 }
 void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) 
 {
+    PROFILE(ReplayViewer, onProtocolFailedToConnectToServer);
+
     sessionState_ = DISCONNECTED;
 
     for (const auto& data : plugins_)
@@ -411,6 +432,8 @@ void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const
 }
 void ReplayViewer::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(ReplayViewer, onProtocolConnectedToServer);
+
     sessionState_ = CONNECTED;
 
     for (const auto& data : plugins_)
@@ -419,6 +442,8 @@ void ReplayViewer::onProtocolConnectedToServer(const char* ipAddress, uint16_t p
 }
 void ReplayViewer::onProtocolDisconnectedFromServer() 
 {
+    PROFILE(ReplayViewer, onProtocolDisconnectedFromServer);
+
     sessionState_ = DISCONNECTED;
 
     for (const auto& data : plugins_)
@@ -429,6 +454,8 @@ void ReplayViewer::onProtocolDisconnectedFromServer()
 // ----------------------------------------------------------------------------
 void ReplayViewer::onProtocolTrainingStarted(rfcommon::Session* training)
 {
+    PROFILE(ReplayViewer, onProtocolTrainingStarted);
+
     activeSessionState_ = TRAINING_STARTED;
     activeSession_ = training;
 
@@ -441,6 +468,8 @@ void ReplayViewer::onProtocolTrainingStarted(rfcommon::Session* training)
 }
 void ReplayViewer::onProtocolTrainingResumed(rfcommon::Session* training)
 {
+    PROFILE(ReplayViewer, onProtocolTrainingResumed);
+
     activeSessionState_ = TRAINING_RESUMED;
     activeSession_ = training;
 
@@ -453,6 +482,8 @@ void ReplayViewer::onProtocolTrainingResumed(rfcommon::Session* training)
 }
 void ReplayViewer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
+    PROFILE(ReplayViewer, onProtocolTrainingReset);
+
     assert(activeSession_ == oldTraining);
     activeSession_ = newTraining;
 
@@ -468,6 +499,8 @@ void ReplayViewer::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcom
 }
 void ReplayViewer::onProtocolTrainingEnded(rfcommon::Session* training)
 {
+    PROFILE(ReplayViewer, onProtocolTrainingEnded);
+
     assert(activeSession_ == training);
     activeSessionState_ = activeSessionState_ == TRAINING_STARTED ? TRAINING_STARTED_ENDED : TRAINING_RESUMED_ENDED;
 
@@ -483,6 +516,8 @@ void ReplayViewer::onProtocolTrainingEnded(rfcommon::Session* training)
 }
 void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
 {
+    PROFILE(ReplayViewer, onProtocolGameStarted);
+
     activeSessionState_ = GAME_STARTED;
     activeSession_ = game;
 
@@ -495,6 +530,8 @@ void ReplayViewer::onProtocolGameStarted(rfcommon::Session* game)
 }
 void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
 {
+    PROFILE(ReplayViewer, onProtocolGameResumed);
+
     activeSessionState_ = GAME_RESUMED;
     activeSession_ = game;
 
@@ -507,6 +544,8 @@ void ReplayViewer::onProtocolGameResumed(rfcommon::Session* game)
 }
 void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
 {
+    PROFILE(ReplayViewer, onProtocolGameEnded);
+
     assert(activeSession_ == game);
     activeSessionState_ = activeSessionState_ == GAME_STARTED ? GAME_STARTED_ENDED : GAME_RESUMED_ENDED;
 

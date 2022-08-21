@@ -1,9 +1,12 @@
 #include "data-viewer/models/StageIDModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------
 void StageIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 {
+    PROFILE(StageIDModel, setMappingInfo);
+
     beginResetModel();
         if (mappingInfo)
         {
@@ -21,18 +24,24 @@ void StageIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 // ----------------------------------------------------------------------------
 int StageIDModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(StageIDModel, rowCount);
+
     return ids_.count();
 }
 
 // ----------------------------------------------------------------------------
 int StageIDModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(StageIDModel, columnCount);
+
     return 2;
 }
 
 // ----------------------------------------------------------------------------
 QVariant StageIDModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(StageIDModel, headerData);
+
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
         if (section == 0) return "Stage ID";
@@ -45,6 +54,8 @@ QVariant StageIDModel::headerData(int section, Qt::Orientation orientation, int 
 // ----------------------------------------------------------------------------
 QVariant StageIDModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(StageIDModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole:

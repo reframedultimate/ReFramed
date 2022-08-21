@@ -3,6 +3,7 @@
 
 #include "rfcommon/init.h"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Log.hpp"
 
@@ -15,6 +16,8 @@
 
 int processOptions(int argc, char** argv)
 {
+    NOPROFILE();
+
     for (int i = 1; i < argc; ++i)
     {
         if (strcmp(argv[i], "--styles") == 0)
@@ -49,6 +52,8 @@ struct RFCommonLib
 
 int main(int argc, char** argv)
 {
+    NOPROFILE();
+
     processOptions(argc, argv);
 
 #ifdef _WIN32
@@ -94,5 +99,13 @@ int main(int argc, char** argv)
 
     mainWindow.showMaximized();
     rfcommon::Log::root()->info("Entering main loop");
-    return app.exec();
+    int result = app.exec();
+
+    {
+        FILE* fp = fopen("profile.dot", "w");
+        if (fp)
+            rfcommon::profiler->exportGraph(fp, rfcommon::Profiler::DOT);
+    }
+
+    return result;
 }

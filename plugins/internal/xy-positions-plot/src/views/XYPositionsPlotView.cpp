@@ -4,6 +4,7 @@
 #include "xy-positions-plot/widgets/XYPositionsPlot.hpp"
 
 #include "rfcommon/Frame.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include "qwt_plot_curve.h"
 
@@ -44,6 +45,8 @@ XYPositionsPlotView::~XYPositionsPlotView()
 // ----------------------------------------------------------------------------
 void XYPositionsPlotView::onDataSetChanged()
 {
+    PROFILE(XYPositionsPlotView, onDataSetChanged);
+
     if (model_->sessionCount() == 1)
     {
         plot_->setParent(nullptr);

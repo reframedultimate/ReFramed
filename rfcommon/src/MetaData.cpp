@@ -1,5 +1,6 @@
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
 
@@ -16,6 +17,8 @@ MetaData* MetaData::newActiveGameSession(
         SmallVector<String, 2>&& tags,
         SmallVector<String, 2>&& names)
 {
+    PROFILE(MetaData, newActiveGameSession);
+
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
@@ -37,6 +40,8 @@ MetaData* MetaData::newActiveTrainingSession(
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags)
 {
+    PROFILE(MetaData, newActiveTrainingSession);
+
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
@@ -61,6 +66,8 @@ MetaData* MetaData::newSavedGameSession(
         SetFormat setFormat,
         int winner)
 {
+    PROFILE(MetaData, newSavedGameSession);
+
     return new GameMetaData(
         timeStarted,
         timeEnded,
@@ -83,6 +90,8 @@ MetaData* MetaData::newSavedTrainingSession(
         SmallVector<String, 2>&& tags,
         GameNumber sessionNumber)
 {
+    PROFILE(MetaData, newSavedTrainingSession);
+
     return new TrainingMetaData(
         timeStarted,
         timeEnded,
@@ -114,6 +123,8 @@ MetaData::~MetaData()
 // ----------------------------------------------------------------------------
 MetaData* MetaData::load(const void* data, uint32_t size)
 {
+    PROFILE(MetaData, load);
+
     // Parse
     const unsigned char* const begin = static_cast<const unsigned char*>(data);
     const unsigned char* const end = static_cast<const unsigned char*>(data) + size;
@@ -129,6 +140,8 @@ MetaData* MetaData::load(const void* data, uint32_t size)
 }
 static MetaData* load_1_5(json& j)
 {
+    PROFILE(MetaDataGlobal, load_1_5);
+
     json jPlayerInfo = j["playerinfo"];
     json jGameInfo = j["gameinfo"];
 
@@ -201,6 +214,8 @@ static MetaData* load_1_5(json& j)
 // ----------------------------------------------------------------------------
 uint32_t MetaData::save(FILE* fp) const
 {
+    PROFILE(MetaData, save);
+
     json jPlayerInfo = json::array();
     for (int i = 0; i != fighterCount(); ++i)
     {
@@ -255,36 +270,48 @@ uint32_t MetaData::save(FILE* fp) const
 // ----------------------------------------------------------------------------
 int MetaData::fighterCount() const
 {
+    NOPROFILE();
+
     return fighterIDs_.count();
 }
 
 // ----------------------------------------------------------------------------
 const String& MetaData::tag(int fighterIdx) const
 {
+    NOPROFILE();
+
     return tags_[fighterIdx];
 }
 
 // ----------------------------------------------------------------------------
 FighterID MetaData::fighterID(int fighterIdx) const
 {
+    NOPROFILE();
+
     return fighterIDs_[fighterIdx];
 }
 
 // ----------------------------------------------------------------------------
 StageID MetaData::stageID() const
 {
+    NOPROFILE();
+
     return stageID_;
 }
 
 // ----------------------------------------------------------------------------
 TimeStamp MetaData::timeStarted() const
 {
+    NOPROFILE();
+
     return timeStarted_;
 }
 
 // ----------------------------------------------------------------------------
 void MetaData::setTimeStarted(TimeStamp timeStamp)
 {
+    PROFILE(MetaData, setTimeStarted);
+
     bool notify = (timeStarted_ == timeStamp);
     timeStarted_ = timeStamp;
     if (notify)
@@ -294,12 +321,16 @@ void MetaData::setTimeStarted(TimeStamp timeStamp)
 // ----------------------------------------------------------------------------
 TimeStamp MetaData::timeEnded() const
 {
+    NOPROFILE();
+
     return timeEnded_;
 }
 
 // ----------------------------------------------------------------------------
 void MetaData::setTimeEnded(TimeStamp timeStamp)
 {
+    PROFILE(MetaData, setTimeEnded);
+
     bool notify = (timeEnded_ == timeStamp);
     timeEnded_ = timeStamp;
     if (notify)
@@ -309,6 +340,8 @@ void MetaData::setTimeEnded(TimeStamp timeStamp)
 // ----------------------------------------------------------------------------
 DeltaTime MetaData::length() const
 {
+    NOPROFILE();
+
     return timeEnded_ - timeStarted_;
 }
 
@@ -335,18 +368,24 @@ GameMetaData::GameMetaData(
 // ----------------------------------------------------------------------------
 MetaData::Type GameMetaData::type() const
 {
+    NOPROFILE();
+
     return GAME;
 }
 
 // ----------------------------------------------------------------------------
 const String& GameMetaData::name(int playerIdx) const
 {
+    NOPROFILE();
+
     return names_[playerIdx];
 }
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setName(int fighterIdx, const String& name)
 {
+    PROFILE(GameMetaData, setName);
+
     bool notify = (names_[fighterIdx] != name);
     names_[fighterIdx] = name;
     if (notify)
@@ -356,12 +395,16 @@ void GameMetaData::setName(int fighterIdx, const String& name)
 // ----------------------------------------------------------------------------
 GameNumber GameMetaData::gameNumber() const
 {
+    NOPROFILE();
+
     return gameNumber_;
 }
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setGameNumber(GameNumber gameNumber)
 {
+    PROFILE(GameMetaData, setGameNumber);
+
     bool notify = (gameNumber_ != gameNumber);
     gameNumber_ = gameNumber;
     if (notify)
@@ -371,17 +414,23 @@ void GameMetaData::setGameNumber(GameNumber gameNumber)
 // ----------------------------------------------------------------------------
 void GameMetaData::resetGameNumber()
 {
+    PROFILE(GameMetaData, resetGameNumber);
+
     setGameNumber(GameNumber::fromValue(1));
 }
 
 // ----------------------------------------------------------------------------
 SetNumber GameMetaData::setNumber() const
 {
+    NOPROFILE();
+
     return setNumber_;
 }
 
 void GameMetaData::setSetNumber(SetNumber setNumber)
 {
+    PROFILE(GameMetaData, setSetNumber);
+
     bool notify = (setNumber_ != setNumber);
     setNumber_ = setNumber;
     if (notify)
@@ -391,18 +440,24 @@ void GameMetaData::setSetNumber(SetNumber setNumber)
 // ----------------------------------------------------------------------------
 void GameMetaData::resetSetNumber()
 {
+    PROFILE(GameMetaData, resetSetNumber);
+
     setSetNumber(SetNumber::fromValue(1));
 }
 
 // ----------------------------------------------------------------------------
 SetFormat GameMetaData::setFormat() const
 {
+    NOPROFILE();
+
     return setFormat_;
 }
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setSetFormat(SetFormat format)
 {
+    PROFILE(GameMetaData, setSetFormat);
+
     bool notify = (setFormat_ != format);
     setFormat_ = format;
     if (notify)
@@ -412,12 +467,16 @@ void GameMetaData::setSetFormat(SetFormat format)
 // ----------------------------------------------------------------------------
 int GameMetaData::winner() const
 {
+    NOPROFILE();
+
     return winner_;
 }
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setWinner(int fighterIdx)
 {
+    PROFILE(GameMetaData, setWinner);
+
     bool notify = (winner_ != fighterIdx);
     winner_ = fighterIdx;
     if (notify)
@@ -439,36 +498,48 @@ TrainingMetaData::TrainingMetaData(
 // ----------------------------------------------------------------------------
 MetaData::Type TrainingMetaData::type() const
 {
+    NOPROFILE();
+
     return TRAINING;
 }
 
 // ----------------------------------------------------------------------------
 const String& TrainingMetaData::name(int playerIdx) const
 {
+    NOPROFILE();
+
     return tag(playerIdx);
 }
 
 // ----------------------------------------------------------------------------
 FighterID TrainingMetaData::playerFighterID() const
 {
+    NOPROFILE();
+
     return fighterID(0);
 }
 
 // ----------------------------------------------------------------------------
 FighterID TrainingMetaData::cpuFighterID() const
 {
+    NOPROFILE();
+
     return fighterID(1);
 }
 
 // ----------------------------------------------------------------------------
 GameNumber TrainingMetaData::sessionNumber() const
 {
+    NOPROFILE();
+
     return sessionNumber_;
 }
 
 // ----------------------------------------------------------------------------
 void TrainingMetaData::setSessionNumber(GameNumber sessionNumber)
 {
+    PROFILE(TrainingMetaData, setSessionNumber);
+
     bool notify = (sessionNumber_ != sessionNumber);
     sessionNumber_ = sessionNumber;
     if (notify)
@@ -478,6 +549,8 @@ void TrainingMetaData::setSessionNumber(GameNumber sessionNumber)
 // ----------------------------------------------------------------------------
 void TrainingMetaData::resetSessionNumber()
 {
+    PROFILE(TrainingMetaData, resetSessionNumber);
+
     setSessionNumber(GameNumber::fromValue(1));
 }
 

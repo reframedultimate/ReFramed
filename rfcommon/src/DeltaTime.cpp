@@ -1,10 +1,13 @@
 #include "rfcommon/DeltaTime.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 DeltaTime DeltaTime::fromMillis(Type value) 
-{ 
+{
+    NOPROFILE();
+ 
     DeltaTime dt; 
     dt.value_ = value; 
     return dt; 

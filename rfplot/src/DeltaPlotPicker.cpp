@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/DeltaPlotPicker.hpp"
 #include "rfplot/MousePlotPickerMachine.hpp"
 
@@ -24,6 +25,8 @@ DeltaPlotPicker::~DeltaPlotPicker()
 // ----------------------------------------------------------------------------
 QPointF DeltaPlotPicker::originalInvTransform(const QPoint& point) const
 {
+    PROFILE(DeltaPlotPicker, originalInvTransform);
+
     return QPointF(originalCanvasMapX_.invTransform(point.x()),
                    originalCanvasMapY_.invTransform(point.y()));
 }
@@ -31,6 +34,8 @@ QPointF DeltaPlotPicker::originalInvTransform(const QPoint& point) const
 // ----------------------------------------------------------------------------
 void DeltaPlotPicker::onActivated(bool activated)
 {
+    PROFILE(DeltaPlotPicker, onActivated);
+
     userJustClicked_ = activated;
 
     if(activated)
@@ -50,6 +55,8 @@ void DeltaPlotPicker::onActivated(bool activated)
 // ----------------------------------------------------------------------------
 void DeltaPlotPicker::onMoved(const QPoint& point)
 {
+    PROFILE(DeltaPlotPicker, onMoved);
+
     if(userJustClicked_)
     {
         userJustClicked_ = false;
@@ -69,6 +76,8 @@ void DeltaPlotPicker::onMoved(const QPoint& point)
 // ----------------------------------------------------------------------------
 void DeltaPlotPicker::move(const QPoint& point)
 {
+    PROFILE(DeltaPlotPicker, move);
+
     onMoved(point);
     QwtPicker::move(point);
 }

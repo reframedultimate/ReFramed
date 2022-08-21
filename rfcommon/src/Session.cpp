@@ -9,6 +9,7 @@
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
@@ -44,6 +45,8 @@ static const char* blobTypeVideoEmbed  = "VIDE";
 // ----------------------------------------------------------------------------
 static std::string decompressGZFile(const char* fileName)
 {
+    PROFILE(SessionGlobal, decompressGZFile);
+
     unsigned char header;
     std::string out;
     gzFile f;
@@ -100,6 +103,8 @@ static std::string decompressGZFile(const char* fileName)
 // ----------------------------------------------------------------------------
 static std::string decompressQtZFile(const char* fileName)
 {
+    PROFILE(SessionGlobal, decompressQtZFile);
+
 #define CHUNK (256*1024)
     std::string out;
     FILE* fp = fopen(fileName, "rb");
@@ -167,6 +172,8 @@ init_stream_failed :
 // ----------------------------------------------------------------------------
 static std::string readUncompressedFile(const char* fileName)
 {
+    PROFILE(SessionGlobal, readUncompressedFile);
+
 #define CHUNK (256*1024)
     std::string out;
     FILE* fp = fopen(fileName, "rb");
@@ -198,6 +205,8 @@ static bool loadLegacy_1_3(
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
+    PROFILE(SessionGlobal, loadLegacy_1_3);
+
     json jMappingInfo = j["mappinginfo"];
     json jGameInfo = j["gameinfo"];
     json jPlayerInfo = j["playerinfo"];
@@ -438,6 +447,8 @@ static bool loadLegacy_1_4(
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
+    PROFILE(SessionGlobal, loadLegacy_1_4);
+
     json jMappingInfo = j["mappinginfo"];
     json jGameInfo = j["gameinfo"];
     json jPlayerInfo = j["playerinfo"];
@@ -728,6 +739,8 @@ Session::~Session()
 // ----------------------------------------------------------------------------
 Session* Session::newModernSavedSession(MappedFile* file)
 {
+    PROFILE(Session, newModernSavedSession);
+
     return new Session(
         file,
         nullptr,
@@ -738,6 +751,8 @@ Session* Session::newModernSavedSession(MappedFile* file)
 // ----------------------------------------------------------------------------
 Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
 {
+    PROFILE(Session, newLegacySavedSession);
+
     return new Session(
         nullptr,
         mappingInfo,
@@ -748,6 +763,8 @@ Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* meta
 // ----------------------------------------------------------------------------
 Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData)
 {
+    PROFILE(Session, newActiveSession);
+
     return new Session(
         nullptr,
         globalMappingInfo,
@@ -758,6 +775,8 @@ Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* met
 // ----------------------------------------------------------------------------
 Session* Session::load(const char* fileName, uint8_t loadFlags)
 {
+    PROFILE(Session, load);
+
     // Assume we're dealing with a modern format first
     Reference<MappedFile> file(new MappedFile);
     if (file->open(fileName) == false)
@@ -856,6 +875,8 @@ Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
 // ----------------------------------------------------------------------------
 bool Session::save(const char* fileName)
 {
+    PROFILE(Session, save);
+
     // Any property of Session is allowed to be null, so we first calculate
     // how many entries we need. We don't know the offsets or sizes yet.
     contentTable_.clear();
@@ -974,6 +995,8 @@ bool Session::save(const char* fileName)
 // ----------------------------------------------------------------------------
 bool Session::existsInContentTable(LoadFlags flag) const
 {
+    PROFILE(Session, existsInContentTable);
+
     const char* blobType = [&flag]() -> const char* {
         switch(flag) {
             case MAPPING_INFO : return blobTypeMappingInfo;
@@ -993,12 +1016,16 @@ bool Session::existsInContentTable(LoadFlags flag) const
 // ----------------------------------------------------------------------------
 void Session::setMappingInfo(MappingInfo* mappingInfo)
 {
+    NOPROFILE();
+
     mappingInfo_ = mappingInfo;
 }
 
 // ----------------------------------------------------------------------------
 MappingInfo* Session::tryGetMappingInfo()
 {
+    PROFILE(Session, tryGetMappingInfo);
+
     if (mappingInfo_.isNull())
     {
         assert(file_.notNull());
@@ -1016,6 +1043,8 @@ MappingInfo* Session::tryGetMappingInfo()
 // ----------------------------------------------------------------------------
 MetaData* Session::tryGetMetaData()
 {
+    PROFILE(Session, tryGetMetaData);
+
     if (metaData_.isNull())
     {
         assert(file_.notNull());
@@ -1039,6 +1068,8 @@ MetaData* Session::tryGetMetaData()
 // ----------------------------------------------------------------------------
 FrameData* Session::tryGetFrameData()
 {
+    PROFILE(Session, tryGetFrameData);
+
     if (frameData_.isNull())
     {
         assert(file_.notNull());
@@ -1062,18 +1093,24 @@ FrameData* Session::tryGetFrameData()
 // ----------------------------------------------------------------------------
 VideoMeta* Session::tryGetVideoMeta()
 {
+    PROFILE(Session, tryGetVideoMeta);
+
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
 VideoEmbed* Session::tryGetVideoEmbed()
 {
+    PROFILE(Session, tryGetVideoEmbed);
+
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
 void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 {
+    PROFILE(Session, onFrameDataNewUniqueFrame);
+
     (void)frameIdx;
 
     // Winner might have changed
@@ -1084,6 +1121,8 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 // ----------------------------------------------------------------------------
 void Session::onFrameDataNewFrame(int frameIdx, const Frame<4>& frame)
 {
+    PROFILE(Session, onFrameDataNewFrame);
+
     // Update ended timestamp
     auto stamp = frame.back().timeStamp();
     metaData_->setTimeEnded(stamp);
@@ -1092,6 +1131,8 @@ void Session::onFrameDataNewFrame(int frameIdx, const Frame<4>& frame)
 // ----------------------------------------------------------------------------
 static int findWinner(const Frame<4>& frame)
 {
+    PROFILE(SessionGlobal, findWinner);
+
     // The winner is the player with most stocks and least damage
     int winneridx = 0;
     for (int i = 1; i != frame.count(); ++i)

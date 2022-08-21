@@ -22,6 +22,7 @@
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QStackedWidget>
 #include <QDockWidget>
@@ -107,6 +108,8 @@ MainWindow::~MainWindow()
 // ----------------------------------------------------------------------------
 void MainWindow::negotiateDefaultRecordingLocation()
 {
+    PROFILE(MainWindow, negotiateDefaultRecordingLocation);
+
     auto askForDir = [this](const QString& path) -> QString {
         return QFileDialog::getExistingDirectory(
             this,
@@ -200,12 +203,16 @@ void MainWindow::negotiateDefaultRecordingLocation()
 // ----------------------------------------------------------------------------
 void MainWindow::populateCategories()
 {
+    PROFILE(MainWindow, populateCategories);
+
 
 }
 
 // ----------------------------------------------------------------------------
 void MainWindow::onConnectActionTriggered()
 {
+    PROFILE(MainWindow, onConnectActionTriggered);
+
     ConnectView c(config_.get(), protocol_.get());
     c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
     c.exec();
@@ -214,6 +221,8 @@ void MainWindow::onConnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onDisconnectActionTriggered()
 {
+    PROFILE(MainWindow, onDisconnectActionTriggered);
+
     // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
     protocol_->disconnectFromServer();
 }
@@ -221,6 +230,8 @@ void MainWindow::onDisconnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onUserLabelsEditorActionTriggered()
 {
+    PROFILE(MainWindow, onUserLabelsEditorActionTriggered);
+
     if (userMotionLabelsEditor_)
         return;
 
@@ -252,6 +263,8 @@ void MainWindow::onUserLabelsEditorActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onAboutActionTriggered()
 {
+    PROFILE(MainWindow, onAboutActionTriggered);
+
     QString text = QString(
         "ReFramed\n\n"
         "Created by TheComet\n"
@@ -268,6 +281,8 @@ void MainWindow::onAboutActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onViewLogActionTriggered()
 {
+    PROFILE(MainWindow, onViewLogActionTriggered);
+
     QUrl fileURL = QUrl::fromLocalFile(rfcommon::Log::root()->fileName());
     QDesktopServices::openUrl(fileURL);
 }
@@ -275,6 +290,8 @@ void MainWindow::onViewLogActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    PROFILE(MainWindow, closeEvent);
+
     if (userMotionLabelsEditor_)
         userMotionLabelsEditor_->close();
 }
@@ -282,6 +299,8 @@ void MainWindow::closeEvent(QCloseEvent* event)
 // ----------------------------------------------------------------------------
 void MainWindow::onCategorySelected(CategoryType category)
 {
+    PROFILE(MainWindow, onCategorySelected);
+
     switch (category)
     {
     case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
@@ -315,16 +334,22 @@ void MainWindow::onCategorySelected(CategoryType category)
 // ----------------------------------------------------------------------------
 void MainWindow::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(MainWindow, onProtocolAttemptConnectToServer);
+
 }
 
 // ----------------------------------------------------------------------------
 void MainWindow::onProtocolFailedToConnectToServer(const char* errorMsg, const char* ipAddress, uint16_t port)
 {
+    PROFILE(MainWindow, onProtocolFailedToConnectToServer);
+
 }
 
 // ----------------------------------------------------------------------------
 void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(MainWindow, onProtocolConnectedToServer);
+
     // Replace the "connect" action in the dropdown menu with "disconnect"
     ui_->action_connect->setVisible(false);
     ui_->action_disconnect->setVisible(true);
@@ -333,6 +358,8 @@ void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t por
 // ----------------------------------------------------------------------------
 void MainWindow::onProtocolDisconnectedFromServer()
 {
+    PROFILE(MainWindow, onProtocolDisconnectedFromServer);
+
     // Replace the "disconnect" action in the dropdown menu with "connect"
     ui_->action_connect->setVisible(true);
     ui_->action_disconnect->setVisible(false);
@@ -341,6 +368,8 @@ void MainWindow::onProtocolDisconnectedFromServer()
 // ----------------------------------------------------------------------------
 void MainWindow::onUserMotionLabelsEditorClosed()
 {
+    PROFILE(MainWindow, onUserMotionLabelsEditorClosed);
+
     ui_->action_userLabelsEditor->setEnabled(true);
     userMotionLabelsEditor_ = nullptr;
 }

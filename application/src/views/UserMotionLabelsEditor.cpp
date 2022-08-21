@@ -7,6 +7,7 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
@@ -64,6 +65,8 @@ public:
 
     void setFighter(rfcommon::FighterID fighterID)
     {
+    PROFILE(UserMotionLabelsEditorGlobal, setFighter);
+
         beginResetModel();
             fighterID_ = fighterID;
             repopulateEntries();
@@ -72,6 +75,8 @@ public:
 
     void setCategory(const QModelIndexList& indexes, rfcommon::UserMotionLabelsCategory category)
     {
+    PROFILE(UserMotionLabelsEditorGlobal, setCategory);
+
         // Create a list of unique entry indices, as changing categories is comparitively expensive
         QSet<int> entryIndices;
         for (const auto& index : indexes)
@@ -182,6 +187,8 @@ public:
 private:
     void repopulateEntries()
     {
+    PROFILE(UserMotionLabelsEditorGlobal, repopulateEntries);
+
         table_.clearCompact();
         if (fighterID_.isValid() == false)
             return;
@@ -205,6 +212,8 @@ private:
 
     void sortTable()
     {
+    PROFILE(UserMotionLabelsEditorGlobal, sortTable);
+
         std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b){
             return a.string < b.string;
         });
@@ -216,6 +225,8 @@ private:
 
     int findTableInsertIdx(const Entry& entry)
     {
+    PROFILE(UserMotionLabelsEditorGlobal, findTableInsertIdx);
+
         auto insertIt = std::lower_bound(table_.begin(), table_.end(), entry, [](const Entry& a, const Entry& b){
             return a.string < b.string;
         });
@@ -407,6 +418,8 @@ UserMotionLabelsEditor::~UserMotionLabelsEditor()
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo)
 {
+    PROFILE(UserMotionLabelsEditor, populateFromGlobalData);
+
     // Create sorted list of all fighters
     struct FighterData {
         rfcommon::FighterID id;
@@ -435,6 +448,8 @@ void UserMotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globa
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount)
 {
+    PROFILE(UserMotionLabelsEditor, populateFromSessions);
+
     auto idAlreadyAdded = [this](rfcommon::FighterID fighterID) -> bool {
         for (auto entry : indexToFighterID_)
             if (entry == fighterID)
@@ -480,6 +495,8 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::closeEvent(QCloseEvent* event)
 {
+    PROFILE(UserMotionLabelsEditor, closeEvent);
+
     mainWindow_->onUserMotionLabelsEditorClosed();
     deleteLater();
 }
@@ -487,6 +504,8 @@ void UserMotionLabelsEditor::closeEvent(QCloseEvent* event)
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::onFighterSelected(int index)
 {
+    PROFILE(UserMotionLabelsEditor, onFighterSelected);
+
     for (int i = 0; i != tableModels_.count(); ++i)
         static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[index]);
 }
@@ -494,6 +513,8 @@ void UserMotionLabelsEditor::onFighterSelected(int index)
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos)
 {
+    PROFILE(UserMotionLabelsEditor, onCustomContextMenuRequested);
+
     // Submenu with all of the categories that are not the current category
     QMenu categoryMenu;
 #define X(category, name) \
@@ -537,6 +558,8 @@ void UserMotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoi
 // ----------------------------------------------------------------------------
 void UserMotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
 {
+    PROFILE(UserMotionLabelsEditor, updateFightersDropdown);
+
     // We update the dropdown of fighters if the fighter was previously unseen
     for (auto entry : indexToFighterID_)
         if (entry == fighterID)
@@ -562,6 +585,8 @@ void UserMotionLabelsEditor::onUserMotionLabelsLayerRemoved(int layerIdx, const 
 
 void UserMotionLabelsEditor::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx)
 {
+    PROFILE(UserMotionLabelsEditor, onUserMotionLabelsNewEntry);
+
     updateFightersDropdown(fighterID);
 }
 

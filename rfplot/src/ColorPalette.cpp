@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/ColorPalette.hpp"
 
 #include <QVector>
@@ -6,6 +7,8 @@ namespace rfplot {
 
 static QVector<QColor> generateColorPalette()
 {
+    PROFILE(ColorPaletteGlobal, generateColorPalette);
+
     QVector<QColor> colors;
 
     colors.push_back(QColor(0, 0, 255));
@@ -22,6 +25,8 @@ static QVector<QColor> generateColorPalette()
 // ----------------------------------------------------------------------------
 QColor ColorPalette::getColor(int index)
 {
+    PROFILE(ColorPalette, getColor);
+
     static QVector<QColor> colors = generateColorPalette();
 
     while(index >= colors.size())

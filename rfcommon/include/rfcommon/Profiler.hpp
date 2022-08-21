@@ -11,10 +11,11 @@
 #include <map>
 #include <mutex>
 #include <cstdio>
+#include <cstdint>
 
 namespace rfcommon {
 
-class ProfileBlock : public RefCounted
+class RFCOMMON_PUBLIC_API ProfileBlock : public RefCounted
 {
 public:
     typedef std::vector<Reference<ProfileBlock> > ContainerType;
@@ -30,22 +31,22 @@ public:
     std::string name;
     ContainerType children;
 
-    int getExecutions() const;
-    uint64_t getAverageTime() const;
-    uint64_t getAccumulatedTime() const;
-    uint64_t getMaxTime() const;
-    uint64_t getMinTime() const;
+    int executions() const;
+    uint64_t averageTimeNS() const;
+    uint64_t accumulatedTimeNS() const;
+    uint64_t maxTimeNS() const;
+    uint64_t minTimeNS() const;
 
 private:
     int executions_;
-    double accumulated_;
-    double max_;
-    double min_;
+    uint64_t accumulated_;
+    uint64_t max_;
+    uint64_t min_;
     HighresTimer timer_;
 };
 
 
-class ProfileRootBlock : public RefCounted
+class RFCOMMON_PUBLIC_API ProfileRootBlock : public RefCounted
 {
 public:
     ProfileRootBlock(const char* name);
@@ -60,10 +61,13 @@ private:
 };
 
 
-class Profiler
+class RFCOMMON_PUBLIC_API Profiler
 {
 public:
     typedef std::map<uint32_t, Reference<ProfileRootBlock> > ContainerType;
+
+    static void init();
+    static void deinit();
 
     enum ExportType
     {
@@ -87,7 +91,7 @@ private:
 };
 
 
-class AutoProfileBlock
+class RFCOMMON_PUBLIC_API AutoProfileBlock
 {
 public:
     AutoProfileBlock(ProfileRootBlock* profiler, const char* name) :
@@ -109,13 +113,13 @@ private:
 
 #ifdef RFCOMMON_PROFILER
 namespace rfcommon {
-extern Profiler profiler;
+extern RFCOMMON_PUBLIC_API Profiler* profiler;
 }
 #define PROFILE(classname, method) \
-    ::common::AutoProfileBlock profile_##classname##_##method (::common::profiler.getThreadSpecificRootBlock(), #classname "::" #method)
+    ::rfcommon::AutoProfileBlock profile_##classname##_##method (::rfcommon::profiler->getThreadSpecificRootBlock(), #classname "::" #method)
 
-#define PROFILE_BEGIN(name) ::common::profiler.beginBlock(name)
-#define PROFILE_END()       ::common::profiler.endBlock()
+#define PROFILE_BEGIN(name) ::rfcommon::profiler->beginBlock(name)
+#define PROFILE_END()       ::rfcommon::profiler->endBlock()
 #else
 #define PROFILE(classname, method)
 #define PROFILE_BEGIN(name)

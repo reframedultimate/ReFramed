@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "xy-positions-plot/widgets/XYPositionsPlot.hpp"
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "xy-positions-plot/models/XYPositionsPlotCurveData.hpp"
@@ -37,6 +38,8 @@ XYPositionsPlot::~XYPositionsPlot()
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::clearCurves()
 {
+    PROFILE(XYPositionsPlot, clearCurves);
+
     for (auto& curve : curves_)
     {
         curve->detach();
@@ -48,6 +51,8 @@ void XYPositionsPlot::clearCurves()
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::buildCurves()
 {
+    PROFILE(XYPositionsPlot, buildCurves);
+
     for (int sessionIdx = 0; sessionIdx != model_->sessionCount(); ++sessionIdx)
         for (int fighterIdx = 0; fighterIdx != model_->fighterCount(sessionIdx); ++fighterIdx)
         {
@@ -66,6 +71,8 @@ void XYPositionsPlot::buildCurves()
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::prependContextMenuActions(QMenu* menu)
 {
+    PROFILE(XYPositionsPlot, prependContextMenuActions);
+
     for (const auto& action : curveTypeActionGroup_->actions())
         menu->addAction(action);
     menu->addSeparator();
@@ -89,6 +96,8 @@ void XYPositionsPlot::prependContextMenuActions(QMenu* menu)
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::onDottedAction(bool enable)
 {
+    PROFILE(XYPositionsPlot, onDottedAction);
+
     if (!enable)
         return;
 
@@ -101,6 +110,8 @@ void XYPositionsPlot::onDottedAction(bool enable)
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::onLinesAction(bool enable)
 {
+    PROFILE(XYPositionsPlot, onLinesAction);
+
     if (!enable)
         return;
 
@@ -113,6 +124,8 @@ void XYPositionsPlot::onLinesAction(bool enable)
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::setCurveVisible(int sessionIdx, int fighterIdx, bool visible)
 {
+    PROFILE(XYPositionsPlot, setCurveVisible);
+
     int curveIdx = 0;
     for (int s = 0; s != model_->sessionCount(); ++s)
         for (int f = 0; f != model_->fighterCount(sessionIdx); ++f)
@@ -130,6 +143,8 @@ void XYPositionsPlot::setCurveVisible(int sessionIdx, int fighterIdx, bool visib
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::onDataSetChanged()
 {
+    PROFILE(XYPositionsPlot, onDataSetChanged);
+
     clearCurves();
     buildCurves();
     forceAutoScale();
@@ -138,12 +153,16 @@ void XYPositionsPlot::onDataSetChanged()
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::onDataChanged()
 {
+    PROFILE(XYPositionsPlot, onDataChanged);
+
     conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlot::onNamesChanged()
 {
+    PROFILE(XYPositionsPlot, onNamesChanged);
+
     /*curves_[fighterIdx]->setTitle(model_->name(fighterIdx).cStr());*/
     conditionalAutoScale();
 }

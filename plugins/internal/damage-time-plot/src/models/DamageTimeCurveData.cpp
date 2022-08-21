@@ -4,6 +4,7 @@
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/Frame.hpp"
+#include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------
 DamageTimeCurveData::DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::MetaData* metaData, rfcommon::FrameData* frameData, int fighterIdx)
@@ -35,12 +36,16 @@ DamageTimeCurveData::~DamageTimeCurveData()
 // ----------------------------------------------------------------------------
 bool DamageTimeCurveData::hasThisFrameData(const rfcommon::FrameData* frameData) const
 {
+    PROFILE(DamageTimeCurveData, hasThisFrameData);
+
     return frameData_ == frameData;
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimeCurveData::appendDataPoint(rfcommon::FramesLeft framesLeft, float damage)
 {
+    PROFILE(DamageTimeCurveData, appendDataPoint);
+
     // If the last point has the same damage value, then we don't add a new data
     // point, instead, the X value is simply adjusted so a straight line is drawn
     // from the last value to the current value
@@ -63,6 +68,8 @@ void DamageTimeCurveData::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnd
 // ----------------------------------------------------------------------------
 void DamageTimeCurveData::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
+    PROFILE(DamageTimeCurveData, onMetaDataPlayerNameChanged);
+
 }
 
 // ----------------------------------------------------------------------------
@@ -76,6 +83,8 @@ void DamageTimeCurveData::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon
 // ----------------------------------------------------------------------------
 void DamageTimeCurveData::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(DamageTimeCurveData, onFrameDataNewFrame);
+
     appendDataPoint(frame[fighterIdx_].framesLeft(), frame[fighterIdx_].damage());
     updateBoundingRect();
     model_->onCurveDataChanged();

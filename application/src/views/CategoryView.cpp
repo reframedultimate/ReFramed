@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/models/CategoryModel.hpp"
 #include "application/models/CategoryModel.hpp"
@@ -76,6 +77,8 @@ CategoryView::~CategoryView()
 // ----------------------------------------------------------------------------
 void CategoryView::dragEnterEvent(QDragEnterEvent* event)
 {
+    PROFILE(CategoryView, dragEnterEvent);
+
     if (!event->mimeData()->formats().contains("application/x-ultimate-hindsight-rfr"))
     {
         event->ignore();
@@ -88,6 +91,8 @@ void CategoryView::dragEnterEvent(QDragEnterEvent* event)
 // ----------------------------------------------------------------------------
 void CategoryView::dragMoveEvent(QDragMoveEvent* event)
 {
+    PROFILE(CategoryView, dragMoveEvent);
+
     QTreeWidgetItem* targetItem = itemAt(event->pos());
     if (targetItem == nullptr)
     {
@@ -123,6 +128,8 @@ void CategoryView::dragMoveEvent(QDragMoveEvent* event)
 // ----------------------------------------------------------------------------
 void CategoryView::dropEvent(QDropEvent* event)
 {
+    PROFILE(CategoryView, dropEvent);
+
     QTreeWidgetItem* targetItem = itemAt(event->pos());
     if (targetItem == nullptr)
     {
@@ -168,6 +175,8 @@ void CategoryView::dropEvent(QDropEvent* event)
 // ----------------------------------------------------------------------------
 void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
 {
+    PROFILE(CategoryView, onCustomContextMenuRequested);
+
     QTreeWidgetItem* item = itemAt(pos);
     if (item == nullptr)
         return;
@@ -259,6 +268,8 @@ void CategoryView::onCustomContextMenuRequested(const QPoint& pos)
 // ----------------------------------------------------------------------------
 void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
+    PROFILE(CategoryView, onCurrentItemChanged);
+
     if (current == nullptr)
         return;
 
@@ -282,6 +293,8 @@ void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetIte
 // ----------------------------------------------------------------------------
 void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 {
+    PROFILE(CategoryView, onItemChanged);
+
     switch (static_cast<CategoryType>(item->type()))
     {
         // Have to make sure that the name the user typed in for the item doesn't
@@ -313,6 +326,8 @@ void CategoryView::onItemChanged(QTreeWidgetItem* item, int column)
 // ----------------------------------------------------------------------------
 void CategoryView::onCategorySelected(CategoryType category)
 {
+    PROFILE(CategoryView, onCategorySelected);
+
 #define SELECT_ITEM(itemname) { \
         QSignalBlocker block(this); \
         clearSelection(); \
@@ -343,6 +358,8 @@ void CategoryView::onCategorySelected(CategoryType category)
 // ----------------------------------------------------------------------------
 void CategoryView::onCategoryItemSelected(CategoryType category, const QString& name)
 {
+    PROFILE(CategoryView, onCategoryItemSelected);
+
 #define SELECT_CHILD_OF(itemname) \
     for (int i = 0; i != itemname->childCount(); ++i) \
     { \
@@ -380,12 +397,16 @@ void CategoryView::onCategoryItemSelected(CategoryType category, const QString& 
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
 {
+    PROFILE(CategoryView, onReplayManagerDefaultReplaySaveLocationChanged);
+
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
+    PROFILE(CategoryView, onReplayManagerGroupAdded);
+
     QTreeWidgetItem* item = new QTreeWidgetItem({group->name()}, static_cast<int>(CategoryType::ITEM_REPLAY_GROUP));
     const ReplayGroup* allGroup = replayManager_->allReplayGroup();
 
@@ -410,6 +431,8 @@ void CategoryView::onReplayManagerGroupAdded(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
+    PROFILE(CategoryView, onReplayManagerGroupNameChanged);
+
     // This will only ever really do anything if the group name is changed outside
     // of this class, in which case we should generate the onItemChange() event
     // as if the item were edited by the user
@@ -428,6 +451,8 @@ void CategoryView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QSt
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
+    PROFILE(CategoryView, onReplayManagerGroupRemoved);
+
     for (int i = 0; i != replayGroupsItem_->childCount(); i++)
     {
         QTreeWidgetItem* item = replayGroupsItem_->child(i);
@@ -443,6 +468,8 @@ void CategoryView::onReplayManagerGroupRemoved(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const QDir& path)
 {
+    PROFILE(CategoryView, onReplayManagerReplaySourceAdded);
+
     replaySourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_REPLAY_SOURCE)));
     // TODO tooltip for path
 }
@@ -450,6 +477,8 @@ void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const Q
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName)
 {
+    PROFILE(CategoryView, onReplayManagerReplaySourceNameChanged);
+
     for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
     {
         QTreeWidgetItem* item = replaySourcesItem_->child(i);
@@ -465,12 +494,16 @@ void CategoryView::onReplayManagerReplaySourceNameChanged(const QString& oldName
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
 {
+    PROFILE(CategoryView, onReplayManagerReplaySourcePathChanged);
+
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerReplaySourceRemoved(const QString& name)
 {
+    PROFILE(CategoryView, onReplayManagerReplaySourceRemoved);
+
     for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
     {
         QTreeWidgetItem* item = replaySourcesItem_->child(i);
@@ -486,6 +519,8 @@ void CategoryView::onReplayManagerReplaySourceRemoved(const QString& name)
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QDir& path)
 {
+    PROFILE(CategoryView, onReplayManagerVideoSourceAdded);
+
     videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_VIDEO_SOURCE)));
     // TODO tooltip for path
 }
@@ -493,6 +528,8 @@ void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QD
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName)
 {
+    PROFILE(CategoryView, onReplayManagerVideoSourceNameChanged);
+
     for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
     {
         QTreeWidgetItem* item = videoSourcesItem_->child(i);
@@ -508,12 +545,16 @@ void CategoryView::onReplayManagerVideoSourceNameChanged(const QString& oldName,
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
 {
+    PROFILE(CategoryView, onReplayManagerVideoSourcePathChanged);
+
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
 void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 {
+    PROFILE(CategoryView, onReplayManagerVideoSourceRemoved);
+
     for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
     {
         QTreeWidgetItem* item = videoSourcesItem_->child(i);

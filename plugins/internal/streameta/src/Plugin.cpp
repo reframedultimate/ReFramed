@@ -1,14 +1,19 @@
 #include "streameta/PluginConfig.hpp"
 #include "streameta/StreametaPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 
 static rfcommon::Plugin* createStreametaPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
+    PROFILE(PluginGlobal, createStreametaPlugin);
+
     return new StreametaPlugin(factory);
 }
 
 static void destroyStreametaPlugin(rfcommon::Plugin* plugin)
 {
+    PROFILE(PluginGlobal, destroyStreametaPlugin);
+
     delete plugin;
 }
 
@@ -29,11 +34,15 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
+    PROFILE(PluginGlobal, start);
+
     return 0;
 }
 
 static void stop()
 {
+    PROFILE(PluginGlobal, stop);
+
 }
 
 DEFINE_PLUGIN(factories, start, stop)

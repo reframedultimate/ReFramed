@@ -1,4 +1,5 @@
 #include "rfcommon/FighterState.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -33,6 +34,8 @@ FighterState::FighterState(
 // ----------------------------------------------------------------------------
 FighterState FighterState::withNewFrameIndex(FrameIndex index) const
 {
+    NOPROFILE();
+
     return FighterState(
         timeStamp_,
         index,
@@ -51,6 +54,8 @@ FighterState FighterState::withNewFrameIndex(FrameIndex index) const
 // ----------------------------------------------------------------------------
 FighterState FighterState::withNewFrameCounters(TimeStamp timeStamp, FrameIndex index, FramesLeft framesLeft) const
 {
+    NOPROFILE();
+
     return FighterState(
         timeStamp,
         index,
@@ -73,6 +78,8 @@ FighterState::~FighterState()
 // ----------------------------------------------------------------------------
 bool FighterState::hasSameDataAs(const FighterState& other) const
 {
+    NOPROFILE();
+
     // Time stamp is allowed to be different
     if (motion() != other.motion()) return false;
     // Frame number is allowed to be different

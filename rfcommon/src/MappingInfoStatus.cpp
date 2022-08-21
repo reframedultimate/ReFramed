@@ -1,4 +1,5 @@
 #include "rfcommon/MappingInfoStatus.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -13,6 +14,8 @@ MappingInfoStatus::~MappingInfoStatus()
 // ----------------------------------------------------------------------------
 const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status) const
 {
+    NOPROFILE();
+
     if (const char* name = toName(fighterID, status, nullptr))
         return name;
     return "(Unknown Status)";
@@ -21,6 +24,8 @@ const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status)
 // ----------------------------------------------------------------------------
 const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status, const char* fallback) const
 {
+    PROFILE(MappingInfoStatus, toName);
+
     const auto baseIt = statusMap_.find(status);
     if (baseIt != statusMap_.end())
         return baseIt->value().cStr();
@@ -39,6 +44,8 @@ const char* MappingInfoStatus::toName(FighterID fighterID, FighterStatus status,
 // ----------------------------------------------------------------------------
 FighterStatus MappingInfoStatus::toStatus(const char* enumName) const
 {
+    PROFILE(MappingInfoStatus, toStatus);
+
     const auto it = enumNameMap_.find(enumName);
     if (it != enumNameMap_.end())
         return it->value();
@@ -48,6 +55,8 @@ FighterStatus MappingInfoStatus::toStatus(const char* enumName) const
 // ----------------------------------------------------------------------------
 void MappingInfoStatus::addBaseName(FighterStatus status, const char* name)
 {
+    PROFILE(MappingInfoStatus, addBaseName);
+
     if (status.isValid() == false)
         return;
     if (statusMap_.insertIfNew(status, name) == statusMap_.end())
@@ -58,6 +67,8 @@ void MappingInfoStatus::addBaseName(FighterStatus status, const char* name)
 // ----------------------------------------------------------------------------
 void MappingInfoStatus::addSpecificName(FighterID fighterID, FighterStatus status, const char* name)
 {
+    PROFILE(MappingInfoStatus, addSpecificName);
+
     if (status.isValid() == false)
         return;
     auto fighterIt = specificStatusMap_.insertOrGet(fighterID, HashMap<FighterStatus, SmallString<31>, FighterStatus::Hasher>());
@@ -68,6 +79,8 @@ void MappingInfoStatus::addSpecificName(FighterID fighterID, FighterStatus statu
 // ----------------------------------------------------------------------------
 Vector<FighterID> MappingInfoStatus::fighterIDs() const
 {
+    PROFILE(MappingInfoStatus, fighterIDs);
+
     auto result = Vector<FighterID>::makeReserved(specificStatusMap_.count());
     for (const auto it : specificStatusMap_)
         result.push(it->key());
@@ -77,6 +90,8 @@ Vector<FighterID> MappingInfoStatus::fighterIDs() const
 // ----------------------------------------------------------------------------
 Vector<SmallString<31>> MappingInfoStatus::baseNames() const
 {
+    PROFILE(MappingInfoStatus, baseNames);
+
     auto result = Vector<SmallString<31>>::makeReserved(statusMap_.count());
     for (const auto it : statusMap_)
         result.push(it->value());
@@ -86,6 +101,8 @@ Vector<SmallString<31>> MappingInfoStatus::baseNames() const
 // ----------------------------------------------------------------------------
 Vector<FighterStatus> MappingInfoStatus::baseStatuses() const
 {
+    PROFILE(MappingInfoStatus, baseStatuses);
+
     auto result = Vector<FighterStatus>::makeReserved(statusMap_.count());
     for (const auto it : statusMap_)
         result.push(it->key());
@@ -95,6 +112,8 @@ Vector<FighterStatus> MappingInfoStatus::baseStatuses() const
 // ----------------------------------------------------------------------------
 Vector<SmallString<31>> MappingInfoStatus::specificNames(FighterID fighterID) const
 {
+    PROFILE(MappingInfoStatus, specificNames);
+
     Vector<SmallString<31>> result;
     const auto fighterIt = specificStatusMap_.find(fighterID);
     if (fighterIt != specificStatusMap_.end())
@@ -106,6 +125,8 @@ Vector<SmallString<31>> MappingInfoStatus::specificNames(FighterID fighterID) co
 // ----------------------------------------------------------------------------
 Vector<FighterStatus> MappingInfoStatus::specificStatuses(FighterID fighterID) const
 {
+    PROFILE(MappingInfoStatus, specificStatuses);
+
     Vector<FighterStatus> result;
     const auto fighterIt = specificStatusMap_.find(fighterID);
     if (fighterIt != specificStatusMap_.end())

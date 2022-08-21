@@ -1,5 +1,6 @@
 #include "rfcommon/UserMotionLabels.hpp"
 #include "rfcommon/UserMotionLabelsListener.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -26,6 +27,8 @@ UserMotionLabels::~UserMotionLabels()
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
 {
+    PROFILE(UserMotionLabels, loadLayer);
+
     // Parse
     const unsigned char* const begin = static_cast<const unsigned char*>(address);
     const unsigned char* const end = static_cast<const unsigned char*>(address) + size;
@@ -82,6 +85,8 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::loadUnlabeled(const void* address, uint32_t size)
 {
+    PROFILE(UserMotionLabels, loadUnlabeled);
+
     // Parse
     const unsigned char* const begin = static_cast<const unsigned char*>(address);
     const unsigned char* const end = static_cast<const unsigned char*>(address) + size;
@@ -127,6 +132,8 @@ bool UserMotionLabels::loadUnlabeled(const void* address, uint32_t size)
 // ----------------------------------------------------------------------------
 uint32_t UserMotionLabels::saveLayer(FILE* fp, const int layerIdx) const
 {
+    PROFILE(UserMotionLabels, saveLayer);
+
     json jFighters = json::object();
     for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
     {
@@ -174,6 +181,8 @@ uint32_t UserMotionLabels::saveLayer(FILE* fp, const int layerIdx) const
 // ----------------------------------------------------------------------------
 uint32_t UserMotionLabels::saveUnlabeled(FILE* fp) const
 {
+    PROFILE(UserMotionLabels, saveUnlabeled);
+
     json jFighters = json::object();
     for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
     {
@@ -216,6 +225,8 @@ uint32_t UserMotionLabels::saveUnlabeled(FILE* fp) const
 // ----------------------------------------------------------------------------
 int UserMotionLabels::newEmptyLayer(const char* name)
 {
+    PROFILE(UserMotionLabels, newEmptyLayer);
+
     const int layerIdx = layerNames_.count();
     layerNames_.push(name);
 
@@ -235,6 +246,8 @@ int UserMotionLabels::newEmptyLayer(const char* name)
 // ----------------------------------------------------------------------------
 void UserMotionLabels::removeLayer(int layerIdx)
 {
+    PROFILE(UserMotionLabels, removeLayer);
+
     // Have to remove all entries in the hashmaps before removing the layer
     for (auto& fighter : fighters_)
         for (const auto motion : fighter.motions)
@@ -258,6 +271,8 @@ void UserMotionLabels::removeLayer(int layerIdx)
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 {
+    PROFILE(UserMotionLabels, addUnknownMotion);
+
     assert(fighterID.isValid());
     assert(motion.isValid());
 
@@ -288,6 +303,8 @@ bool UserMotionLabels::addEntry(
         const char* userLabel, 
         UserMotionLabelsCategory category)
 {
+    PROFILE(UserMotionLabels, addEntry);
+
     assert(fighterID.isValid());
     assert(motion.isValid());
 
@@ -351,6 +368,8 @@ bool UserMotionLabels::changeUserLabel(
         FighterMotion motion, 
         const char* newUserLabel)
 {
+    PROFILE(UserMotionLabels, changeUserLabel);
+
     assert(fighterID.isValid());
     assert(motion.isValid());
 
@@ -405,6 +424,8 @@ bool UserMotionLabels::changeCategory(
     FighterMotion motion,
     UserMotionLabelsCategory newCategory)
 {
+    PROFILE(UserMotionLabels, changeCategory);
+
     assert(fighterID.isValid());
     assert(motion.isValid());
 
@@ -428,6 +449,8 @@ bool UserMotionLabels::changeCategory(
 // ----------------------------------------------------------------------------
 SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, const char* userLabel) const
 {
+    PROFILE(UserMotionLabels, toMotion);
+
     assert(fighterID.isValid());
 
     // A user label can map to multiple motion values. Additionally, there
@@ -454,12 +477,16 @@ SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, co
 // ----------------------------------------------------------------------------
 const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion) const
 {
+    NOPROFILE();
+
     return toStringHighestLayer(fighterID, motion, "(unlabeled)");
 }
 
 // ----------------------------------------------------------------------------
 const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
+    PROFILE(UserMotionLabels, toStringHighestLayer);
+
     assert(fighterID.isValid());
     
     if (motion.isValid() == false)
@@ -480,12 +507,16 @@ const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterM
 // ----------------------------------------------------------------------------
 String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion motion) const
 {
+    NOPROFILE();
+
     return toStringAllLayers(fighterID, motion, "(unlabeled)");
 }
 
 // ----------------------------------------------------------------------------
 String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
+    PROFILE(UserMotionLabels, toStringAllLayers);
+
     assert(fighterID.isValid());
 
     if (motion.isValid() == false)
@@ -515,6 +546,8 @@ String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion mo
 // ----------------------------------------------------------------------------
 void UserMotionLabels::expandTablesUpTo(FighterID fighterID)
 {
+    PROFILE(UserMotionLabels, expandTablesUpTo);
+
     assert(fighterID.isValid());
 
     while (fighters_.count() < fighterID.value() + 1)

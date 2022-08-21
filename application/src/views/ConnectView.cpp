@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/ui_ConnectView.h"
 #include "application/models/Protocol.hpp"
@@ -50,6 +51,8 @@ ConnectView::~ConnectView()
 // ----------------------------------------------------------------------------
 void ConnectView::setConnecting()
 {
+    PROFILE(ConnectView, setConnecting);
+
     ui_->label_info->setText("<font color=\"#000000\">Connecting...</font>");
     repaint();
 }
@@ -57,12 +60,16 @@ void ConnectView::setConnecting()
 // ----------------------------------------------------------------------------
 void ConnectView::setConnectFailed(const QString& error)
 {
+    PROFILE(ConnectView, setConnectFailed);
+
     ui_->label_info->setText("<font color=\"#ff0000\">Failed to connect: " + error + ". Make sure the libreframed-server.nro mod is installed and active</font>");
 }
 
 // ----------------------------------------------------------------------------
 void ConnectView::onConnectButtonReleased()
 {
+    PROFILE(ConnectView, onConnectButtonReleased);
+
     bool ok = false;
     uint16_t port = ui_->lineEdit_port->text().toUInt(&ok);
     if (!ok)
@@ -83,24 +90,32 @@ void ConnectView::onConnectButtonReleased()
 // ----------------------------------------------------------------------------
 void ConnectView::onCancelButtonReleased()
 {
+    PROFILE(ConnectView, onCancelButtonReleased);
+
     protocol_->disconnectFromServer();
 }
 
 // ----------------------------------------------------------------------------
 void ConnectView::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(ConnectView, onProtocolAttemptConnectToServer);
+
     setConnecting();
 }
 
 // ----------------------------------------------------------------------------
 void ConnectView::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port)
 {
+    PROFILE(ConnectView, onProtocolFailedToConnectToServer);
+
     setConnectFailed(errormsg);
 }
 
 // ----------------------------------------------------------------------------
 void ConnectView::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(ConnectView, onProtocolConnectedToServer);
+
     close();
 }
 

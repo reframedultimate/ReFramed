@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "xy-positions-plot/XYPositionsPlotPlugin.hpp"
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "xy-positions-plot/views/XYPositionsPlotView.hpp"
@@ -24,12 +25,16 @@ rfcommon::Plugin::VideoPlayerInterface* XYPositionsPlotPlugin::videoPlayerInterf
 // ----------------------------------------------------------------------------
 QWidget* XYPositionsPlotPlugin::createView()
 {
+    PROFILE(XYPositionsPlotPlugin, createView);
+
     return new XYPositionsPlotView(model_.get());
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::destroyView(QWidget* view)
 {
+    PROFILE(XYPositionsPlotPlugin, destroyView);
+
     delete view;
 }
 
@@ -42,6 +47,8 @@ void XYPositionsPlotPlugin::onProtocolDisconnectedFromServer() {}
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolTrainingStarted(rfcommon::Session* training)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolTrainingStarted);
+
     model_->clearAll();
     model_->addSession(training);
 }
@@ -49,6 +56,8 @@ void XYPositionsPlotPlugin::onProtocolTrainingStarted(rfcommon::Session* trainin
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolTrainingResumed);
+
     model_->clearAll();
     model_->addSession(training);
 }
@@ -56,6 +65,8 @@ void XYPositionsPlotPlugin::onProtocolTrainingResumed(rfcommon::Session* trainin
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolTrainingReset);
+
     model_->clearAll();
     model_->addSession(newTraining);
 }
@@ -63,11 +74,15 @@ void XYPositionsPlotPlugin::onProtocolTrainingReset(rfcommon::Session* oldTraini
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolTrainingEnded(rfcommon::Session* training)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolTrainingEnded);
+
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolGameStarted(rfcommon::Session* game)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolGameStarted);
+
     model_->clearAll();
     model_->addSession(game);
 }
@@ -75,6 +90,8 @@ void XYPositionsPlotPlugin::onProtocolGameStarted(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolGameResumed(rfcommon::Session* game)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolGameResumed);
+
     model_->clearAll();
     model_->addSession(game);
 }
@@ -82,12 +99,16 @@ void XYPositionsPlotPlugin::onProtocolGameResumed(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
+    PROFILE(XYPositionsPlotPlugin, onProtocolGameEnded);
+
     // Keep data around until next session
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
+    PROFILE(XYPositionsPlotPlugin, onGameSessionLoaded);
+
     model_->clearAll();
     model_->addSession(game);
 }
@@ -95,12 +116,16 @@ void XYPositionsPlotPlugin::onGameSessionLoaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
+    PROFILE(XYPositionsPlotPlugin, onGameSessionUnloaded);
+
     model_->clearAll();
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
 {
+    PROFILE(XYPositionsPlotPlugin, onTrainingSessionLoaded);
+
     model_->clearAll();
     model_->addSession(training);
 }
@@ -108,12 +133,16 @@ void XYPositionsPlotPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onTrainingSessionUnloaded(rfcommon::Session* training)
 {
+    PROFILE(XYPositionsPlotPlugin, onTrainingSessionUnloaded);
+
     model_->clearAll();
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(XYPositionsPlotPlugin, onGameSessionSetLoaded);
+
     model_->clearAll();
     for (int i = 0; i != numGames; ++i)
         model_->addSession(games[i]);
@@ -122,5 +151,7 @@ void XYPositionsPlotPlugin::onGameSessionSetLoaded(rfcommon::Session** games, in
 // ----------------------------------------------------------------------------
 void XYPositionsPlotPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(XYPositionsPlotPlugin, onGameSessionSetUnloaded);
+
     model_->clearAll();
 }

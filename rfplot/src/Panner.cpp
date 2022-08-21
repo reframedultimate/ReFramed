@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/Panner.hpp"
 #include "rfplot/MousePlotPickerMachine.hpp"
 
@@ -23,6 +24,8 @@ Panner::~Panner()
 // ----------------------------------------------------------------------------
 void Panner::doPan(const QPointF& delta)
 {
+    PROFILE(Panner, doPan);
+
     const QwtScaleDiv& xScaleDiv = plot()->axisScaleDiv(xAxis());
     const QwtScaleDiv& yScaleDiv = plot()->axisScaleDiv(yAxis());
 

@@ -4,6 +4,7 @@
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/Frame.hpp"
+#include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------
 XYPositionsPlotCurveData::XYPositionsPlotCurveData(XYPositionsPlotModel* model, rfcommon::FrameData* frameData, int fighterIdx)
@@ -30,12 +31,16 @@ XYPositionsPlotCurveData::~XYPositionsPlotCurveData()
 // ----------------------------------------------------------------------------
 bool XYPositionsPlotCurveData::hasThisFrameData(const rfcommon::FrameData* frameData) const
 {
+    PROFILE(XYPositionsPlotCurveData, hasThisFrameData);
+
     return frameData_ == frameData;
 }
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotCurveData::appendDataPoint(const rfcommon::Vec2& pos)
 {
+    PROFILE(XYPositionsPlotCurveData, appendDataPoint);
+
     // Only add if the position is different from the last
     if (points_.count() == 0
         || rfcommon::Vec2::fromValues(points_.back().x(), points_.back().y()) != pos)
@@ -47,6 +52,8 @@ void XYPositionsPlotCurveData::appendDataPoint(const rfcommon::Vec2& pos)
 // ----------------------------------------------------------------------------
 void XYPositionsPlotCurveData::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(XYPositionsPlotCurveData, onFrameDataNewUniqueFrame);
+
     appendDataPoint(frame[fighterIdx_].pos());
     updateBoundingRect();
     model_->onCurveDataChanged();
@@ -55,7 +62,9 @@ void XYPositionsPlotCurveData::onFrameDataNewUniqueFrame(int frameIdx, const rfc
 
 // ----------------------------------------------------------------------------
 void XYPositionsPlotCurveData::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4> & frame) 
-{ 
+{
+    PROFILE(XYPositionsPlotCurveData, onFrameDataNewFrame);
+ 
     (void)frameIdx; 
     (void)frame; 
 }

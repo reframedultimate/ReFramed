@@ -1,4 +1,5 @@
 #include "rfcommon/SetFormat.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <cassert>
 #include <exception>
 #include <cstring>
@@ -33,6 +34,8 @@ SetFormat SetFormat::fromIndex(int index) { assert(index < OTHER); return SetFor
 // ----------------------------------------------------------------------------
 const char* SetFormat::shortDescription() const
 {
+    PROFILE(SetFormat, shortDescription);
+
     if (type_ == OTHER)
         return otherDesc_.cStr();
 
@@ -48,6 +51,8 @@ const char* SetFormat::shortDescription() const
 // ----------------------------------------------------------------------------
 const char* SetFormat::longDescription() const
 {
+    PROFILE(SetFormat, longDescription);
+
     if (type_ == OTHER)
         return otherDesc_.cStr();
 

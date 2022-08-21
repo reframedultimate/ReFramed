@@ -4,6 +4,7 @@
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MemoryBuffer.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Serializer.hpp"
 #include <cassert>
 #include "zlib.h"
@@ -29,6 +30,8 @@ FrameData::~FrameData()
 // ----------------------------------------------------------------------------
 FrameData* FrameData::load(const void* data, uint64_t len)
 {
+    PROFILE(FrameData, load);
+
     Deserializer compressed(data, len);
     const uint8_t major = compressed.readU8();
     const uint8_t minor = compressed.readU8();
@@ -55,6 +58,8 @@ FrameData* FrameData::load(const void* data, uint64_t len)
 }
 FrameData* load_1_5(Deserializer& data)
 {
+    PROFILE(FrameDataGlobal, load_1_5);
+
     FrameIndex::Type frameCount = data.readLU32();
     int fighterCount = data.readU8();
 
@@ -98,6 +103,8 @@ FrameData* load_1_5(Deserializer& data)
 // ----------------------------------------------------------------------------
 uint32_t FrameData::save(FILE* fp) const
 {
+    PROFILE(FrameData, save);
+
     const int fighterStateSize =
             sizeof(TimeStamp::Type) +
             sizeof(FramesLeft::Type) +
@@ -160,18 +167,24 @@ uint32_t FrameData::save(FILE* fp) const
 // ----------------------------------------------------------------------------
 int FrameData::fighterCount() const
 {
+    NOPROFILE();
+
     return fighters_.count();
 }
 
 // ----------------------------------------------------------------------------
 int FrameData::frameCount() const
 {
+    NOPROFILE();
+
     return fighters_.count() ? fighters_[0].count() : 0;
 }
 
 // ----------------------------------------------------------------------------
 const FighterState& FrameData::stateAt(int fighterIdx, int frameIdx) const
 {
+    NOPROFILE();
+
     assert(fighterIdx < fighterCount());
     assert(frameIdx < frameCount());
     return fighters_[fighterIdx][frameIdx];
@@ -180,6 +193,8 @@ const FighterState& FrameData::stateAt(int fighterIdx, int frameIdx) const
 // ----------------------------------------------------------------------------
 const FighterState& FrameData::firstState(int fighterIdx) const
 {
+    NOPROFILE();
+
     assert(frameCount() > 0);
     return fighters_[fighterIdx].front();
 }
@@ -187,6 +202,8 @@ const FighterState& FrameData::firstState(int fighterIdx) const
 // ----------------------------------------------------------------------------
 const FighterState& FrameData::lastState(int fighterIdx) const
 {
+    NOPROFILE();
+
     assert(frameCount() > 0);
     return fighters_[fighterIdx].back();
 }
@@ -194,6 +211,8 @@ const FighterState& FrameData::lastState(int fighterIdx) const
 // ----------------------------------------------------------------------------
 void FrameData::addFrame(Frame<4>&& frame)
 {
+    PROFILE(FrameData, addFrame);
+
     // Sanity checks
     assert(frame.count() == fighterCount());
 #ifndef NDEBUG
@@ -218,6 +237,8 @@ void FrameData::addFrame(Frame<4>&& frame)
 // ----------------------------------------------------------------------------
 bool FrameData::framesHaveSameData(int frameIdx1, int frameIdx2) const
 {
+    PROFILE(FrameData, framesHaveSameData);
+
     // Compare each fighter state between each frame. If they are all equal,
     // then it means both frames compare equal
     for (int i = 0; i != fighterCount(); ++i)

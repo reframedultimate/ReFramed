@@ -1,6 +1,7 @@
 #include "application/ui_DataSetFilterWidget_Game.h"
 #include "application/views/DataSetFilterWidget_Game.hpp"
 #include "rfcommon/DataSetFilter_Game.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/SetFormat.hpp"
 
 namespace rfapp {
@@ -46,6 +47,8 @@ DataSetFilterWidget_Game::~DataSetFilterWidget_Game()
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
 {
+    PROFILE(DataSetFilterWidget_Game, onFormatComboBoxChanged);
+
     rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
 
     if (index == 0)
@@ -83,6 +86,8 @@ void DataSetFilterWidget_Game::onFormatComboBoxChanged(int index)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onFormatDescChanged(const QString& text)
 {
+    PROFILE(DataSetFilterWidget_Game, onFormatDescChanged);
+
     (void)text;
     onFormatComboBoxChanged(ui_->comboBox_format->currentIndex());
 }
@@ -90,6 +95,8 @@ void DataSetFilterWidget_Game::onFormatDescChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onWinnerTextChanged(const QString& text)
 {
+    PROFILE(DataSetFilterWidget_Game, onWinnerTextChanged);
+
     rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setWinner(text.toStdString().c_str());
 }
@@ -97,6 +104,8 @@ void DataSetFilterWidget_Game::onWinnerTextChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onMinLengthChanged(const QTime& time)
 {
+    PROFILE(DataSetFilterWidget_Game, onMinLengthChanged);
+
     rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setMinLengthMs(QTime(0, 0).msecsTo(time));
 }
@@ -104,6 +113,8 @@ void DataSetFilterWidget_Game::onMinLengthChanged(const QTime& time)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget_Game::onMaxLengthChanged(const QTime& time)
 {
+    PROFILE(DataSetFilterWidget_Game, onMaxLengthChanged);
+
     rfcommon::DataSetFilter_Game* f = static_cast<rfcommon::DataSetFilter_Game*>(filter());
     f->setMaxLengthMs(QTime(0, 0).msecsTo(time));
 }

@@ -10,6 +10,7 @@
 
 #include "rfcommon/Session.hpp"
 #include "rfcommon/Vector.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -51,18 +52,24 @@ ReplayNameCompleter::ReplayNameCompleter(QObject* parent)
 
 void ReplayNameCompleter::setGroupWeakRef(ReplayGroup* group)
 {
+    PROFILE(ReplayNameCompleter, setGroupWeakRef);
+
     group_ = group;
     setCompleteCategories();
 }
 
 void ReplayNameCompleter::groupExpired()
 {
+    PROFILE(ReplayNameCompleter, groupExpired);
+
     group_ = nullptr;
     model_->setStringList({});
 }
 
 void ReplayNameCompleter::setCompleteCategories()
 {
+    PROFILE(ReplayNameCompleter, setCompleteCategories);
+
     QStringList list = {
         "name:",
         "tag:",
@@ -81,11 +88,15 @@ void ReplayNameCompleter::setCompleteCategories()
 
 void ReplayNameCompleter::setCompleteTags()
 {
+    PROFILE(ReplayNameCompleter, setCompleteTags);
+
     model_->setStringList({"TheComet", "Stino"});
 }
 
 QStringList ReplayNameCompleter::splitPath(const QString &path) const
 {
+    PROFILE(ReplayNameCompleter, splitPath);
+
     return path.split("[:,]");
 }
 
@@ -145,6 +156,8 @@ ReplayGroupView::~ReplayGroupView()
 // ----------------------------------------------------------------------------
 void ReplayGroupView::setReplayGroup(ReplayGroup* group)
 {
+    PROFILE(ReplayGroupView, setReplayGroup);
+
     assert(currentGroup_ == nullptr);
 
     replayViewer_->clearReplays();
@@ -162,6 +175,8 @@ void ReplayGroupView::setReplayGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 {
+    PROFILE(ReplayGroupView, clearReplayGroup);
+
     assert(currentGroup_ == group && group != nullptr);
 
     replayViewer_->clearReplays();
@@ -177,6 +192,8 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onItemRightClicked(const QPoint& pos)
 {
+    PROFILE(ReplayGroupView, onItemRightClicked);
+
     QPoint item = replayListWidget_->mapToGlobal(pos);
 
     QMenu menu;
@@ -236,6 +253,8 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onItemSelectionChanged()
 {
+    PROFILE(ReplayGroupView, onItemSelectionChanged);
+
     if (currentGroup_ == nullptr)
         return;
 
@@ -271,6 +290,8 @@ void ReplayGroupView::onItemSelectionChanged()
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onFiltersTextChanged(const QString& text)
 {
+    PROFILE(ReplayGroupView, onFiltersTextChanged);
+
     QStringList rules = text.split(",");
     for (const auto& rule : rules)
     {
@@ -281,6 +302,8 @@ void ReplayGroupView::onFiltersTextChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onDeleteKeyPressed()
 {
+    PROFILE(ReplayGroupView, onDeleteKeyPressed);
+
     // Can't delete stuff in all group
     if (currentGroup_ == nullptr || currentGroup_ == replayManager_->allReplayGroup())
         return;
@@ -292,6 +315,8 @@ void ReplayGroupView::onDeleteKeyPressed()
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
+    PROFILE(ReplayGroupView, onReplayManagerGroupRemoved);
+
     if (currentGroup_ == group)
         clearReplayGroup(group);
 }
@@ -299,11 +324,15 @@ void ReplayGroupView::onReplayManagerGroupRemoved(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
+    PROFILE(ReplayGroupView, onReplayManagerGroupNameChanged);
+
 }
 
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
+    PROFILE(ReplayGroupView, onReplayGroupFileAdded);
+
     (void)group;
     replayListWidget_->addReplayFileName(absPathToFile);
     replayListWidget_->sortItems(Qt::DescendingOrder);
@@ -312,6 +341,8 @@ void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo
 // ----------------------------------------------------------------------------
 void ReplayGroupView::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
 {
+    PROFILE(ReplayGroupView, onReplayGroupFileRemoved);
+
     (void)group;
     replayListWidget_->removeReplayFileName(absPathToFile);
 }

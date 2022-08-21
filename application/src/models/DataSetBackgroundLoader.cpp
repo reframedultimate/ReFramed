@@ -3,6 +3,7 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/LinearMap.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QRunnable>
 #include <QThreadPool>
 
@@ -103,6 +104,8 @@ DataSetBackgroundLoader::~DataSetBackgroundLoader()
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::loadGroup(ReplayGroup* group)
 {
+    PROFILE(DataSetBackgroundLoader, loadGroup);
+
     printf("%d: loadGroup()\n", taskIDCounter_);
     mutex_.lock();
         for (const auto& fileInfo : group->absFilePathList())
@@ -132,6 +135,8 @@ void DataSetBackgroundLoader::loadGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::cancelGroup(ReplayGroup* group)
 {
+    PROFILE(DataSetBackgroundLoader, cancelGroup);
+
     printf("cancelGroup()\n");
     mutex_.lock();
         // Delete all pending recording file names in the output queue that
@@ -163,6 +168,8 @@ void DataSetBackgroundLoader::cancelGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::cancelAll()
 {
+    PROFILE(DataSetBackgroundLoader, cancelAll);
+
     mutex_.lock();
         out_.clear();
         pendingTasks_.clear();
@@ -172,6 +179,8 @@ void DataSetBackgroundLoader::cancelAll()
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, rfcommon::DataSet* dataSet, ReplayGroup* group)
 {
+    PROFILE(DataSetBackgroundLoader, onDataSetLoaded);
+
     //rfcommon::Reference<rfcommon::DataSet> ds = dataSet;
     rfcommon::DataSet* ds = dataSet;
 
@@ -201,6 +210,8 @@ void DataSetBackgroundLoader::onDataSetLoaded(quint32 taskID, rfcommon::DataSet*
 // ----------------------------------------------------------------------------
 void DataSetBackgroundLoader::run()
 {
+    PROFILE(DataSetBackgroundLoader, run);
+
     struct PendingDataSet
     {
         rfcommon::Reference<rfcommon::DataSet> dataSet;

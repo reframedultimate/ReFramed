@@ -164,6 +164,8 @@ add_library (rfcommon SHARED
     "src/MemoryBuffer.cpp"
     "src/MetaData.cpp"
     "src/Plugin.cpp"
+	"src/Profiler.cpp"
+	"src/Profiler_exportDOT.cpp"
     "src/RefCounted.cpp"
     "src/SetFormat.cpp"
     "src/SetNumber.cpp"

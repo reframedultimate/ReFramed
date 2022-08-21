@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/RectangleZoomer.hpp"
 
 #include <qwt_plot.h>
@@ -25,6 +26,8 @@ RectangleZoomer::~RectangleZoomer()
 // ----------------------------------------------------------------------------
 void RectangleZoomer::doZoom(const QPointF& origin, const QPointF& current)
 {
+    PROFILE(RectangleZoomer, doZoom);
+
     if(origin.x() == 0 || origin.y() == 0)
         return;
 

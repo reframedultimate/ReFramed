@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/Util.hpp"
 
 #include <QLayout>
@@ -27,6 +28,8 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 void clearLayout(QLayout* layout)
 {
+    PROFILE(UtilGlobal, clearLayout);
+
     QLayoutItem* item;
     while ((item = layout->takeAt(0)) != nullptr)
     {
@@ -40,6 +43,8 @@ void clearLayout(QLayout* layout)
 // ----------------------------------------------------------------------------
 void clearStackedWidget(QStackedWidget* sw)
 {
+    PROFILE(UtilGlobal, clearStackedWidget);
+
     while (sw->count())
     {
         QWidget* widget = sw->widget(0);
@@ -51,6 +56,8 @@ void clearStackedWidget(QStackedWidget* sw)
 // ----------------------------------------------------------------------------
 QRect calculatePopupGeometryKeepSize(const QWidget* main, const QWidget* popup, QRect popupRect)
 {
+    PROFILE(UtilGlobal, calculatePopupGeometryKeepSize);
+
     QRect mainRect = main->geometry();
 
     return QRect(
@@ -64,6 +71,8 @@ QRect calculatePopupGeometryKeepSize(const QWidget* main, const QWidget* popup, 
 // ----------------------------------------------------------------------------
 QRect calculatePopupGeometryActiveScreen()
 {
+    PROFILE(UtilGlobal, calculatePopupGeometryActiveScreen);
+
     QScreen* screen = QApplication::screenAt(QCursor::pos());
     if (screen == nullptr)
         screen = QApplication::primaryScreen();

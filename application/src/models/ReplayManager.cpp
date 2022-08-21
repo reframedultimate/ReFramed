@@ -6,6 +6,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
 
@@ -44,12 +45,16 @@ ReplayManager::ReplayManager(Config* config)
 // ----------------------------------------------------------------------------
 QDir ReplayManager::defaultReplaySourceDirectory() const
 {
+    PROFILE(ReplayManager, defaultReplaySourceDirectory);
+
     return getConfig()["replaymanager"].toObject()["defaultreplaypath"].toString();
 }
 
 // ----------------------------------------------------------------------------
 void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
 {
+    PROFILE(ReplayManager, setDefaultReplaySourceDirectory);
+
     QJsonObject& cfg = getConfig();
     QJsonObject cfgReplayManager = cfg["replaymanager"].toObject();
     cfgReplayManager["defaultreplaypath"] = path.absolutePath();
@@ -62,6 +67,8 @@ void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
 // ----------------------------------------------------------------------------
 QDir ReplayManager::defaultGameSessionSourceDirectory() const
 {
+    PROFILE(ReplayManager, defaultGameSessionSourceDirectory);
+
     QDir dir = defaultReplaySourceDirectory();
     return dir.absolutePath() + "/games";
 }
@@ -69,6 +76,8 @@ QDir ReplayManager::defaultGameSessionSourceDirectory() const
 // ----------------------------------------------------------------------------
 QDir ReplayManager::defaultTrainingSessionSourceDirectory() const
 {
+    PROFILE(ReplayManager, defaultTrainingSessionSourceDirectory);
+
     QDir dir = defaultReplaySourceDirectory();
     return dir.absolutePath() + "/training";
 }
@@ -76,6 +85,8 @@ QDir ReplayManager::defaultTrainingSessionSourceDirectory() const
 // ----------------------------------------------------------------------------
 bool ReplayManager::addReplaySource(const QString& name, const QDir& path)
 {
+    PROFILE(ReplayManager, addReplaySource);
+
     if (replayDirectories_.contains(name))
         return false;
 
@@ -87,6 +98,8 @@ bool ReplayManager::addReplaySource(const QString& name, const QDir& path)
 // ----------------------------------------------------------------------------
 bool ReplayManager::changeReplaySourceName(const QString& oldName, const QString& newName)
 {
+    PROFILE(ReplayManager, changeReplaySourceName);
+
     auto it = replayDirectories_.find(oldName);
     if (it == replayDirectories_.end())
         return false;
@@ -104,6 +117,8 @@ bool ReplayManager::changeReplaySourceName(const QString& oldName, const QString
 // ----------------------------------------------------------------------------
 bool ReplayManager::changeReplaySourcePath(const QString& name, const QDir& newPath)
 {
+    PROFILE(ReplayManager, changeReplaySourcePath);
+
     auto it = replayDirectories_.find(name);
     if (it == replayDirectories_.end())
         return false;
@@ -118,6 +133,8 @@ bool ReplayManager::changeReplaySourcePath(const QString& name, const QDir& newP
 // ----------------------------------------------------------------------------
 bool ReplayManager::removeReplaySource(const QString& name)
 {
+    PROFILE(ReplayManager, removeReplaySource);
+
     if (replayDirectories_.remove(name) == 0)
         return false;
 
@@ -128,12 +145,16 @@ bool ReplayManager::removeReplaySource(const QString& name)
 // ----------------------------------------------------------------------------
 int ReplayManager::replaySourcesCount() const
 {
+    PROFILE(ReplayManager, replaySourcesCount);
+
     return replayDirectories_.size();
 }
 
 // ----------------------------------------------------------------------------
 QString ReplayManager::replaySourceName(int idx) const
 {
+    PROFILE(ReplayManager, replaySourceName);
+
     for (auto it = replayDirectories_.begin(); it != replayDirectories_.end(); ++it)
         if (idx-- == 0)
             return it.key();
@@ -144,6 +165,8 @@ QString ReplayManager::replaySourceName(int idx) const
 // ----------------------------------------------------------------------------
 QDir ReplayManager::replaySourcePath(int idx) const
 {
+    PROFILE(ReplayManager, replaySourcePath);
+
     for (const auto& dir : replayDirectories_)
         if (idx-- == 0)
             return dir;
@@ -154,6 +177,8 @@ QDir ReplayManager::replaySourcePath(int idx) const
 // ----------------------------------------------------------------------------
 QString ReplayManager::findFreeGroupName(const QString& name)
 {
+    PROFILE(ReplayManager, findFreeGroupName);
+
     int idx = 1;
     QString candidate = name;
     while (true)
@@ -171,6 +196,8 @@ QString ReplayManager::findFreeGroupName(const QString& name)
 // ----------------------------------------------------------------------------
 ReplayGroup* ReplayManager::addReplayGroup(const QString& name)
 {
+    PROFILE(ReplayManager, addReplayGroup);
+
     if (name.length() == 0)
         return nullptr;
 
@@ -185,6 +212,8 @@ ReplayGroup* ReplayManager::addReplayGroup(const QString& name)
 // ----------------------------------------------------------------------------
 ReplayGroup* ReplayManager::duplicateReplayGroup(ReplayGroup* group, const QString& newName)
 {
+    PROFILE(ReplayManager, duplicateReplayGroup);
+
     ReplayGroup* newGroup = addReplayGroup(newName);
     if (newGroup == nullptr)
         return nullptr;
@@ -198,6 +227,8 @@ ReplayGroup* ReplayManager::duplicateReplayGroup(ReplayGroup* group, const QStri
 // ----------------------------------------------------------------------------
 bool ReplayManager::renameReplayGroup(ReplayGroup* group, const QString& newName)
 {
+    PROFILE(ReplayManager, renameReplayGroup);
+
     const QString& oldName = group->name();
     if (newName.length() == 0)
         return false;
@@ -221,6 +252,8 @@ bool ReplayManager::renameReplayGroup(ReplayGroup* group, const QString& newName
 // ----------------------------------------------------------------------------
 bool ReplayManager::removeReplayGroup(ReplayGroup* group)
 {
+    PROFILE(ReplayManager, removeReplayGroup);
+
     auto it = groups_.find(group->name().toStdString());
     if (it == groups_.end())
         return false;
@@ -233,6 +266,8 @@ bool ReplayManager::removeReplayGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 ReplayGroup* ReplayManager::replayGroup(const QString& name) const
 {
+    PROFILE(ReplayManager, replayGroup);
+
     auto it = groups_.find(name.toStdString());
     if (it == groups_.end())
         return nullptr;
@@ -242,6 +277,8 @@ ReplayGroup* ReplayManager::replayGroup(const QString& name) const
 // ----------------------------------------------------------------------------
 ReplayGroup* ReplayManager::replayGroup(int idx) const
 {
+    PROFILE(ReplayManager, replayGroup);
+
     for (const auto& it : groups_)
         if (idx-- == 0)
             return it.second.get();
@@ -252,18 +289,24 @@ ReplayGroup* ReplayManager::replayGroup(int idx) const
 // ----------------------------------------------------------------------------
 int ReplayManager::replayGroupsCount() const
 {
+    PROFILE(ReplayManager, replayGroupsCount);
+
     return groups_.size();
 }
 
 // ----------------------------------------------------------------------------
 ReplayGroup* ReplayManager::allReplayGroup() const
 {
+    PROFILE(ReplayManager, allReplayGroup);
+
     return groups_.find("All")->second.get();
 }
 
 // ----------------------------------------------------------------------------
 bool ReplayManager::addVideoSource(const QString& name, const QDir& path)
 {
+    PROFILE(ReplayManager, addVideoSource);
+
     if (videoDirectories_.contains(name))
         return false;
 
@@ -275,6 +318,8 @@ bool ReplayManager::addVideoSource(const QString& name, const QDir& path)
 // ----------------------------------------------------------------------------
 bool ReplayManager::changeVideoSourceName(const QString& oldName, const QString& newName)
 {
+    PROFILE(ReplayManager, changeVideoSourceName);
+
     auto it = videoDirectories_.find(oldName);
     if (it == videoDirectories_.end())
         return false;
@@ -292,6 +337,8 @@ bool ReplayManager::changeVideoSourceName(const QString& oldName, const QString&
 // ----------------------------------------------------------------------------
 bool ReplayManager::changeVideoSourcePath(const QString& name, const QDir& newPath)
 {
+    PROFILE(ReplayManager, changeVideoSourcePath);
+
     auto it = videoDirectories_.find(name);
     if (it == videoDirectories_.end())
         return false;
@@ -306,6 +353,8 @@ bool ReplayManager::changeVideoSourcePath(const QString& name, const QDir& newPa
 // ----------------------------------------------------------------------------
 bool ReplayManager::removeVideoSource(const QString& name)
 {
+    PROFILE(ReplayManager, removeVideoSource);
+
     if (videoDirectories_.remove(name) == 0)
         return false;
 
@@ -316,12 +365,16 @@ bool ReplayManager::removeVideoSource(const QString& name)
 // ----------------------------------------------------------------------------
 int ReplayManager::videoSourcesCount() const
 {
+    PROFILE(ReplayManager, videoSourcesCount);
+
     return videoDirectories_.size();
 }
 
 // ----------------------------------------------------------------------------
 QString ReplayManager::videoSourceName(int idx) const
 {
+    PROFILE(ReplayManager, videoSourceName);
+
     for (auto it = videoDirectories_.begin(); it != videoDirectories_.end(); ++it)
         if (idx-- == 0)
             return it.key();
@@ -332,6 +385,8 @@ QString ReplayManager::videoSourceName(int idx) const
 // ----------------------------------------------------------------------------
 QDir ReplayManager::videoSourcePath(int idx) const
 {
+    PROFILE(ReplayManager, videoSourcePath);
+
     for (const auto& dir : videoDirectories_)
         if (idx-- == 0)
             return dir;
@@ -342,6 +397,8 @@ QDir ReplayManager::videoSourcePath(int idx) const
 // ----------------------------------------------------------------------------
 QString ReplayManager::composeFileName(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata, QString formatString)
 {
+    PROFILE(ReplayManager, composeFileName);
+
     using namespace rfcommon;
 
     // We absolutely need the metadata, otherwise there's no way to create
@@ -440,6 +497,8 @@ QString ReplayManager::composeFileName(rfcommon::MappingInfo* map, rfcommon::Met
 // ----------------------------------------------------------------------------
 bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
+    PROFILE(ReplayManager, findFreeSetAndGameNumbers);
+
     auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
     const char* formatStr = type == rfcommon::MetaData::GAME ?
                 "%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game" :
@@ -497,6 +556,8 @@ bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcomm
 // ----------------------------------------------------------------------------
 bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& oldFile)
 {
+    PROFILE(ReplayManager, saveReplayOver);
+
     QString oldFileName = oldFile.fileName();
     QDir dir(oldFile.path());
 
@@ -531,6 +592,8 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
 // ----------------------------------------------------------------------------
 bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
 {
+    PROFILE(ReplayManager, saveReplayWithDefaultSettings);
+
     auto map = session->tryGetMappingInfo();
     auto mdata = session->tryGetMetaData();
     auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
@@ -562,6 +625,8 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void ReplayManager::scanForReplays()
 {
+    PROFILE(ReplayManager, scanForReplays);
+
     ReplayGroup* allGroup = allReplayGroup();
     allGroup->removeAllFiles();
     for (const auto& replayDir : replayDirectories_)
@@ -578,12 +643,16 @@ void ReplayManager::scanForReplays()
 // ----------------------------------------------------------------------------
 void ReplayManager::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& name)
 {
+    PROFILE(ReplayManager, onReplayGroupFileAdded);
+
 
 }
 
 // ----------------------------------------------------------------------------
 void ReplayManager::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& name)
 {
+    PROFILE(ReplayManager, onReplayGroupFileRemoved);
+
 
 }
 

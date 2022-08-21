@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "streameta/StreametaPlugin.hpp"
 #include <QWidget>
 
@@ -21,13 +22,17 @@ rfcommon::Plugin::VideoPlayerInterface* StreametaPlugin::videoPlayerInterface() 
 
 // ----------------------------------------------------------------------------
 QWidget* StreametaPlugin::createView() 
-{ 
+{
+    PROFILE(StreametaPlugin, createView);
+ 
     return new QWidget();
 }
 
 // ----------------------------------------------------------------------------
 void StreametaPlugin::destroyView(QWidget* view) 
-{ 
+{
+    PROFILE(StreametaPlugin, destroyView);
+ 
     delete view; 
 }
 

@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "video-player/views/VideoPlayerView.hpp"
 #include "video-player/models/VideoPlayerModel.hpp"
 #include <QPlainTextEdit>
@@ -74,6 +75,8 @@ VideoPlayerView::~VideoPlayerView()
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onPresentCurrentFrame()
 {
+    PROFILE(VideoPlayerView, onPresentCurrentFrame);
+
     videoSurface_->image = model_->currentFrameAsImage();
     videoSurface_->update();
 }
@@ -81,6 +84,8 @@ void VideoPlayerView::onPresentCurrentFrame()
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onInfo(const QString& msg)
 {
+    PROFILE(VideoPlayerView, onInfo);
+
     logWidget_->textCursor().insertText("[INFO] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
 }
@@ -88,6 +93,8 @@ void VideoPlayerView::onInfo(const QString& msg)
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onError(const QString& msg)
 {
+    PROFILE(VideoPlayerView, onError);
+
     logWidget_->textCursor().insertText("[ERROR] " + msg + "\n");
     logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
 }

@@ -1,4 +1,5 @@
 #include "rfcommon/MappingInfoStage.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -13,6 +14,8 @@ MappingInfoStage::~MappingInfoStage()
 // ----------------------------------------------------------------------------
 const char* MappingInfoStage::toName(StageID stageID) const
 {
+    PROFILE(MappingInfoStage, toName);
+
     const auto it = map_.findKey(stageID);
     if (it != map_.end())
         return it->value().cStr();
@@ -22,6 +25,8 @@ const char* MappingInfoStage::toName(StageID stageID) const
 // ----------------------------------------------------------------------------
 const StageID MappingInfoStage::toID(const char* name) const
 {
+    PROFILE(MappingInfoStage, toID);
+
     const auto it = map_.findValue(name);
     if (it != map_.end())
         return it->key();
@@ -31,6 +36,8 @@ const StageID MappingInfoStage::toID(const char* name) const
 // ----------------------------------------------------------------------------
 void MappingInfoStage::add(StageID stageID, const char* name)
 {
+    PROFILE(MappingInfoStage, add);
+
     if (stageID.isValid() == false)
         return;
     map_.insertNew(stageID, name);
@@ -39,12 +46,16 @@ void MappingInfoStage::add(StageID stageID, const char* name)
 // ----------------------------------------------------------------------------
 int MappingInfoStage::count() const
 {
+    NOPROFILE();
+
     return map_.count();
 }
 
 // ----------------------------------------------------------------------------
 SmallVector<String, 10> MappingInfoStage::names() const
 {
+    PROFILE(MappingInfoStage, names);
+
     SmallVector<String, 10> result;
     for (const auto it : map_)
         result.push(it->value());
@@ -54,6 +65,8 @@ SmallVector<String, 10> MappingInfoStage::names() const
 // ----------------------------------------------------------------------------
 SmallVector<StageID, 10> MappingInfoStage::IDs() const
 {
+    PROFILE(MappingInfoStage, IDs);
+
     SmallVector<StageID, 10> result;
     for (const auto it : map_)
         result.push(it->key());

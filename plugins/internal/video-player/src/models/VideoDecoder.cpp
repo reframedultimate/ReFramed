@@ -1,5 +1,6 @@
 #include "video-player/models/VideoDecoder.hpp"
 #include "rfcommon/Deserializer.hpp"
+#include "rfcommon/Profiler.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -72,6 +73,8 @@ VideoDecoder::~VideoDecoder()
 // ----------------------------------------------------------------------------
 QImage VideoDecoder::currentFrameAsImage()
 {
+    PROFILE(VideoDecoder, currentFrameAsImage);
+
     if (currentFrame_ == nullptr)
         return QImage();
 
@@ -91,12 +94,16 @@ QImage VideoDecoder::currentFrameAsImage()
 
 static int read_callback(void* opaque, uint8_t* buf, int buf_size)
 {
+    PROFILE(VideoDecoderGlobal, read_callback);
+
     auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
     return ioChunkReader->read(buf, buf_size);
 }
 
 static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 {
+    PROFILE(VideoDecoderGlobal, seek_callback);
+
     auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
     switch (whence)
     {
@@ -112,6 +119,8 @@ static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 // ----------------------------------------------------------------------------
 bool VideoDecoder::openFile(const void* address, uint64_t size)
 {
+    PROFILE(VideoDecoder, openFile);
+
     emit info("Opening file from memory");
 
     int result;
@@ -279,6 +288,8 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
 // ----------------------------------------------------------------------------
 void VideoDecoder::closeFile()
 {
+    PROFILE(VideoDecoder, closeFile);
+
     mutex_.lock();
         requestShutdown_ = true;
         cond_.wakeOne();
@@ -324,6 +335,8 @@ void VideoDecoder::closeFile()
 // ----------------------------------------------------------------------------
 bool VideoDecoder::nextFrame()
 {
+    PROFILE(VideoDecoder, nextFrame);
+
     QMutexLocker guard(&mutex_);
 
     if (frontQueue_.count() == 0)
@@ -340,6 +353,8 @@ bool VideoDecoder::nextFrame()
 // ----------------------------------------------------------------------------
 bool VideoDecoder::prevFrame()
 {
+    PROFILE(VideoDecoder, prevFrame);
+
     QMutexLocker guard(&mutex_);
 
     if (backQueue_.count() == 0)
@@ -356,6 +371,8 @@ bool VideoDecoder::prevFrame()
 // ----------------------------------------------------------------------------
 void VideoDecoder::seekToMs(uint64_t offsetFromStart)
 {
+    PROFILE(VideoDecoder, seekToMs);
+
     QMutexLocker guard(&mutex_);
 
     /*
@@ -383,6 +400,8 @@ void VideoDecoder::seekToMs(uint64_t offsetFromStart)
 // ----------------------------------------------------------------------------
 bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
 {
+    PROFILE(VideoDecoder, decodeNextFrame);
+
     AVPacket packet;
 
     // Returns <0 if an error occurred, or if end of file was reached
@@ -438,6 +457,8 @@ bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
 // ----------------------------------------------------------------------------
 void VideoDecoder::run()
 {
+    PROFILE(VideoDecoder, run);
+
     mutex_.lock();
     while (true)
     {

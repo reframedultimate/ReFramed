@@ -1,4 +1,5 @@
 #include "rfcommon/MappingInfoHitStatus.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -13,6 +14,8 @@ MappingInfoHitStatus::~MappingInfoHitStatus()
 // ----------------------------------------------------------------------------
 const char* MappingInfoHitStatus::toName(FighterHitStatus status) const
 {
+    PROFILE(MappingInfoHitStatus, toName);
+
     const auto it = map_.findKey(status);
     if (it != map_.end())
         return it->value().cStr();
@@ -22,6 +25,8 @@ const char* MappingInfoHitStatus::toName(FighterHitStatus status) const
 // ----------------------------------------------------------------------------
 FighterHitStatus MappingInfoHitStatus::toID(const char* name) const
 {
+    PROFILE(MappingInfoHitStatus, toID);
+
     const auto it = map_.findValue(name);
     if (it != map_.end())
         return it->key();
@@ -31,6 +36,8 @@ FighterHitStatus MappingInfoHitStatus::toID(const char* name) const
 // ----------------------------------------------------------------------------
 void MappingInfoHitStatus::add(FighterHitStatus status, const char* name)
 {
+    PROFILE(MappingInfoHitStatus, add);
+
     if (status.isValid() == false)
         return;
     map_.insertNew(status, name);
@@ -39,6 +46,8 @@ void MappingInfoHitStatus::add(FighterHitStatus status, const char* name)
 // ----------------------------------------------------------------------------
 SmallVector<String, 6> MappingInfoHitStatus::names() const
 {
+    PROFILE(MappingInfoHitStatus, names);
+
     SmallVector<String, 6> result;
     for (const auto it : map_)
         result.push(it->value());
@@ -48,6 +57,8 @@ SmallVector<String, 6> MappingInfoHitStatus::names() const
 // ----------------------------------------------------------------------------
 SmallVector<FighterHitStatus, 6> MappingInfoHitStatus::statuses() const
 {
+    PROFILE(MappingInfoHitStatus, statuses);
+
     SmallVector<FighterHitStatus, 6> result;
     for (const auto it : map_)
         result.push(it->key());

@@ -1,10 +1,13 @@
 #include "rfcommon/FrameIndex.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 FrameIndex FrameIndex::fromValue(Type value)
 {
+    NOPROFILE();
+
     return FrameIndex(value);
 }
 

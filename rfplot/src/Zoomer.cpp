@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/Zoomer.hpp"
 #include "rfplot/MousePlotPickerMachine.hpp"
 
@@ -8,6 +9,8 @@
 
 static QPointF qPow(qreal base, const QPointF& exponent)
 {
+    PROFILE(ZoomerGlobal, qPow);
+
     return QPointF(
         qPow(base, exponent.x()),
         qPow(base, exponent.y())
@@ -34,6 +37,8 @@ Zoomer::~Zoomer()
 // ----------------------------------------------------------------------------
 void Zoomer::onActivated(bool activated)
 {
+    PROFILE(Zoomer, onActivated);
+
     // Store the original distances from the point where the user clicked
     // (origin) to the plot's upper and lower points so we have a reference
     // when zooming
@@ -53,6 +58,8 @@ void Zoomer::onActivated(bool activated)
 // ----------------------------------------------------------------------------
 void Zoomer::doZoom(const QPointF& origin, const QPointF& current)
 {
+    PROFILE(Zoomer, doZoom);
+
     // The mouse position is mapped to a normalized coordinate system where
     // [-1,-1] is the top left of the canvas boundaries and [1,1] is bottom
     // right. The coordinate system is offset such that its centre is placed

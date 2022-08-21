@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "damage-time-plot/views/DamageTimePlotView.hpp"
 #include "damage-time-plot/models/DamageTimeCurveData.hpp"
 #include "damage-time-plot/models/DamageTimePlotModel.hpp"
@@ -59,6 +60,8 @@ DamageTimePlotView::~DamageTimePlotView()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::clearCurves()
 {
+    PROFILE(DamageTimePlotView, clearCurves);
+
     for (auto& curve : curves_)
     {
         curve->detach();
@@ -70,6 +73,8 @@ void DamageTimePlotView::clearCurves()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::buildCurves()
 {
+    PROFILE(DamageTimePlotView, buildCurves);
+
     for (int sessionIdx = 0; sessionIdx != model_->sessionCount(); ++sessionIdx)
         for (int fighterIdx = 0; fighterIdx != model_->fighterCount(sessionIdx); ++fighterIdx)
         {
@@ -85,6 +90,8 @@ void DamageTimePlotView::buildCurves()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onDataSetChanged()
 {
+    PROFILE(DamageTimePlotView, onDataSetChanged);
+
     if (model_->sessionCount() == 1)
     {
         plot_->setParent(nullptr);
@@ -112,12 +119,16 @@ void DamageTimePlotView::onDataSetChanged()
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onDataChanged()
 {
+    PROFILE(DamageTimePlotView, onDataChanged);
+
     plot_->conditionalAutoScale();
 }
 
 // ----------------------------------------------------------------------------
 void DamageTimePlotView::onNamesChanged()
 {
+    PROFILE(DamageTimePlotView, onNamesChanged);
+
     /*curves_[fighterIdx]->setTitle(model_->name(fighterIdx).cStr());*/
     plot_->conditionalAutoScale();
 }

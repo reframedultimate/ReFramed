@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/models/Config.hpp"
 
 #include <QDir>
@@ -22,6 +23,8 @@ Config::~Config()
 // ----------------------------------------------------------------------------
 void Config::load()
 {
+    PROFILE(Config, load);
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QFile f(dir.absoluteFilePath("config.json"));
     if (!f.open(QIODevice::ReadOnly))
@@ -32,6 +35,8 @@ void Config::load()
 // ----------------------------------------------------------------------------
 void Config::save()
 {
+    PROFILE(Config, save);
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QFileInfo pathInfo(dir.path());
     if (!pathInfo.exists())

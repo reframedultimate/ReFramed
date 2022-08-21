@@ -1,4 +1,5 @@
 #include "rfcommon/KnockbackCalculator.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <limits>
 
 namespace rfcommon {
@@ -36,6 +37,8 @@ KnockbackCalculator::KnockbackCalculator(
 // ----------------------------------------------------------------------------
 double KnockbackCalculator::addMove(const Move& move)
 {
+    PROFILE(KnockbackCalculator, addMove);
+
     // TODO
     // - hitstun after tumble: ((knockback * 0.4) - (((knockback * 0.4) - 32) * 0.4)) - 1
     // - when does a move tumble?
@@ -63,6 +66,8 @@ double KnockbackCalculator::addMove(const Move& move)
 // ----------------------------------------------------------------------------
 bool KnockbackCalculator::isInQueue(int id)
 {
+    PROFILE(KnockbackCalculator, isInQueue);
+
     for (int i = 0; i != 9; ++i)
         if (id == staleQueue_[i])
             return true;
@@ -72,6 +77,8 @@ bool KnockbackCalculator::isInQueue(int id)
 // ----------------------------------------------------------------------------
 void KnockbackCalculator::addToQueue(int id)
 {
+    PROFILE(KnockbackCalculator, addToQueue);
+
     for (int i = 8; i > 0; --i)
         staleQueue_[i] = staleQueue_[i-1];
     staleQueue_[0] = id;
@@ -80,6 +87,8 @@ void KnockbackCalculator::addToQueue(int id)
 // ----------------------------------------------------------------------------
 double KnockbackCalculator::stalenessOf(int id)
 {
+    PROFILE(KnockbackCalculator, stalenessOf);
+
     double staleness = 1.0;
     for (int i = 0; i != 9; ++i)
         if (staleQueue_[i] == id)

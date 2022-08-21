@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/MousePlotPickerMachine.hpp"
 
 #include <QEvent>
@@ -21,6 +22,8 @@ MousePlotPickerMachine::~MousePlotPickerMachine()
 QList<QwtPickerMachine::Command> MousePlotPickerMachine::transition(
     const QwtEventPattern& eventPattern, const QEvent* event )
 {
+    PROFILE(MousePlotPickerMachine, transition);
+
     QList<QwtPickerMachine::Command> cmdList;
 
     switch(event->type())

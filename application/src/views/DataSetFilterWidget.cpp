@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/views/DataSetFilterWidget.hpp"
 
 #include <QPropertyAnimation>
@@ -111,24 +112,32 @@ DataSetFilterWidget::DataSetFilterWidget(rfcommon::DataSetFilter* filter, QWidge
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget::setTitle(const QString& title)
 {
+    PROFILE(DataSetFilterWidget, setTitle);
+
     enableCheckbox_->setText(title);
 }
 
 // ----------------------------------------------------------------------------
 QWidget* DataSetFilterWidget::contentWidget()
 {
+    PROFILE(DataSetFilterWidget, contentWidget);
+
     return contentArea_;
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::DataSetFilter* DataSetFilterWidget::filter() const
 {
+    PROFILE(DataSetFilterWidget, filter);
+
     return filter_;
 }
 
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget::setExpanded(bool expanded)
 {
+    PROFILE(DataSetFilterWidget, setExpanded);
+
     toggleButton_->setChecked(expanded);
     onToggleButtonClicked(expanded);
 }
@@ -136,6 +145,8 @@ void DataSetFilterWidget::setExpanded(bool expanded)
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget::updateSize()
 {
+    PROFILE(DataSetFilterWidget, updateSize);
+
     // http://stackoverflow.com/questions/13942616/qt-resize-window-after-widget-remove
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
@@ -166,6 +177,8 @@ void DataSetFilterWidget::updateSize()
 // ----------------------------------------------------------------------------
 void DataSetFilterWidget::onToggleButtonClicked(bool checked)
 {
+    PROFILE(DataSetFilterWidget, onToggleButtonClicked);
+
     toggleButton_->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
     toggleAnimation_->setDirection(checked ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
     toggleAnimation_->start();

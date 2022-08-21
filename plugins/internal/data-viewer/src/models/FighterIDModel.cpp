@@ -1,10 +1,13 @@
 #include "data-viewer/models/FighterIDModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <algorithm>
 
 // ----------------------------------------------------------------------------
 void FighterIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 {
+    PROFILE(FighterIDModel, setMappingInfo);
+
     beginResetModel();
         table_.clearCompact();
         if (mappingInfo)
@@ -25,18 +28,24 @@ void FighterIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 // ----------------------------------------------------------------------------
 int FighterIDModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(FighterIDModel, rowCount);
+
     return table_.count();
 }
 
 // ----------------------------------------------------------------------------
 int FighterIDModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(FighterIDModel, columnCount);
+
     return 2;
 }
 
 // ----------------------------------------------------------------------------
 QVariant FighterIDModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(FighterIDModel, headerData);
+
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
         if (section == 0) return "Fighter ID";
@@ -49,6 +58,8 @@ QVariant FighterIDModel::headerData(int section, Qt::Orientation orientation, in
 // ----------------------------------------------------------------------------
 QVariant FighterIDModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(FighterIDModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole:

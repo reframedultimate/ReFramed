@@ -4,6 +4,7 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/SetFormat.hpp"
 
 #include <QFormLayout>
@@ -92,6 +93,8 @@ ReplayEditorDialog::~ReplayEditorDialog()
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onSaveClicked()
 {
+    PROFILE(ReplayEditorDialog, onSaveClicked);
+
     if (replayManager_->saveReplayOver(session_, currentFileName_))
         close();
     else
@@ -101,6 +104,8 @@ void ReplayEditorDialog::onSaveClicked()
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onTimeStartedChanged(const QDateTime& started)
 {
+    PROFILE(ReplayEditorDialog, onTimeStartedChanged);
+
     if (auto mdata = session_->tryGetMetaData())
     {
         const QDateTime ended = started.addMSecs(mdata->length().millis());
@@ -113,6 +118,8 @@ void ReplayEditorDialog::onTimeStartedChanged(const QDateTime& started)
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onGameNumberChanged(int value)
 {
+    PROFILE(ReplayEditorDialog, onGameNumberChanged);
+
     if (auto mdata = session_->tryGetMetaData())
         if (mdata->type() == rfcommon::MetaData::GAME)
             static_cast<rfcommon::GameMetaData*>(mdata)->setGameNumber(
@@ -122,6 +129,8 @@ void ReplayEditorDialog::onGameNumberChanged(int value)
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onSetNumberChanged(int value)
 {
+    PROFILE(ReplayEditorDialog, onSetNumberChanged);
+
     if (auto mdata = session_->tryGetMetaData())
         if (mdata->type() == rfcommon::MetaData::GAME)
             static_cast<rfcommon::GameMetaData*>(mdata)->setSetNumber(
@@ -131,6 +140,8 @@ void ReplayEditorDialog::onSetNumberChanged(int value)
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onSetFormatChanged(int index)
 {
+    PROFILE(ReplayEditorDialog, onSetFormatChanged);
+
     ui_->customSetFormat->setVisible(index == rfcommon::SetFormat::OTHER);
 
     if (auto mdata = session_->tryGetMetaData())
@@ -152,6 +163,8 @@ void ReplayEditorDialog::onSetFormatChanged(int index)
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::customFormatTextChanged(const QString& text)
 {
+    PROFILE(ReplayEditorDialog, customFormatTextChanged);
+
     if (auto mdata = session_->tryGetMetaData())
     {
         QByteArray ba = text.toUtf8();
@@ -163,6 +176,8 @@ void ReplayEditorDialog::customFormatTextChanged(const QString& text)
 // ----------------------------------------------------------------------------
 void ReplayEditorDialog::onPlayerNameChanged(int fighterIdx, const QString& name)
 {
+    PROFILE(ReplayEditorDialog, onPlayerNameChanged);
+
     if (auto mdata = session_->tryGetMetaData())
     {
         QByteArray ba = name.toUtf8();

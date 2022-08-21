@@ -2,6 +2,7 @@
 #include "application/views/VideoAssociatorDialog.hpp"
 #include "application/models/PluginManager.hpp"
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
@@ -108,12 +109,16 @@ VideoAssociatorDialog::~VideoAssociatorDialog()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onSaveReleased()
 {
+    PROFILE(VideoAssociatorDialog, onSaveReleased);
+
 
 }
 
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onChooseFileReleased()
 {
+    PROFILE(VideoAssociatorDialog, onChooseFileReleased);
+
     QString fileName = QFileDialog::getOpenFileName(
         this, "Open Video File", "", "Video Files (*.mp4 *.mkv *.avi *.webm)");
     if (fileName.length() == 0)

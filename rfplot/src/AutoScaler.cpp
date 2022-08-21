@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/AutoScaler.hpp"
 #include "qwt_plot.h"
 #include "qwt_plot_canvas.h"
@@ -20,6 +21,8 @@ AutoScaler::~AutoScaler()
 // ----------------------------------------------------------------------------
 void AutoScaler::widgetMouseDoubleClickEvent(QMouseEvent* me)
 {
+    PROFILE(AutoScaler, widgetMouseDoubleClickEvent);
+
     if(me->button() & btn_)
         autoScale();
 }
@@ -27,6 +30,8 @@ void AutoScaler::widgetMouseDoubleClickEvent(QMouseEvent* me)
 // ----------------------------------------------------------------------------
 void AutoScaler::autoScale()
 {
+    PROFILE(AutoScaler, autoScale);
+
     bool storeX = plot()->axisAutoScale(xAxis());
     bool storeYLeft = plot()->axisAutoScale(QwtPlot::yLeft);
     bool storeYRight = plot()->axisAutoScale(QwtPlot::yRight);

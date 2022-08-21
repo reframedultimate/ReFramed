@@ -2,6 +2,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "nlohmann/json.hpp"
 #include <memory>
 #include <unordered_set>
@@ -25,6 +26,8 @@ MappingInfo::~MappingInfo()
 // ----------------------------------------------------------------------------
 MappingInfo* MappingInfo::load(const void* data, uint32_t size)
 {
+    PROFILE(MappingInfo, load);
+
     // Parse
     const unsigned char* const begin = static_cast<const unsigned char*>(data);
     const unsigned char* const end = static_cast<const unsigned char*>(data) + size;
@@ -42,6 +45,8 @@ MappingInfo* MappingInfo::load(const void* data, uint32_t size)
 // ----------------------------------------------------------------------------
 static MappingInfo* load_1_5(json& j)
 {
+    PROFILE(MappingInfoGlobal, load_1_5);
+
     json jFighterStatuses = j["fighterstatus"];
     json jFighterIDs = j["fighterid"];
     json jStageIDs = j["stageid"];
@@ -131,6 +136,8 @@ static MappingInfo* load_1_5(json& j)
 // ----------------------------------------------------------------------------
 uint32_t MappingInfo::save(FILE* fp) const
 {
+    PROFILE(MappingInfo, save);
+
     json fighterBaseStatusMapping;
     const auto baseNames = status.baseNames();
     const auto baseStatuses = status.baseStatuses();
@@ -192,6 +199,8 @@ uint32_t MappingInfo::save(FILE* fp) const
 // ----------------------------------------------------------------------------
 uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const FrameData* frameData) const
 {
+    PROFILE(MappingInfo, saveNecessary);
+
     assert(metaData->fighterCount() == frameData->fighterCount());
 
     struct FighterStatusHasherStd {
@@ -309,6 +318,8 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
 // ----------------------------------------------------------------------------
 uint32_t MappingInfo::checksum() const
 {
+    NOPROFILE();
+
     return checksum_;
 }
 

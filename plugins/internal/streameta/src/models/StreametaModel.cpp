@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "streameta/models/StreametaModel.hpp"
 
 // ----------------------------------------------------------------------------
@@ -19,6 +20,8 @@ FrameDataListModel::~FrameDataListModel()
 // ----------------------------------------------------------------------------
 void FrameDataListModel::setSession(rfcommon::Session* session)
 {
+    PROFILE(FrameDataListModel, setSession);
+
     mappingInfo_ = session->tryGetMappingInfo();
     metaData_ = session->tryGetMetaData();
     frameData_ = session->tryGetFrameData();
@@ -45,6 +48,8 @@ void FrameDataListModel::setSession(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void FrameDataListModel::finalizeSession(rfcommon::Session* session)
 {
+    PROFILE(FrameDataListModel, finalizeSession);
+
     dispatcher.dispatch(&FrameDataListListener::onDataFinalized, mappingInfo_, metaData_, frameData_);
 
     if (frameData_)

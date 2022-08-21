@@ -1,5 +1,6 @@
 #include "rfcommon/Serializer.hpp"
 #include "rfcommon/Endian.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <cassert>
 #include <cstring>
 
@@ -16,6 +17,7 @@ Serializer::Serializer(void* dst, uint64_t maxSize)
 // ----------------------------------------------------------------------------
 void* Serializer::writeToPtr(int bytes)
 {
+    NOPROFILE();
     assert(writePtr_ + bytes <= end_);
 
     void* begin = writePtr_;
@@ -26,6 +28,7 @@ void* Serializer::writeToPtr(int bytes)
 // ----------------------------------------------------------------------------
 void Serializer::writeU8(uint8_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 1 <= end_);
     *writePtr_++ = value;
 }
@@ -33,6 +36,7 @@ void Serializer::writeU8(uint8_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeLU16(uint16_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 2 <= end_);
 
     uint16_t le = toLittleEndian16(value);
@@ -43,6 +47,7 @@ void Serializer::writeLU16(uint16_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeLU32(uint32_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 4 <= end_);
 
     uint32_t le = toLittleEndian32(value);
@@ -53,6 +58,7 @@ void Serializer::writeLU32(uint32_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeLU64(uint64_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 8 <= end_);
 
     uint64_t le = toLittleEndian64(value);
@@ -63,6 +69,7 @@ void Serializer::writeLU64(uint64_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeLF32(float value)
 {
+    NOPROFILE();
     assert(writePtr_ + 4 <= end_);
 
     uint32_t le = toLittleEndian32(*reinterpret_cast<uint32_t*>(&value));
@@ -73,7 +80,7 @@ void Serializer::writeLF32(float value)
 // ----------------------------------------------------------------------------
 void Serializer::writeLF64(double value)
 {
-
+    NOPROFILE();
     assert(writePtr_ + 8 <= end_);
 
     uint64_t le = toLittleEndian64(*reinterpret_cast<uint64_t*>(&value));
@@ -84,6 +91,7 @@ void Serializer::writeLF64(double value)
 // ----------------------------------------------------------------------------
 void Serializer::writeBU16(uint16_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 2 <= end_);
 
     uint16_t le = toBigEndian16(value);
@@ -94,6 +102,7 @@ void Serializer::writeBU16(uint16_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeBU32(uint32_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 4 <= end_);
 
     uint32_t le = toBigEndian32(value);
@@ -104,6 +113,7 @@ void Serializer::writeBU32(uint32_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeBU64(uint64_t value)
 {
+    NOPROFILE();
     assert(writePtr_ + 8 <= end_);
 
     uint64_t le = toBigEndian64(value);
@@ -114,6 +124,7 @@ void Serializer::writeBU64(uint64_t value)
 // ----------------------------------------------------------------------------
 void Serializer::writeBF32(float value)
 {
+    NOPROFILE();
     assert(writePtr_ + 4 <= end_);
 
     uint32_t le = toBigEndian32(*reinterpret_cast<uint32_t*>(&value));
@@ -124,7 +135,7 @@ void Serializer::writeBF32(float value)
 // ----------------------------------------------------------------------------
 void Serializer::writeBF64(double value)
 {
-
+    NOPROFILE();
     assert(writePtr_ + 8 <= end_);
 
     uint64_t le = toBigEndian64(*reinterpret_cast<uint64_t*>(&value));
@@ -135,12 +146,14 @@ void Serializer::writeBF64(double value)
 // ----------------------------------------------------------------------------
 void Serializer::seekW(int offset)
 {
+    NOPROFILE();
     writePtr_ = const_cast<unsigned char*>(begin_ + offset);
 }
 
 // ----------------------------------------------------------------------------
 uint64_t Serializer::bytesWritten() const
 {
+    NOPROFILE();
     return writePtr_ - begin_;
 }
 

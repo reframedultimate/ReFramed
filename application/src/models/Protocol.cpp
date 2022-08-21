@@ -3,6 +3,7 @@
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/MappedFile.hpp"
@@ -30,6 +31,8 @@ Protocol::~Protocol()
 // ----------------------------------------------------------------------------
 void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 {
+    PROFILE(Protocol, connectToServer);
+
     disconnectFromServer();
 
     uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
@@ -69,18 +72,24 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 // ----------------------------------------------------------------------------
 void Protocol::disconnectFromServer()
 {
+    PROFILE(Protocol, disconnectFromServer);
+
     task_.reset();
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::MappingInfo* Protocol::globalMappingInfo() const
 {
+    PROFILE(Protocol, globalMappingInfo);
+
     return globalMappingInfo_;
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onConnectionSuccess(const QString& ipAddress, quint16 port)
 {
+    PROFILE(Protocol, onConnectionSuccess);
+
     QByteArray ba = ipAddress.toUtf8();
     const char* ipCstr = ba.data();
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolConnectedToServer, ipCstr, port);
@@ -89,6 +98,8 @@ void Protocol::onConnectionSuccess(const QString& ipAddress, quint16 port)
 // ----------------------------------------------------------------------------
 void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAddress, quint16 port)
 {
+    PROFILE(Protocol, onConnectionFailure);
+
     task_.reset();
 
     QByteArray ipba = ipAddress.toUtf8();
@@ -101,6 +112,8 @@ void Protocol::onConnectionFailure(const QString& errormsg, const QString& ipAdd
 // ----------------------------------------------------------------------------
 void Protocol::onConnectionClosed()
 {
+    PROFILE(Protocol, onConnectionClosed);
+
     endSessionIfNecessary();
 
     task_.reset();
@@ -110,6 +123,8 @@ void Protocol::onConnectionClosed()
 // ----------------------------------------------------------------------------
 void Protocol::onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo)
 {
+    PROFILE(Protocol, onMappingInfoReceived);
+
     globalMappingInfo_ = mappingInfo;
     saveGlobalMappingInfo();
 }
@@ -117,6 +132,8 @@ void Protocol::onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo)
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingStartedProxy(rfcommon::MetaData* trainingMeta)
 {
+    PROFILE(Protocol, onTrainingStartedProxy);
+
     // If the timer did not reset this in time, it means that a stop and a
     // start event occurred in quick succession. This is how we detect a reset
     // in training mode.
@@ -149,6 +166,8 @@ void Protocol::onTrainingStartedProxy(rfcommon::MetaData* trainingMeta)
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingStartedActually(rfcommon::MetaData* trainingMeta)
 {
+    PROFILE(Protocol, onTrainingStartedActually);
+
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
@@ -163,6 +182,8 @@ void Protocol::onTrainingStartedActually(rfcommon::MetaData* trainingMeta)
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingResumed(rfcommon::MetaData* trainingMeta)
 {
+    PROFILE(Protocol, onTrainingResumed);
+
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
@@ -177,6 +198,8 @@ void Protocol::onTrainingResumed(rfcommon::MetaData* trainingMeta)
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingEndedProxy()
 {
+    PROFILE(Protocol, onTrainingEndedProxy);
+
     trainingEndedProxyWasCalled_ = true;
     QTimer::singleShot(1000, this, [this](){
         if (trainingEndedProxyWasCalled_)
@@ -190,12 +213,16 @@ void Protocol::onTrainingEndedProxy()
 // ----------------------------------------------------------------------------
 void Protocol::onTrainingEndedActually()
 {
+    PROFILE(Protocol, onTrainingEndedActually);
+
     endSessionIfNecessary();
 }
 
 // ----------------------------------------------------------------------------
 void Protocol::onGameStarted(rfcommon::MetaData* gameMeta)
 {
+    PROFILE(Protocol, onGameStarted);
+
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
@@ -210,6 +237,8 @@ void Protocol::onGameStarted(rfcommon::MetaData* gameMeta)
 // ----------------------------------------------------------------------------
 void Protocol::onGameResumed(rfcommon::MetaData* gameMeta)
 {
+    PROFILE(Protocol, onGameResumed);
+
     // Handle case where game end is not sent (should never happen but you never know)
     endSessionIfNecessary();
 
@@ -224,6 +253,8 @@ void Protocol::onGameResumed(rfcommon::MetaData* gameMeta)
 // ----------------------------------------------------------------------------
 void Protocol::onGameEnded()
 {
+    PROFILE(Protocol, onGameEnded);
+
     endSessionIfNecessary();
 }
 
@@ -245,6 +276,8 @@ void Protocol::onFighterState(
         bool facingDirection,
         bool opponentInHitlag)
 {
+    PROFILE(Protocol, onFighterState);
+
     if (activeSession_.isNull())
         return;
 
@@ -407,6 +440,8 @@ void Protocol::onFighterState(
 // ----------------------------------------------------------------------------
 void Protocol::endSessionIfNecessary()
 {
+    PROFILE(Protocol, endSessionIfNecessary);
+
     if (activeSession_.isNull())
         return;
 
@@ -429,6 +464,8 @@ void Protocol::endSessionIfNecessary()
 // ----------------------------------------------------------------------------
 void Protocol::tryLoadGlobalMappingInfo()
 {
+    PROFILE(Protocol, tryLoadGlobalMappingInfo);
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
     rfcommon::MappedFile file;
@@ -441,6 +478,8 @@ void Protocol::tryLoadGlobalMappingInfo()
 // ----------------------------------------------------------------------------
 void Protocol::saveGlobalMappingInfo()
 {
+    PROFILE(Protocol, saveGlobalMappingInfo);
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
     FILE* fp = fopen(ba.constData(), "wb");

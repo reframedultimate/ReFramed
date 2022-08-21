@@ -1,4 +1,5 @@
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/hash40.hpp"
 #include <cstdio>
 #include <memory>
@@ -8,6 +9,8 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 static uint64_t hexStringToValue(const char* hex, int* error)
 {
+    NOPROFILE();
+
     uint64_t value = 0;
 
     if (hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X'))
@@ -43,6 +46,8 @@ Hash40Strings::~Hash40Strings()
 // ----------------------------------------------------------------------------
 Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
 {
+    PROFILE(Hash40Strings, loadCSV);
+
     FILE* fp = fopen(fileName, "rb");
     if (fp == nullptr)
         return nullptr;
@@ -97,18 +102,24 @@ Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
 // ----------------------------------------------------------------------------
 Hash40Strings* Hash40Strings::makeEmpty()
 {
+    NOPROFILE();
+
     return new Hash40Strings();
 }
 
 // ----------------------------------------------------------------------------
 const char* Hash40Strings::toString(FighterMotion motion) const
 {
+    NOPROFILE();
+
     return toString(motion, "(unknown)");
 }
 
 // ----------------------------------------------------------------------------
 const char* Hash40Strings::toString(FighterMotion motion, const char* fallback) const
 {
+    PROFILE(Hash40Strings, toString);
+
     auto it = entries_.find(motion);
     if (it != entries_.end())
         return it->value().cStr();
@@ -118,6 +129,8 @@ const char* Hash40Strings::toString(FighterMotion motion, const char* fallback) 
 // ----------------------------------------------------------------------------
 FighterMotion Hash40Strings::toMotion(const char* str) const
 {
+    PROFILE(Hash40Strings, toMotion);
+
     // Have to do 1 lookup to avoid hash collisions
     const FighterMotion motion = hash40(str);
     if (entries_.find(motion) == entries_.end())

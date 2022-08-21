@@ -1,10 +1,13 @@
 #include "rfcommon/SetNumber.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 SetNumber SetNumber::fromValue(Type value)
 {
+    NOPROFILE();
+
     return SetNumber(value);
 }
 

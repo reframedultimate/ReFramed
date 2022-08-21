@@ -14,6 +14,7 @@
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
@@ -39,6 +40,8 @@ DataViewerModel::~DataViewerModel()
 // ----------------------------------------------------------------------------
 void DataViewerModel::setSession(rfcommon::Session* session)
 {
+    PROFILE(DataViewerModel, setSession);
+
     clearSession();
 
     mappingInfo_ = session->tryGetMappingInfo();
@@ -72,6 +75,8 @@ void DataViewerModel::setSession(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void DataViewerModel::clearSession()
 {
+    PROFILE(DataViewerModel, clearSession);
+
     dispatcher.dispatch(&DataViewerListener::onClear);
 
     baseStatusIDModel_->setMappingInfo(nullptr);

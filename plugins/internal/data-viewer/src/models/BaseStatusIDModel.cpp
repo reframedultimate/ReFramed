@@ -1,10 +1,13 @@
 #include "data-viewer/models/BaseStatusIDModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <algorithm>
 
 // ----------------------------------------------------------------------------
 void BaseStatusIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 {
+    PROFILE(BaseStatusIDModel, setMappingInfo);
+
     beginResetModel();
         table_.clearCompact();
         if (mappingInfo)
@@ -25,18 +28,24 @@ void BaseStatusIDModel::setMappingInfo(rfcommon::MappingInfo* mappingInfo)
 // ----------------------------------------------------------------------------
 int BaseStatusIDModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(BaseStatusIDModel, rowCount);
+
     return table_.count();
 }
 
 // ----------------------------------------------------------------------------
 int BaseStatusIDModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(BaseStatusIDModel, columnCount);
+
     return 2;
 }
 
 // ----------------------------------------------------------------------------
 QVariant BaseStatusIDModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(BaseStatusIDModel, headerData);
+
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
         if (section == 0) return "Status ID";
@@ -49,6 +58,8 @@ QVariant BaseStatusIDModel::headerData(int section, Qt::Orientation orientation,
 // ----------------------------------------------------------------------------
 QVariant BaseStatusIDModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(BaseStatusIDModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole:

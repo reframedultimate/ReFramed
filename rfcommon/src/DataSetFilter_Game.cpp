@@ -1,5 +1,6 @@
 #include "rfcommon/DataSetFilter_Game.hpp"
 #include "rfcommon/DataSet.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -12,6 +13,8 @@ DataSetFilter_Game::DataSetFilter_Game()
 // ----------------------------------------------------------------------------
 DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 {
+    PROFILE(DataSetFilter_Game, apply);
+
     DataSet* out = new DataSet;
     /*out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
@@ -33,6 +36,8 @@ DataSet* DataSetFilter_Game::apply(const DataSet* dataSet)
 // ----------------------------------------------------------------------------
 DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
 {
+    PROFILE(DataSetFilter_Game, applyInverse);
+
     DataSet* out = new DataSet;
     /*out->reserve(dataSet->dataPointCount());
     for (const DataPoint* p = dataSet->dataPointsBegin(); p != dataSet->dataPointsEnd(); ++p)
@@ -54,6 +59,8 @@ DataSet* DataSetFilter_Game::applyInverse(const DataSet* dataSet)
 // ----------------------------------------------------------------------------
 void DataSetFilter_Game::setSetFormat(const SetFormat& format)
 {
+    PROFILE(DataSetFilter_Game, setSetFormat);
+
     format_ = format;
     notifyDirty();
 }
@@ -61,6 +68,8 @@ void DataSetFilter_Game::setSetFormat(const SetFormat& format)
 // ----------------------------------------------------------------------------
 void DataSetFilter_Game::setAnySetFormat(bool filter)
 {
+    PROFILE(DataSetFilter_Game, setAnySetFormat);
+
     anySetFormat_ = filter;
     notifyDirty();
 }
@@ -68,6 +77,8 @@ void DataSetFilter_Game::setAnySetFormat(bool filter)
 // ----------------------------------------------------------------------------
 void DataSetFilter_Game::setWinner(const String& name)
 {
+    PROFILE(DataSetFilter_Game, setWinner);
+
     winner_ = name;
     notifyDirty();
 }
@@ -75,6 +86,8 @@ void DataSetFilter_Game::setWinner(const String& name)
 // ----------------------------------------------------------------------------
 void DataSetFilter_Game::setMinLengthMs(uint64_t length)
 {
+    PROFILE(DataSetFilter_Game, setMinLengthMs);
+
     minLength_ = length;
     notifyDirty();
 }
@@ -82,6 +95,8 @@ void DataSetFilter_Game::setMinLengthMs(uint64_t length)
 // ----------------------------------------------------------------------------
 void DataSetFilter_Game::setMaxLengthMs(uint64_t length)
 {
+    PROFILE(DataSetFilter_Game, setMaxLengthMs);
+
     maxLength_ = length;
     notifyDirty();
 }

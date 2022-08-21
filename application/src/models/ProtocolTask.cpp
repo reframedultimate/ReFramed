@@ -1,6 +1,7 @@
 #include "application/models/ProtocolTask.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/time.h"
@@ -34,6 +35,8 @@ ProtocolTask::~ProtocolTask()
 // ----------------------------------------------------------------------------
 void ProtocolTask::run()
 {
+    PROFILE(ProtocolTask, run);
+
     // Connects to the switch and requests/validates the protocol version
     // being used. If this function returns a valid socket handle, then it
     // means we're successfully connected and compatible, and from this
@@ -58,6 +61,8 @@ void ProtocolTask::run()
 // ----------------------------------------------------------------------------
 void* ProtocolTask::connectAndCheckVersion()
 {
+    PROFILE(ProtocolTask, connectAndCheckVersion);
+
     // Attempt to connect to the host
     tcp_socket socket;
     QByteArray ba = ipAddress_.toLocal8Bit();
@@ -145,6 +150,8 @@ socket_error:
 // ----------------------------------------------------------------------------
 bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
 {
+    PROFILE(ProtocolTask, negotiateMappingInfo);
+
     tcp_socket socket = tcp_socket_from_handle(tcp_socket_handle);
     rfcommon::Reference<rfcommon::MappingInfo> mappingInfo;
 
@@ -303,6 +310,8 @@ disconnect_error:
 // ----------------------------------------------------------------------------
 void ProtocolTask::handleProtocol(void* tcp_socket_handle)
 {
+    PROFILE(ProtocolTask, handleProtocol);
+
     tcp_socket socket = tcp_socket_from_handle(tcp_socket_handle);
 
     // Each fighter is assigned to a "slot" in the game, which means in a 1v1

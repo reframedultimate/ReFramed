@@ -4,6 +4,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
 #include <algorithm>
@@ -61,18 +62,24 @@ FighterStatesModel::~FighterStatesModel()
 // ----------------------------------------------------------------------------
 int FighterStatesModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(FighterStatesModel, rowCount);
+
     return frameData_->frameCount();
 }
 
 // ----------------------------------------------------------------------------
 int FighterStatesModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(FighterStatesModel, columnCount);
+
     return ColumnCount;
 }
 
 // ----------------------------------------------------------------------------
 QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(FighterStatesModel, headerData);
+
     if (role == Qt::DisplayRole)
     {
         if (orientation == Qt::Horizontal)
@@ -112,6 +119,8 @@ QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation
 // ----------------------------------------------------------------------------
 QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(FighterStatesModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole: {
@@ -198,11 +207,15 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
 // ----------------------------------------------------------------------------
 void FighterStatesModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(FighterStatesModel, onFrameDataNewUniqueFrame);
+
 }
 
 // ----------------------------------------------------------------------------
 void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(FighterStatesModel, onFrameDataNewFrame);
+
     beginInsertRows(QModelIndex(), frameIdx, frameIdx);
     endInsertRows();
 }
@@ -210,6 +223,8 @@ void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame
 // ----------------------------------------------------------------------------
 void FighterStatesModel::updateMotionUserLabelsColumn()
 {
+    PROFILE(FighterStatesModel, updateMotionUserLabelsColumn);
+
     emit dataChanged(index(0, MotionUserLabel), index(frameData_->frameCount() - 1, MotionUserLabel));
 }
 void FighterStatesModel::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }

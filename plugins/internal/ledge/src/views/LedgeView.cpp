@@ -3,10 +3,13 @@
 #include "frame-data-list/models/FrameDataListModel.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QDateTime>
 
 static void clearStackedWidget(QStackedWidget* sw)
 {
+    PROFILE(LedgeViewGlobal, clearStackedWidget);
+
     while (sw->count())
     {
         QWidget* widget = sw->widget(0);
@@ -51,6 +54,8 @@ FrameDataListView::~FrameDataListView()
 // ----------------------------------------------------------------------------
 void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
+    PROFILE(FrameDataListView, onNewData);
+
     repopulatePlayerDataTables();
     repopulateTree(map, meta, frames);
 
@@ -65,11 +70,15 @@ void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData
 // ----------------------------------------------------------------------------
 void FrameDataListView::onDataFinalized(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
+    PROFILE(FrameDataListView, onDataFinalized);
+
 }
 
 // ----------------------------------------------------------------------------
 void FrameDataListView::onNewFrame()
 {
+    PROFILE(FrameDataListView, onNewFrame);
+
     for (auto table : playerDataTables_)
         table->scrollToBottom();
 }
@@ -77,6 +86,8 @@ void FrameDataListView::onNewFrame()
 // ----------------------------------------------------------------------------
 void FrameDataListView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
+    PROFILE(FrameDataListView, onCurrentItemChanged);
+
     (void)previous;
 
     if (current == nullptr)
@@ -120,6 +131,8 @@ void FrameDataListView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
 // ----------------------------------------------------------------------------
 void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
 {
+    PROFILE(FrameDataListView, repopulateTree);
+
     const int previouslySelectedItem = [this]() -> int {
         const auto item = ui_->treeWidget->currentItem();
         if (item == nullptr)
@@ -212,6 +225,8 @@ void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Met
 // ----------------------------------------------------------------------------
 void FrameDataListView::repopulatePlayerDataTables()
 {
+    PROFILE(FrameDataListView, repopulatePlayerDataTables);
+
     const int storeIdx = ui_->stackedWidget_playerData->currentIndex();
     clearStackedWidget(ui_->stackedWidget_playerData);
     playerDataTables_.clearCompact();

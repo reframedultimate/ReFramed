@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "rfplot/RealtimePlot.hpp"
 #include "rfplot/Panner.hpp"
 #include "rfplot/Zoomer.hpp"
@@ -39,6 +40,8 @@ public:
 
     void retranslate()
     {
+    PROFILE(RealtimePlotGlobal, retranslate);
+
         resetZoom.setText(QWidget::tr("Reset Zoom"));
         copyImage.setText(QWidget::tr("Copy as image to clipboard"));
         copyCSV.setText(QWidget::tr("Copy as CSV to clipboard"));
@@ -128,6 +131,8 @@ RealtimePlot::~RealtimePlot()
 // ----------------------------------------------------------------------------
 void RealtimePlot::forceAutoScale()
 {
+    PROFILE(RealtimePlot, forceAutoScale);
+
     autoScaler_->autoScale();
     lastScaleWasAutomatic_ = true;
 }
@@ -135,6 +140,8 @@ void RealtimePlot::forceAutoScale()
 // ----------------------------------------------------------------------------
 void RealtimePlot::conditionalAutoScale()
 {
+    PROFILE(RealtimePlot, conditionalAutoScale);
+
     if (lastScaleWasAutomatic_)
         autoScaler_->autoScale();
     else
@@ -145,6 +152,8 @@ void RealtimePlot::conditionalAutoScale()
 /*
 void RealtimePlot::setAxisUnits(QString unitX, QString unitY)
 {
+    PROFILE(RealtimePlot, setAxisUnits);
+
     setXAxisUnit(unitX);
     setYAxisUnit(unitY);
 }
@@ -152,18 +161,24 @@ void RealtimePlot::setAxisUnits(QString unitX, QString unitY)
 // ----------------------------------------------------------------------------
 void RealtimePlot::setXAxisUnit(QString unitX)
 {
+    PROFILE(RealtimePlot, setXAxisUnit);
+
     unitTracker_->setXUnit(unitX);
 }
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::setYAxisUnit(QString unitY)
 {
+    PROFILE(RealtimePlot, setYAxisUnit);
+
     unitTracker_->setYUnit(unitY);
 }*/
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::changeEvent(QEvent* e)
 {
+    PROFILE(RealtimePlot, changeEvent);
+
     if(e->type() == QEvent::LanguageChange)
     {
         contextMenuStore_->retranslate();
@@ -175,6 +190,8 @@ void RealtimePlot::changeEvent(QEvent* e)
 // ----------------------------------------------------------------------------
 bool RealtimePlot::event(QEvent* event)
 {
+    PROFILE(RealtimePlot, event);
+
     /*
      * This function auto-scales the plot when the user presses the space bar.
      * I may make this configurable in the future, not sure yet.
@@ -235,6 +252,8 @@ bool RealtimePlot::event(QEvent* event)
 // ----------------------------------------------------------------------------
 void RealtimePlot::onPickerActivated(bool activated, const QPointF& point)
 {
+    PROFILE(RealtimePlot, onPickerActivated);
+
     if(activated)
     {
         onPickerMoved(point, point);
@@ -244,6 +263,8 @@ void RealtimePlot::onPickerActivated(bool activated, const QPointF& point)
 // ----------------------------------------------------------------------------
 void RealtimePlot::onPickerMoved(const QPointF& origin, const QPointF& current)
 {
+    PROFILE(RealtimePlot, onPickerMoved);
+
     (void)origin;
     // Whenever left mouse button is pressed or dragged
     emit pointSelected(current);
@@ -252,6 +273,8 @@ void RealtimePlot::onPickerMoved(const QPointF& origin, const QPointF& current)
 // ----------------------------------------------------------------------------
 void RealtimePlot::showContextMenu(const QPoint& pos)
 {
+    PROFILE(RealtimePlot, showContextMenu);
+
     (void)pos;
     QMenu contextMenu(tr("Context Menu"));
 
@@ -269,18 +292,24 @@ void RealtimePlot::showContextMenu(const QPoint& pos)
 // ----------------------------------------------------------------------------
 void RealtimePlot::cancelContextMenu()
 {
+    PROFILE(RealtimePlot, cancelContextMenu);
+
     contextMenuRequestedAt_ = QPoint();
 }
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::resetZoom()
 {
+    PROFILE(RealtimePlot, resetZoom);
+
     forceAutoScale();
 }
 
 // ----------------------------------------------------------------------------
 void RealtimePlot::copyImageToClipboard()
 {
+    PROFILE(RealtimePlot, copyImageToClipboard);
+
     // It's nicer to have a white background for word documents and such
     QPalette restorePal = palette();
     QPalette pal = palette();
@@ -299,6 +328,8 @@ void RealtimePlot::copyImageToClipboard()
 // ----------------------------------------------------------------------------
 void RealtimePlot::extractCurveData(QVector<QVector<QString>>* container, bool writeTitles)
 {
+    PROFILE(RealtimePlot, extractCurveData);
+
     const QwtPlotItemList& items = itemList(QwtPlotItem::Rtti_PlotCurve);
     for(QwtPlotItemList::const_iterator it = items.begin(); it != items.end(); ++it)
     {
@@ -330,6 +361,8 @@ void RealtimePlot::extractCurveData(QVector<QVector<QString>>* container, bool w
 // ----------------------------------------------------------------------------
 void RealtimePlot::copyCSVToClipboard()
 {
+    PROFILE(RealtimePlot, copyCSVToClipboard);
+
     QVector<QVector<QString> > itemSamples;
     extractCurveData(&itemSamples, true);
     if(itemSamples.size() == 0)
@@ -359,6 +392,8 @@ void RealtimePlot::copyCSVToClipboard()
 // ----------------------------------------------------------------------------
 void RealtimePlot::copyMatlabToClipboard()
 {
+    PROFILE(RealtimePlot, copyMatlabToClipboard);
+
     QVector<QVector<QString>> itemSamples;
     extractCurveData(&itemSamples);
     if(itemSamples.size() == 0)
@@ -382,6 +417,8 @@ void RealtimePlot::copyMatlabToClipboard()
 // ----------------------------------------------------------------------------
 void RealtimePlot::saveAs()
 {
+    PROFILE(RealtimePlot, saveAs);
+
 }
 
 } // namespace uh

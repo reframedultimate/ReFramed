@@ -25,6 +25,14 @@ def process(file_name, contents):
         class_name = match.group(1)
         func_name = match.group(2)
 
+        # For some reason if/for/switch statements are sometimes matched
+        if func_name in ("if", "for", "switch"):
+            continue
+
+        # Ignore all capital function names, as those are macros
+        if func_name.isupper():
+            continue
+
         if class_name is None:
             class_name = file_name + 'Global'
 
@@ -37,11 +45,16 @@ def process(file_name, contents):
         if -1 < contents[match.end():].find('NOPROFILE') < 20:
             continue
 
+        # Skip one-line functions
+        if '\n' not in contents[match.start():match.end()]:
+            continue
+
         contents = contents[:match.end()] +\
             '\n    PROFILE({}, {});\n'.format(class_name, func_name) +\
             contents[match.end():]
 
     return contents
+
 
 def build_files_list(directory, lst, allowed_extensions):
     for dir_path, sub_dir_list, file_list in os.walk(directory):
@@ -49,6 +62,26 @@ def build_files_list(directory, lst, allowed_extensions):
             if not any(file_name.endswith(x) for x in allowed_extensions):
                 continue
             lst.append(os.path.join(dir_path, file_name))
+
+
+def insert_includes(contents):
+    header = '#include "rfcommon/Profiler.hpp"'
+    if header in contents:
+        return contents
+
+    lines = contents.split('\n')
+    found_first_rfcommon = False
+    for i in range(0, len(lines) - 1):
+        if not found_first_rfcommon and '#include "rfcommon' in lines[i]:
+            found_first_rfcommon = True
+        if found_first_rfcommon:
+            if lines[i] < header < lines[i+1] or '#include "rfcommon' not in lines[i+1]:
+                lines.insert(i+1, header)
+                return '\n'.join(lines)
+
+    lines.insert(0, header)
+    return '\n'.join(lines)
+
 
 def process_files(directory):
     allowed_extensions = ('.cpp',)
@@ -63,6 +96,7 @@ def process_files(directory):
             modified_contents = process(file_name_ext, orig_contents)
 
         if not orig_contents == modified_contents:
+            modified_contents = insert_includes(modified_contents)
             print('Updated {}'.format(file_name))
             with open(file_name, 'w') as f:
                 f.write(modified_contents)

@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "ledge/LedgePlugin.hpp"
 #include <QWidget>
 
@@ -22,12 +23,16 @@ rfcommon::Plugin::VideoPlayerInterface* LedgePlugin::videoPlayerInterface() { re
 // ----------------------------------------------------------------------------
 QWidget* LedgePlugin::createView()
 {
+    PROFILE(LedgePlugin, createView);
+
     return new QWidget();
 }
 
 // ----------------------------------------------------------------------------
 void LedgePlugin::destroyView(QWidget* view)
 {
+    PROFILE(LedgePlugin, destroyView);
+
     delete view;
 }
 

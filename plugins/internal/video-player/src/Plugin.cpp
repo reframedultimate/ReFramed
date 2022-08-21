@@ -1,16 +1,21 @@
 #include "video-player/PluginConfig.hpp"
 #include "video-player/VideoPlayerPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QWidget>
 
 static rfcommon::Plugin* createVideoPlayerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
+    PROFILE(PluginGlobal, createVideoPlayerPlugin);
+
     return new VideoPlayerPlugin(factory);
 }
 
 static void destroyVideoPlayerPlugin(rfcommon::Plugin* plugin)
 {
+    PROFILE(PluginGlobal, destroyVideoPlayerPlugin);
+
     delete plugin;
 }
 
@@ -31,11 +36,15 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
+    PROFILE(PluginGlobal, start);
+
     return 0;
 }
 
 static void stop()
 {
+    PROFILE(PluginGlobal, stop);
+
 }
 
 DEFINE_PLUGIN(factories, start, stop)

@@ -6,6 +6,7 @@
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 #include <cassert>
@@ -55,6 +56,8 @@ PluginManager::~PluginManager()
 // ----------------------------------------------------------------------------
 bool PluginManager::loadPlugin(const QString& fileName)
 {
+    PROFILE(PluginManager, loadPlugin);
+
     RFPluginInterface* i;
     const char* pluginError = nullptr;
     qDebug() << "Loading " << fileName;
@@ -107,6 +110,8 @@ bool PluginManager::loadPlugin(const QString& fileName)
 // ----------------------------------------------------------------------------
 QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
 {
+    PROFILE(PluginManager, availableFactoryNames);
+
     QVector<QString> list;
     for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
     {
@@ -119,6 +124,8 @@ QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
 // ----------------------------------------------------------------------------
 const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) const
 {
+    PROFILE(PluginManager, getFactoryInfo);
+
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
@@ -130,6 +137,8 @@ const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) co
 // ----------------------------------------------------------------------------
 rfcommon::Plugin* PluginManager::create(const QString& name)
 {
+    PROFILE(PluginManager, create);
+
     auto it = factories_.find(name);
     if (it == factories_.end())
         return nullptr;
@@ -145,6 +154,8 @@ rfcommon::Plugin* PluginManager::create(const QString& name)
 // ----------------------------------------------------------------------------
 void PluginManager::destroy(rfcommon::Plugin* model)
 {
+    PROFILE(PluginManager, destroy);
+
     const RFPluginFactory* factory = model->factory();
     factory->destroy(model);
 }

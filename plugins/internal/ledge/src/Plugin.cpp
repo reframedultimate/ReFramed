@@ -1,14 +1,19 @@
 #include "ledge/PluginConfig.hpp"
 #include "ledge/LedgePlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 
 static rfcommon::Plugin* createLedgePlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
 {
+    PROFILE(PluginGlobal, createLedgePlugin);
+
     return new LedgePlugin(factory);
 }
 
 static void destroyLedgePlugin(rfcommon::Plugin* plugin)
 {
+    PROFILE(PluginGlobal, destroyLedgePlugin);
+
     delete plugin;
 }
 
@@ -30,11 +35,15 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
+    PROFILE(PluginGlobal, start);
+
     return 0;
 }
 
 static void stop()
 {
+    PROFILE(PluginGlobal, stop);
+
 }
 
 DEFINE_PLUGIN(factories, start, stop)
