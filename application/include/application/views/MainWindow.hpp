@@ -52,6 +52,9 @@ private slots:
     void onDisconnectActionTriggered();
     void onUserLabelsEditorActionTriggered();
 
+    void onAboutActionTriggered();
+    void onViewLogActionTriggered();
+
 protected:
     void closeEvent(QCloseEvent* event) override;
 

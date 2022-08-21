@@ -1,0 +1,39 @@
+/*
+ * NOTE: This file is auto-generated. Changes will be overwritten. Instead,
+ * you should be changing BuildInfo.cpp.in
+ */
+#include "rfcommon/BuildInfo.hpp"
+
+namespace rfcommon {
+
+// ----------------------------------------------------------------------------
+const char* BuildInfo::commit()
+{
+    return "${RFCOMMON_COMMIT_INFO}";
+}
+
+// ----------------------------------------------------------------------------
+const char* BuildInfo::buildHost()
+{
+    return "${RFCOMMON_HOST_COMPUTER}";
+}
+
+// ----------------------------------------------------------------------------
+const char* BuildInfo::compiler()
+{
+    return "${RFCOMMON_COMPILER}";
+}
+
+// ----------------------------------------------------------------------------
+const char* BuildInfo::platform()
+{
+	return "${RFCOMMON_PLATFORM}";
+}
+
+// ----------------------------------------------------------------------------
+int BuildInfo::bits()
+{
+	return ${RFCOMMON_BITS};
+}
+
+}

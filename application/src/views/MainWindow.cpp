@@ -18,7 +18,9 @@
 #include "application/views/VisualizerView.hpp"
 #include "application/Util.hpp"
 
+#include "rfcommon/BuildInfo.hpp"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 
 #include <QStackedWidget>
@@ -28,6 +30,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QDesktopServices>
 
 namespace rfapp {
 
@@ -244,6 +247,29 @@ void MainWindow::onUserLabelsEditorActionTriggered()
 
     // Disable action in dropdown so user can't open this more than once
     ui_->action_userLabelsEditor->setEnabled(false);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onAboutActionTriggered()
+{
+    QString text = QString(
+        "ReFramed\n\n"
+        "Created by TheComet\n"
+        "  https://github.com/TheComet\n"
+        "  https://github.com/reframedultimate/ReFramed\n"
+        "  TheComet#5387, @TheComet93\n") +
+        "Build information:\n" +
+        "  Commit info: " + rfcommon::BuildInfo::commit() + "\n" +
+        "  Build host: " + rfcommon::BuildInfo::buildHost() + "\n" +
+        "  Compiler: " + rfcommon::BuildInfo::compiler();
+    QMessageBox::about(this, "About", text);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onViewLogActionTriggered()
+{
+    QUrl fileURL = QUrl::fromLocalFile(rfcommon::Log::root()->fileName());
+    QDesktopServices::openUrl(fileURL);
 }
 
 // ----------------------------------------------------------------------------

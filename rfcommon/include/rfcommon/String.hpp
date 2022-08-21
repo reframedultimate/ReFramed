@@ -17,9 +17,8 @@ public:
     char* data() { return this->begin_; }
     const char* data() const { return this->begin_; }
     const char* cStr() const { return this->begin_; }
-    S count() const { return this->count_ - 1; }
     const S length() const { return this->count_ - 1; }
-    S capacity() const { return this->capacity_; }
+    S capacity() const { return this->capacity_ - 1; }
 
     char& operator[](S i) { return this->begin_[i]; }
     const char& operator[](S i) const { return this->begin_[i]; }
@@ -63,6 +62,15 @@ public:
     {
         swap(*this, other);
         return *this;
+    }
+
+    void resize(S count)
+    {
+        int nullPos = length();  // number of chars without null terminator
+        SmallVector<char, N + 1, S>::resize(count + 1);
+        if (nullPos > length())
+            nullPos = length();
+        this->begin_[count] = '\0';
     }
 
     template <int N2>
@@ -123,6 +131,13 @@ inline SmallString<N, S> operator+(SmallString<N, S> lhs, const char* rhs)
 {
     lhs += SmallString<N, S>(rhs);
     return lhs;
+}
+template <int N, typename S>
+inline SmallString<N, S> operator+(const char* lhs, SmallString<N, S> rhs)
+{
+    SmallString<N, S> s(lhs);
+    s += SmallString<N, S>(rhs);
+    return s;
 }
 
 using String = SmallString<15>;

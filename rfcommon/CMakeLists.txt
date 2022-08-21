@@ -5,8 +5,33 @@ include (CheckCXXSourceCompiles)
 project ("rfcommon"
     VERSION ${REFRAMED_VERSION}
     LANGUAGES CXX C)
-    
+
 option (RFCOMMON_REFCOUNTED_DEBUG "Adds members to the rfcommon::RefCounted class to help find memory leaks" OFF)
+option (RFCOMMON_PROFILER "Do inline profiling on functions. May slightly decrease performance." OFF)
+
+###############################################################################
+# Config
+###############################################################################
+
+# Determine platform
+if (WIN32 OR CYGWIN)
+	set (RFCOMMON_PLATFORM "WINDOWS")
+elseif (APPLE)
+	set (RFCOMMON_PLATFORM "OSX")
+elseif (UNIX)
+	set (RFCOMMON_PLATFORM "LINUX")
+else ()
+	message (FATAL_ERROR "Platform detection failed")
+endif ()
+
+# Determine bits
+if (${CMAKE_SIZEOF_VOID_P} STREQUAL "4")
+	set (RFCOMMON_BITS "32")
+elseif (${CMAKE_SIZEOF_VOID_P} STREQUAL "8")
+	set (RFCOMMON_BITS "64")
+else ()
+	message (FATAL_ERROR "Unsupported number of bits")
+endif ()
     
 test_visibility_macros (
     RFCOMMON_API_EXPORT 
@@ -51,11 +76,54 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 else ()
     message (FATAL_ERROR "Endian byteswap check was not implemented for this compiler (yet). Please check the above cmake code and see if you can implement it, or submit an issue")
 endif ()
+
+# Determine host computer information
+set (RFCOMMON_HOST_COMPUTER ${CMAKE_HOST_SYSTEM})
+set (RFCOMMON_COMPILER ${CMAKE_CXX_COMPILER_ID})
+find_program (UNAME_PROGRAM uname)
+if (UNAME_PROGRAM)
+    execute_process (
+        COMMAND ${UNAME_PROGRAM} -o -r -m -p -i
+        OUTPUT_VARIABLE RFCOMMON_HOST_COMPUTER)
+    string (REPLACE "\n" "" RFCOMMON_HOST_COMPUTER ${RFCOMMON_HOST_COMPUTER})
+else ()
+    set (RFCOMMON_HOST_COMPUTER ${CMAKE_HOST_SYSTEM_NAME})
+endif ()
+
+# Required for build info
+find_package (Git)
+if (GIT_FOUND)
+    execute_process (COMMAND ${GIT_EXECUTABLE} describe --tags RESULT_VARIABLE RESULT OUTPUT_VARIABLE COMMIT_TAG)
+    if (RESULT)
+        set (RFCOMMIT_TAG "(unknown tag)")
+    else ()
+        string (REPLACE "\n" "" COMMIT_TAG ${COMMIT_TAG})
+    endif ()
+    execute_process (COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD RESULT_VARIABLE RESULT OUTPUT_VARIABLE COMMIT_HASH)
+    if (RESULT)
+        set (RFCOMMIT_HASH "(commit hash unknown)")
+    else ()
+        string (REPLACE "\n" "" COMMIT_HASH ${COMMIT_HASH})
+    endif ()
+    set (RFCOMMON_COMMIT_INFO "${COMMIT_TAG} (${COMMIT_HASH})")
+else ()
+    set (RFCOMMON_COMMIT_INFO "unknown (git not found!)")
+    message (WARNING "Git not found. Build will not contain git revision info.")
+endif ()
     
 configure_file ("cmake/templates/config.hpp.in" "include/rfcommon/config.hpp")
 configure_file ("cmake/templates/Endian.hpp.in" "include/rfcommon/Endian.hpp")
+configure_file ("cmake/templates/BuildInfo.cpp.in" "src/BuildInfo.cpp")
+
+###############################################################################
+# source files and library definition
+###############################################################################
 
 add_library (rfcommon SHARED
+	"cmake/templates/config.hpp.in"
+	"cmake/templates/Endian.hpp.in"
+	"cmake/templates/BuildInfo.cpp.in"
+	
     "src/AnalysisResult.cpp"
     "src/crc32.c"
     "src/DataSet.cpp"
@@ -85,7 +153,8 @@ add_library (rfcommon SHARED
     "src/Hash40Strings.cpp"
     "src/HashMap.cpp"
     "src/HitstunCalculator.cpp"
-    "src/init.c"
+    "src/init.cpp"
+    "src/Log.cpp"
     "src/KnockbackCalculator.cpp"
     "src/MappingInfo.cpp"
     "src/MappingInfoFighter.cpp"
@@ -107,10 +176,18 @@ add_library (rfcommon SHARED
     "src/Vec2.cpp"
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
-    "src/platform/dynlib.c"
-    "src/platform/MappedFile.cpp"
-    "src/platform/tcp_socket.c"
-    "src/platform/time.cpp")
+	"${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/dynlib_windows.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/MappedFile_windows.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/tcp_socket_windows.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/time_windows.cpp>
+	
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/dynlib_linux.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/HighresTimer_linux.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/MappedFile_linux.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/tcp_socket_linux.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/time_linux.cpp>)
 target_include_directories (rfcommon
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -143,6 +220,10 @@ set_target_properties (rfcommon
 
 add_library (ReFramed::rfcommon ALIAS rfcommon)
 
+###############################################################################
+# Dependencies
+###############################################################################
+
 if (UNIX)
     find_package (DL REQUIRED)
     target_link_libraries (rfcommon PRIVATE DL::DL)
@@ -153,6 +234,10 @@ if (WIN32)
         PRIVATE wsock32
         PRIVATE ws2_32)
 endif()
+
+###############################################################################
+# Install targets
+###############################################################################
 
 install (
     TARGETS rfcommon

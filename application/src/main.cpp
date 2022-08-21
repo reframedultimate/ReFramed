@@ -4,10 +4,12 @@
 #include "rfcommon/init.h"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Reference.hpp"
+#include "rfcommon/Log.hpp"
 
 #include <QApplication>
 #include <QStyleFactory>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 #include <iostream>
 
@@ -39,7 +41,7 @@ int processOptions(int argc, char** argv)
 
 struct RFCommonLib
 {
-    RFCommonLib() { result = rfcommon_init(); }
+    RFCommonLib(const char* logPath) { result = rfcommon_init(logPath); }
     ~RFCommonLib() { rfcommon_deinit(); }
 
     int result;
@@ -54,7 +56,11 @@ int main(int argc, char** argv)
 #endif
     QApplication app(argc, argv);
 
-    RFCommonLib rfcommonLib;
+    QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    if (logPath.exists("logs") == false)
+        logPath.mkdir("logs");
+    QByteArray logPathUtf8 = logPath.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
+    RFCommonLib rfcommonLib(logPathUtf8.constData());
     if (rfcommonLib.result != 0)
     {
         QMessageBox::critical(nullptr, "Error", "Failed to initialize rfcommon library");
@@ -87,5 +93,6 @@ int main(int argc, char** argv)
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());
 
     mainWindow.showMaximized();
+    rfcommon::Log::root()->info("Entering main loop");
     return app.exec();
 }

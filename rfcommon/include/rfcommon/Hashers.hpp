@@ -95,7 +95,7 @@ struct Hasher<SmallString<N>, uint32_t>
 {
     typedef uint32_t HashType;
     uint32_t operator()(const SmallString<N>& s) const {
-        return hash32_jenkins_oaat(s.data(), s.count());
+        return hash32_jenkins_oaat(s.data(), s.length());
     }
 };
 
