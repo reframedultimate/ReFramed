@@ -8,6 +8,8 @@
     X(GRABS, "Grabs") \
     X(LEDGE, "Ledge") \
     X(DEFENSIVE, "Defensive") \
+    X(DISADVANTAGE, "Disadvantage") \
+    X(ITEMS, "Items") \
     X(MISC, "Misc") \
     X(UNLABELED, "Unlabeled")
 

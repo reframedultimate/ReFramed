@@ -13,6 +13,8 @@
 #include <cstdio>
 #include <cstdint>
 
+#if defined(RFCOMMON_PROFILER)
+
 namespace rfcommon {
 
 class RFCOMMON_PUBLIC_API ProfileBlock : public RefCounted
@@ -109,9 +111,8 @@ private:
     ProfileRootBlock* profiler_;
 };
 
-} // namespace common
+} // namespace rfcommon
 
-#ifdef RFCOMMON_PROFILER
 namespace rfcommon {
 extern RFCOMMON_PUBLIC_API Profiler* profiler;
 }
