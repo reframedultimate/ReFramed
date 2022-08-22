@@ -40,7 +40,7 @@ public:
     void populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount);
 
 protected:
-    void closeEvent(QCloseEvent* event);
+    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void onFighterSelected(int index);

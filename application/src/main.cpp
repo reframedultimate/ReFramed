@@ -11,10 +11,11 @@
 #include <QStyleFactory>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QTextStream>
 
 #include <iostream>
 
-int processOptions(int argc, char** argv)
+static int processOptions(int argc, char** argv)
 {
     NOPROFILE();
 
@@ -42,6 +43,23 @@ int processOptions(int argc, char** argv)
     return 0;
 }
 
+static bool applyStyle(int idx, QApplication* app)
+{
+    static const char* table[] = {
+        ":/qdarkstyle/light/lightstyle.qss",
+        ":/qdarkstyle/dark/darkstyle.qss"
+    };
+
+    QFile f(table[idx]);
+    f.open(QIODevice::ReadOnly);
+    if (!f.isOpen())
+        return false;
+
+    QTextStream ts(&f);
+    app->setStyleSheet(ts.readAll());
+    return true;
+}
+
 struct RFCommonLib
 {
     RFCommonLib(const char* logPath) { result = rfcommon_init(logPath); }
@@ -59,6 +77,8 @@ int main(int argc, char** argv)
 #ifdef _WIN32
     QApplication::setStyle("fusion");
 #endif
+    //applyStyle(1, qApp);
+
     QApplication app(argc, argv);
 
     QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
@@ -101,11 +121,13 @@ int main(int argc, char** argv)
     rfcommon::Log::root()->info("Entering main loop");
     int result = app.exec();
 
+#if defined(RFCOMMON_PROFILER)
     {
         FILE* fp = fopen("profile.dot", "w");
         if (fp)
             rfcommon::profiler->exportGraph(fp, rfcommon::Profiler::DOT);
     }
+#endif
 
     return result;
 }

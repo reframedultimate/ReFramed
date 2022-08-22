@@ -10,14 +10,14 @@ TEST(NAME, default_constructor)
 {
     SmallString<4> s;
     ASSERT_THAT(s.begin(), Eq(s.end()));
-    ASSERT_THAT(s.count(), Eq(0));
+    ASSERT_THAT(s.length(), Eq(0));
     EXPECT_THAT(s.data()[0], Eq('\0'));
 }
 
 TEST(NAME, construct_with_size)
 {
     SmallString<4> s(2);
-    EXPECT_THAT(s.count(), Eq(2));
+    EXPECT_THAT(s.length(), Eq(2));
     EXPECT_THAT(s[0], Eq('\0'));
     EXPECT_THAT(s[1], Eq('\0'));
 }

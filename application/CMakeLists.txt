@@ -50,7 +50,9 @@ qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/VideoAssociatorDialog.ui"
     "forms/MainWindow.ui")
 qt5_add_resources (APPLICATION_RESOURCES_GEN
-    "res/reframed.qrc")
+    "res/reframed.qrc"
+	"res/qdarkstyle/light/lightstyle.qrc"
+	"res/qdarkstyle/dark/darkstyle.qrc")
 qt5_add_translation (APPLICATION_QM_FILES
     "")
 

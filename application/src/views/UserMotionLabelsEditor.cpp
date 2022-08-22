@@ -24,6 +24,9 @@
 #include <QMenu>
 #include <QAction>
 #include <QInputDialog>
+#include <QKeyEvent>
+#include <QClipboard>
+#include <QApplication>
 
 #include "rfcommon/hash40.hpp"
 
@@ -324,6 +327,41 @@ private:
     rfcommon::FighterID fighterID_;
 };
 
+class TableView : public QTableView
+{
+public:
+    void keyPressEvent(QKeyEvent* event) override
+    {
+        // If Ctrl-C typed
+        // Or use event->matches(QKeySequence::Copy)
+        if (event->key() == Qt::Key_C && (event->modifiers() & Qt::ControlModifier))
+        {
+            QModelIndexList cells = selectedIndexes();
+            qSort(cells); // Necessary, otherwise they are in column order
+
+            QString text;
+            int currentRow = 0; // To determine when to insert newlines
+            foreach(const QModelIndex & cell, cells) {
+                if (text.length() == 0) {
+                    // First item
+                }
+                else if (cell.row() != currentRow) {
+                    // New row
+                    text += '\n';
+                }
+                else {
+                    // Next cell
+                    text += '\t';
+                }
+                currentRow = cell.row();
+                text += cell.data().toString();
+            }
+
+            QApplication::clipboard()->setText(text);
+        }
+    }
+};
+
 }
 
 // ----------------------------------------------------------------------------
@@ -362,7 +400,7 @@ UserMotionLabelsEditor::UserMotionLabelsEditor(
     // Tabs with different categories
     tabWidget_categories = new QTabWidget;
 #define X(category, name) \
-        tableViews_.push(new QTableView); \
+        tableViews_.push(new TableView); \
         tableModels_.push(new TableModel(rfcommon::FighterID::makeInvalid(), manager_->userMotionLabels(), hash40Strings, rfcommon::UserMotionLabelsCategory::category)); \
         tableViews_.back()->setModel(tableModels_.back()); \
         tabWidget_categories->addTab(tableViews_.back(), name);
