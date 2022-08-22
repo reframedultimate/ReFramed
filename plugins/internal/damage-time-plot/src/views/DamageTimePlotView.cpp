@@ -55,6 +55,8 @@ DamageTimePlotView::DamageTimePlotView(DamageTimePlotModel* model, QWidget* pare
 DamageTimePlotView::~DamageTimePlotView()
 {
     model_->dispatcher.removeListener(this);
+
+    delete sessionsList_;
 }
 
 // ----------------------------------------------------------------------------
