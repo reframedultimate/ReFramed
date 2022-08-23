@@ -4,6 +4,8 @@
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Log.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
@@ -558,7 +560,11 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
 {
     PROFILE(ReplayManager, saveReplayOver);
 
+    static int tmpCounter = 0;
+
+    rfcommon::Log* log = rfcommon::Log::root();
     QString oldFileName = oldFile.fileName();
+    QString tmpFile = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
     QDir dir(oldFile.path());
 
     // Determine format string based on type
@@ -570,17 +576,41 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
 
     QFileInfo newFile(dir, composeFileName(session->tryGetMappingInfo(), mdata, formatStr));
 
-    if (dir.rename(oldFileName, "." + oldFileName) == false)
+    log->info("Renaming %s -> %s", oldFile.absoluteFilePath().toUtf8().constData(), newFile.absoluteFilePath().toUtf8().constData());
+    log->info("Dir: %s", dir.absolutePath().toUtf8().constData());
+
+    if (newFile.exists())
+    {
+        log->warning("File %s already exists, aborting rename", newFile.absoluteFilePath().toUtf8().constData());
         return false;
+    }
+
+    if (dir.rename(oldFileName, tmpFile) == false)
+    {
+        log->error("Failed to rename %s -> %s", oldFileName.toUtf8().constData(), tmpFile.toUtf8().constData());
+        return false;
+    }
 
     QByteArray ba = newFile.absoluteFilePath().toUtf8();
     if (session->save(ba.constData()) == false)
     {
-        dir.rename("." + oldFileName, oldFileName);
+        log->error("Failed to save session to %s", ba.constData());
+        if (dir.rename(tmpFile, oldFileName))
+            log->error("Failed to rename %s -> %s", tmpFile.toUtf8().constData(), oldFileName.toUtf8().constData());
+
         return false;
     }
 
-    dir.remove("." + oldFileName);
+    if (dir.remove(tmpFile) == false)
+    {
+        // On Windows, it's not possible to delete a file when it is memory mapped,
+        // which is the case with session files. What we can do is set the FILE_FLAG_DELETE_ON_CLOSE
+        // flag on the file, which will cause it to be deleted as soon as all references
+        // to the session are dropped
+        QByteArray ba = dir.absoluteFilePath(tmpFile).toUtf8();
+        if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
+            log->error("Failed to remove temporary file %s");
+    }
 
     for (auto& group : groups_)
         if (group.second->removeFile(oldFile.absoluteFilePath()))

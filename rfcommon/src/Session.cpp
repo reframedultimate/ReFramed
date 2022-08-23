@@ -6,6 +6,7 @@
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/FighterFlags.hpp"
 #include "rfcommon/FighterStocks.hpp"
+#include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
@@ -877,36 +878,47 @@ bool Session::save(const char* fileName)
 {
     PROFILE(Session, save);
 
+    Log* log = Log::root();
+    log->beginDropdown("Saving session %s", fileName);
+
     // Any property of Session is allowed to be null, so we first calculate
     // how many entries we need. We don't know the offsets or sizes yet.
-    contentTable_.clear();
-    if (mappingInfo_.notNull())
-        contentTable_.emplace(blobTypeMappingInfo);
-    if (metaData_.notNull())
-        contentTable_.emplace(blobTypeMeta);
-    if (frameData_.notNull())
-        contentTable_.emplace(blobTypeFrameData);
-    if (videoMeta_.notNull())
-        contentTable_.emplace(blobTypeVideoMeta);
-    if (videoEmbed_.notNull())
-        contentTable_.emplace(blobTypeVideoEmbed);
+    SmallVector<ContentTableEntry, 5> table;
+    if (tryGetMappingInfo())
+        table.emplace(blobTypeMappingInfo);
+    if (tryGetMetaData())
+        table.emplace(blobTypeMeta);
+    if (tryGetFrameData())
+        table.emplace(blobTypeFrameData);
+    if (tryGetVideoMeta())
+        table.emplace(blobTypeVideoMeta);
+    if (tryGetVideoEmbed())
+        table.emplace(blobTypeVideoEmbed);
 
-    const int headerSize = 5 + 12 * contentTable_.count();
-    uint8_t numEntries = static_cast<uint8_t>(contentTable_.count());
+    const int headerSize = 5 + 12 * table.count();
+    uint8_t numEntries = static_cast<uint8_t>(table.count());
     int offset = headerSize;
+
+    log->info("Content Table has %d entries. Header size %d", numEntries, headerSize);
 
     FILE* file;
     file = fopen(fileName, "wb");
     if (file == nullptr)
+    {
+        log->error("Failed to open file %s: %s", fileName, strerror(errno));
         goto fopen_fail;
+    }
 
-    // We skip header writing the header until after data is written, because
+    // We skip writing the header until after data is written, because
     // there is not enough information yet
     if (fseek(file, headerSize, SEEK_SET) != 0)
+    {
+        log->error("Failed to seek to first offset 0x%x", headerSize);
         goto write_fail;
+    }
 
     // Write content and update offsets/sizes in content table
-    for (auto& entry : contentTable_)
+    for (auto& entry : table)
     {
         if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
         {
@@ -917,6 +929,7 @@ bool Session::save(const char* fileName)
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
+            log->info("Saved mapping info at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
         else if (memcmp(entry.type, blobTypeMeta, 4) == 0)
         {
@@ -925,6 +938,7 @@ bool Session::save(const char* fileName)
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
+            log->info("Saved meta data at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
         else if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
         {
@@ -933,6 +947,7 @@ bool Session::save(const char* fileName)
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
+            log->info("Saved frame data at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
         else if (memcmp(entry.type, blobTypeVideoMeta, 4) == 0)
         {
@@ -941,6 +956,7 @@ bool Session::save(const char* fileName)
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
+            log->info("Saved video meta at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
         else if (memcmp(entry.type, blobTypeVideoEmbed, 4) == 0)
         {
@@ -949,35 +965,46 @@ bool Session::save(const char* fileName)
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
+            log->info("Saved video embed at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
     }
 
     // Rewind and write header
     if (fseek(file, 0, SEEK_SET) != 0)
+    {
+        log->error("Failed to seek to beginning");
         goto write_fail;
+    }
 
     // Write magic
     if (fwrite(magic, 1, 4, file) != 4)
+    {
+        log->error("Failed to write magic");
         goto write_fail;
+    }
 
     // Write contents table
     if (fwrite(&numEntries, 1, 1, file) != 1)
+    {
+        log->error("Failed to write content table size");
         goto write_fail;
-    for (const auto& entry : contentTable_)
+    }
+    for (const auto& entry : table)
     {
         uint32_t offsetLE = toLittleEndian32(entry.offset);
         uint32_t sizeLE = toLittleEndian32(entry.size);
-        if (fwrite(entry.type, 1, 4, file) != 4)
-            goto write_fail;
-        if (fwrite(&offsetLE, 1, 4, file) != 4)
-            goto write_fail;
-        if (fwrite(&sizeLE, 1, 4, file) != 4)
-            goto write_fail;
+        if (fwrite(entry.type, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
+        if (fwrite(&offsetLE, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
+        if (fwrite(&sizeLE, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
     }
 
     if (fclose(file) != 0)
+    {
+        log->error("Failed to close file");
         goto write_fail;
+    }
 
+    log->endDropdown();
     return true;
 
     write_fail:
@@ -989,6 +1016,7 @@ bool Session::save(const char* fileName)
         {
             QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
         }*/
+        log->endDropdown();
     return false;
 }
 

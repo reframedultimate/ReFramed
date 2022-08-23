@@ -8,7 +8,8 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 MappedFile::MappedFile()
-    : address_(nullptr)
+    : fileHandle_(nullptr)
+    , address_(nullptr)
 {
 }
 
@@ -32,7 +33,7 @@ bool MappedFile::open(const char* fileName)
     hFile = CreateFile(
         fileName,               // File name
         GENERIC_READ,           // Read only
-        0,                      // We have exclusive access over file
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         NULL,                   // Default security
         OPEN_EXISTING,          // File must exist
         FILE_ATTRIBUTE_NORMAL,  // Default attributes
@@ -61,9 +62,8 @@ bool MappedFile::open(const char* fileName)
     if (address == NULL)
         goto map_view_failed;
 
-    // The file handle and file mapping aren't required anymore
+    // The file mapping isn't required anymore
     CloseHandle(mapping);
-    CloseHandle(hFile);
 
     // Success, close previous mapping if any, then store new values
     close();
@@ -86,6 +86,31 @@ void MappedFile::close()
     if (address_)
         UnmapViewOfFile(address_);
     address_ = nullptr;
+
+    if (fileHandle_)
+        CloseHandle(static_cast<HANDLE>(fileHandle_));
+    fileHandle_ = nullptr;
+}
+
+// ----------------------------------------------------------------------------
+bool MappedFile::setDeleteOnClose()
+{
+    HANDLE hFile = ReOpenFile(fileHandle_, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, FILE_FLAG_DELETE_ON_CLOSE);
+    if (hFile != INVALID_HANDLE_VALUE)
+        return false;
+
+    fileHandle_ = static_cast<void*>(hFile);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool MappedFile::setDeleteOnClose(const char* fileName)
+{
+    HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return false;
+    CloseHandle(hFile);
+    return true;
 }
 
 }

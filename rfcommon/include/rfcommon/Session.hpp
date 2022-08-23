@@ -71,7 +71,7 @@ private:
         uint32_t offset;
         uint32_t size;
     };
-    SmallVector<ContentTableEntry, 4> contentTable_;
+    SmallVector<ContentTableEntry, 5> contentTable_;
 
     Reference<MappedFile> file_;
     Reference<MappingInfo> mappingInfo_;
