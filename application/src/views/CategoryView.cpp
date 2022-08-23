@@ -23,22 +23,14 @@ CategoryView::CategoryView(
     : QTreeWidget(parent)
     , categoryModel_(categoryModel)
     , replayManager_(replayManager)
-    , dataSetsItem_(new QTreeWidgetItem({"Data Sets"}, static_cast<int>(CategoryType::TOP_LEVEL_DATA_SETS)))
-    , analysisCategoryItem_(new QTreeWidgetItem({"Analysis"}, static_cast<int>(CategoryType::TOP_LEVEL_ANALYSIS)))
+    , sessionItem_(new QTreeWidgetItem({ "Session" }, static_cast<int>(CategoryType::TOP_LEVEL_SESSION)))
     , replayGroupsItem_(new QTreeWidgetItem({"Replay Groups"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_GROUPS)))
-    , replaySourcesItem_(new QTreeWidgetItem({"Replay Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_REPLAY_SOURCES)))
-    , videoSourcesItem_(new QTreeWidgetItem({"Video Sources"}, static_cast<int>(CategoryType::TOP_LEVEL_VIDEO_SOURCES)))
-    , sessionItem_(new QTreeWidgetItem({"Session"}, static_cast<int>(CategoryType::TOP_LEVEL_SESSION)))
 {
     setHeaderHidden(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
 
-    addTopLevelItem(dataSetsItem_);
-    addTopLevelItem(analysisCategoryItem_);
-    addTopLevelItem(replayGroupsItem_);
-    addTopLevelItem(replaySourcesItem_);
-    addTopLevelItem(videoSourcesItem_);
     addTopLevelItem(sessionItem_);
+    addTopLevelItem(replayGroupsItem_);
 
     // Configure which items accept drag/drop
     setAcceptDrops(true);
@@ -53,8 +45,6 @@ CategoryView::CategoryView(
         onReplayManagerVideoSourceAdded(replayManager_->videoSourceName(i), replayManager_->videoSourcePath(i));
 
     replayGroupsItem_->setExpanded(true);
-    replaySourcesItem_->setExpanded(true);
-    videoSourcesItem_->setExpanded(true);
 
     categoryModel_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
@@ -275,18 +265,10 @@ void CategoryView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetIte
 
     switch (static_cast<CategoryType>(current->type()))
     {
-        case CategoryType::TOP_LEVEL_DATA_SETS      : categoryModel_->selectDataSetsCategory(); break;
-        case CategoryType::TOP_LEVEL_ANALYSIS       : categoryModel_->selectAnalysisCategory(); break;
-        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : categoryModel_->selectReplayGroupsCategory(); break;
-        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : categoryModel_->selectReplaySourcesCategory(); break;
-        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : categoryModel_->selectVideoSourcesCategory(); break;
         case CategoryType::TOP_LEVEL_SESSION        : categoryModel_->selectSessionCategory(); break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : categoryModel_->selectReplayGroupsCategory(); break;
 
-        case CategoryType::ITEM_DATA_SET            : /* TODO */ break;
-        case CategoryType::ITEM_ANALYSIS            : /* TODO */ break;
         case CategoryType::ITEM_REPLAY_GROUP        : categoryModel_->selectReplayGroup(current->text(0)); break;
-        case CategoryType::ITEM_REPLAY_SOURCE       : categoryModel_->selectReplaySource(current->text(0)); break;
-        case CategoryType::ITEM_VIDEO_SOURCE        : categoryModel_->selectVideoSource(current->text(0)); break;
     }
 }
 
@@ -337,18 +319,10 @@ void CategoryView::onCategorySelected(CategoryType category)
 
     switch (category)
     {
-        case CategoryType::TOP_LEVEL_ANALYSIS       : SELECT_ITEM(analysisCategoryItem_) break;
-        case CategoryType::TOP_LEVEL_DATA_SETS      : SELECT_ITEM(dataSetsItem_)         break;
-        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_ITEM(replayGroupsItem_)     break;
-        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_ITEM(replaySourcesItem_)    break;
-        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_ITEM(videoSourcesItem_)     break;
         case CategoryType::TOP_LEVEL_SESSION        : SELECT_ITEM(sessionItem_)          break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_ITEM(replayGroupsItem_)     break;
 
-        case CategoryType::ITEM_ANALYSIS:
-        case CategoryType::ITEM_DATA_SET:
         case CategoryType::ITEM_REPLAY_GROUP:
-        case CategoryType::ITEM_REPLAY_SOURCE:
-        case CategoryType::ITEM_VIDEO_SOURCE:
             break;
     }
 
@@ -376,18 +350,10 @@ void CategoryView::onCategoryItemSelected(CategoryType category, const QString& 
 
     switch (category)
     {
-        case CategoryType::TOP_LEVEL_ANALYSIS       : SELECT_CHILD_OF(analysisCategoryItem_) break;
-        case CategoryType::TOP_LEVEL_DATA_SETS      : SELECT_CHILD_OF(dataSetsItem_);        break;
-        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_CHILD_OF(replayGroupsItem_);    break;
-        case CategoryType::TOP_LEVEL_REPLAY_SOURCES : SELECT_CHILD_OF(replaySourcesItem_);   break;
-        case CategoryType::TOP_LEVEL_VIDEO_SOURCES  : SELECT_CHILD_OF(videoSourcesItem_)     break;
         case CategoryType::TOP_LEVEL_SESSION        : SELECT_CHILD_OF(sessionItem_)          break;
+        case CategoryType::TOP_LEVEL_REPLAY_GROUPS  : SELECT_CHILD_OF(replayGroupsItem_);    break;
 
-        case CategoryType::ITEM_ANALYSIS:
-        case CategoryType::ITEM_DATA_SET:
         case CategoryType::ITEM_REPLAY_GROUP:
-        case CategoryType::ITEM_REPLAY_SOURCE:
-        case CategoryType::ITEM_VIDEO_SOURCE:
             break;
     }
 
@@ -470,7 +436,7 @@ void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const Q
 {
     PROFILE(CategoryView, onReplayManagerReplaySourceAdded);
 
-    replaySourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_REPLAY_SOURCE)));
+    //replaySourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_REPLAY_SOURCE)));
     // TODO tooltip for path
 }
 
@@ -478,17 +444,6 @@ void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const Q
 void CategoryView::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName)
 {
     PROFILE(CategoryView, onReplayManagerReplaySourceNameChanged);
-
-    for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
-    {
-        QTreeWidgetItem* item = replaySourcesItem_->child(i);
-        if (item->text(0) == oldName)
-        {
-            item->setText(0, newName);
-            // TODO update tooltip
-            break;
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -503,17 +458,6 @@ void CategoryView::onReplayManagerReplaySourcePathChanged(const QString& name, c
 void CategoryView::onReplayManagerReplaySourceRemoved(const QString& name)
 {
     PROFILE(CategoryView, onReplayManagerReplaySourceRemoved);
-
-    for (int i = 0; i != replaySourcesItem_->childCount(); ++i)
-    {
-        QTreeWidgetItem* item = replaySourcesItem_->child(i);
-        if (item->text(0) == name)
-        {
-            replaySourcesItem_->removeChild(item);
-            // TODO remove tooltip
-            break;
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -521,7 +465,7 @@ void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QD
 {
     PROFILE(CategoryView, onReplayManagerVideoSourceAdded);
 
-    videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_VIDEO_SOURCE)));
+    //videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_VIDEO_SOURCE)));
     // TODO tooltip for path
 }
 
@@ -529,17 +473,6 @@ void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QD
 void CategoryView::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName)
 {
     PROFILE(CategoryView, onReplayManagerVideoSourceNameChanged);
-
-    for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
-    {
-        QTreeWidgetItem* item = videoSourcesItem_->child(i);
-        if (item->text(0) == oldName)
-        {
-            item->setText(0, newName);
-            // TODO update tooltip
-            break;
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -554,17 +487,6 @@ void CategoryView::onReplayManagerVideoSourcePathChanged(const QString& name, co
 void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
 {
     PROFILE(CategoryView, onReplayManagerVideoSourceRemoved);
-
-    for (int i = 0; i != videoSourcesItem_->childCount(); ++i)
-    {
-        QTreeWidgetItem* item = videoSourcesItem_->child(i);
-        if (item->text(0) == name)
-        {
-            videoSourcesItem_->removeChild(item);
-            // TODO remove tooltip
-            break;
-        }
-    }
 }
 
 }

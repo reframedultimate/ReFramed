@@ -8,14 +8,11 @@
 #include "application/models/ReplayManager.hpp"
 #include "application/models/UserMotionLabelsManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
-#include "application/views/AnalysisView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
-#include "application/views/DataSetFilterView.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
-#include "application/views/VisualizerView.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/BuildInfo.hpp"
@@ -58,12 +55,8 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     setWindowTitle("ReFramed - " APP_VERSION_STR);
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
-    mainView_->addWidget(replayGroupView_);
-    mainView_->addWidget(new DataSetFilterView(replayManager_.get()));
-    mainView_->addWidget(new VisualizerView(pluginManager_.get()));
-    mainView_->addWidget(new QWidget);
-    mainView_->addWidget(new QWidget);
     mainView_->addWidget(activeSessionView_);
+    mainView_->addWidget(replayGroupView_);
     setCentralWidget(mainView_);
 
     QDockWidget* categoryDock = new QDockWidget(this);
@@ -81,8 +74,6 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
             this, &MainWindow::onDisconnectActionTriggered);
     connect(ui_->action_userLabelsEditor, &QAction::triggered,
             this, &MainWindow::onUserLabelsEditorActionTriggered);
-
-    categoryModel_->selectReplayGroupsCategory();
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
@@ -303,28 +294,12 @@ void MainWindow::onCategorySelected(CategoryType category)
 
     switch (category)
     {
-    case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
+    case CategoryType::TOP_LEVEL_SESSION:
         mainView_->setCurrentIndex(0);
         break;
 
-    case CategoryType::TOP_LEVEL_DATA_SETS:
+    case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
         mainView_->setCurrentIndex(1);
-        break;
-
-    case CategoryType::TOP_LEVEL_ANALYSIS:
-        mainView_->setCurrentIndex(2);
-        break;
-
-    case CategoryType::TOP_LEVEL_REPLAY_SOURCES:
-        mainView_->setCurrentIndex(3);
-        break;
-
-    case CategoryType::TOP_LEVEL_VIDEO_SOURCES:
-        mainView_->setCurrentIndex(4);
-        break;
-
-    case CategoryType::TOP_LEVEL_SESSION:
-        mainView_->setCurrentIndex(5);
         break;
 
     default: break;

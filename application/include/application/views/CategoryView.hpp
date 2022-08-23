@@ -11,9 +11,10 @@ namespace rfapp {
 class CategoryModel;
 class ReplayManager;
 
-class CategoryView : public QTreeWidget
-                   , public CategoryListener
-                   , public ReplayManagerListener
+class CategoryView 
+        : public QTreeWidget
+        , public CategoryListener
+        , public ReplayManagerListener
 {
     Q_OBJECT
 public:
@@ -57,13 +58,9 @@ private:
 
 private:
     CategoryModel* categoryModel_;
-    ReplayManager* replayManager_;
-    QTreeWidgetItem* dataSetsItem_;
-    QTreeWidgetItem* analysisCategoryItem_;
-    QTreeWidgetItem* replayGroupsItem_;
-    QTreeWidgetItem* replaySourcesItem_;
-    QTreeWidgetItem* videoSourcesItem_;
     QTreeWidgetItem* sessionItem_;
+    ReplayManager* replayManager_;
+    QTreeWidgetItem* replayGroupsItem_;
 
     QHash<QTreeWidgetItem*, QString> oldGroupNames_;
 };
