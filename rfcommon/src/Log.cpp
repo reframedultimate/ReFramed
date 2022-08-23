@@ -7,7 +7,8 @@
 #include <ctime>
 #include <cstring>
 #include <cstdlib>
-#include <mutex>
+
+#if defined(RFCOMMON_LOGGING)
 
 namespace rfcommon {
 
@@ -206,7 +207,8 @@ struct LogPrivate
     rfcommon::String absFileName;
     rfcommon::String name;
     rfcommon::String currentMsg;
-    std::mutex mutex;
+
+    bool dropDownOpen = false;
 };
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
@@ -378,50 +380,67 @@ Log* Log::child(const char* logName)
         fflush(stdout)
 
 // ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_DEBUG
+void Log::debug(const char* fmt, ...)
+{
+    NOPROFILE();
+    FORWARD_TO_FPRINTF(toHTML("656565", "DEBUG", fmt).cStr());
+}
+#endif
+
+// ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_INFO
 void Log::info(const char* fmt, ...)
 {
     NOPROFILE();
     FORWARD_TO_FPRINTF(toHTML("353535", "INFO", fmt).cStr());
 }
+#endif
 
 // ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_NOTICE
 void Log::notice(const char* fmt, ...)
 {
     NOPROFILE();
     FORWARD_TO_FPRINTF(toHTML("007050", "NOTICE", fmt).cStr());
 }
+#endif
 
 // ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_WARNING
 void Log::warning(const char* fmt, ...)
 {
     NOPROFILE();
     FORWARD_TO_FPRINTF(toHTML("ff7000", "WARNING", fmt).cStr());
 }
+#endif
 
 // ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_ERROR
 void Log::error(const char* fmt, ...)
 {
     NOPROFILE();
     FORWARD_TO_FPRINTF(toHTML("ff0020", "ERROR", fmt).cStr());
 }
+#endif
 
 // ----------------------------------------------------------------------------
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_FATAL
 void Log::fatal(const char* fmt, ...)
 {
     NOPROFILE();
     FORWARD_TO_FPRINTF(toHTML("ff0020", "FATAL", fmt).cStr());
 }
+#endif
 
 // ----------------------------------------------------------------------------
 void Log::beginDropdown(const char* title, ...)
 {
     NOPROFILE();
 
-    /*
-     * Hold a mutex until the dropdown is closed again. Prevents other threads
-     * from logging stuff into the dropdown.
-     */
-    d_->mutex.lock();
+    if (d_->dropDownOpen)
+        return;
+    d_->dropDownOpen = true;
 
     va_list va;
     va_start(va, title);
@@ -444,10 +463,12 @@ void Log::endDropdown()
 {
     NOPROFILE();
 
+    if (d_->dropDownOpen == false)
+        return;
+    d_->dropDownOpen = false;
+
     fprintf(d_->fp, "</pre></ul></div></div><pre>");
     fflush(d_->fp);
-
-    d_->mutex.unlock();
 }
 
 // ----------------------------------------------------------------------------
@@ -475,3 +496,5 @@ const char* Log::name() const
 }
 
 }
+#else
+#endif

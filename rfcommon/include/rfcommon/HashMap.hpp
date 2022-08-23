@@ -16,7 +16,13 @@ public:
     static void deallocate(char* p);
 };
 
-template <typename K, typename V, typename Hasher=Hasher<K>, typename S=int32_t>
+template <typename K>
+struct CompareEqual
+{
+    bool operator()(const K& a, const K& b) const { return a == b; }
+};
+
+template <typename K, typename V, typename Hasher=Hasher<K>, typename CompareEqual=CompareEqual<K>, typename S=int32_t>
 class HashMap : private HashMapAlloc
 {
     using H = typename Hasher::HashType;
@@ -64,7 +70,7 @@ public:
         const V& value() const { return value_; }
 
         KeyValueRef* operator->() { return this; }
-        const ConstKeyValueRef* operator->() const { return this; }
+        const KeyValueRef* operator->() const { return this; }
 
     private:
         K& key_;
@@ -336,7 +342,8 @@ private:
             // origin keys), then we can conclude this key was already inserted
             if (table_[pos] == hash)
             {
-                if (keys_[pos] == key)
+                CompareEqual c;
+                if (c(keys_[pos], key))
                     return false;
             }
             else

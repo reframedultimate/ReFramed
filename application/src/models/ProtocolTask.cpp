@@ -1,5 +1,6 @@
 #include "application/models/ProtocolTask.hpp"
 #include "rfcommon/FighterState.hpp"
+#include "rfcommon/Log.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
@@ -14,8 +15,9 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ProtocolTask::ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, QObject* parent)
+ProtocolTask::ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, rfcommon::Log* log, QObject* parent)
     : QThread(parent)
+    , log_(log)
     , ipAddress_(ipAddress)
     , mappingInfoChecksum_(mappingInfoChecksum)
     , port_(port)
@@ -66,8 +68,10 @@ void* ProtocolTask::connectAndCheckVersion()
     // Attempt to connect to the host
     tcp_socket socket;
     QByteArray ba = ipAddress_.toLocal8Bit();
-    if (tcp_socket_connect_to_host(&socket, ba.data(), port_) != 0)
+    log_->info("Connecting to %s:%d", ba.constData(), port_);
+    if (tcp_socket_connect_to_host(&socket, ba.constData(), port_) != 0)
     {
+        log_->error("Failed to connect to %s:%d: %s", ba.constData(), port_, tcp_socket_get_connect_error(&socket));
         emit connectionFailure(
                     tcp_socket_get_connect_error(&socket),
                     ipAddress_, port_);
@@ -76,8 +80,10 @@ void* ProtocolTask::connectAndCheckVersion()
 
     // Request protocol version from switch so we can verify we're compatible
     char buf[2] = {ProtocolTask::ProtocolVersion};
+    log_->info("Requesting protocol version");
     if (tcp_socket_write(&socket, buf, 1) != 1)
     {
+        log_->error("Socket write error, closing");
         emit connectionFailure("Failed to write to socket", ipAddress_, port_);
         goto socket_error;
     }
@@ -88,14 +94,17 @@ void* ProtocolTask::connectAndCheckVersion()
         mutex_.lock();
             if (requestShutdown_)
             {
+                log_->info("Shutdown requested, closing socket");
                 mutex_.unlock();
                 break;
             }
         mutex_.unlock();
 
         // Read message type
+        log_->info("Waiting for version...");
         if (tcp_socket_read_exact(&socket, buf, 1) != 1)
         {
+            log_->error("Socket read error, closing");
             emit connectionFailure("Failed to read from socket", ipAddress_, port_);
             goto socket_error;
         }
@@ -105,6 +114,7 @@ void* ProtocolTask::connectAndCheckVersion()
             case ProtocolVersion: {
                 if (tcp_socket_read_exact(&socket, buf, 2) != 2)
                 {
+                    log_->error("Socket read error, closing");
                     emit connectionFailure("Failed to read from socket", ipAddress_, port_);
                     goto socket_error;
                 }
@@ -114,11 +124,13 @@ void* ProtocolTask::connectAndCheckVersion()
                 const char minor = 0x00;
                 if (buf[0] == major && buf[1] == minor)
                 {
+                    log_->info("Protocol version is %d.%d, we support %d.%d. Accepting", buf[0], buf[1], major, minor);
                     emit connectionSuccess(ipAddress_, port_);
                     return tcp_socket_to_handle(&socket);
                 }
 
                 // Protocol version does not match
+                log_->error("Protocol version is %d.%d, we support %d.%d. Aborting.", buf[0], buf[1], major, minor);
                 emit connectionFailure(
                             QString("Unsupported protocol version major=%1, minor=%2").arg(buf[0]).arg(buf[1]),
                             ipAddress_, port_);
@@ -166,6 +178,7 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
         mutex_.lock();
             if (requestShutdown_)
             {
+                log_->info("Shutdown requested, closing socket");
                 mutex_.unlock();
                 goto disconnect_error;
             }
@@ -173,34 +186,50 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
 
         uint8_t msg;
         if (tcp_socket_read_exact(&socket, &msg, 1) != 1)
+        {
+            log_->error("Failed to read message type from socket, closing");
             goto disconnect_error;
+        }
 
         switch (msg)
         {
             case MappingInfoChecksum: {
                 uint8_t buf[4];
                 if (tcp_socket_read_exact(&socket, buf, 4) != 4)
+                {
+                    log_->error("Failed to read mapping info checksum from socket, closing");
                     goto disconnect_error;
+                }
 
                 // Checksum is the same as our local copy, return success and
                 // start normal protocol stuff
                 uint32_t checksum = (buf[0] << 24) | (buf[1] << 16) | (buf[2] <<  8) | (buf[3] <<  0);
+                log_->info("Received mapping info checksum %d, ours is %d", checksum, mappingInfoChecksum_);
                 if (mappingInfoChecksum_ == checksum)
                     return true;
 
                 // Our mapping info is out of date, request new
+                log_->info("Requesting mapping info");
                 buf[0] = MappingInfoRequest;
                 if (tcp_socket_write(&socket, buf, 1) != 1)
+                {
+                    log_->error("Socket write error, closing");
                     goto disconnect_error;
+                }
             } break;
 
             case MappingInfoRequest: {
                 uint8_t buf[4];
                 if (tcp_socket_read_exact(&socket, buf, 4) != 4)
+                {
+                    log_->error("Failed to read new mapping info checksum from socket");
                     goto disconnect_error;
+                }
 
                 // Prepare a new mapping info structure to fill in
                 uint32_t checksum = (buf[0] << 24) | (buf[1] << 16) | (buf[2] <<  8) | (buf[3] <<  0);
+                log_->info("Received mapping info checksum %d", checksum);
+                log_->beginDropdown("Mapping Info");
                 mappingInfo = new rfcommon::MappingInfo(checksum);
             } break;
 
@@ -208,15 +237,19 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
                 uint8_t fighterID;
                 uint8_t len;
                 char name[256];
-                if (tcp_socket_read_exact(&socket, &fighterID, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &len, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, name, len) != len) goto disconnect_error;
+                if (tcp_socket_read_exact(&socket, &fighterID, 1) != 1) { log_->error("Failed to read fighter ID"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &len, 1) != 1) { log_->error("Failed to read fighter len"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, name, len) != len) { log_->error("Failed to read fighter name"); goto disconnect_error; }
                 name[static_cast<int>(len)] = '\0';
 
                 // Something is weird
                 if (mappingInfo.isNull())
+                {
+                    log_->error("MappingInfoFighterKinds received even though it wasn't requested?");
                     goto disconnect_error;
+                }
 
+                log_->info("Fighter ID: %d - %s", fighterID, name);
                 mappingInfo->fighter.add(rfcommon::FighterID::fromValue(fighterID), name);
             } break;
 
@@ -224,11 +257,11 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
                 uint8_t fighterIDValue;
                 uint8_t statusID_l, statusID_h, len;
                 char name[256];
-                if (tcp_socket_read_exact(&socket, &fighterIDValue, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &statusID_h, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &statusID_l, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &len, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, name, len) != len) goto disconnect_error;
+                if (tcp_socket_read_exact(&socket, &fighterIDValue, 1) != 1) { log_->error("Failed to read fighter ID for status"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &statusID_h, 1) != 1) { log_->error("Failed to read fighter status_h"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &statusID_l, 1) != 1) { log_->error("Failed to read fighter status_l"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &len, 1) != 1) { log_->error("Failed to read fighter status len"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, name, len) != len) { log_->error("Failed to read fighter status name"); goto disconnect_error; }
                 name[static_cast<int>(len)] = '\0';
 
                 const auto statusID = rfcommon::FighterStatus::fromValue((statusID_h << 8) | (statusID_l << 0));
@@ -236,29 +269,42 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
 
                 // Something is weird
                 if (mappingInfo.isNull())
+                {
+                    log_->error("MappingInfoFighterStatusKinds received even though it wasn't requested?");
                     goto disconnect_error;
+                }
 
                 if (fighterIDValue == 255)
+                {
+                    log_->info("Base status: %d - %s", statusID, name);
                     mappingInfo->status.addBaseName(statusID, name);
+                }
                 else
+                {
+                    log_->info("Specific status %d: %d - %s", fighterID, statusID, name);
                     mappingInfo->status.addSpecificName(fighterID, statusID, name);
+                }
             } break;
 
             case MappingInfoStageKinds: {
                 uint8_t stageID_l, stageID_h, len;
                 char name[256];
-                if (tcp_socket_read_exact(&socket, &stageID_h, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &stageID_l, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, &len, 1) != 1) goto disconnect_error;
-                if (tcp_socket_read_exact(&socket, name, len) != len) goto disconnect_error;
+                if (tcp_socket_read_exact(&socket, &stageID_h, 1) != 1) { log_->error("Failed to read stage_h"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &stageID_l, 1) != 1) { log_->error("Failed to read stage_l"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &len, 1) != 1) { log_->error("Failed to read stage len"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, name, len) != len) { log_->error("Failed to read stage name"); goto disconnect_error; }
                 name[static_cast<int>(len)] = '\0';
 
                 auto stageID = rfcommon::StageID::fromValue((stageID_h << 8) | (stageID_l << 0));
 
                 // Something is weird
                 if (mappingInfo.isNull())
+                {
+                    log_->error("MappingInfoStageKinds received even though it wasn't requested?");
                     goto disconnect_error;
+                }
 
+                log_->info("Stage ID: %d - %s", stageID, name);
                 mappingInfo->stage.add(stageID, name);
             } break;
 
@@ -266,25 +312,33 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
                 uint8_t status;
                 uint8_t len;
                 char name[256];
-                if (tcp_socket_read_exact(&socket, &status, 1) != 1) break;
-                if (tcp_socket_read_exact(&socket, &len, 1) != 1) break;
-                if (tcp_socket_read_exact(&socket, name, len) != len) break;
+                if (tcp_socket_read_exact(&socket, &status, 1) != 1) { log_->error("Failed to read hit status ID"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, &len, 1) != 1) { log_->error("Failed to read hit status len"); goto disconnect_error; }
+                if (tcp_socket_read_exact(&socket, name, len) != len) { log_->error("Failed to read hit status name"); goto disconnect_error; }
                 name[static_cast<int>(len)] = '\0';
 
                 // Something is weird
                 if (mappingInfo.isNull())
+                {
+                    log_->error("MappingInfoHitStatusKinds received even though it wasn't requested?");
                     goto disconnect_error;
+                }
 
+                log_->info("Hit Status ID: %d - %s", status, name);
                 mappingInfo->hitStatus.add(rfcommon::FighterHitStatus::fromValue(status), name);
-
             } break;
 
             case MappingInfoRequestComplete: {
 
                 // Something is weird
                 if (mappingInfo.isNull())
+                {
+                    log_->error("MappingInfoRequestComplete received even though it wasn't requested?");
                     goto disconnect_error;
+                }
 
+                log_->endDropdown();
+                log_->notice("All mapping info received");
                 emit mappingInfoReceived(mappingInfo.detach());
                 return true;
             } break;
@@ -303,6 +357,7 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
     }
 
 disconnect_error:
+    log_->endDropdown();
     tcp_socket_shutdown(&socket);
     return false;
 }
@@ -329,6 +384,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
         mutex_.lock();
             if (requestShutdown_)
             {
+                log_->info("Shutdown requested, closing socket");
                 mutex_.unlock();
                 goto disconnect;
             }
@@ -336,16 +392,25 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
 
         uint8_t msg;
         if (tcp_socket_read_exact(&socket, &msg, 1) != 1)
+        {
+            log_->error("Failed to read message type from socket, closing");
             goto disconnect;
+        }
 
         switch (msg)
         {
 
             case TrainingStart:
             case TrainingResume: {
+                log_->beginDropdown("Training Session");
+                log_->info("Training %s", msg == TrainingStart ? "started" : "resumed");
+
                 uint8_t buf[4];
                 if (tcp_socket_read_exact(&socket, buf, 4) != 4)
-                    break;
+                {
+                    log_->error("Failed to read training start/resume data");
+                    goto disconnect;
+                }
 
 #define stageH          buf[0]
 #define stageL          buf[1]
@@ -357,6 +422,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                     rfcommon::FighterID::fromValue(cpuFighterID)
                 });
                 rfcommon::SmallVector<rfcommon::String, 2> tags({"Player 1", "CPU"});
+
+                log_->info("stageID: %d, player 1: %d, cpu: %d", stageID, playerFighterID, cpuFighterID);
 #undef stageH
 #undef stageL
 #undef playerFighterID
@@ -379,15 +446,23 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
             } break;
 
             case TrainingEnd: {
+                log_->info("Training ended");
+                log_->endDropdown();
                 emit trainingEnded();
             } break;
 
             case GameStart:
             case GameResume: {
+                log_->beginDropdown("Game Session");
+                log_->info("Game %s", msg == GameStart ? "started" : "resumed");
+
                 uint8_t buf[3];
                 char tag[256];
                 if (tcp_socket_read_exact(&socket, buf, 3) != 3)
-                    break;
+                {
+                    log_->error("Failed to read game start/resume data");
+                    goto disconnect;
+                }
 
 #define stageH buf[0]
 #define stageL buf[1]
@@ -397,27 +472,42 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
                 auto names = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
 
+                log_->info("stageID: %d, player count: %d", stageID, playerCount);
+
                 fighterSlots.resize(playerCount);
                 if (tcp_socket_read_exact(&socket, fighterSlots.data(), playerCount) != playerCount)
+                {
+                    log_->error("Failed to read fighter slots");
                     goto disconnect;
+                }
+                for (int i = 0; i != fighterSlots.count(); ++i)
+                    log_->info("idx %d -> slot %d", i, fighterSlots[i]);
 
                 if (tcp_socket_read_exact(&socket, fighterIDValues.data(), playerCount) != playerCount)
+                {
+                    log_->error("Failed to read fighter ID values");
                     goto disconnect;
+                }
 
                 auto fighterIDs = rfcommon::SmallVector<rfcommon::FighterID, 2>::makeReserved(playerCount);
-                for (auto value : fighterIDValues)
-                    fighterIDs.push(rfcommon::FighterID::fromValue(value));
+                for (int i = 0; i != fighterIDValues.count(); ++i)
+                {
+                    log_->info("idx %d: FighterID: %d", i, fighterIDValues[i]);
+                    fighterIDs.push(rfcommon::FighterID::fromValue(fighterIDValues[i]));
+                }
 
                 for (int i = 0; i < playerCount; ++i)
                 {
                     // TODO Tags on switch are stored as UTF-16. Have to update
                     // protocol at some point
                     uint8_t len;
-                    if (tcp_socket_read_exact(&socket, &len, 1) != 1) goto disconnect;
-                    if (tcp_socket_read_exact(&socket, tag, len) != len) goto disconnect;
+                    if (tcp_socket_read_exact(&socket, &len, 1) != 1) { log_->error("Failed to player tag len"); goto disconnect; }
+                    if (tcp_socket_read_exact(&socket, tag, len) != len) { log_->error("Failed to player tag string"); goto disconnect; }
                     tag[static_cast<int>(len)] = '\0';
                     tags.push(tag);
                     names.push(tag);
+
+                    log_->info("idx %d: Tag: %s, Name: %s", i, tags[i].cStr(), names[i].cStr());
                 }
 #undef stageH
 #undef stageL
@@ -436,6 +526,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
             } break;
 
             case GameEnd: {
+                log_->info("Game ended");
+                log_->endDropdown();
                 emit gameEnded();
             } break;
 
@@ -547,8 +639,10 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                                     attack_connected,
                                     facing_direction,
                                     opponent_in_hitlag);
-                        break;
+                        goto successfully_mapped_to_slot;
                     }
+                log_->warning("Received fighter state for slot %d, but this slot is not mapped!", slotIdx);
+                successfully_mapped_to_slot:;
 #undef frame0
 #undef frame1
 #undef frame2
@@ -583,6 +677,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
     }
 
 disconnect:
+    log_->info("socket shutdown");
+    log_->endDropdown();
     tcp_socket_shutdown(&socket);
 }
 

@@ -2,8 +2,9 @@
 
 /* Config ------------------------------------------------------------------ */
 
-#cmakedefine RFCOMMON_REFCOUNTED_DEBUG
+#cmakedefine RFCOMMON_LOGGING
 #cmakedefine RFCOMMON_PROFILER
+#cmakedefine RFCOMMON_REFCOUNTED_DEBUG
 
 #define RFCOMMON_PLATFORM_${RFCOMMON_PLATFORM}
 #define RFCOMMON_BITS_${RFCOMMON_BITS}
@@ -49,3 +50,16 @@
 #   define RFCOMMON_PUBLIC_API ${RFCOMMON_API_IMPORT}
 #endif
 #define RFCOMMON_PRIVATE_API ${RFCOMMON_API_LOCAL}
+
+/* Log levels -------------------------------------------------------------- */
+
+#if defined(RFCOMMON_LOGGING)
+#	define RFCOMMON_LOG_DEBUG   0
+#	define RFCOMMON_LOG_INFO    1
+#	define RFCOMMON_LOG_NOTICE  2
+#	define RFCOMMON_LOG_WARNING 3
+#	define RFCOMMON_LOG_ERROR   4
+#	define RFCOMMON_LOG_FATAL   5
+
+# 	define RFCOMMON_LOG_LEVEL RFCOMMON_LOG_${RFCOMMON_LOG_LEVEL}
+#endif

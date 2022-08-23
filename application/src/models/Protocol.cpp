@@ -2,12 +2,13 @@
 #include "application/models/ProtocolTask.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Log.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/MappedFile.hpp"
-#include "rfcommon/MetaData.hpp"
 #include <QTimer>
 #include <QStandardPaths>
 #include <QDir>
@@ -36,7 +37,7 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
     disconnectFromServer();
 
     uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
-    task_.reset(new ProtocolTask(ipAddress, port, mappingInfoChecksum));
+    task_.reset(new ProtocolTask(ipAddress, port, mappingInfoChecksum, rfcommon::Log::root()->child("protocol")));
 
     QByteArray ba = ipAddress.toUtf8();
     const char* ipCstr = ba.constData();

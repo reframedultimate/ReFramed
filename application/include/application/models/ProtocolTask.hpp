@@ -4,6 +4,7 @@
 #include <QMutex>
 
 namespace rfcommon {
+    class Log;
     class MappingInfo;
     class MetaData;
 }
@@ -38,7 +39,7 @@ public:
         FighterState,
     };
 
-    ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, QObject* parent=nullptr);
+    ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, rfcommon::Log* log, QObject* parent=nullptr);
     ~ProtocolTask();
 
 signals:
@@ -77,6 +78,7 @@ private:
     void handleProtocol(void* tcp_socket_handle);
 
 private:
+    rfcommon::Log* log_;
     QString ipAddress_;
     QMutex mutex_;
     uint32_t mappingInfoChecksum_;

@@ -15,6 +15,7 @@ struct LogPrivate;
  *
  * All messages are converted to HTML so it looks nice in a browser.
  */
+#if defined(RFCOMMON_LOGGING)
 class RFCOMMON_PUBLIC_API Log
 {
     Log();
@@ -46,16 +47,47 @@ public:
      */
     void endDropdown();
 
+    /// Debug, noisy stuff
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_DEBUG
+    void debug(const char* fmt, ...);
+#else
+    void debug(const char* fmt, ...) {}
+#endif
+
     /// Non-critical information. Uses the printf-style format string.
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_INFO
     void info(const char* fmt, ...);
+#else
+    void info(const char* fmt, ...) {}
+#endif
+
     /// More interesting information, but not critical. Uses the printf-style format string.
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_NOTICE
     void notice(const char* fmt, ...);
+#else
+    void notice(const char* fmt, ...) {}
+#endif
+
     /// Warning message. Uses the printf-style format string.
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_WARNING
     void warning(const char* fmt, ...);
+#else
+    void warning(const char* fmt, ...) {}
+#endif
+
     /// An error has occurred. Uses the printf-style format string.
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_ERROR
     void error(const char* fmt, ...);
+#else
+    void error(const char* fmt, ...) {}
+#endif
+
     /// A fatal error has occurred. Uses the printf-style format string.
+#if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_FATAL
     void fatal(const char* fmt, ...);
+#else
+    void fatal(const char* fmt, ...) {}
+#endif
 
     //! Returns the open file stream of the log file.
     FILE* fileStream() const;
@@ -67,5 +99,39 @@ public:
 private:
     LogPrivate* d_;
 };
+#else
+class RFCOMMON_PUBLIC_API Log
+{
+    Log() {}
+    ~Log() {}
+public:
+    static void init(const char* logPath) {}
+    static void deinit() {}
+    static Log* root() { static Log log; return &log; }
+    Log* child(const char* logName) { return this; }
+    void beginDropdown(const char* title, ...) {}
+    void endDropdown() {}
+    void debug(const char* fmt, ...) {}
+    void info(const char* fmt, ...) {}
+    void notice(const char* fmt, ...) {}
+    void warning(const char* fmt, ...) {}
+    void error(const char* fmt, ...) {}
+    void fatal(const char* fmt, ...) {}
 
-} // namespace common
+    FILE* fileStream() const { return nullptr; }
+    const char* fileName() const { return ""; }
+    const char* name() const { return ""; }
+};
+#endif
+
+class RFCOMMON_PUBLIC_API LogDropdown
+{
+public:
+    LogDropdown(Log* log, const char* name) : log_(log) { log_->beginDropdown(name); }
+    ~LogDropdown() { log_->endDropdown(); }
+
+private:
+    Log* log_;
+};
+
+} // namespace rfcommon

@@ -81,11 +81,17 @@ int main(int argc, char** argv)
 
     QApplication app(argc, argv);
 
+#if defined(RFCOMMON_LOGGING)
     QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     if (logPath.exists("logs") == false)
         logPath.mkdir("logs");
     QByteArray logPathUtf8 = logPath.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
-    RFCommonLib rfcommonLib(logPathUtf8.constData());
+    const char* logPathUtf8CStr = logPathUtf8.constData();
+#else
+    const char* logPathUtf8CStr = "";
+#endif
+
+    RFCommonLib rfcommonLib(logPathUtf8CStr);
     if (rfcommonLib.result != 0)
     {
         QMessageBox::critical(nullptr, "Error", "Failed to initialize rfcommon library");
@@ -118,7 +124,7 @@ int main(int argc, char** argv)
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());
 
     mainWindow.showMaximized();
-    rfcommon::Log::root()->info("Entering main loop");
+    rfcommon::Log::root()->notice("Entering main loop");
     int result = app.exec();
 
 #if defined(RFCOMMON_PROFILER)

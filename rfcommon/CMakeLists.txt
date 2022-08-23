@@ -1,13 +1,17 @@
 include (TestVisibilityMacros)
 include (TestBigEndian)
 include (CheckCXXSourceCompiles)
+include (CMakeDependentOption)
 
 project ("rfcommon"
     VERSION ${REFRAMED_VERSION}
     LANGUAGES CXX C)
 
-option (RFCOMMON_REFCOUNTED_DEBUG "Adds members to the rfcommon::RefCounted class to help find memory leaks" OFF)
+option (RFCOMMON_LOGGING "Enable logging functionality in the entire application" ON)
 option (RFCOMMON_PROFILER "Do inline profiling on functions. May slightly decrease performance." OFF)
+option (RFCOMMON_REFCOUNTED_DEBUG "Adds members to the rfcommon::RefCounted class to help find memory leaks" OFF)
+set (RFCOMMON_LOG_LEVEL "DEBUG" CACHE STRING "Any log calls under this level are optimized out")
+set_property (CACHE RFCOMMON_LOG_LEVEL PROPERTY STRINGS "DEBUG;INFO;NOTICE;WARNING;ERROR;FATAL")
 
 ###############################################################################
 # Config
