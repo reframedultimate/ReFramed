@@ -1,46 +1,34 @@
 #include "rfcommon/time.h"
 #include "rfcommon/Profiler.hpp"
+
 #include <iomanip>
 #include <sstream>
+#include <ctime>
+#include <cerrno>
+#include <cstring>
 
-#if defined(_WIN32)
-#   include <windows.h>
-#else
-#   include <time.h>
-#   include <sys/time.h>
-#	include <errno.h>
-#endif
+#include <sys/time.h>
 
 /* ------------------------------------------------------------------------- */
 uint64_t time_milli_seconds_since_epoch(void)
 {
     PROFILE(time_linuxGlobal, time_milli_seconds_since_epoch);
 
-#if defined(WIN32)
-    FILETIME ft;
-    uint64_t ns100;
-    GetSystemTimeAsFileTime(&ft);
-    /* Number of 100ns intervals since January 1, 1601 (UTC) */
-    ns100 = ((uint64_t)ft.dwHighDateTime <<32) + (uint64_t)ft.dwLowDateTime;
-    /* Jan 1 1601 -> Jan 1 1970, convert to ms */
-    return (ns100 - 116444736000000000LL) / 10000;
-#else
     struct timeval tv;
-#	ifdef DEBUG
+#ifndef NDEBUG
     if (
-#	endif
+#endif
         gettimeofday(&tv, NULL)
-#	ifdef DEBUG
+#ifndef NDEBUG
         != 0)
     {
-        fprintf(stderr, "gettimeofday() failed: %s\n", strerror(errno))
+        fprintf(stderr, "gettimeofday() failed: %s\n", strerror(errno));
     }
-#	else
+#else
         ;
-#	endif
+#endif
 
     return ((uint64_t)tv.tv_sec * 1000) + ((uint64_t)tv.tv_usec / 1000);
-#endif
 }
 
 /* ------------------------------------------------------------------------- */

@@ -14,7 +14,6 @@ public:
 
     bool open(const char* fileName);
     void close();
-    bool setDeleteOnClose();
     static bool setDeleteOnClose(const char* fileName);
 
     const void* address() const { return address_; }

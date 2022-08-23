@@ -231,8 +231,8 @@ add_library (ReFramed::rfcommon ALIAS rfcommon)
 ###############################################################################
 
 if (UNIX)
-    find_package (DL REQUIRED)
-    target_link_libraries (rfcommon PRIVATE DL::DL)
+    target_link_libraries (rfcommon
+        PRIVATE ${CMAKE_DL_LIBS})
 endif ()
 
 if (WIN32)
