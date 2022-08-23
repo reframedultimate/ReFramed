@@ -1,8 +1,9 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
-#include "rfcommon/dynlib.h"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/LastWindowsError.hpp"
+#include "rfcommon/Log.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
@@ -14,96 +15,118 @@
 #include <QWidget>
 #include <QDir>
 
-#if defined(_WIN32)
-#include "Windows.h"
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+#   include <Windows.h>
 #endif
 
 namespace rfapp {
+
+PluginManager::LoadedPlugin::LoadedPlugin(const char* fileName)
+    : library(fileName)
+{}
+PluginManager::LoadedPlugin::~LoadedPlugin()
+{}
+PluginManager::LoadedPlugin::LoadedPlugin(LoadedPlugin&& other)
+    : library(std::move(other.library))
+    , iface(other.iface)
+    , started(other.started)
+{}
 
 // ----------------------------------------------------------------------------
 PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
     : userLabels_(userLabels)
     , hash40Strings_(hash40Strings)
 {
+    auto log = rfcommon::Log::root();
+
     // On Windows, add a directory to the search path so plugins
     // that depend on additional DLLs can load those from this "deps" directory
-#if defined(_WIN32)
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
     CHAR buf[MAX_PATH];
     strcpy(buf, APP_PLUGINDEPSDIR);
     for (CHAR* p = buf; *p; ++p)
         if (*p == '/')
             *p = '\\';
-    SetDllDirectoryA(buf);
+    log->info("Adding DLL search path: %s", buf);
+    if (!SetDllDirectoryA(buf))
+        log->error("Failed to add DLL search path: %s: %s", buf, rfcommon::LastWindowsError().cStr());
 #endif
 
-    QDir pluginDir(APP_PLUGINDIR);
-    for (const auto& pluginFile : pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files))
-        loadPlugin(pluginDir.absoluteFilePath(pluginFile));
+    scanForPlugins();
 }
 
 // ----------------------------------------------------------------------------
 PluginManager::~PluginManager()
 {
-    for (const auto& dl : libraries_)
-    {
-        RFPluginInterface* i = static_cast<RFPluginInterface*>(rfcommon_dynlib_lookup_symbol_address(dl, "plugin_interface"));
-        assert(i != nullptr);
-        i->stop();
-        rfcommon_dynlib_close(dl);
-    }
+    auto log = rfcommon::Log::root();
+
+    log->beginDropdown("Stopping plugins");
+    for (const auto& plugin : plugins_)
+        if (plugin.started)
+            if (plugin.iface->stop)
+            {
+                log->info("Calling stop() for plugin factory \"%s\"", plugin.iface->factories[0].info.name ? plugin.iface->factories[0].info.name : "");
+                plugin.iface->stop();
+            }
+    log->endDropdown();
+
+    // Destructors take care of unloading libs
 }
 
 // ----------------------------------------------------------------------------
-bool PluginManager::loadPlugin(const QString& fileName)
+void PluginManager::scanForPlugins()
+{
+    auto log = rfcommon::Log::root();
+
+    log->beginDropdown("Loading plugin interfaces");
+        QDir pluginDir(APP_PLUGINDIR);
+        const auto files = pluginDir.entryList(QStringList() << "*.so" << "*.dll", QDir::Files);
+        for (const auto& pluginFile : files)
+            loadInterface(pluginDir.absoluteFilePath(pluginFile));
+    log->endDropdown();
+}
+
+// ----------------------------------------------------------------------------
+bool PluginManager::loadInterface(const QString& fileName)
 {
     PROFILE(PluginManager, loadPlugin);
 
-    RFPluginInterface* i;
-    const char* pluginError = nullptr;
-    qDebug() << "Loading " << fileName;
-    rfcommon_dynlib* dl = rfcommon_dynlib_open(fileName.toStdString().c_str());
-    if (dl == nullptr)
-    {
-        qDebug() << "Failed to load " << fileName;
+    auto log = rfcommon::Log::root();
+    
+    QByteArray fileNameBA = fileName.toUtf8();
+    log->info("Loading plugin %s", fileNameBA.constData());
+    LoadedPlugin& plugin = plugins_.emplace(fileNameBA.constData());
+    if (plugin.library.isOpen() == false)
         goto open_failed;
-    }
 
-    i = static_cast<RFPluginInterface*>(rfcommon_dynlib_lookup_symbol_address(dl, "plugin_interface"));
-    if (i == nullptr)
+    plugin.iface = static_cast<RFPluginInterface*>(plugin.library.lookupSymbolAddress("plugin_interface"));
+    if (plugin.iface == nullptr)
     {
-        qDebug() << "Failed to lookup symbol 'plugin_interface' in " << fileName;
+        log->error("Failed to lookup symbol 'plugin_interface' in plugin %s", fileNameBA.constData());
         goto init_plugin_failed;
     }
-    if (i->start == nullptr || i->start(APP_VERSION, &pluginError) != 0)
+    if (plugin.iface->factories == nullptr)
     {
-        qDebug() << "Call to start() failed in " << fileName;
-        if (pluginError)
-            qDebug() << pluginError;
+        log->error("Plugin %s did not register any factories", fileNameBA.constData());
         goto init_plugin_failed;
     }
 
-    for (RFPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
+    for (RFPluginFactory* factory = plugin.iface->factories; factory->info.name != nullptr; ++factory)
     {
-        if (factories_.contains(factory->info.name))
-            goto duplicate_factory_name;
-        factories_.insert(factory->info.name, factory);
-        qDebug() << "  - Successfully registered plugin factory \"" << factory->info.name << "\"";
+        if (factoryNames_.contains(factory->info.name))
+        {
+            log->warning("Plugin is trying to register factory \"%s\", but a factory with the same name was already registered by a previously loaded plugin. Skipping...", factory->info.name);
+            continue;
+        }
+        factoryNames_.insert(factory->info.name);
+        log->info("  - Successfully registered plugin factory \"%s\"", factory->info.name);
     }
-
-    libraries_.push_back(dl);
 
     return true;
 
-    duplicate_factory_name :
-        for (RFPluginFactory* factory = i->factories; factory->info.name != nullptr; ++factory)
-        {
-            auto it = factories_.find(factory->info.name);
-            if (it != factories_.end())
-                factories_.erase(it);
-        }
     init_plugin_failed :
-        rfcommon_dynlib_close(dl);
     open_failed :
+        plugins_.pop();
         return false;
 }
 
@@ -113,25 +136,25 @@ QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
     PROFILE(PluginManager, availableFactoryNames);
 
     QVector<QString> list;
-    for (auto factory = factories_.begin(); factory != factories_.end(); ++factory)
-    {
-        if ((factory.value()->type & type) == type)
-            list.push_back(factory.value()->info.name);
-    }
+    for (const auto& plugin : plugins_)
+        for (RFPluginFactory* factory = plugin.iface->factories; factory->info.name != nullptr; ++factory)
+            if ((factory->type & type) == type)
+                list.push_back(factory->info.name);
+
     return list;
 }
 
 // ----------------------------------------------------------------------------
-const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString &name) const
+const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString& name) const
 {
     PROFILE(PluginManager, getFactoryInfo);
 
-    auto it = factories_.find(name);
-    if (it == factories_.end())
-        return nullptr;
+    for (const auto& plugin : plugins_)
+        for (RFPluginFactory* factory = plugin.iface->factories; factory->info.name != nullptr; ++factory)
+            if (name == factory->info.name)
+                return &factory->info;
 
-    RFPluginFactory* factory = it.value();
-    return &factory->info;
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -139,25 +162,48 @@ rfcommon::Plugin* PluginManager::create(const QString& name)
 {
     PROFILE(PluginManager, create);
 
-    auto it = factories_.find(name);
-    if (it == factories_.end())
-        return nullptr;
+    auto log = rfcommon::Log::root();
 
-    RFPluginFactory* factory = it.value();
-    rfcommon::Plugin* model = factory->create(factory, userLabels_, hash40Strings_);
-    if (model == nullptr)
-        return nullptr;
+    for (auto pluginIt = plugins_.begin(); pluginIt != plugins_.end(); ++pluginIt)
+        for (RFPluginFactory* factory = pluginIt->iface->factories; factory->info.name != nullptr; ++factory)
+            if (name == factory->info.name)
+            {
+                // See if start() needs to be called
+                if (pluginIt->started == false && pluginIt->iface->start)
+                {
+                    const char* startError = nullptr;
+                    log->info("Calling start() for plugin factory \"%s\"", factory->info.name);
+                    if (pluginIt->iface->start(APP_VERSION, &startError) != 0)
+                    {
+                        log->error("Call to start() failed for plugin factory \"%s\": %s", factory->info.name, startError ? startError : "(Plugin reported no error message)");
+                        for (factory = pluginIt->iface->factories; factory->info.name != nullptr; ++factory)
+                            factoryNames_.remove(factory->info.name);
+                        plugins_.erase(pluginIt);
+                        return nullptr;
+                    }
+                    pluginIt->started = true;
+                }
 
-    return model;
+                // Instantiate object
+                rfcommon::Log::root()->info("Creating plugin \"%s\"", factory->info.name);
+                rfcommon::Plugin* plugin = factory->create(factory, userLabels_, hash40Strings_);
+                if (plugin == nullptr)
+                    log->error("Call to create() failed for plugin factory \"%s\"", factory->info.name);
+                return plugin;
+            }
+
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
-void PluginManager::destroy(rfcommon::Plugin* model)
+void PluginManager::destroy(rfcommon::Plugin* plugin)
 {
     PROFILE(PluginManager, destroy);
 
-    const RFPluginFactory* factory = model->factory();
-    factory->destroy(model);
+    const RFPluginFactory* factory = plugin->factory();
+
+    rfcommon::Log::root()->info("Destroying plugin \"%s\"", plugin->factory()->info.name);
+    factory->destroy(plugin);
 }
 
 }

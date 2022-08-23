@@ -183,13 +183,14 @@ add_library (rfcommon SHARED
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
 	"${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/dynlib_windows.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/LastWindowsError.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/MappedFile_windows.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/tcp_socket_windows.c>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/time_windows.cpp>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Time_windows.cpp>
 	
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/dynlib_linux.c>
+	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/SharedLibrary_linux.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/HighresTimer_linux.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/MappedFile_linux.cpp>
 	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/tcp_socket_linux.c>

@@ -2,9 +2,11 @@
 
 #include "rfcommon/PluginType.hpp"
 #include "rfcommon/Reference.hpp"
+#include "rfcommon/SharedLibrary.hpp"
+#include "rfcommon/Vector.hpp"
 #include <QString>
 #include <QVector>
-#include <QHash>
+#include <QSet>
 
 struct rfcommon_dynlib;
 struct RFPluginFactory;
@@ -39,12 +41,17 @@ public:
     ~PluginManager();
 
     /*!
+     * \brief Scans for DLLs and updates the internal list of plugins.
+     */
+    void scanForPlugins();
+
+    /*!
      * \brief Attempts to load a shared library and registers all factories
      * in it if successful.
      * \param fileName The full path to the file to load.
      * \return True if it was successful, false if otherwise.
      */
-    bool loadPlugin(const QString& fileName);
+    bool loadInterface(const QString& fileName);
 
     /*!
      * \brief Returns a list of all factory names available, filtered by type.
@@ -65,8 +72,20 @@ public:
 private:
     rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
-    QHash<QString, RFPluginFactory*> factories_;
-    QVector<rfcommon_dynlib*> libraries_;
+
+    struct LoadedPlugin
+    {
+        LoadedPlugin(const char* fileName);
+        ~LoadedPlugin();
+        LoadedPlugin(const LoadedPlugin& other) = delete;  // We need to move-construct SharedLibrary or it will unload libraries every time vector reallocates
+        LoadedPlugin(LoadedPlugin&& other);
+
+        rfcommon::SharedLibrary library;
+        RFPluginInterface* iface = nullptr;
+        bool started = false;
+    };
+    rfcommon::Vector<LoadedPlugin> plugins_;
+    QSet<QString> factoryNames_;
 };
 
 }
