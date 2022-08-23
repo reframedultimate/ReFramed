@@ -1,0 +1,15 @@
+Enhancements
+- First (very unusable) version of the video player plugin
+- Added hash40 strings database (ParamLabels.csv) so plugins have access to motion value strings
+- Added a user labels editor that lets users assign nicer names to every move in the game
+- Added logging support to the main application. Logs are stored in %AppData%\..\Local\ReFramed\logs
+- Added QDarkStyle theme, but it is not accessible yet (no settings menu)
+- Improved save/loading of replays
+
+Bugfixes
+- Fixed crash in Damage vs Time plot where a Qt object was destroyed after the plugin was unloaded
+- Fixed major issue where editing meta data in a replay file would cause the frame data to be deleted
+
+Statistics
+- Fixed SD Statistic
+- Using new User Labels API to display more human readable animation names
