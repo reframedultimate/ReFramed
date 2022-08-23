@@ -37,7 +37,7 @@ static bool loadLegacy_1_4(
 static int findWinner(const Frame<4>& frame);
 
 static const char* magic               = "RFR1";
-static const char* blobTypeMeta        = "META";
+static const char* blobTypeMetaData    = "META";
 static const char* blobTypeMappingInfo = "MAPI";
 static const char* blobTypeFrameData   = "FDAT";
 static const char* blobTypeVideoMeta   = "VIDM";
@@ -801,25 +801,13 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
             entry.size = deserializer.readLU32();
         }
 
-        if (loadFlags & MAPPING_INFO)
-            if (session->tryGetMappingInfo() == nullptr)
+        // Load sections immediately if necessary
+#define X(name, value)                                 \
+        if (loadFlags & Flags::name)                   \
+            if (session->tryGet##name() == nullptr)    \
                 return nullptr;
-
-        if (loadFlags & META_DATA)
-            if (session->tryGetMetaData() == nullptr)
-                return nullptr;
-
-        if (loadFlags & FRAME_DATA)
-            if (session->tryGetFrameData() == nullptr)
-                return nullptr;
-
-        if (loadFlags & VIDEO_META)
-            if (session->tryGetVideoMeta() == nullptr)
-                return nullptr;
-
-        if (loadFlags & VIDEO_EMBED)
-            if (session->tryGetVideoEmbed() == nullptr)
-                return nullptr;
+        RFCOMMON_SESSION_SECTIONS_LIST
+#undef X
 
         return session.detach();
     }
@@ -874,27 +862,64 @@ Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
 }
 
 // ----------------------------------------------------------------------------
-bool Session::save(const char* fileName)
+bool Session::save(const char* fileName, uint8_t saveFlags)
 {
     PROFILE(Session, save);
 
     Log* log = Log::root();
     log->beginDropdown("Saving session %s", fileName);
 
-    // Any property of Session is allowed to be null, so we first calculate
-    // how many entries we need. We don't know the offsets or sizes yet.
+    // This could either be a session that was recorded live, or a session
+    // loaded from disk. If loaded from disk, then we have to make sure to
+    // load all of the sections that can be edited and weren't lazy loaded 
+    // yet, otherwise we'll skip saving that data into the new file and lose 
+    // data.
+    // 
+    // The only sections currently editable are meta data and video meta. the
+    // other sections can simply be copied over to the new file byte-by-byte
+    // without having to go through the deserialize/serialize process.
     SmallVector<ContentTableEntry, 5> table;
-    if (tryGetMappingInfo())
-        table.emplace(blobTypeMappingInfo);
-    if (tryGetMetaData())
-        table.emplace(blobTypeMeta);
-    if (tryGetFrameData())
-        table.emplace(blobTypeFrameData);
-    if (tryGetVideoMeta())
-        table.emplace(blobTypeVideoMeta);
-    if (tryGetVideoEmbed())
-        table.emplace(blobTypeVideoEmbed);
+    if (file_.notNull())
+    {
+        // Load necessary sections (meta data and video meta)
+        for (const auto& entry : contentTable_)
+        {
+#define LOAD_SECTION(name)                                    \
+            if (memcmp(entry.type, blobType##name, 4) == 0)   \
+            {                                                 \
+                if (!(saveFlags & Flags::name))               \
+                    continue;                                 \
+                if (tryGet##name() == nullptr)                \
+                {                                             \
+                    log->error("Content table contains " #name ", but unable to load the data. Can't create new replay file!"); \
+                    return false;                             \
+                }                                             \
+            }
+            LOAD_SECTION(MetaData)
+            LOAD_SECTION(VideoMeta)
+#undef LOAD_SECTION
+        }
 
+        // Copy existing content table
+        table = contentTable_;
+    }
+    else  // This was a live session with no data to lazy load
+    {
+        // Any property of Session is allowed to be null, so we first calculate
+        // how many entries we need. We don't know the offsets or sizes yet.
+        if (mappingInfo_.notNull() && (saveFlags & Flags::MappingInfo))
+            table.emplace(blobTypeMappingInfo);
+        if (metaData_.notNull() && (saveFlags & Flags::MetaData))
+            table.emplace(blobTypeMetaData);
+        if (frameData_.notNull() && (saveFlags & Flags::FrameData))
+            table.emplace(blobTypeFrameData);
+        if (videoMeta_.notNull() && (saveFlags & Flags::VideoMeta))
+            table.emplace(blobTypeVideoMeta);
+        if (videoEmbed_.notNull() && (saveFlags & Flags::VideoEmbed))
+            table.emplace(blobTypeVideoEmbed);
+    }
+
+    // Calculate header size and data offset
     const int headerSize = 5 + 12 * table.count();
     uint8_t numEntries = static_cast<uint8_t>(table.count());
     int offset = headerSize;
@@ -920,18 +945,38 @@ bool Session::save(const char* fileName)
     // Write content and update offsets/sizes in content table
     for (auto& entry : table)
     {
+#define COPY_EXISTING_BLOB() do {                                     \
+            /* Locate entry in current content table */               \
+            for (const auto& existingEntry : contentTable_)           \
+                if (memcmp(existingEntry.type, entry.type, 4) == 0)   \
+                {                                                     \
+                    entry.offset = offset;                            \
+                    entry.size = fwrite(file_->addressAtOffset(existingEntry.offset), 1, existingEntry.size, file); \
+                    if (entry.size != existingEntry.size)             \
+                    {                                                 \
+                        log->error("Failed to write 0x%x bytes to file. Only wrote 0x%x bytes.", existingEntry.size, entry.size); \
+                        goto write_fail;                              \
+                    }                                                 \
+                }                                                     \
+            } while(0)
+
         if (memcmp(entry.type, blobTypeMappingInfo, 4) == 0)
         {
-            entry.offset = offset;
-            entry.size = metaData_ && frameData_ ?
+            if (file_.notNull())  // Can write blob directly without deserializing/serializing it
+                COPY_EXISTING_BLOB();
+            else
+            {
+                entry.offset = offset;
+                entry.size = metaData_ && frameData_ ?
                     mappingInfo_->saveNecessary(file, metaData_, frameData_) :
                     mappingInfo_->save(file);
-            if (entry.size == 0)
-                goto write_fail;
+                if (entry.size == 0)
+                    goto write_fail;
+            }
             offset += entry.size;
             log->info("Saved mapping info at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
-        else if (memcmp(entry.type, blobTypeMeta, 4) == 0)
+        else if (memcmp(entry.type, blobTypeMetaData, 4) == 0)
         {
             entry.offset = offset;
             entry.size = metaData_->save(file);
@@ -942,10 +987,15 @@ bool Session::save(const char* fileName)
         }
         else if (memcmp(entry.type, blobTypeFrameData, 4) == 0)
         {
-            entry.offset = offset;
-            entry.size = frameData_->save(file);
-            if (entry.size == 0)
-                goto write_fail;
+            if (file_.notNull())  // Can write blob directly without deserializing/serializing it
+                COPY_EXISTING_BLOB();
+            else
+            {
+                entry.offset = offset;
+                entry.size = frameData_->save(file);
+                if (entry.size == 0)
+                    goto write_fail;
+            }
             offset += entry.size;
             log->info("Saved frame data at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
@@ -960,13 +1010,23 @@ bool Session::save(const char* fileName)
         }
         else if (memcmp(entry.type, blobTypeVideoEmbed, 4) == 0)
         {
-            entry.offset = offset;
-            entry.size = fwrite(videoEmbed_->address(), 1, videoEmbed_->size(), file);
-            if (entry.size == 0)
-                goto write_fail;
+            if (file_.notNull())  // Can write blob directly without deserializing/serializing it
+                COPY_EXISTING_BLOB();
+            else
+            {
+                entry.offset = offset;
+                entry.size = fwrite(videoEmbed_->address(), 1, videoEmbed_->size(), file);
+                if (entry.size == 0)
+                    goto write_fail;
+            }
             offset += entry.size;
             log->info("Saved video embed at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
+        else
+        {
+            log->warning("Unknown entry type in content table: %c%c%c%c. Ignoring.", entry.type[0], entry.type[1], entry.type[2], entry.type[3]);
+        }
+#undef COPY_EXISTING_BLOB
     }
 
     // Rewind and write header
@@ -1021,15 +1081,15 @@ bool Session::save(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-bool Session::existsInContentTable(LoadFlags flag) const
+bool Session::existsInContentTable(Flags::Flag flag) const
 {
     PROFILE(Session, existsInContentTable);
 
-    const char* blobType = [&flag]() -> const char* {
+    const char* blobType = [=]() -> const char* {
         switch(flag) {
-            case MAPPING_INFO : return blobTypeMappingInfo;
-            case META_DATA : return blobTypeMeta;
-            case FRAME_DATA : return blobTypeFrameData;
+#define X(name, value) case Flags::name : return blobType##name;
+            RFCOMMON_SESSION_SECTIONS_LIST
+#undef X
             default: return "    ";
         }
     }();
@@ -1039,14 +1099,6 @@ bool Session::existsInContentTable(LoadFlags flag) const
             return true;
 
     return false;
-}
-
-// ----------------------------------------------------------------------------
-void Session::setMappingInfo(MappingInfo* mappingInfo)
-{
-    NOPROFILE();
-
-    mappingInfo_ = mappingInfo;
 }
 
 // ----------------------------------------------------------------------------
@@ -1077,7 +1129,7 @@ MetaData* Session::tryGetMetaData()
     {
         assert(file_.notNull());
         for (const auto& entry : contentTable_)
-            if (memcmp(entry.type, blobTypeMeta, 4) == 0)
+            if (memcmp(entry.type, blobTypeMetaData, 4) == 0)
             {
                 metaData_ = MetaData::load(file_->addressAtOffset(entry.offset), entry.size);
                 break;

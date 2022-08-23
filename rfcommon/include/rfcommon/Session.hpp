@@ -6,6 +6,13 @@
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/Vector.hpp"
 
+#define RFCOMMON_SESSION_SECTIONS_LIST \
+    X(MappingInfo, 0x01)               \
+    X(MetaData, 0x02)                  \
+    X(FrameData, 0x04)                 \
+    X(VideoMeta, 0x08)                 \
+    X(VideoEmbed, 0x10)
+
 namespace rfcommon {
 
 class MappedFile;
@@ -20,15 +27,15 @@ class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
     Session(MappedFile* file, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
 
 public:
-    enum LoadFlags
-    {
-        MAPPING_INFO = 0x01,
-        META_DATA = 0x02,
-        FRAME_DATA = 0x04,
-        VIDEO_META = 0x08,
-        VIDEO_EMBED = 0x10,
-
-        ALL = 0xFF
+    struct Flags {
+        enum Flag
+        {
+#define X(name, value) name = value,
+            RFCOMMON_SESSION_SECTIONS_LIST
+#undef X
+            None = 0x00,
+            All = 0xFF
+        };
     };
 
     ~Session();
@@ -36,12 +43,10 @@ public:
     static Session* newModernSavedSession(MappedFile* file);
     static Session* newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
     static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
-    static Session* load(const char* fileName, uint8_t loadFlags=0);
-    bool save(const char* fileName);
+    static Session* load(const char* fileName, uint8_t loadFlags=Flags::None);
+    bool save(const char* fileNamem, uint8_t saveFlags=Flags::All);
 
-    bool existsInContentTable(LoadFlags flag) const;
-
-    void setMappingInfo(MappingInfo* mappingInfo);
+    bool existsInContentTable(Flags::Flag flag) const;
 
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to

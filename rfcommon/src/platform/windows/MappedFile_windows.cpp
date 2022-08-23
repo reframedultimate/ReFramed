@@ -93,17 +93,6 @@ void MappedFile::close()
 }
 
 // ----------------------------------------------------------------------------
-bool MappedFile::setDeleteOnClose()
-{
-    HANDLE hFile = ReOpenFile(fileHandle_, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, FILE_FLAG_DELETE_ON_CLOSE);
-    if (hFile != INVALID_HANDLE_VALUE)
-        return false;
-
-    fileHandle_ = static_cast<void*>(hFile);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
 bool MappedFile::setDeleteOnClose(const char* fileName)
 {
     HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);

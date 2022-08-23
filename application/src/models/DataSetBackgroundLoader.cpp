@@ -43,7 +43,7 @@ private:
             mutex_->unlock();
                 rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(
                     item.recordingFile.absoluteFilePath().toStdString().c_str(),
-                    rfcommon::Session::META_DATA);
+                    rfcommon::Session::Flags::MetaData);
             mutex_->lock();
 
             if (session)

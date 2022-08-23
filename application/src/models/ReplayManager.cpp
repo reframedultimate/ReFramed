@@ -579,10 +579,13 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
     log->info("Renaming %s -> %s", oldFile.absoluteFilePath().toUtf8().constData(), newFile.absoluteFilePath().toUtf8().constData());
     log->info("Dir: %s", dir.absolutePath().toUtf8().constData());
 
-    if (newFile.exists())
+    if (oldFile != newFile)
     {
-        log->warning("File %s already exists, aborting rename", newFile.absoluteFilePath().toUtf8().constData());
-        return false;
+        if (newFile.exists())
+        {
+            log->warning("File %s already exists, aborting rename", newFile.absoluteFilePath().toUtf8().constData());
+            return false;
+        }
     }
 
     if (dir.rename(oldFileName, tmpFile) == false)
