@@ -10,6 +10,7 @@ Bugfixes
 - Fixed crash in Damage vs Time plot where a Qt object was destroyed after the plugin was unloaded
 - Fixed major issue where editing meta data in a replay file would cause the frame data to be deleted
 - Fixed crash when a plugin tries to lookup a user label, but there are no user labels loaded
+- Many other small bugfixes and improvements
 
 Statistics
 - Fixed SD Statistic
