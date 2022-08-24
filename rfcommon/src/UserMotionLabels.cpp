@@ -453,6 +453,9 @@ SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, co
 
     assert(fighterID.isValid());
 
+    if (fighterID.value() >= fighters_.count())
+        return SmallVector<FighterMotion, 4>();
+
     // A user label can map to multiple motion values. Additionally, there
     // can be multiple layers of user labels. What makes the most sense is
     // to prioritize layers with higher indices (layers that were added later), 
@@ -492,6 +495,9 @@ const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterM
     if (motion.isValid() == false)
         return fallback;
 
+    if (fighterID.value() >= fighters_.count())
+        return fallback;
+
     const auto& map = fighters_[fighterID.value()].motionMap;
     const auto& layers = fighters_[fighterID.value()].layers;
 
@@ -520,6 +526,9 @@ String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion mo
     assert(fighterID.isValid());
 
     if (motion.isValid() == false)
+        return fallback;
+
+    if (fighterID.value() >= fighters_.count())
         return fallback;
 
     const auto& map = fighters_[fighterID.value()].motionMap;

@@ -74,7 +74,7 @@ public:
     String toStringAllLayers(FighterID fighterID, FighterMotion motion) const;
     String toStringAllLayers(FighterID fighterID, FighterMotion motion, const char* fallback) const;
 
-    int entryCount(FighterID fighterID) const 
+    int entryCount(FighterID fighterID) const
         { return fighterID.value() < fighters_.count() ? fighters_[fighterID.value()].motions.count() : 0; }
     UserMotionLabelsCategory categoryAt(FighterID fighterID, int entryIdx) const
         { return fighters_[fighterID.value()].categories[entryIdx]; }
