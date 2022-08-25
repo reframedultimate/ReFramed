@@ -19,22 +19,22 @@ set_property (CACHE RFCOMMON_LOG_LEVEL PROPERTY STRINGS "DEBUG;INFO;NOTICE;WARNI
 
 # Determine platform
 if (WIN32 OR CYGWIN)
-	set (RFCOMMON_PLATFORM "WINDOWS")
+    set (RFCOMMON_PLATFORM "WINDOWS")
 elseif (APPLE)
-	set (RFCOMMON_PLATFORM "OSX")
+    set (RFCOMMON_PLATFORM "OSX")
 elseif (UNIX)
-	set (RFCOMMON_PLATFORM "LINUX")
+    set (RFCOMMON_PLATFORM "LINUX")
 else ()
-	message (FATAL_ERROR "Platform detection failed")
+    message (FATAL_ERROR "Platform detection failed")
 endif ()
 
 # Determine bits
 if (${CMAKE_SIZEOF_VOID_P} STREQUAL "4")
-	set (RFCOMMON_BITS "32")
+    set (RFCOMMON_BITS "32")
 elseif (${CMAKE_SIZEOF_VOID_P} STREQUAL "8")
-	set (RFCOMMON_BITS "64")
+    set (RFCOMMON_BITS "64")
 else ()
-	message (FATAL_ERROR "Unsupported number of bits")
+    message (FATAL_ERROR "Unsupported number of bits")
 endif ()
     
 test_visibility_macros (
@@ -124,10 +124,10 @@ configure_file ("cmake/templates/BuildInfo.cpp.in" "src/BuildInfo.cpp")
 ###############################################################################
 
 add_library (rfcommon SHARED
-	"cmake/templates/config.hpp.in"
-	"cmake/templates/Endian.hpp.in"
-	"cmake/templates/BuildInfo.cpp.in"
-	
+    "cmake/templates/config.hpp.in"
+    "cmake/templates/Endian.hpp.in"
+    "cmake/templates/BuildInfo.cpp.in"
+
     "src/AnalysisResult.cpp"
     "src/crc32.c"
     "src/DataSet.cpp"
@@ -168,8 +168,8 @@ add_library (rfcommon SHARED
     "src/MemoryBuffer.cpp"
     "src/MetaData.cpp"
     "src/Plugin.cpp"
-	$<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler.cpp>
-	$<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler_exportDOT.cpp>
+    $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler.cpp>
+    $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler_exportDOT.cpp>
     "src/RefCounted.cpp"
     "src/SetFormat.cpp"
     "src/SetNumber.cpp"
@@ -182,19 +182,19 @@ add_library (rfcommon SHARED
     "src/Vec2.cpp"
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
-	"${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/LastWindowsError.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/MappedFile_windows.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/tcp_socket_windows.c>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Time_windows.cpp>
-	
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/SharedLibrary_linux.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/HighresTimer_linux.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/MappedFile_linux.cpp>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/tcp_socket_linux.c>
-	$<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/time_linux.cpp>)
+    "${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/LastWindowsError.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/MappedFile_windows.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/tcp_socket_windows.c>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Time_windows.cpp>
+
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/SharedLibrary_linux.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/HighresTimer_linux.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/MappedFile_linux.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/tcp_socket_linux.c>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/Time_linux.cpp>)
 target_include_directories (rfcommon
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

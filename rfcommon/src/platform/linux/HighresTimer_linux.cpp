@@ -9,9 +9,11 @@ namespace rfcommon {
 HighresTimer::HighresTimer() :
     startTime_(0),
     stopTime_(0)
-{
-    NOPROFILE();
-}
+{}
+
+// ----------------------------------------------------------------------------
+HighresTimer::~HighresTimer()
+{}
 
 // ----------------------------------------------------------------------------
 void HighresTimer::reset()
@@ -45,7 +47,7 @@ void HighresTimer::stop()
 }
 
 // ----------------------------------------------------------------------------
-uint64_t HighresTimer::getTimePassedInNanoSeconds() const
+uint64_t HighresTimer::timePassedNS() const
 {
     NOPROFILE();
 

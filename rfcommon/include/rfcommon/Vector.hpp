@@ -493,18 +493,17 @@ public:
         swap(*this, other);
     }
 
+    Vector(std::initializer_list<T> l)
+        : Vector()
+    {
+        insertCopy(0, l.begin(), l.end());
+    }
+
     template <int N>
     Vector(const SmallVector<T, N>& other)
         : Vector()
     {
         insertCopy(0, other.begin(), other.end());
-    }
-
-    template <int N>
-    Vector(SmallVector<T, N>&& other)
-        : Vector()
-    {
-        insertMove(0, other.begin(), other.end());
     }
 
     Vector(const T* data, S len)

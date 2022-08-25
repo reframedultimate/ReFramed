@@ -1,30 +1,53 @@
-#include "rfcommon/dynlib.h"
+#include "rfcommon/Log.hpp"
+#include "rfcommon/SharedLibrary.hpp"
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <stdio.h>
+#include <dlfcn.h>
+#include <linux/limits.h>  // PATH_MAX
+
+namespace rfcommon {
 
 /* ------------------------------------------------------------------------- */
-struct rfcommon_dynlib* rfcommon_dynlib_open(const char* fileName)
+SharedLibrary::SharedLibrary(const char* fileName)
 {
     void* handle = dlopen(fileName, RTLD_NOW);
-    if (handle == NULL)
+    if (handle == nullptr)
+        Log::root()->error("Failed to load shared library: %s: %s", fileName, dlerror());
+
+    handle_ = handle;
+}
+
+/* ------------------------------------------------------------------------- */
+SharedLibrary::SharedLibrary(SharedLibrary&& other)
+    : handle_(other.handle_)
+{
+    other.handle_ = nullptr;
+}
+
+/* ------------------------------------------------------------------------- */
+SharedLibrary::~SharedLibrary()
+{
+    if (handle_ != nullptr)
     {
-        printf("dlopen() failed: %s\n", dlerror());
-        return NULL;
+        char path[PATH_MAX+1];
+        if (dlinfo(handle_, RTLD_DI_ORIGIN, static_cast<void*>(path)) == 0)  // GNU extensions
+            Log::root()->info("Closing shared library: %s", path);
+        else
+            Log::root()->info("Closing shared library");
+        dlclose(handle_);
     }
-    return (struct rfcommon_dynlib*)handle;
 }
 
 /* ------------------------------------------------------------------------- */
-void rfcommon_dynlib_close(struct rfcommon_dynlib* dynlib)
+bool SharedLibrary::isOpen() const
 {
-    void* handle = (void*)dynlib;
-    dlclose(handle);
+    return handle_ != nullptr;
 }
 
 /* ------------------------------------------------------------------------- */
-void* rfcommon_dynlib_lookup_symbol_address(struct rfcommon_dynlib* dynlib, const char* name)
+void* SharedLibrary::lookupSymbolAddress(const char* name)
 {
-    void* handle = (void*)dynlib;
-    return dlsym(handle, name);
+    return dlsym(handle_, name);
+}
+
 }
