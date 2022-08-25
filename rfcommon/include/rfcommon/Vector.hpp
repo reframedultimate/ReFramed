@@ -364,7 +364,7 @@ public:
 
     ConstIterator findFirst(const T& value) const
     {
-        Iterator it = this->begin();
+        ConstIterator it = this->begin();
         for (; it != this->end(); ++it)
             if (*it == value)
                 break;
