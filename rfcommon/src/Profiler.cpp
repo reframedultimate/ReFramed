@@ -49,7 +49,7 @@ void ProfileBlock::end()
 
     timer_.stop();
 
-    uint64_t passed = timer_.getTimePassedInNanoSeconds();
+    uint64_t passed = timer_.timePassedNS();
     accumulated_ += passed;
     executions_++;
 

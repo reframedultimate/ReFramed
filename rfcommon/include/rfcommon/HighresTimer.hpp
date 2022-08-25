@@ -1,19 +1,20 @@
 #pragma once
 
-#include "rfcommon/RefCounted.hpp"
+#include "rfcommon/config.hpp"
 #include <cstdint>
 
 namespace rfcommon {
 
-class HighresTimer : public RefCounted
+class RFCOMMON_PUBLIC_API HighresTimer
 {
 public:
     HighresTimer();
+    ~HighresTimer();
 
     void reset();
     void start();
     void stop();
-    uint64_t getTimePassedInNanoSeconds() const;
+    uint64_t timePassedNS() const;
 
 private:
     uint64_t startTime_;

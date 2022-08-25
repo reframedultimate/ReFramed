@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.2)
 set (PLUGIN_NAME "stats")
 
 project ("plugin-${PLUGIN_NAME}"
-    VERSION 0.0.8
+    VERSION 0.0.9
     LANGUAGES CXX)
 
 option (STATS_ENABLE_LICENSING "Enables the license agreement popup" OFF)
