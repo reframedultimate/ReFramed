@@ -56,7 +56,7 @@ void OBSExporter::setPlayerCharacter(int idx, const QString& character)
 // ----------------------------------------------------------------------------
 bool OBSExporter::writeNames() const
 {
-    QFile names(settings_->destinationFolderOBS().absoluteFilePath("names.txt"));
+    QFile names(settings_->obsDestinationFolder().absoluteFilePath("names.txt"));
     if (names.open(QIODevice::WriteOnly) == false)
         return false;
 
@@ -64,7 +64,7 @@ bool OBSExporter::writeNames() const
     {
         // Additional newlines
         if (i > 0)
-            for (int n = 0; n != settings_->additionalNewlinesOBS(); ++n)
+            for (int n = 0; n != settings_->obsAdditionalNewlines(); ++n)
                 names.write("\n");
 
         StatType type = settings_->statAtIndex(i);
@@ -78,7 +78,7 @@ bool OBSExporter::writeNames() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writeScene() const
 {
-    QFile scene(settings_->destinationFolderOBS().absoluteFilePath("obsscene.txt"));
+    QFile scene(settings_->obsDestinationFolder().absoluteFilePath("obsscene.txt"));
     if (scene.open(QIODevice::WriteOnly) == false)
         return false;
 
@@ -89,8 +89,8 @@ bool OBSExporter::writeScene() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerCharacters() const
 {
-    QFile p1char(settings_->destinationFolderOBS().absoluteFilePath("p1char.txt"));
-    QFile p2char(settings_->destinationFolderOBS().absoluteFilePath("p2char.txt"));
+    QFile p1char(settings_->obsDestinationFolder().absoluteFilePath("p1char.txt"));
+    QFile p2char(settings_->obsDestinationFolder().absoluteFilePath("p2char.txt"));
 
     if (p1char.open(QIODevice::WriteOnly) == false)
         return false;
@@ -111,8 +111,8 @@ bool OBSExporter::writePlayerCharacters() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerTags() const
 {
-    QFile p1tag(settings_->destinationFolderOBS().absoluteFilePath("p1tag.txt"));
-    QFile p2tag(settings_->destinationFolderOBS().absoluteFilePath("p2tag.txt"));
+    QFile p1tag(settings_->obsDestinationFolder().absoluteFilePath("p1tag.txt"));
+    QFile p2tag(settings_->obsDestinationFolder().absoluteFilePath("p2tag.txt"));
 
     if (p1tag.open(QIODevice::WriteOnly) == false)
         return false;
@@ -133,8 +133,8 @@ bool OBSExporter::writePlayerTags() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerStats() const
 {
-    QFile p1stats(settings_->destinationFolderOBS().absoluteFilePath("p1stats.txt"));
-    QFile p2stats(settings_->destinationFolderOBS().absoluteFilePath("p2stats.txt"));
+    QFile p1stats(settings_->obsDestinationFolder().absoluteFilePath("p1stats.txt"));
+    QFile p2stats(settings_->obsDestinationFolder().absoluteFilePath("p2stats.txt"));
 
     if (p1stats.open(QIODevice::WriteOnly) == false)
         return false;
@@ -146,7 +146,7 @@ bool OBSExporter::writePlayerStats() const
     {
         // Additional newlines
         if (i > 0)
-            for (int n = 0; n != settings_->additionalNewlinesOBS(); ++n)
+            for (int n = 0; n != settings_->obsAdditionalNewlines(); ++n)
             {
                 p1stats.write("\n");
                 p2stats.write("\n");
@@ -171,8 +171,8 @@ bool OBSExporter::writePlayerStats() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerStatsEmpty() const
 {
-    QFile p1stats(settings_->destinationFolderOBS().absoluteFilePath("p1stats.txt"));
-    QFile p2stats(settings_->destinationFolderOBS().absoluteFilePath("p2stats.txt"));
+    QFile p1stats(settings_->obsDestinationFolder().absoluteFilePath("p1stats.txt"));
+    QFile p2stats(settings_->obsDestinationFolder().absoluteFilePath("p2stats.txt"));
 
     if (p1stats.open(QIODevice::WriteOnly) == false)
         return false;
@@ -183,7 +183,7 @@ bool OBSExporter::writePlayerStatsEmpty() const
     {
         // Additional newlines
         if (i > 0)
-            for (int n = 0; n != settings_->additionalNewlinesOBS(); ++n)
+            for (int n = 0; n != settings_->obsAdditionalNewlines(); ++n)
             {
                 p1stats.write("\n");
                 p2stats.write("\n");

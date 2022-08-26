@@ -40,6 +40,7 @@ private:
     void onStatsUpdated() override;
     void onSettingsStatsChanged() override;
     void onSettingsOBSChanged() override;
+    void onSettingsWSChanged() override;
 
 private:
     void onPlayerMetaChanged() override;

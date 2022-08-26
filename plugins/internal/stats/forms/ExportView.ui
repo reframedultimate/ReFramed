@@ -66,19 +66,6 @@
       <string>WebSocket Server</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="lineEdit_wsAddress">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="maxLength">
-         <number>256</number>
-        </property>
-        <property name="placeholderText">
-         <string>Set Automatically</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="1">
        <widget class="QSpinBox" name="spinBox_wsPort">
         <property name="enabled">
@@ -91,21 +78,11 @@
          <number>65535</number>
         </property>
         <property name="value">
-         <number>1337</number>
+         <number>0</number>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_wsAddress">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Address:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
+      <item row="5" column="0" colspan="2">
        <widget class="QPushButton" name="pushButton_wsStartStop">
         <property name="enabled">
          <bool>false</bool>
@@ -125,6 +102,23 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_wsAddress">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Address:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QLabel" name="label_wsStatus">
+        <property name="text">
+         <string>Stopped.</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0" colspan="2">
        <widget class="QCheckBox" name="checkBox_wsEnable">
         <property name="text">
@@ -132,20 +126,39 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QLabel" name="label_wsError">
-        <property name="text">
-         <string>Stopped.</string>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="lineEdit_wsAddress">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maxLength">
+         <number>256</number>
+        </property>
+        <property name="placeholderText">
+         <string>Set Automatically</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="checkBox_wsAutoHost">
+       <widget class="QCheckBox" name="checkBox_wsAutoStart">
         <property name="enabled">
          <bool>false</bool>
         </property>
         <property name="text">
          <string>Start server automatically on startup</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QCheckBox" name="checkBox_wsSecureMode">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Secure mode (wss)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

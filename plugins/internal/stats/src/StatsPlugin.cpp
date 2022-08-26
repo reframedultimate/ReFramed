@@ -1,5 +1,6 @@
 #include "stats/StatsPlugin.hpp"
 #include "stats/exporters/OBSExporter.hpp"
+#include "stats/exporters/WSExporter.hpp"
 #include "stats/models/PlayerMeta.hpp"
 #include "stats/models/StatsCalculator.hpp"
 #include "stats/models/SettingsModel.hpp"
@@ -90,9 +91,9 @@ bool StatsPlugin::addSession(rfcommon::Session* session)
 }
 
 // ----------------------------------------------------------------------------
-void StatsPlugin::exportEmptyStats() const
+void StatsPlugin::exportOBSEmptyStats() const
 {
-    if (settingsModel_->exportToOBS())
+    if (settingsModel_->obsEnabled())
     {
         OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
         exporter.setPlayerTag(0, playerMeta_->name(0));
@@ -104,9 +105,9 @@ void StatsPlugin::exportEmptyStats() const
 }
 
 // ----------------------------------------------------------------------------
-void StatsPlugin::exportStats() const
+void StatsPlugin::exportOBSStats() const
 {
-    if (settingsModel_->exportToOBS())
+    if (settingsModel_->obsEnabled())
     {
         OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
         exporter.setPlayerTag(0, playerMeta_->name(0));
@@ -114,6 +115,16 @@ void StatsPlugin::exportStats() const
         exporter.setPlayerCharacter(0, playerMeta_->character(0));
         exporter.setPlayerCharacter(1, playerMeta_->character(1));
         exporter.exportStatistics();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void StatsPlugin::sendWebSocketStats(bool gameStarted, bool gameEnded) const
+{
+    if (settingsModel_->wsEnabled())
+    {
+        WSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get(), wsServer_.get());
+        exporter.writeJSON(gameStarted, gameEnded);
     }
 }
 
@@ -129,7 +140,7 @@ QWidget* StatsPlugin::createView()
 {
     // Create new instance of view. The view registers as a listener to this model
     //return new StatsView(model_.get());
-    return new MainView(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
+    return new MainView(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get(), wsServer_.get());
 }
 
 // ----------------------------------------------------------------------------
@@ -147,7 +158,8 @@ void StatsPlugin::onProtocolGameStarted(rfcommon::Session* game)
     if (addSession(game))
     {
         // OBS should display empty statistics, since a new game has started now
-        exportEmptyStats();
+        exportOBSEmptyStats();
+        sendWebSocketStats(true, false);
     }
 
     weAreLive_ = true;
@@ -161,7 +173,8 @@ void StatsPlugin::onProtocolGameResumed(rfcommon::Session* game)
     if (addSession(game))
     {
         // OBS should display empty statistics, since a new game has started now
-        exportEmptyStats();
+        exportOBSEmptyStats();
+        sendWebSocketStats(true, false);
     }
 
     weAreLive_ = true;
@@ -172,7 +185,8 @@ void StatsPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
     weAreLive_ = false;
 
-    exportStats();
+    exportOBSStats();
+    sendWebSocketStats(false, true);
 
     // We hold on to our reference to the data until a new session is started,
     // so that if settings change, the exporters still have data to export
@@ -202,7 +216,10 @@ void StatsPlugin::onGameSessionLoaded(rfcommon::Session* game)
     statsCalculator_->resetStatistics();
     clearSession();
     if (addSession(game))
-        exportStats();
+    {
+        exportOBSStats();
+        sendWebSocketStats(false, false);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -233,7 +250,8 @@ void StatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames
         addSession(games[s]);
     }
 
-    exportStats();
+    exportOBSStats();
+    sendWebSocketStats(false, false);
 }
 
 // ----------------------------------------------------------------------------
@@ -248,11 +266,16 @@ void StatsPlugin::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& fr
 {
     statsCalculator_->updateStatistics(frame);
 
-    if (weAreLive_ && settingsModel_->exportIntervalOBS() > 0)
+    if (weAreLive_ && settingsModel_->obsExportInterval() > 0)
     {
-        const int interfalFrames = settingsModel_->exportIntervalOBS() * 60;
-        if (frameIdx % interfalFrames == 0)
-            exportStats();
+        const int intervalFrames = settingsModel_->obsExportInterval() * 60;
+        if (frameIdx % intervalFrames == 0)
+            exportOBSStats();
+    }
+
+    if (weAreLive_ && (frameIdx % 60) == 0)
+    {
+        sendWebSocketStats(false, false);
     }
 }
 
@@ -260,19 +283,29 @@ void StatsPlugin::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& fr
 void StatsPlugin::onSettingsStatsChanged()
 {
     if (frameData_)
-        exportStats();
+    {
+        exportOBSStats();
+        sendWebSocketStats(false, false);
+    }
     else
-        exportEmptyStats();
+        exportOBSEmptyStats();
 }
 
 // ----------------------------------------------------------------------------
 void StatsPlugin::onSettingsOBSChanged()
 {
     if (frameData_)
-        exportStats();
+    {
+        exportOBSStats();
+        sendWebSocketStats(false, false);
+    }
     else
-        exportEmptyStats();
+        exportOBSEmptyStats();
 }
+
+// ----------------------------------------------------------------------------
+void StatsPlugin::onSettingsWSChanged()
+{}
 
 // ----------------------------------------------------------------------------
 // Unused callbacks

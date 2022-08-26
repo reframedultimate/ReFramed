@@ -129,10 +129,8 @@ void StatsView::onSettingsStatsChanged()
 }
 
 // ----------------------------------------------------------------------------
-void StatsView::onSettingsOBSChanged()
-{
-
-}
+void StatsView::onSettingsOBSChanged() {}
+void StatsView::onSettingsWSChanged() {}
 
 // ----------------------------------------------------------------------------
 void StatsView::onPlayerMetaChanged()

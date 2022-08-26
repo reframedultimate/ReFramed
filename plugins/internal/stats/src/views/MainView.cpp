@@ -7,13 +7,13 @@
 #include <QTabWidget>
 
 // ----------------------------------------------------------------------------
-MainView::MainView(PlayerMeta* playerMeta, StatsCalculator* statsModel, SettingsModel* settingsModel, QWidget* parent)
+MainView::MainView(PlayerMeta* playerMeta, StatsCalculator* statsModel, SettingsModel* settingsModel, WebSocketServer* wsServer, QWidget* parent)
 {
     setLayout(new QVBoxLayout);
 
     QTabWidget* tabWidget = new QTabWidget;
     tabWidget->addTab(new StatsView(playerMeta, statsModel, settingsModel), "Statistics");
     tabWidget->addTab(new StatsArrangeView(settingsModel), "Enable and Disable Stats");
-    tabWidget->addTab(new ExportView(settingsModel), "Settings and Export");
+    tabWidget->addTab(new ExportView(settingsModel, wsServer), "Settings and Export");
     layout()->addWidget(tabWidget);
 }

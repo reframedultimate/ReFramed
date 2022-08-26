@@ -23,10 +23,17 @@ bool SettingsModel::load()
     QJsonObject data = QJsonDocument::fromJson(file.readAll()).object();
     
     const QJsonObject obs = data["obs"].toObject();
-    exportToOBS_ = obs["enabled"].toBool(false);
-    additionalNewlinesOBS_ = obs["extranewlines"].toInt(0);
-    destinationFolderOBS_.setPath(obs["dir"].toString(""));
-    exportIntervalOBS_ = obs["exportinterval"].toInt(0);
+    obsEnabled_ = obs["enabled"].toBool(false);
+    obsAdditionalNewlines_ = obs["extranewlines"].toInt(0);
+    obsDestinationFolder_.setPath(obs["dir"].toString(""));
+    obsExportInterval_ = obs["exportinterval"].toInt(0);
+
+    const QJsonObject ws = data["websockets"].toObject();
+    wsEnabled_ = ws["enabled"].toBool(false);
+    wsAutoStart_ = ws["autostart"].toBool(false);
+    wsSecureMode_ = ws["secure"].toBool(false);
+    wsHostName_ = ws["hostname"].toString("");
+    wsPort_ = ws["port"].toInt(0);
 
     const QJsonObject stats = data["stats"].toObject();
     QString resetBehaviorStr = stats["reseteach"].toString("");
@@ -97,16 +104,25 @@ bool SettingsModel::save()
     };
 
     QJsonObject obs = {
-        {"enabled", exportToOBS()},
-        {"extranewlines", additionalNewlinesOBS()},
-        {"dir", destinationFolderOBS().absolutePath()},
-        {"exportinterval", exportIntervalOBS_}
+        {"enabled", obsEnabled()},
+        {"extranewlines", obsAdditionalNewlines()},
+        {"dir", obsDestinationFolder().absolutePath()},
+        {"exportinterval", obsExportInterval_}
+    };
+
+    QJsonObject ws = {
+        {"enabled", wsEnabled()},
+        {"autostart", wsAutoStart()},
+        {"secure", wsSecureMode()},
+        {"hostname", wsHostName()},
+        {"port", wsPort()}
     };
 
     QJsonObject data = {
         {"version", "1.0"},
         {"stats", stats},
-        {"obs", obs}
+        {"obs", obs},
+        {"websockets", ws},
     };
 
     QFile file(settingsFile_);
@@ -192,61 +208,128 @@ void SettingsModel::setResetBehavior(ResetBehavior behavior)
 }
 
 // ----------------------------------------------------------------------------
-bool SettingsModel::exportToOBS() const
+bool SettingsModel::obsEnabled() const
 {
-    return exportToOBS_;
+    return obsEnabled_;
 }
 
 // ----------------------------------------------------------------------------
-void SettingsModel::setExportToOBS(bool enable)
+void SettingsModel::obsSetEnabled(bool enable)
 {
-    exportToOBS_ = enable;
+    obsEnabled_ = enable;
 
     save();
     dispatcher.dispatch(&SettingsListener::onSettingsOBSChanged);
 }
 
 // ----------------------------------------------------------------------------
-void SettingsModel::setAdditionalNewlinesOBS(int lines)
+void SettingsModel::obsSetAdditionalNewlines(int lines)
 {
-    additionalNewlinesOBS_ = lines;
+    obsAdditionalNewlines_ = lines;
 
     save();
     dispatcher.dispatch(&SettingsListener::onSettingsOBSChanged);
 }
 
 // ----------------------------------------------------------------------------
-int SettingsModel::additionalNewlinesOBS() const
+int SettingsModel::obsAdditionalNewlines() const
 {
-    return additionalNewlinesOBS_;
+    return obsAdditionalNewlines_;
 }
 
 // ----------------------------------------------------------------------------
-void SettingsModel::setDestinationFolderOBS(const QDir& dir)
+void SettingsModel::obsSetDestinationFolder(const QDir& dir)
 {
-    destinationFolderOBS_ = dir;
+    obsDestinationFolder_ = dir;
 
     save();
     dispatcher.dispatch(&SettingsListener::onSettingsOBSChanged);
 }
 
 // ----------------------------------------------------------------------------
-const QDir& SettingsModel::destinationFolderOBS() const
+const QDir& SettingsModel::obsDestinationFolder() const
 {
-    return destinationFolderOBS_;
+    return obsDestinationFolder_;
 }
 
 // ----------------------------------------------------------------------------
-int SettingsModel::exportIntervalOBS() const
+int SettingsModel::obsExportInterval() const
 {
-    return exportIntervalOBS_;
+    return obsExportInterval_;
 }
 
 // ----------------------------------------------------------------------------
-void SettingsModel::setExportIntervalOBS(int seconds)
+void SettingsModel::obsSetExportInterval(int seconds)
 {
-    exportIntervalOBS_ = seconds;
+    obsExportInterval_ = seconds;
 
     save();
     dispatcher.dispatch(&SettingsListener::onSettingsOBSChanged);
+}
+
+// ----------------------------------------------------------------------------
+bool SettingsModel::wsEnabled() const
+{
+    return wsEnabled_;
+}
+
+// ----------------------------------------------------------------------------
+void SettingsModel::wsSetEnabled(bool enable)
+{
+    wsEnabled_ = enable;
+
+    save();
+    dispatcher.dispatch(&SettingsListener::onSettingsWSChanged);
+}
+
+// ----------------------------------------------------------------------------
+bool SettingsModel::wsAutoStart() const
+{
+    return wsAutoStart_;
+}
+
+// ----------------------------------------------------------------------------
+void SettingsModel::wsSetAutoStart(bool enable)
+{
+    wsAutoStart_ = enable;
+
+    save();
+    dispatcher.dispatch(&SettingsListener::onSettingsWSChanged);
+}
+
+// ----------------------------------------------------------------------------
+bool SettingsModel::wsSecureMode() const
+{
+    return wsSecureMode_;
+}
+
+// ----------------------------------------------------------------------------
+void SettingsModel::wsSetSecureMode(bool enable)
+{
+    wsSecureMode_ = enable;
+
+    save();
+    dispatcher.dispatch(&SettingsListener::onSettingsWSChanged);
+}
+
+// ----------------------------------------------------------------------------
+QString SettingsModel::wsHostName() const
+{
+    return wsHostName_;
+}
+
+// ----------------------------------------------------------------------------
+void SettingsModel::wsSetHostNameAndPort(const QString& hostName, uint16_t port)
+{
+    wsHostName_ = hostName;
+    wsPort_ = port;
+
+    save();
+    dispatcher.dispatch(&SettingsListener::onSettingsWSChanged);
+}
+
+// ----------------------------------------------------------------------------
+uint16_t SettingsModel::wsPort() const
+{
+    return wsPort_;
 }

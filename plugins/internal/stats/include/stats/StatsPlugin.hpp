@@ -42,12 +42,14 @@ public:
      * of zeros, no names, etc.) This is mostly to indicate that a new game
      * has started and statistics aren't available yet.
      */
-    void exportEmptyStats() const;
+    void exportOBSEmptyStats() const;
 
     /*!
      * \brief Export all statistics to files.
      */
-    void exportStats() const;
+    void exportOBSStats() const;
+
+    void sendWebSocketStats(bool gameStarted, bool gameEnded) const;
 
 private:
     Plugin::UIInterface* uiInterface() override final;
@@ -111,12 +113,13 @@ private:
     // The export code is implemented in these callbacks
     void onSettingsStatsChanged() override;
     void onSettingsOBSChanged() override;
+    void onSettingsWSChanged() override;
 
 private:
     rfcommon::Reference<rfcommon::FrameData> frameData_;
     std::unique_ptr<PlayerMeta> playerMeta_;
     std::unique_ptr<StatsCalculator> statsCalculator_;
     std::unique_ptr<SettingsModel> settingsModel_;
-    std::unique_ptr< WebSocketServer> wsServer_;
+    std::unique_ptr<WebSocketServer> wsServer_;
     bool weAreLive_ = false;
 };

@@ -13,6 +13,7 @@ namespace rfcommon {
     class Hash40Strings;
     class MappingInfo;
     class MetaData;
+    class GameMetaData;
     class UserMotionLabels;
 }
 
@@ -27,7 +28,11 @@ public:
     void setMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
     void clearMetaData();
 
+    rfcommon::GameMetaData* latestMetaData() const;
+
+    int playerCount() const;
     QString name(int fighterIdx) const;
+    QString tag(int fighterIdx) const;
     QString character(int fighterIdx) const;
     QString moveName(int fighterIdx, rfcommon::FighterMotion motion) const;
 
@@ -56,14 +61,8 @@ private:
     void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
 
 private:
-    struct Player
-    {
-        QString name;
-        QString character;
-    };
-
-    rfcommon::Reference<rfcommon::MetaData> metaData_;
+    rfcommon::Reference<rfcommon::MetaData> mdata_;
+    rfcommon::Reference<rfcommon::MappingInfo> map_;
     rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
-    rfcommon::SmallVector<Player, 2> players_;
 };

@@ -1,6 +1,8 @@
 #pragma once
 
 #cmakedefine STATS_ENABLE_LICENSING
+#cmakedefine STATS_WEBSOCKET_SERVER
+
 #if defined(STATS_ENABLE_LICENSING)
 #   define STATS_LICENSED_TO "${STATS_LICENSED_TO}"
 #endif

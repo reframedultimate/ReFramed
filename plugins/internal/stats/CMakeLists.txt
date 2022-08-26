@@ -15,11 +15,12 @@ configure_file ("cmake/templates/config.hpp.in" "include/stats/config.hpp")
 
 reframed_add_plugin (plugin-${PLUGIN_NAME}
     FORMS
-		"forms/ExportView.ui"
+        "forms/ExportView.ui"
         "forms/StatsArrangeView.ui"
         "forms/LicenseView.ui"
     SOURCES
         "src/exporters/OBSExporter.cpp"
+        "src/exporters/WSExporter.cpp"
         "src/models/SettingsModel.cpp"
         "src/models/StatsCalculator.cpp"
         "src/models/PlayerMeta.cpp"
@@ -38,9 +39,11 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "src/Plugin.cpp"
     HEADERS
         "include/${PLUGIN_NAME}/exporters/OBSExporter.hpp"
+        "include/${PLUGIN_NAME}/exporters/WSExporter.hpp"
         "include/${PLUGIN_NAME}/listeners/SettingsListener.hpp"
         "include/${PLUGIN_NAME}/listeners/StatsCalculatorListener.hpp"
         "include/${PLUGIN_NAME}/listeners/PlayerMetaListener.hpp"
+        "include/${PLUGIN_NAME}/listeners/WebSocketServerListener.hpp"
         "include/${PLUGIN_NAME}/models/SettingsModel.hpp"
         "include/${PLUGIN_NAME}/models/StatsCalculator.hpp"
         "include/${PLUGIN_NAME}/models/PlayerMeta.hpp"
@@ -56,6 +59,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "include/${PLUGIN_NAME}/widgets/SettingsStatsItem.hpp"
         "include/${PLUGIN_NAME}/StatType.hpp"
         "include/${PLUGIN_NAME}/StatsPlugin.hpp"
+        "cmake/templates/config.hpp.in"
     INCLUDE_DIRECTORIES
         "include"
         "${PROJECT_BINARY_DIR}/include"

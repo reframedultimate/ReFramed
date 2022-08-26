@@ -16,8 +16,8 @@ PlayerMeta::PlayerMeta(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40S
 // ----------------------------------------------------------------------------
 PlayerMeta::~PlayerMeta()
 {
-    if (metaData_)
-        metaData_->dispatcher.removeListener(this);
+    if (mdata_)
+        mdata_->dispatcher.removeListener(this);
 
     userLabels_->dispatcher.removeListener(this);
 }
@@ -27,15 +27,9 @@ void PlayerMeta::setMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mda
 {
     clearMetaData();
 
-    players_.resize(mdata->fighterCount());
-    for (int i = 0; i != mdata->fighterCount(); ++i)
-    {
-        players_[i].name = mdata->name(i).cStr();
-        players_[i].character = map->fighter.toName(mdata->fighterID(i));
-    }
-
-    metaData_ = mdata;
-    metaData_->dispatcher.addListener(this);
+    map_ = map;
+    mdata_ = mdata;
+    mdata_->dispatcher.addListener(this);
 
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
@@ -43,27 +37,51 @@ void PlayerMeta::setMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mda
 // ----------------------------------------------------------------------------
 void PlayerMeta::clearMetaData()
 {
-    if (metaData_)
-        metaData_->dispatcher.removeListener(this);
+    if (mdata_)
+        mdata_->dispatcher.removeListener(this);
+    mdata_.drop();
 
-    players_.clear();
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::GameMetaData* PlayerMeta::latestMetaData() const
+{
+    if (mdata_.isNull())
+        return nullptr;
+    if (mdata_->type() != rfcommon::MetaData::GAME)
+        return nullptr;
+    return static_cast<rfcommon::GameMetaData*>(mdata_.get());
+}
+
+// ----------------------------------------------------------------------------
+int PlayerMeta::playerCount() const
+{
+    return mdata_ ? mdata_->fighterCount() : 0;
 }
 
 // ----------------------------------------------------------------------------
 QString PlayerMeta::name(int fighterIdx) const
 {
-    return players_.count() ?
-        players_[fighterIdx].name :
+    return mdata_ ?
+        mdata_->name(fighterIdx).cStr() :
+        QString("Player ") + QString::number(fighterIdx + 1);
+}
+
+// ----------------------------------------------------------------------------
+QString PlayerMeta::tag(int fighterIdx) const
+{
+    return mdata_ ?
+        mdata_->tag(fighterIdx).cStr() :
         QString("Player ") + QString::number(fighterIdx + 1);
 }
 
 // ----------------------------------------------------------------------------
 QString PlayerMeta::character(int fighterIdx) const
 {
-    return players_.count() ?
-        players_[fighterIdx].character :
-        "";
+    return mdata_ ?
+        map_->fighter.toName(mdata_->fighterID(fighterIdx)) :
+        QString("Player ") + QString::number(fighterIdx + 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -74,9 +92,9 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
     if (motion.isValid() == false)
         return "None";
 
-    if (metaData_.notNull())
+    if (mdata_.notNull())
     {
-        const auto fighterID = metaData_->fighterID(fighterIdx);
+        const auto fighterID = mdata_->fighterID(fighterIdx);
         label = userLabels_->toStringHighestLayer(fighterID, motion, nullptr);
     }
 
@@ -89,7 +107,6 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 // ----------------------------------------------------------------------------
 void PlayerMeta::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
 {
-    players_[fighterIdx].name = name.cStr();
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
 

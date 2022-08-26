@@ -66,40 +66,53 @@ public:
     void setResetBehavior(ResetBehavior behavior);
 
     /*! \brief Return true if exporting to OBS is enabled */
-    bool exportToOBS() const;
+    bool obsEnabled() const;
 
     /*! \brief Enable or disable exporting to OBS */
-    void setExportToOBS(bool enable);
+    void obsSetEnabled(bool enable);
 
     /*!
      * \brief Configure how many additional newlines to insert in between
      * the exported statistics. 0 Means no additional newlines.
      */
-    void setAdditionalNewlinesOBS(int lines);
+    void obsSetAdditionalNewlines(int lines);
 
     /*!
      * \brief How many additional newlines to insert in between the 
      * exported statistics. 0 Means no additional newlines.
      */
-    int additionalNewlinesOBS() const;
+    int obsAdditionalNewlines() const;
 
     /*! \brief Set the directory to export OBS files to */
-    void setDestinationFolderOBS(const QDir& dir);
+    void obsSetDestinationFolder(const QDir& dir);
 
     /*! \brief The directory to export OBS files to */
-    const QDir& destinationFolderOBS() const;
+    const QDir& obsDestinationFolder() const;
 
     /*! 
      * \brief Returns in seconds how often to generate exports. A value
      * of 0 Means do it after each game only.
      */
-    int exportIntervalOBS() const;
+    int obsExportInterval() const;
 
     /*!
      * \brief Set in seconds how often to generate exports. A value
      * of 0 Means do it after each game only.
      */
-    void setExportIntervalOBS(int seconds);
+    void obsSetExportInterval(int seconds);
+
+    bool wsEnabled() const;
+    void wsSetEnabled(bool enable);
+
+    bool wsAutoStart() const;
+    void wsSetAutoStart(bool enable);
+
+    bool wsSecureMode() const;
+    void wsSetSecureMode(bool enable);
+
+    QString wsHostName() const;
+    uint16_t wsPort() const;
+    void wsSetHostNameAndPort(const QString& hostName, uint16_t port);
 
     rfcommon::ListenerDispatcher<SettingsListener> dispatcher;
 
@@ -117,9 +130,14 @@ private:
     };
 
     QString settingsFile_;
-    QDir destinationFolderOBS_;
-    int additionalNewlinesOBS_ = 0;
-    int exportIntervalOBS_ = 0;
+    QDir obsDestinationFolder_;
+    QString wsHostName_;
+    int obsAdditionalNewlines_ = 0;
+    int obsExportInterval_ = 0;
+    uint16_t wsPort_ = 1337;
     ResetBehavior resetBehavior_ = RESET_EACH_GAME;
-    bool exportToOBS_ = false;
+    bool obsEnabled_ = false;
+    bool wsEnabled_ = false;
+    bool wsAutoStart_ = false;
+    bool wsSecureMode_ = true;
 };
