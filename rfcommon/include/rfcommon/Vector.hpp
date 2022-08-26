@@ -672,6 +672,24 @@ public:
         return value;
     }
 
+    Iterator findFirst(const T& value)
+    {
+        Iterator it = this->begin();
+        for (; it != this->end(); ++it)
+            if (*it == value)
+                break;
+        return it;
+    }
+
+    ConstIterator findFirst(const T& value) const
+    {
+        ConstIterator it = this->begin();
+        for (; it != this->end(); ++it)
+            if (*it == value)
+                break;
+        return it;
+    }
+
     void reserve(S count)
     {
         ensureCapacity(count, this->count_, 0);

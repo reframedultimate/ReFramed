@@ -8,3 +8,7 @@ foreach (CHILD ${CHILDREN})
 		endif ()
     endif ()
 endforeach ()
+
+if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    set (REFRAMED_plugin-debug-asserts OFF CACHE FORCE)
+endif ()

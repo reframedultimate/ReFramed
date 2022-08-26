@@ -181,7 +181,11 @@ void ReplayViewer::clearActiveSession()
 {
     PROFILE(ReplayViewer, clearActiveSession);
 
-    if (activeSessionState_ != NO_ACTIVE_SESSION)
+    if (activeSessionState_ != NO_ACTIVE_SESSION
+        && activeSessionState_ != TRAINING_STARTED_ENDED
+        && activeSessionState_ != TRAINING_RESUMED_ENDED
+        && activeSessionState_ != GAME_STARTED_ENDED
+        && activeSessionState_ != GAME_RESUMED_ENDED)
     {
         assert(activeSession_.notNull());
         assert(activeSession_->tryGetMetaData());
@@ -278,6 +282,23 @@ void ReplayViewer::onTabBarClicked(int index)
 
     previousTab_ = index;
 
+    switch (sessionState_)
+    {
+    case ATTEMPT_CONNECT:
+        if (auto i = data.plugin->realtimeInterface())
+            i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+        break;
+    case CONNECTED:
+        if (auto i = data.plugin->realtimeInterface())
+        {
+            i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+            i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+        }
+        break;
+    case DISCONNECTED:
+        break;
+    }
+
     // See if there is an active session we can give to the new plugin
     switch (activeSessionState_)
     {
@@ -297,8 +318,27 @@ void ReplayViewer::onTabBarClicked(int index)
         assert(activeSession_.notNull());
         if (auto i = data.plugin->realtimeInterface())
         {
-            i->onProtocolTrainingStarted(activeSession_);
-            i->onProtocolTrainingEnded(activeSession_);
+            switch (sessionState_)
+            {
+            case DISCONNECTED:
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolTrainingStarted(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                break;
+            case ATTEMPT_CONNECT:
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolTrainingStarted(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                break;
+            case CONNECTED:
+                i->onProtocolTrainingStarted(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                break;
+            }
         }
         break;
 
@@ -306,8 +346,27 @@ void ReplayViewer::onTabBarClicked(int index)
         assert(activeSession_.notNull());
         if (auto i = data.plugin->realtimeInterface())
         {
-            i->onProtocolTrainingResumed(activeSession_);
-            i->onProtocolTrainingEnded(activeSession_);
+            switch (sessionState_)
+            {
+            case DISCONNECTED:
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolTrainingResumed(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                break;
+            case ATTEMPT_CONNECT:
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolTrainingResumed(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                break;
+            case CONNECTED:
+                i->onProtocolTrainingResumed(activeSession_);
+                i->onProtocolTrainingEnded(activeSession_);
+                break;
+            }
         }
         break;
 
@@ -327,8 +386,27 @@ void ReplayViewer::onTabBarClicked(int index)
         assert(activeSession_.notNull());
         if (auto i = data.plugin->realtimeInterface())
         {
-            i->onProtocolGameStarted(activeSession_);
-            i->onProtocolGameEnded(activeSession_);
+            switch (sessionState_)
+            {
+            case DISCONNECTED:
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolGameStarted(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                break;
+            case ATTEMPT_CONNECT:
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolGameStarted(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                break;
+            case CONNECTED:
+                i->onProtocolGameStarted(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                break;
+            }
         }
         break;
 
@@ -336,8 +414,27 @@ void ReplayViewer::onTabBarClicked(int index)
         assert(activeSession_.notNull());
         if (auto i = data.plugin->realtimeInterface())
         {
-            i->onProtocolGameResumed(activeSession_);
-            i->onProtocolGameEnded(activeSession_);
+            switch (sessionState_)
+            {
+            case DISCONNECTED:
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolGameResumed(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                break;
+            case ATTEMPT_CONNECT:
+                i->onProtocolConnectedToServer(ipAddress_.toUtf8().constData(), port_);
+                i->onProtocolGameResumed(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                i->onProtocolDisconnectedFromServer();
+                i->onProtocolAttemptConnectToServer(ipAddress_.toUtf8().constData(), port_);
+                break;
+            case CONNECTED:
+                i->onProtocolGameResumed(activeSession_);
+                i->onProtocolGameEnded(activeSession_);
+                break;
+            }
         }
         break;
 
@@ -396,6 +493,58 @@ void ReplayViewer::closeTabWithView(QWidget* view)
     {
         if (it->view != view)
             continue;
+
+        switch (activeSessionState_)
+        {
+            case TRAINING_STARTED:
+            case TRAINING_RESUMED:
+                assert(activeSession_.notNull());
+                assert(activeSession_->tryGetMetaData());
+                assert(activeSession_->tryGetMetaData()->type() == rfcommon::MetaData::TRAINING);
+                if (auto i = it->plugin->realtimeInterface())
+                    i->onProtocolTrainingEnded(activeSession_);
+                break;
+
+            case GAME_STARTED:
+            case GAME_RESUMED:
+                assert(activeSession_.notNull());
+                assert(activeSession_->tryGetMetaData());
+                assert(activeSession_->tryGetMetaData()->type() == rfcommon::MetaData::GAME);
+                if (auto i = it->plugin->realtimeInterface())
+                    i->onProtocolGameEnded(activeSession_);
+                break;
+
+            case NO_ACTIVE_SESSION:
+            case TRAINING_STARTED_ENDED:
+            case TRAINING_RESUMED_ENDED:
+            case GAME_STARTED_ENDED:
+            case GAME_RESUMED_ENDED:
+                break;
+        }
+
+        if (activeReplays_.size() == 1)
+        {
+            if (auto i = it->plugin->replayInterface())
+                i->onGameSessionUnloaded(activeReplays_[0]);
+        }
+        else if (activeReplays_.size() > 1)
+        {
+            if (auto i = it->plugin->replayInterface())
+                i->onGameSessionSetUnloaded(activeReplays_.data(), activeReplays_.size());
+        }
+
+        switch (sessionState_)
+        {
+        case ATTEMPT_CONNECT:
+            if (auto i = it->plugin->realtimeInterface())
+                i->onProtocolFailedToConnectToServer("Plugin is being destroyed", ipAddress_.toUtf8().constData(), port_);
+            break;
+        case CONNECTED:
+            if (auto i = it->plugin->realtimeInterface())
+                i->onProtocolDisconnectedFromServer();
+        case DISCONNECTED:
+            break;
+        }
 
         it->view->setParent(nullptr);
         it->plugin->uiInterface()->destroyView(it->view);
