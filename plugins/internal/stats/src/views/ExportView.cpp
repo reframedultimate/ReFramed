@@ -1,33 +1,16 @@
-#include "ui_SettingsView.h"
+#include "ui_ExportView.h"
 #include "stats/models/SettingsModel.hpp"
-#include "stats/views/SettingsView.hpp"
-#include "stats/widgets/SettingsDragWidget.hpp"
+#include "stats/views/ExportView.hpp"
 
-#include <QVBoxLayout>
 #include <QFileDialog>
 
 // ----------------------------------------------------------------------------
-SettingsView::SettingsView(SettingsModel* model, QWidget* parent)
+ExportView::ExportView(SettingsModel* model, QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::SettingsView)
+    , ui_(new Ui::ExportView)
     , settings_(model)
-    , enabledStats_(new SettingsDragWidget)
-    , disabledStats_(new SettingsDragWidget)
 {
     ui_->setupUi(this);
-
-    for (int i = 0; i != settings_->numStatsEnabled(); ++i)
-    {
-        StatType type = settings_->statAtIndex(i);
-        enabledStats_->addStat(type);
-    }
-
-    for (int i = 0; i != STAT_COUNT; ++i)
-    {
-        StatType type = static_cast<StatType>(i);
-        if (settings_->statEnabled(type) == false)
-            disabledStats_->addStat(type);
-    }
 
     // Set UI state based on settings
     ui_->radioButton_resetStatsEveryGame->setChecked(settings_->resetBehavior() == SettingsModel::RESET_EACH_GAME);
@@ -51,31 +34,24 @@ SettingsView::SettingsView(SettingsModel* model, QWidget* parent)
     ui_->spinBox_obsSeconds->setEnabled(settings_->exportToOBS() && settings_->exportIntervalOBS() > 0);
     ui_->label_obsSeconds->setEnabled(settings_->exportToOBS() && settings_->exportIntervalOBS() > 0);
 
-    ui_->groupBox_enabledStats->setLayout(new QVBoxLayout);
-    ui_->groupBox_disabledStats->setLayout(new QVBoxLayout);
-    ui_->groupBox_enabledStats->layout()->addWidget(enabledStats_);
-    ui_->groupBox_disabledStats->layout()->addWidget(disabledStats_);
+    connect(ui_->radioButton_resetStatsEveryGame, &QRadioButton::toggled, this, &ExportView::onResetEachGameToggled);
 
-    connect(ui_->radioButton_resetStatsEveryGame, &QRadioButton::toggled, this, &SettingsView::onResetEachGameToggled);
-    connect(enabledStats_, &SettingsDragWidget::statAdded, this, &SettingsView::onStatEnabled);
-    connect(disabledStats_, &SettingsDragWidget::statAdded, this, &SettingsView::onStatDisabled);
-
-    connect(ui_->checkBox_obsExport, &QCheckBox::toggled, this, &SettingsView::onOBSCheckBoxToggled);
-    connect(ui_->checkBox_obsInsertNewlines, &QCheckBox::toggled, this, &SettingsView::onOBSInsertNewLinesCheckBoxToggled);
-    connect(ui_->spinBox_obsNewlines, qOverload<int>(&QSpinBox::valueChanged), this, &SettingsView::onOBSSpinBoxNewLinesChanged);
-    connect(ui_->toolButton_obsBrowseFolder, &QToolButton::released, this, &SettingsView::onOBSBrowseFolderButtonReleased);
-    connect(ui_->radioButton_obsExportAfterEachGame, &QRadioButton::toggled, this, &SettingsView::onOBSExportAfterEachGameToggled);
-    connect(ui_->spinBox_obsSeconds, qOverload<int>(&QSpinBox::valueChanged), this, &SettingsView::onOBSExportIntervalValueChanged);
+    connect(ui_->checkBox_obsExport, &QCheckBox::toggled, this, &ExportView::onOBSCheckBoxToggled);
+    connect(ui_->checkBox_obsInsertNewlines, &QCheckBox::toggled, this, &ExportView::onOBSInsertNewLinesCheckBoxToggled);
+    connect(ui_->spinBox_obsNewlines, qOverload<int>(&QSpinBox::valueChanged), this, &ExportView::onOBSSpinBoxNewLinesChanged);
+    connect(ui_->toolButton_obsBrowseFolder, &QToolButton::released, this, &ExportView::onOBSBrowseFolderButtonReleased);
+    connect(ui_->radioButton_obsExportAfterEachGame, &QRadioButton::toggled, this, &ExportView::onOBSExportAfterEachGameToggled);
+    connect(ui_->spinBox_obsSeconds, qOverload<int>(&QSpinBox::valueChanged), this, &ExportView::onOBSExportIntervalValueChanged);
 }
 
 // ----------------------------------------------------------------------------
-SettingsView::~SettingsView()
+ExportView::~ExportView()
 {
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onResetEachGameToggled(bool eachGame)
+void ExportView::onResetEachGameToggled(bool eachGame)
 {
     settings_->setResetBehavior(eachGame ?
         SettingsModel::RESET_EACH_GAME :
@@ -83,20 +59,7 @@ void SettingsView::onResetEachGameToggled(bool eachGame)
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onStatEnabled(int insertIndex, StatType type)
-{
-    settings_->setStatEnabled(type, true);
-    settings_->setStatAtIndex(insertIndex, type);
-}
-
-// ----------------------------------------------------------------------------
-void SettingsView::onStatDisabled(int insertIndex, StatType type)
-{
-    settings_->setStatEnabled(type, false);
-}
-
-// ----------------------------------------------------------------------------
-void SettingsView::onOBSCheckBoxToggled(bool enable)
+void ExportView::onOBSCheckBoxToggled(bool enable)
 {
     ui_->label_obsDestFolder->setEnabled(enable);
     ui_->lineEdit_obsDestFolder->setEnabled(enable);
@@ -112,7 +75,7 @@ void SettingsView::onOBSCheckBoxToggled(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onOBSInsertNewLinesCheckBoxToggled(bool enable)
+void ExportView::onOBSInsertNewLinesCheckBoxToggled(bool enable)
 {
     ui_->spinBox_obsNewlines->setEnabled(enable);
 
@@ -120,13 +83,13 @@ void SettingsView::onOBSInsertNewLinesCheckBoxToggled(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onOBSSpinBoxNewLinesChanged(int value)
+void ExportView::onOBSSpinBoxNewLinesChanged(int value)
 {
     settings_->setAdditionalNewlinesOBS(value);
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onOBSBrowseFolderButtonReleased()
+void ExportView::onOBSBrowseFolderButtonReleased()
 {
     QString dir = QFileDialog::getExistingDirectory(this, "Destination Folder");
     ui_->lineEdit_obsDestFolder->setText(dir);
@@ -135,7 +98,7 @@ void SettingsView::onOBSBrowseFolderButtonReleased()
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onOBSExportAfterEachGameToggled(bool checked)
+void ExportView::onOBSExportAfterEachGameToggled(bool checked)
 {
     ui_->spinBox_obsSeconds->setEnabled(!checked);
 
@@ -145,7 +108,7 @@ void SettingsView::onOBSExportAfterEachGameToggled(bool checked)
 }
 
 // ----------------------------------------------------------------------------
-void SettingsView::onOBSExportIntervalValueChanged(int value)
+void ExportView::onOBSExportIntervalValueChanged(int value)
 {
     settings_->setExportIntervalOBS(value);
 }

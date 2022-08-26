@@ -19,6 +19,7 @@ namespace rfcommon {
 class PlayerMeta;
 class StatsCalculator;
 class SettingsModel;
+class WebSocketServer;
 
 class StatsPlugin
         : public rfcommon::Plugin
@@ -116,5 +117,6 @@ private:
     std::unique_ptr<PlayerMeta> playerMeta_;
     std::unique_ptr<StatsCalculator> statsCalculator_;
     std::unique_ptr<SettingsModel> settingsModel_;
+    std::unique_ptr< WebSocketServer> wsServer_;
     bool weAreLive_ = false;
 };

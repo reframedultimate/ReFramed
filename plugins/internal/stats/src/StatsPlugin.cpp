@@ -3,6 +3,7 @@
 #include "stats/models/PlayerMeta.hpp"
 #include "stats/models/StatsCalculator.hpp"
 #include "stats/models/SettingsModel.hpp"
+#include "stats/models/WebSocketServer.hpp"
 #include "stats/util/Paths.hpp"
 #include "stats/views/MainView.hpp"
 
@@ -18,6 +19,7 @@ StatsPlugin::StatsPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* u
     , playerMeta_(new PlayerMeta(userLabels, hash40Strings))
     , statsCalculator_(new StatsCalculator)
     , settingsModel_(new SettingsModel(dataDir().absoluteFilePath("settings.json")))
+    , wsServer_(new WebSocketServer)
 {
     settingsModel_->dispatcher.addListener(this);
 }
