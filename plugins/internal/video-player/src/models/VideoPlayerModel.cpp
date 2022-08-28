@@ -1,27 +1,34 @@
-#include "rfcommon/Profiler.hpp"
 #include "video-player/listeners/VideoPlayerListener.hpp"
 #include "video-player/models/VideoPlayerModel.hpp"
 #include "video-player/models/VideoDecoder.hpp"
 
-VideoPlayerModel::VideoPlayerModel()
+#include "rfcommon/Log.hpp"
+#include "rfcommon/Profiler.hpp"
+
+// ----------------------------------------------------------------------------
+VideoPlayerModel::VideoPlayerModel(rfcommon::Log* log)
+    : log_(log)
 {
-    timer_.setInterval(16);
 }
 
+// ----------------------------------------------------------------------------
 VideoPlayerModel::~VideoPlayerModel()
 {}
 
+// ----------------------------------------------------------------------------
 bool VideoPlayerModel::open(const void* address, uint64_t size)
 {
     PROFILE(VideoPlayerModel, open);
 
-    decoder_.reset(new VideoDecoder(address, size));
+    decoder_.reset(new VideoDecoder(address, size, log_->child("Decoder")));
     if (decoder_->isOpen())
     {
-        timer_.setInterval(16);  // TODO get fps from decoder
+        timer_.setInterval(16);  // TODO get fps from decoder. Hard coded to 60 fps for debugging
         connect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onPresentNextFrame);
 
-        //timer_.start();
+        decoder_->seekToGameFrame(rfcommon::FrameIndex::fromValue(120));
+
+        timer_.start();
         dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
         return true;
     }
@@ -32,6 +39,7 @@ bool VideoPlayerModel::open(const void* address, uint64_t size)
     }
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::close()
 {
     PROFILE(VideoPlayerModel, close);
@@ -42,6 +50,7 @@ void VideoPlayerModel::close()
     decoder_.reset();
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::play()
 {
     PROFILE(VideoPlayerModel, play);
@@ -50,6 +59,7 @@ void VideoPlayerModel::play()
         timer_.start();
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::pause()
 {
     PROFILE(VideoPlayerModel, pause);
@@ -58,13 +68,15 @@ void VideoPlayerModel::pause()
         timer_.stop();
 }
 
-void VideoPlayerModel::advanceFrames(int videoFrames)
+// ----------------------------------------------------------------------------
+void VideoPlayerModel::advanceFrames(int gameFrames)
 {
     PROFILE(VideoPlayerModel, advanceFrames);
 
 
 }
 
+// ----------------------------------------------------------------------------
 QImage VideoPlayerModel::currentFrameAsImage()
 {
     PROFILE(VideoPlayerModel, currentFrameAsImage);
@@ -74,6 +86,7 @@ QImage VideoPlayerModel::currentFrameAsImage()
     return QImage();
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::onPresentNextFrame()
 {
     PROFILE(VideoPlayerModel, onPresentNextFrame);
@@ -85,6 +98,7 @@ void VideoPlayerModel::onPresentNextFrame()
     dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::onInfo(const QString& msg)
 {
     PROFILE(VideoPlayerModel, onInfo);
@@ -92,6 +106,7 @@ void VideoPlayerModel::onInfo(const QString& msg)
     dispatcher.dispatch(&VideoPlayerListener::onInfo, msg);
 }
 
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::onError(const QString& msg)
 {
     PROFILE(VideoPlayerModel, onError);

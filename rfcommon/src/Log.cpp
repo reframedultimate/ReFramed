@@ -326,8 +326,8 @@ Log* Log::child(const char* logName)
             return log;
 
     rfcommon::Vector<const char*> parentNames;
-    Log* log = d_->parent;
-    while (log)
+    Log* log = this;
+    while (log->d_->parent)
     {
         parentNames.insert(0, log->name());
         log = log->d_->parent;

@@ -54,12 +54,12 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
             endif ()
 
             add_custom_command (TARGET plugin-${PLUGIN_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DLL_FILENAME}" "${REFRAMED_BUILD_BINDIR}"
-                COMMENT "Copying FFMPEG DLL ${DLL_FILENAME} to runtime dir ${REFRAMED_BUILD_BINDIR}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DLL_FILENAME}" "${REFRAMED_BUILD_PLUGINDEPSDIR}"
+                COMMENT "Copying FFMPEG DLL ${DLL_FILENAME} to runtime dir ${REFRAMED_BUILD_PLUGINDEPSDIR}"
                 VERBATIM)
 			install (
 				FILES ${DLL_FILENAME}
-				DESTINATION ${REFRAMED_INSTALL_BINDIR})
+				DESTINATION ${REFRAMED_BUILD_PLUGINDEPSDIR})
         endforeach ()
     endif ()
 endif ()

@@ -5,11 +5,11 @@
 
 #include <QWidget>
 
-static rfcommon::Plugin* createVideoPlayerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+static rfcommon::Plugin* createVideoPlayerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log)
 {
     PROFILE(PluginGlobal, createVideoPlayerPlugin);
 
-    return new VideoPlayerPlugin(factory);
+    return new VideoPlayerPlugin(factory, log);
 }
 
 static void destroyVideoPlayerPlugin(rfcommon::Plugin* plugin)

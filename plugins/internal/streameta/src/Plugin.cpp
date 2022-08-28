@@ -3,7 +3,7 @@
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"
 
-static rfcommon::Plugin* createStreametaPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+static rfcommon::Plugin* createStreametaPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log)
 {
     PROFILE(PluginGlobal, createStreametaPlugin);
 

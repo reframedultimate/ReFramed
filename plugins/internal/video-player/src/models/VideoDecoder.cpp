@@ -1,6 +1,7 @@
 #include "video-player/models/VideoDecoder.hpp"
 #include "rfcommon/Deserializer.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Log.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -14,13 +15,13 @@ struct FrameDequeEntry
     FrameDequeEntry* next;
     FrameDequeEntry* prev;
     AVFrame* frame;
-    int number;
 };
 
 // ----------------------------------------------------------------------------
-VideoDecoder::VideoDecoder(const void* address, uint64_t size, QObject* parent)
+VideoDecoder::VideoDecoder(const void* address, uint64_t size, rfcommon::Log* log, QObject* parent)
     : QThread(parent)
-    , currentFrameIndex_(-1)
+    , log_(log)
+    , currentGameFrame_(rfcommon::FrameIndex::fromValue(-1))
     , bufSize_(64)
     , frameFreeList_(bufSize_)
     , currentFrame_(nullptr)
@@ -31,28 +32,11 @@ VideoDecoder::VideoDecoder(const void* address, uint64_t size, QObject* parent)
     {
         FrameDequeEntry* entry = &entries[i];
         entry->frame = av_frame_alloc();
-        entry->number = -1;
     }
 
     // Open file from memory and start decoder thread
     isOpen_ = openFile(address, size);
-    if (isOpen_)
-    {
-        // Decode the very first frame before starting the decoder thread,
-        // so the calling code has a valid frame to show
-        FrameDequeEntry* entry = frameFreeList_.take();
-        if (decodeNextFrame(entry))
-        {
-            currentFrame_ = entry;
-            start();
-        }
-        else
-        {
-            frameFreeList_.put(entry);
-            closeFile();
-            isOpen_ = false;
-        }
-    }
+    start();
 }
 
 // ----------------------------------------------------------------------------
@@ -79,6 +63,7 @@ QImage VideoDecoder::currentFrameAsImage()
         return QImage();
 
     AVFrame* frame = currentFrame_->frame;
+    log_->debug("pts: %d", frame->pts);
 
     videoScaleCtx_ = sws_getCachedContext(videoScaleCtx_,
         sourceWidth_, sourceHeight_, static_cast<AVPixelFormat>(frame->format),
@@ -121,7 +106,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
 {
     PROFILE(VideoDecoder, openFile);
 
-    emit info("Opening file from memory");
+    log_->info("Opening file from memory, address: 0x%" PRIXPTR ", size: 0x%" PRIX64, address, size);
 
     int result;
     const AVCodec* videoCodec;
@@ -149,7 +134,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     inputCtx_ = avformat_alloc_context();
     if (inputCtx_ == nullptr)
     {
-        emit error("Failed to allocate avformat context");
+        log_->error("Failed to allocate avformat context");
         goto alloc_context_failed;
     }
     inputCtx_->pb = ioCtx_;
@@ -168,7 +153,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     {
         char buf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(result, buf, AV_ERROR_MAX_STRING_SIZE);
-        emit error(buf);
+        log_->error(buf);
         goto open_input_failed;
     }
 
@@ -182,7 +167,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#gad42172e27cddafb81096939783b157bb
     if (avformat_find_stream_info(inputCtx_, NULL) < 0)
     {
-        emit error("Failed to find stream info");
+        log_->error("Failed to find stream info");
         goto find_stream_info_failed;
     }
 
@@ -195,7 +180,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
         const AVCodec* codec = avcodec_find_decoder(codecParams->codec_id);
         if (codec == nullptr)
         {
-            emit error("Unsupported codec");
+            log_->error("Unsupported codec");
             continue;
         }
 
@@ -216,17 +201,17 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     }
     if (videoStreamIdx_ == -1)
     {
-        emit error("Input does not contain a video stream");
+        log_->error("Input does not contain a video stream");
         goto video_stream_not_found;
     }
     if (audioStreamIdx_ == -1)
-        emit info("Input does not contain an audio stream");
+        log_->info("Input does not contain an audio stream");
 
     // https://ffmpeg.org/doxygen/trunk/structAVCodecContext.html
     videoCodecCtx_ = avcodec_alloc_context3(videoCodec);
     if (videoCodecCtx_ == nullptr)
     {
-        emit error("Failed to allocate video codec context");
+        log_->error("Failed to allocate video codec context");
         goto alloc_video_codec_context_failed;
     }
 
@@ -234,7 +219,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     // https://ffmpeg.org/doxygen/trunk/group__lavc__core.html#gac7b282f51540ca7a99416a3ba6ee0d16
     if (avcodec_parameters_to_context(videoCodecCtx_, inputCtx_->streams[videoStreamIdx_]->codecpar) < 0)
     {
-        emit error("Failed to copy video codec params to video codec context");
+        log_->error("Failed to copy video codec params to video codec context");
         goto copy_video_codec_params_failed;
     }
 
@@ -242,7 +227,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     // https://ffmpeg.org/doxygen/trunk/group__lavc__core.html#ga11f785a188d7d9df71621001465b0f1d
     if (avcodec_open2(videoCodecCtx_, videoCodec, NULL) < 0)
     {
-        emit error("Failed to open video codec");
+        log_->error("Failed to open video codec");
         goto open_video_codec_failed;
     }
 
@@ -272,7 +257,23 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     sourceWidth_ = videoCodecCtx_->width;
     sourceHeight_ = videoCodecCtx_->height;
     requestShutdown_ = false;
-    currentFrameIndex_ = 0;
+
+    log_->info("Video stream initialized. Decoding first frame...");
+
+    // Decode the very first frame before starting the decoder thread,
+    // so the calling code has a valid frame to show
+    FrameDequeEntry* entry = frameFreeList_.take();
+    if (decodeNextFrame(entry))
+    {
+        currentFrame_ = entry;
+        currentGameFrame_ = 0;
+    }
+    else
+    {
+        frameFreeList_.put(entry);
+        closeFile();
+        return false;
+    }
 
     return true;
 
@@ -333,7 +334,7 @@ void VideoDecoder::closeFile()
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::nextFrame()
+bool VideoDecoder::nextVideoFrame()
 {
     PROFILE(VideoDecoder, nextFrame);
 
@@ -345,13 +346,15 @@ bool VideoDecoder::nextFrame()
     if (currentFrame_)
         backQueue_.putFront(currentFrame_);
     currentFrame_ = frontQueue_.takeBack();
+    currentFrameIdx_++;
+
     cond_.wakeOne();
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::prevFrame()
+bool VideoDecoder::prevVideoFrame()
 {
     PROFILE(VideoDecoder, prevFrame);
 
@@ -363,19 +366,28 @@ bool VideoDecoder::prevFrame()
     if (currentFrame_)
         frontQueue_.putBack(currentFrame_);
     currentFrame_ = backQueue_.takeFront();
+    currentFrameIdx_--;
+
     cond_.wakeOne();
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-void VideoDecoder::seekToMs(uint64_t offsetFromStart)
+void VideoDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
 {
     PROFILE(VideoDecoder, seekToMs);
 
     QMutexLocker guard(&mutex_);
 
+    // Convert game frame index into video frame index
     /*
+    AVRational game_time_base = av_make_q(1, 60);  // Game runs at 60 fps
+    AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
+    AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
+    currentFrameIdx_ = av_rescale_q(frame.index(), game_time_base, video_frame_time_base);*/
+    currentGameFrame_ = frame.index();
+
     // Clear all cached frames
     while (frontQueue_.count())
     {
@@ -394,7 +406,7 @@ void VideoDecoder::seekToMs(uint64_t offsetFromStart)
         av_frame_unref(currentFrame_->frame);
         frameFreeList_.put(currentFrame_);
         currentFrame_ = nullptr;
-    }*/
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -437,7 +449,7 @@ bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
             else if (response == AVERROR_EOF)
                 goto exit;
             else if (response < 0)
-                emit error("Decoder error");
+                log_->error("Decoder error");
 
             // Frame is successfully decoded here
 
@@ -460,11 +472,8 @@ void VideoDecoder::run()
     PROFILE(VideoDecoder, run);
 
     mutex_.lock();
-    while (true)
+    while (requestShutdown_ == false)
     {
-        if (requestShutdown_)
-            break;
-
         int expectedBackQueueCount = bufSize_ / 2;
         int expectedFrontQueueCount = (bufSize_ - 1) / 2;
 
@@ -484,6 +493,42 @@ void VideoDecoder::run()
             frameFreeList_.put(entry);
         }
 
+        // AVSEEK_FLAG_BACKWARD should seek to the first keyframe that occurs
+        // before the specific time_stamp, however, people online have said that
+        // sometimes it will seek to a keyframe after the timestamp specified,
+        // if the timestamp is one frame before the keyframe. To fix this, we
+        // just subtract 1 more frame
+        // https://stackoverflow.com/questions/20734814/ffmpeg-av-seek-frame-with-avseek-flag-any-causes-grey-screen
+
+        // If the current frame is NULL, this indicates that we may have to
+        // seek to the current frame index.
+        if (currentFrame_ == nullptr)
+        {
+            int64_t seek_target = currentFrameIdx_;
+            FrameDequeEntry* entry = frameFreeList_.take();
+            assert(entry);
+            mutex_.unlock();
+                // Convert from frame index to timestamp in the stream's time base
+                AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
+                AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
+                AVRational stream_time_base = inputCtx_->streams[videoStreamIdx_]->time_base;
+                seek_target = seek_target > 0 ? seek_target - 1 : seek_target;  // See comment above
+                seek_target = av_rescale_q(seek_target, video_frame_time_base, stream_time_base);
+
+                // Seek and decode frame
+                int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, seek_target, AVSEEK_FLAG_BACKWARD);
+                bool decode_result = decodeNextFrame(entry);
+            mutex_.lock();
+
+            if (decode_result)
+                currentFrame_ = entry;
+            else
+            {
+                frameFreeList_.put(entry);
+                continue;
+            }
+        }
+
         // If both queues are full then there's nothing left to do. Otherwise
         // try to decode as many frames as possible until both queues are full.
         if (frontQueue_.count() < expectedFrontQueueCount)
@@ -498,9 +543,33 @@ void VideoDecoder::run()
                 frontQueue_.putFront(entry);
             else
                 frameFreeList_.put(entry);
+
+            continue;
         }
 
-        if (frontQueue_.count() == expectedFrontQueueCount && requestShutdown_ == false)
+        if (backQueue_.count() < expectedBackQueueCount)
+        {
+            int64_t backQueueStartFrame = currentFrameIdx_ - bufSize_ / 2;
+            FrameDequeEntry* entry = frameFreeList_.take();
+            assert(entry);
+            mutex_.unlock();
+                // Convert from frame index to timestamp in the stream's time base
+                AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
+                AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
+                AVRational stream_time_base = inputCtx_->streams[videoStreamIdx_]->time_base;
+                int64_t seek_target = backQueueStartFrame > 0 ? backQueueStartFrame - 1 : backQueueStartFrame;
+                seek_target = seek_target < 0 ? 0 : seek_target;
+                seek_target = av_rescale_q(seek_target, video_frame_time_base, stream_time_base);
+
+                // Seek and decode frame
+                int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, seek_target, AVSEEK_FLAG_BACKWARD);
+                bool decode_result = decodeNextFrame(entry);
+            mutex_.lock();
+
+            continue;
+        }
+
+        if (requestShutdown_ == false)
             cond_.wait(&mutex_);
     }
     mutex_.unlock();

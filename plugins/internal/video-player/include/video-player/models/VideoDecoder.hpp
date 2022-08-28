@@ -1,5 +1,7 @@
 #pragma once
 
+#include "rfcommon/FrameIndex.hpp"
+
 #include <QThread>
 #include <QImage>
 #include <QMutex>
@@ -18,6 +20,10 @@ typedef struct SwsContext SwsContext;
 }
 
 struct FrameDequeEntry;
+
+namespace rfcommon {
+    class Log;
+}
 
 template <typename Entry>
 class Deque
@@ -169,20 +175,16 @@ class VideoDecoder : public QThread
     Q_OBJECT
 
 public:
-    explicit VideoDecoder(const void* address, uint64_t size, QObject* parent=nullptr);
+    explicit VideoDecoder(const void* address, uint64_t size, rfcommon::Log* log, QObject* parent=nullptr);
     ~VideoDecoder();
 
     bool isOpen() const { return isOpen_; }
 
-    bool nextFrame();
-    bool prevFrame();
-    void seekToMs(uint64_t offsetFromStart);
+    bool nextVideoFrame();
+    bool prevVideoFrame();
+    void seekToGameFrame(rfcommon::FrameIndex frame);
 
-    QImage currentFrameAsImage();
-
-signals:
-    void info(const QString& msg);
-    void error(const QString& msg);
+    QImage currentVideoFrameAsImage();
 
 private:
     bool openFile(const void* address, uint64_t size);
@@ -191,6 +193,9 @@ private:
     void run() override;
 
 private:
+    rfcommon::Log* log_;
+
+    // libav state
     int sourceWidth_ = 0;
     int sourceHeight_ = 0;
     int videoStreamIdx_ = -1;
@@ -205,12 +210,14 @@ private:
     QMutex mutex_;
     QWaitCondition cond_;
 
-    int currentFrameIndex_;
+    // queues
     int bufSize_;
     FlatFreeList<FrameDequeEntry> frameFreeList_;
     Deque<FrameDequeEntry> backQueue_;
     Deque<FrameDequeEntry> frontQueue_;
     FrameDequeEntry* currentFrame_;
+
+    rfcommon::FrameIndex::Type currentGameFrame_;
 
     bool requestShutdown_ = false;
     bool isOpen_ = false;

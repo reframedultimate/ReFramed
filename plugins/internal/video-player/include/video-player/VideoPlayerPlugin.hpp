@@ -7,6 +7,7 @@
 class VideoPlayerModel;
 
 namespace rfcommon {
+    class Log;
     class VideoEmbed;
 }
 
@@ -17,7 +18,7 @@ class VideoPlayerPlugin
         , private rfcommon::Plugin::VideoPlayerInterface
 {
 public:
-    VideoPlayerPlugin(RFPluginFactory* factory);
+    VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* log);
     ~VideoPlayerPlugin();
 
     Plugin::UIInterface* uiInterface() override final;
@@ -49,6 +50,7 @@ private:
     void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
 
 private:
+    rfcommon::Log* log_;
     std::unique_ptr<VideoPlayerModel> videoPlayer_;
     rfcommon::Reference<rfcommon::VideoEmbed> activeVideo_;
 };

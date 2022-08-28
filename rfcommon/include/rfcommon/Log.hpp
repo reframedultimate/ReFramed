@@ -3,6 +3,12 @@
 #include "rfcommon/config.hpp"
 #include <cstdio>
 
+#if defined(__GNUC__) || defined(__clang__)
+#   define PRINTF_FORMAT(fmt, params) __attribute__((format(printf, fmt, params)))
+#else
+#   define PRINTF_FORMAT(fmt, params)
+#endif
+
 namespace rfcommon {
 
 struct LogPrivate;
@@ -48,6 +54,7 @@ public:
     void endDropdown();
 
     /// Debug, noisy stuff
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_DEBUG
     void debug(const char* fmt, ...);
 #else
@@ -55,6 +62,7 @@ public:
 #endif
 
     /// Non-critical information. Uses the printf-style format string.
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_INFO
     void info(const char* fmt, ...);
 #else
@@ -62,6 +70,7 @@ public:
 #endif
 
     /// More interesting information, but not critical. Uses the printf-style format string.
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_NOTICE
     void notice(const char* fmt, ...);
 #else
@@ -69,6 +78,7 @@ public:
 #endif
 
     /// Warning message. Uses the printf-style format string.
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_WARNING
     void warning(const char* fmt, ...);
 #else
@@ -76,6 +86,7 @@ public:
 #endif
 
     /// An error has occurred. Uses the printf-style format string.
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_ERROR
     void error(const char* fmt, ...);
 #else
@@ -83,6 +94,7 @@ public:
 #endif
 
     /// A fatal error has occurred. Uses the printf-style format string.
+    PRINTF_FORMAT(1, 2)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_FATAL
     void fatal(const char* fmt, ...);
 #else

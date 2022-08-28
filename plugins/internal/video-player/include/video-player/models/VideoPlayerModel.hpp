@@ -9,19 +9,23 @@
 class VideoDecoder;
 class VideoPlayerListener;
 
+namespace rfcommon {
+    class Log;
+}
+
 class VideoPlayerModel : public QObject
 {
     Q_OBJECT
 
 public:
-    VideoPlayerModel();
+    VideoPlayerModel(rfcommon::Log* log);
     ~VideoPlayerModel();
 
     bool open(const void* address, uint64_t size);
     void close();
     void play();
     void pause();
-    void advanceFrames(int videoFrames);
+    void advanceFrames(int gameFrames);
 
     QImage currentFrameAsImage();
 
@@ -33,6 +37,7 @@ private slots:
     void onError(const QString& msg);
 
 private:
+    rfcommon::Log* log_;
     std::unique_ptr<VideoDecoder> decoder_;
     QTimer timer_;
 };

@@ -5,6 +5,7 @@
 
 namespace rfcommon {
     class Hash40Strings;
+    class Log;
     class Plugin;
     class UserMotionLabels;
 }
@@ -24,7 +25,7 @@ struct RFPluginFactoryInfo
 
 struct RFPluginFactory
 {
-    rfcommon::Plugin* (*create)(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    rfcommon::Plugin* (*create)(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log);
     void (*destroy)(rfcommon::Plugin* plugin);
 
     RFPluginType type;

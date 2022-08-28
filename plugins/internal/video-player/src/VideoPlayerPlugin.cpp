@@ -8,9 +8,10 @@
 #include "rfcommon/VideoMeta.hpp"
 
 // ----------------------------------------------------------------------------
-VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory)
+VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* log)
     : Plugin(factory)
-    , videoPlayer_(new VideoPlayerModel)
+    , log_(log)
+    , videoPlayer_(new VideoPlayerModel(log))
 {}
 
 // ----------------------------------------------------------------------------

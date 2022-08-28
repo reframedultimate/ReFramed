@@ -186,7 +186,7 @@ rfcommon::Plugin* PluginManager::create(const QString& name)
 
                 // Instantiate object
                 rfcommon::Log::root()->info("Creating plugin \"%s\"", factory->info.name);
-                rfcommon::Plugin* plugin = factory->create(factory, userLabels_, hash40Strings_);
+                rfcommon::Plugin* plugin = factory->create(factory, userLabels_, hash40Strings_, rfcommon::Log::root()->child(factory->info.name));
                 if (plugin == nullptr)
                     log->error("Call to create() failed for plugin factory \"%s\"", factory->info.name);
                 return plugin;
