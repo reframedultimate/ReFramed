@@ -63,8 +63,8 @@ void WSExporter::writeJSON(bool gameStarted, bool gameEnded) const
 
     auto mdata = playerMeta_->latestMetaData();
     QJsonObject jMetaData = mdata ? QJsonObject({
-        {"started", int64_t(mdata->timeStarted().millisSinceEpoch())},
-        {"ended", int64_t(mdata->timeEnded().millisSinceEpoch())},
+        {"started", qint64(mdata->timeStarted().millisSinceEpoch())},
+        {"ended", qint64(mdata->timeEnded().millisSinceEpoch())},
         {"gamenumber", mdata->gameNumber().value()},
         {"setnumber", mdata->setNumber().value()},
         {"format", mdata->setFormat().shortDescription()},

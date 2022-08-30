@@ -15,7 +15,7 @@ VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* lo
 {}
 
 // ----------------------------------------------------------------------------
-VideoPlayerPlugin::~VideoPlayerPlugin() 
+VideoPlayerPlugin::~VideoPlayerPlugin()
 {}
 
 // ----------------------------------------------------------------------------
@@ -42,7 +42,7 @@ void VideoPlayerPlugin::destroyView(QWidget* view)
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game) 
+void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
     PROFILE(VideoPlayerPlugin, onGameSessionLoaded);
 
@@ -75,7 +75,7 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game) 
+void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
     PROFILE(VideoPlayerPlugin, onGameSessionUnloaded);
 
@@ -89,7 +89,7 @@ void VideoPlayerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int nu
 void VideoPlayerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
 
 // ----------------------------------------------------------------------------
-bool VideoPlayerPlugin::openVideoFromMemory(const void* address, uint64_t size) 
+bool VideoPlayerPlugin::openVideoFromMemory(const void* address, uint64_t size)
 {
     PROFILE(VideoPlayerPlugin, openVideoFromMemory);
 
@@ -121,6 +121,14 @@ void VideoPlayerPlugin::pauseVideo()
 }
 
 // ----------------------------------------------------------------------------
+bool VideoPlayerPlugin::isVideoPlaying() const
+{
+    PROFILE(VideoPlayerPlugin, isVideoPlaying);
+
+    return videoPlayer_->isPlaying();
+}
+
+// ----------------------------------------------------------------------------
 void VideoPlayerPlugin::setVideoVolume(int percent)
 {
     PROFILE(VideoPlayerPlugin, setVideoVolume);
@@ -140,4 +148,11 @@ void VideoPlayerPlugin::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 {
     PROFILE(VideoPlayerPlugin, seekVideoToGameFrame);
 
+    videoPlayer_->seekToFrame(frameNumber);
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::FrameIndex VideoPlayerPlugin::currentVideoGameFrame()
+{
+    return rfcommon::FrameIndex::fromValue(0);
 }

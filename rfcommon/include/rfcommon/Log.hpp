@@ -54,7 +54,7 @@ public:
     void endDropdown();
 
     /// Debug, noisy stuff
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_DEBUG
     void debug(const char* fmt, ...);
 #else
@@ -62,7 +62,7 @@ public:
 #endif
 
     /// Non-critical information. Uses the printf-style format string.
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_INFO
     void info(const char* fmt, ...);
 #else
@@ -70,7 +70,7 @@ public:
 #endif
 
     /// More interesting information, but not critical. Uses the printf-style format string.
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_NOTICE
     void notice(const char* fmt, ...);
 #else
@@ -78,7 +78,7 @@ public:
 #endif
 
     /// Warning message. Uses the printf-style format string.
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_WARNING
     void warning(const char* fmt, ...);
 #else
@@ -86,7 +86,7 @@ public:
 #endif
 
     /// An error has occurred. Uses the printf-style format string.
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_ERROR
     void error(const char* fmt, ...);
 #else
@@ -94,7 +94,7 @@ public:
 #endif
 
     /// A fatal error has occurred. Uses the printf-style format string.
-    PRINTF_FORMAT(1, 2)
+    PRINTF_FORMAT(2, 3)
 #if RFCOMMON_LOG_LEVEL <= RFCOMMON_LOG_FATAL
     void fatal(const char* fmt, ...);
 #else

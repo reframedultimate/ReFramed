@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/FrameIndex.hpp"
 #include <QObject>
 #include <QImage>
 #include <QTimer>
@@ -23,18 +24,22 @@ public:
 
     bool open(const void* address, uint64_t size);
     void close();
-    void play();
-    void pause();
-    void advanceFrames(int gameFrames);
+
+    bool isPlaying() const;
+    void seekToFrame(rfcommon::FrameIndex frame);
 
     QImage currentFrameAsImage();
 
     rfcommon::ListenerDispatcher<VideoPlayerListener> dispatcher;
 
+public slots:
+    void play();
+    void pause();
+    void togglePlaying();
+    void advanceFrames(int numFrames);
+
 private slots:
     void onPresentNextFrame();
-    void onInfo(const QString& msg);
-    void onError(const QString& msg);
 
 private:
     rfcommon::Log* log_;

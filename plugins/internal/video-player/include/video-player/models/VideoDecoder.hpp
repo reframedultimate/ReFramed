@@ -19,36 +19,16 @@ typedef struct AVFrame AVFrame;
 typedef struct SwsContext SwsContext;
 }
 
-struct FrameDequeEntry;
-
 namespace rfcommon {
     class Log;
 }
 
 template <typename Entry>
-class Deque
+class Queue
 {
 public:
-    /*!
-     * \brief Inserts an item into the back of the queue.
-     */
-    void putBack(Entry* entry)
-    {
-        entry->prev = nullptr;
-        entry->next = back_;
-
-        if (back_)
-            back_->prev = entry;
-        else
-            front_ = entry;
-
-        count_++;
-        back_ = entry;
-    }
-
     void putFront(Entry* entry)
     {
-        entry->prev = front_;
         entry->next = nullptr;
 
         if (front_)
@@ -65,44 +45,19 @@ public:
         Entry* entry = back_;
 
         if (back_)
+        {
             back_ = back_->next;
+            count_--;
+        }
         if (back_ == nullptr)
             front_ = nullptr;
 
-        count_--;
         return entry;
     }
 
-    /*!
-     * \brief Pops an item from the front of the queue.
-     */
-    Entry* takeFront()
-    {
-        Entry* entry = front_;
-
-        if (front_)
-            front_ = front_->prev;
-        if (front_ == nullptr)
-            back_ = nullptr;
-
-        count_--;
-        return entry;
-    }
-
-    Entry* peekFront() const
-    {
-        return front_;
-    }
-
-    Entry* peekback() const
-    {
-        return back_;
-    }
-
-    int count() const
-    {
-        return count_;
-    }
+    Entry* peekFront() const { return front_; }
+    Entry* peekback() const { return back_; }
+    int count() const { return count_; }
 
 private:
     Entry* front_ = nullptr;
@@ -111,40 +66,17 @@ private:
 };
 
 template <typename Entry>
-class FlatFreeList
+class FreeList
 {
 public:
-    FlatFreeList(int size)
+    FreeList()
         : first_(nullptr)
-        , entries_(nullptr)
-    {
-        resize(size);
-    }
+    {}
 
-    ~FlatFreeList()
-    {
-        if (entries_)
-            delete[] entries_;
-    }
-
-    FlatFreeList(const FlatFreeList&) = delete;
-    FlatFreeList(FlatFreeList&&) = delete;
-    FlatFreeList& operator=(const FlatFreeList&) = delete;
-    FlatFreeList& operator=(FlatFreeList&&) = delete;
-
-    void resize(int size)
-    {
-        assert(size > 0);
-
-        if (entries_)
-            delete[] entries_;
-
-        entries_ = new Entry[size];
-
-        first_ = nullptr;
-        for (int i = size - 1; i >= 0; --i)
-            put(&entries_[i]);
-    }
+    FreeList(const FreeList&) = delete;
+    FreeList(FreeList&&) = delete;
+    FreeList& operator=(const FreeList&) = delete;
+    FreeList& operator=(FreeList&&) = delete;
 
     void put(Entry* entry)
     {
@@ -160,37 +92,70 @@ public:
         return entry;
     }
 
-    Entry* entries() const
-    {
-        return entries_;
-    }
-
 private:
     Entry* first_;
-    Entry* entries_;
 };
 
-class VideoDecoder : public QThread
+template <typename Entry, int N>
+class FlatFreeList : public FreeList<Entry>
 {
-    Q_OBJECT
-
 public:
-    explicit VideoDecoder(const void* address, uint64_t size, rfcommon::Log* log, QObject* parent=nullptr);
-    ~VideoDecoder();
+    FlatFreeList()
+    {
+        for (int i = N - 1; i >= 0; --i)
+            put(&entries_[i]);
+    }
+
+    Entry* entries() const { return entries_; }
+    int count() const { return N; }
+
+private:
+    Entry entries_[N];
+};
+
+struct FrameEntry
+{
+    FrameEntry* next;
+    AVFrame* frame;
+};
+
+class AVDecoder
+{
+public:
+    AVDecoder(rfcommon::Log* log);
+    ~AVDecoder();
+
+    bool openFile(const void* address, uint64_t size);
+    void closeFile();
 
     bool isOpen() const { return isOpen_; }
 
-    bool nextVideoFrame();
-    bool prevVideoFrame();
-    void seekToGameFrame(rfcommon::FrameIndex frame);
+    /*!
+     * \brief Decodes the next frame of video and converts it into RGB24.
+     * \param[out] bufPtr The pointer to the internally allocated buffer containing
+     * the image data is written to this output variable. The buffer remains
+     * valid up until the next call to nextVideoFrame().
+     * \param[out] width The width in pixels of the image
+     * \param[out] height The height in pixels of the image
+     * \param[out] bytesPerLine Number of bytes for each picture line.
+     * \return The video timestamp (PTS) of the decoded frame is returned. If
+     * PTS is not available, 0 is returned (some codecs do this). If an error
+     * in decoding occurred, -1 is returned.
+     */
+    int64_t nextVideoFrame(void** bufPtr, int* width, int* height, int* bytesPerLine);
 
-    QImage currentVideoFrameAsImage();
+    /*!
+     * \brief Decodes the next chunk of audio.
+     * \param buf
+     * \param size
+     * \return
+     */
+    int64_t nextAudioFrame(void** bufPtr, int* size);
+
+    bool seekToGameFrame(rfcommon::FrameIndex frame);
 
 private:
-    bool openFile(const void* address, uint64_t size);
-    void closeFile();
-    bool decodeNextFrame(FrameDequeEntry* entry);
-    void run() override;
+    bool decodeNextPacket();
 
 private:
     rfcommon::Log* log_;
@@ -204,21 +169,12 @@ private:
     AVFormatContext* inputCtx_ = nullptr;
     AVCodecContext* videoCodecCtx_ = nullptr;
     SwsContext* videoScaleCtx_ = nullptr;
-    AVFrame* rgbFrame_ = nullptr;
-    uint8_t* rgbFrameBuffer_ = nullptr;
-
-    QMutex mutex_;
-    QWaitCondition cond_;
 
     // queues
-    int bufSize_;
-    FlatFreeList<FrameDequeEntry> frameFreeList_;
-    Deque<FrameDequeEntry> backQueue_;
-    Deque<FrameDequeEntry> frontQueue_;
-    FrameDequeEntry* currentFrame_;
+    FreeList<FrameEntry> frameFreeList_;
+    FlatFreeList<FrameEntry, 64> pictureFreeList_;
+    Queue<FrameEntry> audioQueue_;
+    Queue<FrameEntry> videoQueue_;
 
-    rfcommon::FrameIndex::Type currentGameFrame_;
-
-    bool requestShutdown_ = false;
     bool isOpen_ = false;
 };

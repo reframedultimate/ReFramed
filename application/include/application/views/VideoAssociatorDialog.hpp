@@ -3,6 +3,8 @@
 #include "rfcommon/Reference.hpp"
 #include <QDialog>
 
+class QShortcut;
+
 namespace Ui {
     class VideoAssociatorDialog;
 }
@@ -34,6 +36,9 @@ public:
 private slots:
     void onSaveReleased();
     void onChooseFileReleased();
+    void onPlayToggled();
+    void onNextFrame();
+    void onPrevFrame();
 
 private:
     Ui::VideoAssociatorDialog* ui_;
@@ -44,6 +49,12 @@ private:
     rfcommon::Reference<rfcommon::Session> session_;
     rfcommon::Reference<rfcommon::MappedFile> currentVideoFile_;
     const QString currentFileName_;
+
+    QShortcut* togglePlayShortcut_ = nullptr;
+    QShortcut* nextFrameShortcut_ = nullptr;
+    QShortcut* prevFrameShortcut_ = nullptr;
+
+    int currentGameFrame_;
 };
 
 }

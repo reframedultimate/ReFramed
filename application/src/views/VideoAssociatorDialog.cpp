@@ -1,13 +1,15 @@
 #include "application/ui_VideoAssociatorDialog.h"
 #include "application/views/VideoAssociatorDialog.hpp"
 #include "application/models/PluginManager.hpp"
+#include "rfcommon/FrameData.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
-#include "rfcommon/MappedFile.hpp"
 
+#include <QShortcut>
 #include <QPushButton>
 #include <QFileDialog>
 
@@ -28,6 +30,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     , videoView_(nullptr)
     , session_(session)
     , currentFileName_(currentFileName)
+    , currentGameFrame_(0)
 {
     ui_->setupUi(this);
 
@@ -47,7 +50,16 @@ VideoAssociatorDialog::VideoAssociatorDialog(
         videoPlugin_ = nullptr;
     }
     if (videoView_)
+    {
+        togglePlayShortcut_ = new QShortcut(QKeySequence(Qt::Key_Space), videoView_);
+        nextFrameShortcut_ = new QShortcut(QKeySequence(Qt::Key_Right), videoView_);
+        prevFrameShortcut_ = new QShortcut(QKeySequence(Qt::Key_Left), videoView_);
         ui_->layout_videoPlugin->addWidget(videoView_);
+
+        connect(togglePlayShortcut_, &QShortcut::activated, this, &VideoAssociatorDialog::onPlayToggled);
+        connect(nextFrameShortcut_, &QShortcut::activated, this, &VideoAssociatorDialog::onNextFrame);
+        connect(prevFrameShortcut_, &QShortcut::activated, this, &VideoAssociatorDialog::onPrevFrame);
+    }
     else
     {
         QLabel* label = new QLabel;
@@ -81,12 +93,13 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     /*
     if (vmeta)
     {
-        QTime time; 
+        QTime time;
         time.addSecs(vmeta->frameOffset().seconds());
 
         ui_->spinBox_frameOffset->setValue(vmeta->frameOffset().frames());
         ui_->timeEdit_timeOffset->setTime(time);
     }*/
+
 
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &VideoAssociatorDialog::close);
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
@@ -119,10 +132,12 @@ void VideoAssociatorDialog::onChooseFileReleased()
 {
     PROFILE(VideoAssociatorDialog, onChooseFileReleased);
 
+    /*
     QString fileName = QFileDialog::getOpenFileName(
         this, "Open Video File", "", "Video Files (*.mp4 *.mkv *.avi *.webm)");
     if (fileName.length() == 0)
-        return;
+        return;*/
+    QString fileName = "/media/ssbu/2022-08-04 - Basel Summer Weekly/2022-08-04 - Bo3 - TheComet (Pika) vs DeepFreeze (Joker) Game 1.mp4";
 
     rfcommon::Reference<rfcommon::MappedFile> f = new rfcommon::MappedFile;
     QByteArray ba = fileName.toUtf8();
@@ -133,6 +148,53 @@ void VideoAssociatorDialog::onChooseFileReleased()
 
     if (videoPlugin_)
         videoPlugin_->videoPlayerInterface()->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onPlayToggled()
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        if (i->isVideoPlaying())
+            i->pauseVideo();
+        else
+            i->playVideo();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onNextFrame()
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+        if (auto fdata = session_->tryGetFrameData())
+        {
+            i->pauseVideo();
+            if (currentGameFrame_ < fdata->frameCount())
+            {
+                currentGameFrame_++;
+                i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(currentGameFrame_));
+            }
+        }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onPrevFrame()
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        i->pauseVideo();
+        if (currentGameFrame_ > 0)
+        {
+            currentGameFrame_--;
+            i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(currentGameFrame_));
+        }
+    }
 }
 
 }

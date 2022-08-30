@@ -10,71 +10,21 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-struct FrameDequeEntry
-{
-    FrameDequeEntry* next;
-    FrameDequeEntry* prev;
-    AVFrame* frame;
-};
-
 // ----------------------------------------------------------------------------
-VideoDecoder::VideoDecoder(const void* address, uint64_t size, rfcommon::Log* log, QObject* parent)
-    : QThread(parent)
-    , log_(log)
-    , currentGameFrame_(rfcommon::FrameIndex::fromValue(-1))
-    , bufSize_(64)
-    , frameFreeList_(bufSize_)
-    , currentFrame_(nullptr)
+AVDecoder::AVDecoder(rfcommon::Log* log)
+    : log_(log)
 {
-    // We maintain a double ended queue of AVFrames that are filled asynchronously
-    FrameDequeEntry* entries = frameFreeList_.entries();
-    for (int i = 0; i != bufSize_; ++i)
+    for (int i = 0; i != pictureFreeList_.count(); ++i)
     {
-        FrameDequeEntry* entry = &entries[i];
-        entry->frame = av_frame_alloc();
-    }
 
-    // Open file from memory and start decoder thread
-    isOpen_ = openFile(address, size);
-    start();
+    }
 }
 
 // ----------------------------------------------------------------------------
-VideoDecoder::~VideoDecoder()
+AVDecoder::~AVDecoder()
 {
-    // Joins decoding thread and cleans up everything
     if (isOpen_)
         closeFile();
-
-    // Free AVFrames in double ended queue
-    FrameDequeEntry* entries = frameFreeList_.entries();
-    for (int i = 0; i != bufSize_; ++i)
-    {
-        av_frame_free(&entries[i].frame);
-    }
-}
-
-// ----------------------------------------------------------------------------
-QImage VideoDecoder::currentFrameAsImage()
-{
-    PROFILE(VideoDecoder, currentFrameAsImage);
-
-    if (currentFrame_ == nullptr)
-        return QImage();
-
-    AVFrame* frame = currentFrame_->frame;
-    log_->debug("pts: %d", frame->pts);
-
-    videoScaleCtx_ = sws_getCachedContext(videoScaleCtx_,
-        sourceWidth_, sourceHeight_, static_cast<AVPixelFormat>(frame->format),
-        sourceWidth_, sourceHeight_, AV_PIX_FMT_RGB24,
-        SWS_BILINEAR, nullptr, nullptr, nullptr);
-
-    sws_scale(videoScaleCtx_,
-        frame->data, frame->linesize, 0, sourceHeight_,
-        rgbFrame_->data, rgbFrame_->linesize);
-
-    return QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
 }
 
 static int read_callback(void* opaque, uint8_t* buf, int buf_size)
@@ -102,11 +52,11 @@ static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::openFile(const void* address, uint64_t size)
+bool AVDecoder::openFile(const void* address, uint64_t size)
 {
     PROFILE(VideoDecoder, openFile);
 
-    log_->info("Opening file from memory, address: 0x%" PRIXPTR ", size: 0x%" PRIX64, address, size);
+    log_->info("Opening file from memory, address: 0x%" PRIxPTR ", size: 0x%" PRIx64, (intptr_t)address, size);
 
     int result;
     const AVCodec* videoCodec;
@@ -153,7 +103,7 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
     {
         char buf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(result, buf, AV_ERROR_MAX_STRING_SIZE);
-        log_->error(buf);
+        log_->error("%s", buf);
         goto open_input_failed;
     }
 
@@ -231,49 +181,11 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
         goto open_video_codec_failed;
     }
 
-    rgbFrame_ = av_frame_alloc();
-
-    bufSize = av_image_fill_arrays(
-        rgbFrame_->data,           /* Data pointers to be filled in */
-        rgbFrame_->linesize,       /* linesizes for the image in dst_data to be filled in */
-        nullptr,                   /* Source buffer - nullptr means calculate and return the required buffer size in bytes */
-        AV_PIX_FMT_RGB24,          /* Destination format */
-        videoCodecCtx_->width,     /* Destination width */
-        videoCodecCtx_->height,    /* Destination height */
-        1                          /* The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1) */
-    );
-    /* if (bufSize < 0) ... */
-    rgbFrameBuffer_ = (uint8_t*)av_malloc(bufSize);
-    av_image_fill_arrays(
-        rgbFrame_->data,           /* Data pointers to be filled in */
-        rgbFrame_->linesize,       /* linesizes for the image in dst_data to be filled in */
-        rgbFrameBuffer_,           /* Source buffer */
-        AV_PIX_FMT_RGB24,          /* Destination format */
-        videoCodecCtx_->width,     /* Destination width */
-        videoCodecCtx_->height,    /* Destination height */
-        1                          /* The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1) */
-    );
-
     sourceWidth_ = videoCodecCtx_->width;
     sourceHeight_ = videoCodecCtx_->height;
     requestShutdown_ = false;
 
-    log_->info("Video stream initialized. Decoding first frame...");
-
-    // Decode the very first frame before starting the decoder thread,
-    // so the calling code has a valid frame to show
-    FrameDequeEntry* entry = frameFreeList_.take();
-    if (decodeNextFrame(entry))
-    {
-        currentFrame_ = entry;
-        currentGameFrame_ = 0;
-    }
-    else
-    {
-        frameFreeList_.put(entry);
-        closeFile();
-        return false;
-    }
+    log_->info("Video stream initialized");
 
     return true;
 
@@ -287,33 +199,17 @@ bool VideoDecoder::openFile(const void* address, uint64_t size)
 }
 
 // ----------------------------------------------------------------------------
-void VideoDecoder::closeFile()
+void AVDecoder::closeFile()
 {
     PROFILE(VideoDecoder, closeFile);
 
-    mutex_.lock();
-        requestShutdown_ = true;
-        cond_.wakeOne();
-    mutex_.unlock();
-    wait();
-
-    while (frontQueue_.count())
+    // Free AVFrames left in queues
+    while (videoQueue_.count())
     {
-        FrameDequeEntry* entry = frontQueue_.takeFront();
-        av_frame_unref(entry->frame);
-        frameFreeList_.put(entry);
-    }
-    while (backQueue_.count())
-    {
-        FrameDequeEntry* entry = backQueue_.takeFront();
-        av_frame_unref(entry->frame);
-        frameFreeList_.put(entry);
-    }
-    if (currentFrame_)
-    {
-        av_frame_unref(currentFrame_->frame);
-        frameFreeList_.put(currentFrame_);
-        currentFrame_ = nullptr;
+        FrameEntry* e = videoQueue_.takeBack();
+        av_free(e->frame.data[0]);  // This is the picture buffer we manually allocated
+        av_frame_unref(&e->frame);
+        pictureFreeList_.put(e);
     }
 
     if (videoScaleCtx_)
@@ -322,8 +218,6 @@ void VideoDecoder::closeFile()
         videoScaleCtx_ = nullptr;
     }
 
-    av_free(rgbFrameBuffer_);
-    av_frame_free(&rgbFrame_);
     avcodec_close(videoCodecCtx_);
     avcodec_free_context(&videoCodecCtx_);
     avformat_close_input(&inputCtx_);
@@ -334,99 +228,90 @@ void VideoDecoder::closeFile()
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::nextVideoFrame()
+int64_t AVDecoder::nextVideoFrame(void** bufPtr, int* width, int* height, int* bytesPerLine)
 {
-    PROFILE(VideoDecoder, nextFrame);
+    while (videoQueue_.count() == 0)
+    {
+        if (decodeNextPacket() == false)
+            return -1;
+    }
 
-    QMutexLocker guard(&mutex_);
+    FrameEntry* e = videoQueue_.takeBack();
+    // We do not call av_frame_unref() and we do not free the picture buffer,
+    // even though we're putting the entry back into the freelist. The reason
+    // why this is possible is because avcodec_receive_frame() calls unref()
+    // for us the next time it is used, and we can hold on to the allocated
+    // picture buffer until the stream is closed.
+    pictureFreeList_.put(e);
 
-    if (frontQueue_.count() == 0)
-        return false;
+    *bufPtr = e->frame.data[0];
+    *width = sourceWidth_;
+    *height = sourceHeight_;
+    *bytesPerLine = e->frame.linesize[0];
 
-    if (currentFrame_)
-        backQueue_.putFront(currentFrame_);
-    currentFrame_ = frontQueue_.takeBack();
-    currentFrameIdx_++;
-
-    cond_.wakeOne();
-
-    return true;
+    return e->frame.pts;
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::prevVideoFrame()
-{
-    PROFILE(VideoDecoder, prevFrame);
-
-    QMutexLocker guard(&mutex_);
-
-    if (backQueue_.count() == 0)
-        return false;
-
-    if (currentFrame_)
-        frontQueue_.putBack(currentFrame_);
-    currentFrame_ = backQueue_.takeFront();
-    currentFrameIdx_--;
-
-    cond_.wakeOne();
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-void VideoDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
+bool AVDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
 {
     PROFILE(VideoDecoder, seekToMs);
 
-    QMutexLocker guard(&mutex_);
+    // Convert game frame index into timestamp in video stream time base units
+    AVRational codec_tb = inputCtx_->streams[videoStreamIdx_]->time_base;
+    AVRational game_tb = av_make_q(1, 60);
+    int64_t target_ts = av_rescale_q(frame.index(), game_tb, codec_tb);
 
-    // Convert game frame index into video frame index
-    /*
-    AVRational game_time_base = av_make_q(1, 60);  // Game runs at 60 fps
-    AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
-    AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
-    currentFrameIdx_ = av_rescale_q(frame.index(), game_time_base, video_frame_time_base);*/
-    currentGameFrame_ = frame.index();
+    // Clear all buffers before seeking
+    while (videoQueue_.count())
+    {
+        FrameEntry* e = videoQueue_.takeBack();
+        // We do not call av_frame_unref() and we do not free the picture buffer,
+        // even though we're putting the entry back into the freelist. The reason
+        // why this is possible is because avcodec_receive_frame() calls unref()
+        // for us the next time it is used, and we can hold on to the allocated
+        // picture buffer until the stream is closed.
+        pictureFreeList_.put(e);
+    }
 
-    // Clear all cached frames
-    while (frontQueue_.count())
+    // AVSEEK_FLAG_BACKWARD should seek to the first keyframe that occurs
+    // before the specific time_stamp, however, people online have said that
+    // sometimes it will seek to a keyframe after the timestamp specified,
+    // if the timestamp is one frame before the keyframe. To fix this, we
+    // just subtract 1 more frame
+    // https://stackoverflow.com/questions/20734814/ffmpeg-av-seek-frame-with-avseek-flag-any-causes-grey-screen
+
+    // Seek and decode frame
+    log_->info("Seeking to %ld, stream time base: %d/%d", target_ts, codec_tb.num, codec_tb.den);
+    int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, target_ts, AVSEEK_FLAG_BACKWARD);
+    if (seek_result < 0)
     {
-        FrameDequeEntry* entry = frontQueue_.takeBack();
-        av_frame_unref(entry->frame);
-        frameFreeList_.put(entry);
+        char buf[AV_ERROR_MAX_STRING_SIZE];
+        log_->error("av_seek_frame failed: %s", av_make_error_string(buf, AV_ERROR_MAX_STRING_SIZE, seek_result));
+        return false;
     }
-    while (backQueue_.count())
-    {
-        FrameDequeEntry* entry = frontQueue_.takeBack();
-        av_frame_unref(entry->frame);
-        frameFreeList_.put(entry);
-    }
-    if (currentFrame_ != nullptr)
-    {
-        av_frame_unref(currentFrame_->frame);
-        frameFreeList_.put(currentFrame_);
-        currentFrame_ = nullptr;
-    }
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
+bool AVDecoder::decodeNextPacket()
 {
     PROFILE(VideoDecoder, decodeNextFrame);
-
-    AVPacket packet;
 
     // Returns <0 if an error occurred, or if end of file was reached
     int response;
     while (true)
     {
+        AVPacket packet;
+        memset(&packet, 0, sizeof packet);
         response = av_read_frame(inputCtx_, &packet);
-        if (response < 0) 
+        if (response < 0)
         {
             if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
-                break;
+                return false;
             if (inputCtx_->pb && inputCtx_->pb->error)
-                break;
+                return false;
             continue;
         }
 
@@ -437,35 +322,86 @@ bool VideoDecoder::decodeNextFrame(FrameDequeEntry* entry)
             if (response < 0)
             {
                 if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
-                    goto exit;
+                    goto exit_failure;
                 if (inputCtx_->pb && inputCtx_->pb->error)
-                    goto exit;
+                    goto exit_failure;
                 goto need_next_packet;
             }
 
-            response = avcodec_receive_frame(videoCodecCtx_, entry->frame);
+            AVFrame frame;
+            memset(&frame, 0, sizeof frame);
+            response = avcodec_receive_frame(videoCodecCtx_, &frame);
             if (response == AVERROR(EAGAIN))
                 goto need_next_packet;
             else if (response == AVERROR_EOF)
-                goto exit;
+                goto exit_failure;
             else if (response < 0)
+            {
                 log_->error("Decoder error");
+                goto need_next_packet;
+            }
 
             // Frame is successfully decoded here
 
-            goto exit;
+            // Get a picture we can re-use from the freelist
+            FrameEntry* picEntry = pictureFreeList_.take();
+            if (picEntry == nullptr)
+            {
+                // Have to allocate a new entry
+                picEntry = frameFreeList_.take();
+                picEntry->frame = av_frame_alloc();
+
+                // Allocates the raw image buffer and fills in the frame's data
+                // pointers and line sizes.
+                //
+                // NOTE: The image buffer has to be manually freed with
+                //       av_free(qEntry->frame.data[0]), as av_frame_unref()
+                //       does not take care of this.
+                av_image_alloc(
+                    picEntry->frame->data,      /* Data pointers to be filled in */
+                    picEntry->frame->linesize,  /* linesizes for the image in dst_data to be filled in */
+                    sourceWidth_,
+                    sourceHeight_,
+                    AV_PIX_FMT_RGB24,
+                    1                           /* Alignment */
+                );
+            }
+
+            // Convert frame to RGB24 format
+            videoScaleCtx_ = sws_getCachedContext(videoScaleCtx_,
+                sourceWidth_, sourceHeight_, static_cast<AVPixelFormat>(frame.format),
+                sourceWidth_, sourceHeight_, AV_PIX_FMT_RGB24,
+                SWS_BILINEAR, nullptr, nullptr, nullptr);
+
+            sws_scale(videoScaleCtx_,
+                frame.data, frame.linesize, 0, sourceHeight_,
+                picEntry->frame->data, picEntry->frame->linesize);
+
+            videoQueue_.putFront(picEntry);
+            av_frame_unref(&frame);
+
+            goto exit_success;
+        }
+
+        if (packet.stream_index == audioStreamIdx_)
+        {
+
         }
 
         need_next_packet : av_packet_unref(&packet);
         continue;
 
-        exit : av_packet_unref(&packet);
+        exit_failure : av_packet_unref(&packet);
+        return false;
+
+        exit_success: av_packet_unref(&packet);
         break;
     }
 
-    return (response >= 0);
+    return true;
 }
 
+/*
 // ----------------------------------------------------------------------------
 void VideoDecoder::run()
 {
@@ -493,84 +429,9 @@ void VideoDecoder::run()
             frameFreeList_.put(entry);
         }
 
-        // AVSEEK_FLAG_BACKWARD should seek to the first keyframe that occurs
-        // before the specific time_stamp, however, people online have said that
-        // sometimes it will seek to a keyframe after the timestamp specified,
-        // if the timestamp is one frame before the keyframe. To fix this, we
-        // just subtract 1 more frame
-        // https://stackoverflow.com/questions/20734814/ffmpeg-av-seek-frame-with-avseek-flag-any-causes-grey-screen
-
-        // If the current frame is NULL, this indicates that we may have to
-        // seek to the current frame index.
-        if (currentFrame_ == nullptr)
-        {
-            int64_t seek_target = currentFrameIdx_;
-            FrameDequeEntry* entry = frameFreeList_.take();
-            assert(entry);
-            mutex_.unlock();
-                // Convert from frame index to timestamp in the stream's time base
-                AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
-                AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
-                AVRational stream_time_base = inputCtx_->streams[videoStreamIdx_]->time_base;
-                seek_target = seek_target > 0 ? seek_target - 1 : seek_target;  // See comment above
-                seek_target = av_rescale_q(seek_target, video_frame_time_base, stream_time_base);
-
-                // Seek and decode frame
-                int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, seek_target, AVSEEK_FLAG_BACKWARD);
-                bool decode_result = decodeNextFrame(entry);
-            mutex_.lock();
-
-            if (decode_result)
-                currentFrame_ = entry;
-            else
-            {
-                frameFreeList_.put(entry);
-                continue;
-            }
-        }
-
-        // If both queues are full then there's nothing left to do. Otherwise
-        // try to decode as many frames as possible until both queues are full.
-        if (frontQueue_.count() < expectedFrontQueueCount)
-        {
-            FrameDequeEntry* entry = frameFreeList_.take();
-            assert(entry);
-            mutex_.unlock();
-                bool result = decodeNextFrame(entry);
-            mutex_.lock();
-
-            if (result)
-                frontQueue_.putFront(entry);
-            else
-                frameFreeList_.put(entry);
-
-            continue;
-        }
-
-        if (backQueue_.count() < expectedBackQueueCount)
-        {
-            int64_t backQueueStartFrame = currentFrameIdx_ - bufSize_ / 2;
-            FrameDequeEntry* entry = frameFreeList_.take();
-            assert(entry);
-            mutex_.unlock();
-                // Convert from frame index to timestamp in the stream's time base
-                AVRational r_frame_rate = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
-                AVRational video_frame_time_base = av_make_q(r_frame_rate.den, r_frame_rate.num);
-                AVRational stream_time_base = inputCtx_->streams[videoStreamIdx_]->time_base;
-                int64_t seek_target = backQueueStartFrame > 0 ? backQueueStartFrame - 1 : backQueueStartFrame;
-                seek_target = seek_target < 0 ? 0 : seek_target;
-                seek_target = av_rescale_q(seek_target, video_frame_time_base, stream_time_base);
-
-                // Seek and decode frame
-                int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, seek_target, AVSEEK_FLAG_BACKWARD);
-                bool decode_result = decodeNextFrame(entry);
-            mutex_.lock();
-
-            continue;
-        }
-
+        out:
         if (requestShutdown_ == false)
             cond_.wait(&mutex_);
     }
     mutex_.unlock();
-}
+}*/

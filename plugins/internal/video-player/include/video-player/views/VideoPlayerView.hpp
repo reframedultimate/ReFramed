@@ -10,7 +10,7 @@ class VideoDecoder;
 class VideoSurface;
 class VideoPlayerModel;
 
-class VideoPlayerView 
+class VideoPlayerView
     : public QWidget
     , public VideoPlayerListener
 {

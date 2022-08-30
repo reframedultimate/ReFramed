@@ -28,7 +28,7 @@ bool VideoPlayerModel::open(const void* address, uint64_t size)
 
         decoder_->seekToGameFrame(rfcommon::FrameIndex::fromValue(120));
 
-        timer_.start();
+        //timer_.start();
         dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
         return true;
     }
@@ -51,6 +51,39 @@ void VideoPlayerModel::close()
 }
 
 // ----------------------------------------------------------------------------
+bool VideoPlayerModel::isPlaying() const
+{
+    PROFILE(VideoPlayerModel, isPlaying);
+
+    if (decoder_.get())
+        return timer_.isActive();
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+void VideoPlayerModel::seekToFrame(rfcommon::FrameIndex frame)
+{
+    PROFILE(VideoPlayerModel, seekToFrame);
+
+    if (decoder_.get())
+        decoder_->seekToGameFrame(frame);
+    dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
+}
+
+// ----------------------------------------------------------------------------
+QImage VideoPlayerModel::currentFrameAsImage()
+{
+    PROFILE(VideoPlayerModel, currentFrameAsImage);
+
+    if (decoder_.get())
+    {
+        QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
+        return decoder_->currentVideoFrameAsImage();
+    }
+    return QImage();
+}
+
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::play()
 {
     PROFILE(VideoPlayerModel, play);
@@ -69,21 +102,32 @@ void VideoPlayerModel::pause()
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerModel::advanceFrames(int gameFrames)
+void VideoPlayerModel::togglePlaying()
 {
-    PROFILE(VideoPlayerModel, advanceFrames);
-
-
+    if (isPlaying())
+        pause();
+    else
+        play();
 }
 
 // ----------------------------------------------------------------------------
-QImage VideoPlayerModel::currentFrameAsImage()
+void VideoPlayerModel::advanceFrames(int numFrames)
 {
-    PROFILE(VideoPlayerModel, currentFrameAsImage);
+    if (decoder_.get() == nullptr)
+        return;
 
-    if (decoder_.get())
-        return decoder_->currentFrameAsImage();
-    return QImage();
+    while (numFrames > 0)
+    {
+        decoder_->nextVideoFrame();
+        numFrames--;
+    }
+    while (numFrames < 0)
+    {
+        decoder_->prevVideoFrame();
+        numFrames++;
+    }
+
+    dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
 }
 
 // ----------------------------------------------------------------------------
@@ -94,22 +138,6 @@ void VideoPlayerModel::onPresentNextFrame()
     if (decoder_.get() == nullptr)
         return;
 
-    decoder_->nextFrame();
+    decoder_->nextVideoFrame();
     dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::onInfo(const QString& msg)
-{
-    PROFILE(VideoPlayerModel, onInfo);
-
-    dispatcher.dispatch(&VideoPlayerListener::onInfo, msg);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::onError(const QString& msg)
-{
-    PROFILE(VideoPlayerModel, onError);
-
-    dispatcher.dispatch(&VideoPlayerListener::onError, msg);
 }

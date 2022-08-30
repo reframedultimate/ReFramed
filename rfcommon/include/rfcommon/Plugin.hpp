@@ -47,14 +47,14 @@ public:
     {
     public:
         /*!
-         * \brief Open a video file and display the first frame. Video 
+         * \brief Open a video file and display the first frame. Video
          * player should pause.
-         * 
+         *
          * In ReFramed, video files are mapped into memory instead of
          * dealing with file pointers and file names. This makes it possible
          * to use the same API for playing embedded videos and external
          * videos.
-         * 
+         *
          * \note ReFramed will guarantee that this function won't be called
          * twice in a row. close() will always be called first if necessary.
          */
@@ -78,29 +78,37 @@ public:
         virtual void pauseVideo() = 0;
 
         /*!
+         * \brief Return true if the video is playing, otherwise false
+         */
+        virtual bool isVideoPlaying() const = 0;
+
+        /*!
          * \brief Set the volume in percent.
          */
         virtual void setVideoVolume(int percent) = 0;
 
         /*!
          * \brief Advance by N number of video-frames (not game-frames).
+         * \note N can be negative, which means to go backwards N frames.
          *
-         * The video player should avoid seeking here if possible, but instead, 
+         * The video player should avoid seeking here if possible, but instead,
          * decode each successive frame as needed. In the case of advancing
-         * backwards (negative value for "frames"), the video player can seek
+         * backwards (negative value for N), the video player can seek
          * if required to buffer the previous frames.
-         * 
+         *
          * \param frames The number of frames to seek. Can be negative. This
          * value is guaranteed to be "small", i.e. in the range of -30 to 30.
          */
         virtual void advanceVideoFrames(int videoFrames) = 0;
 
         /*!
-         * \brief Try to seek to a specific game-frame (not video frame). Due 
-         * to the nature of decoding video streams, it's OK to not be 100% 
+         * \brief Try to seek to a specific game-frame (not video frame). Due
+         * to the nature of decoding video streams, it's OK to not be 100%
          * accurate here, but you should try for best effort.
          */
         virtual void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) = 0;
+
+        virtual rfcommon::FrameIndex currentVideoGameFrame() = 0;
     };
 
     Plugin(RFPluginFactory* factory);

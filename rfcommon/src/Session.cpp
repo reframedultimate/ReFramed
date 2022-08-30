@@ -871,10 +871,10 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
 
     // This could either be a session that was recorded live, or a session
     // loaded from disk. If loaded from disk, then we have to make sure to
-    // load all of the sections that can be edited and weren't lazy loaded 
-    // yet, otherwise we'll skip saving that data into the new file and lose 
+    // load all of the sections that can be edited and weren't lazy loaded
+    // yet, otherwise we'll skip saving that data into the new file and lose
     // data.
-    // 
+    //
     // The only sections currently editable are meta data and video meta. the
     // other sections can simply be copied over to the new file byte-by-byte
     // without having to go through the deserialize/serialize process.
@@ -1202,6 +1202,8 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 void Session::onFrameDataNewFrame(int frameIdx, const Frame<4>& frame)
 {
     PROFILE(Session, onFrameDataNewFrame);
+
+    (void)frameIdx;
 
     // Update ended timestamp
     auto stamp = frame.back().timeStamp();

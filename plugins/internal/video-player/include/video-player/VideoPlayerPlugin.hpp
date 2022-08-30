@@ -45,9 +45,11 @@ private:
     void closeVideo() override final;
     void playVideo() override final;
     void pauseVideo() override final;
+    bool isVideoPlaying() const override final;
     void setVideoVolume(int percent) override final;
     void advanceVideoFrames(int videoFrames) override final;
     void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
+    rfcommon::FrameIndex currentVideoGameFrame() override final;
 
 private:
     rfcommon::Log* log_;

@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 #include <QScrollBar>
 #include <QOpenGLWidget>
+#include <QShortcut>
 
 class VideoSurface : public QOpenGLWidget
 {
