@@ -14,10 +14,6 @@ extern "C" {
 AVDecoder::AVDecoder(rfcommon::Log* log)
     : log_(log)
 {
-    for (int i = 0; i != pictureFreeList_.count(); ++i)
-    {
-
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -181,9 +177,10 @@ bool AVDecoder::openFile(const void* address, uint64_t size)
         goto open_video_codec_failed;
     }
 
+    currentPacket_ = av_packet_alloc();
+
     sourceWidth_ = videoCodecCtx_->width;
     sourceHeight_ = videoCodecCtx_->height;
-    requestShutdown_ = false;
 
     log_->info("Video stream initialized");
 
@@ -207,9 +204,15 @@ void AVDecoder::closeFile()
     while (videoQueue_.count())
     {
         FrameEntry* e = videoQueue_.takeBack();
-        av_free(e->frame.data[0]);  // This is the picture buffer we manually allocated
-        av_frame_unref(&e->frame);
-        pictureFreeList_.put(e);
+        av_free(e->frame->data[0]);  // This is the picture buffer we manually allocated
+        av_frame_free(&e->frame);
+        freeFrameEntries_.put(e);
+    }
+    while (audioQueue_.count())
+    {
+        FrameEntry* e = audioQueue_.takeBack();
+        av_frame_free(&e->frame);
+        freeFrameEntries_.put(e);
     }
 
     if (videoScaleCtx_)
@@ -218,6 +221,7 @@ void AVDecoder::closeFile()
         videoScaleCtx_ = nullptr;
     }
 
+    av_packet_free(&currentPacket_);
     avcodec_close(videoCodecCtx_);
     avcodec_free_context(&videoCodecCtx_);
     avformat_close_input(&inputCtx_);
@@ -228,51 +232,80 @@ void AVDecoder::closeFile()
 }
 
 // ----------------------------------------------------------------------------
-int64_t AVDecoder::nextVideoFrame(void** bufPtr, int* width, int* height, int* bytesPerLine)
+AVFrame* AVDecoder::takeNextVideoFrame()
 {
     while (videoQueue_.count() == 0)
     {
         if (decodeNextPacket() == false)
-            return -1;
+            return nullptr;
     }
 
     FrameEntry* e = videoQueue_.takeBack();
-    // We do not call av_frame_unref() and we do not free the picture buffer,
-    // even though we're putting the entry back into the freelist. The reason
-    // why this is possible is because avcodec_receive_frame() calls unref()
-    // for us the next time it is used, and we can hold on to the allocated
-    // picture buffer until the stream is closed.
-    pictureFreeList_.put(e);
-
-    *bufPtr = e->frame.data[0];
-    *width = sourceWidth_;
-    *height = sourceHeight_;
-    *bytesPerLine = e->frame.linesize[0];
-
-    return e->frame.pts;
+    AVFrame* frame = e->frame;
+    freeFrameEntries_.put(e);
+    return frame;
 }
 
 // ----------------------------------------------------------------------------
-bool AVDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
+void AVDecoder::giveVideoFrame(AVFrame* frame)
+{
+    FrameEntry* e = freeFrameEntries_.take();
+    if (e == nullptr)
+    {
+        // Should never happen but just in case if it does, clean up
+        log_->error("Used up all free frame entries!");
+        av_free(frame->data[0]);
+        av_frame_free(&frame);
+    }
+    else
+    {
+        e->frame = frame;
+        picturePool_.put(e);
+    }
+}
+
+// ----------------------------------------------------------------------------
+AVFrame* AVDecoder::takeNextAudioFrame()
+{
+    while (audioQueue_.count() == 0)
+    {
+        if (decodeNextPacket() == false)
+            return nullptr;
+    }
+
+    FrameEntry* e = audioQueue_.takeBack();
+    AVFrame* frame = e->frame;
+    freeFrameEntries_.put(e);
+    return frame;
+}
+
+// ----------------------------------------------------------------------------
+void AVDecoder::giveAudioFrame(AVFrame* frame)
+{
+    FrameEntry* e = freeFrameEntries_.take();
+    if (e == nullptr)
+    {
+        // Should never happen but just in case if it does, clean up
+        log_->error("Used up all free frame entries!");
+        av_frame_free(&frame);
+    }
+    else
+    {
+        e->frame = frame;
+        framePool_.put(e);
+    }
+}
+
+// ----------------------------------------------------------------------------
+bool AVDecoder::seekToTimeStamp(int64_t target_ts)
 {
     PROFILE(VideoDecoder, seekToMs);
 
-    // Convert game frame index into timestamp in video stream time base units
-    AVRational codec_tb = inputCtx_->streams[videoStreamIdx_]->time_base;
-    AVRational game_tb = av_make_q(1, 60);
-    int64_t target_ts = av_rescale_q(frame.index(), game_tb, codec_tb);
-
     // Clear all buffers before seeking
     while (videoQueue_.count())
-    {
-        FrameEntry* e = videoQueue_.takeBack();
-        // We do not call av_frame_unref() and we do not free the picture buffer,
-        // even though we're putting the entry back into the freelist. The reason
-        // why this is possible is because avcodec_receive_frame() calls unref()
-        // for us the next time it is used, and we can hold on to the allocated
-        // picture buffer until the stream is closed.
-        pictureFreeList_.put(e);
-    }
+        picturePool_.put(videoQueue_.takeBack());
+    while (audioQueue_.count())
+        framePool_.put(audioQueue_.takeBack());
 
     // AVSEEK_FLAG_BACKWARD should seek to the first keyframe that occurs
     // before the specific time_stamp, however, people online have said that
@@ -282,7 +315,7 @@ bool AVDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
     // https://stackoverflow.com/questions/20734814/ffmpeg-av-seek-frame-with-avseek-flag-any-causes-grey-screen
 
     // Seek and decode frame
-    log_->info("Seeking to %ld, stream time base: %d/%d", target_ts, codec_tb.num, codec_tb.den);
+    log_->info("Seeking to %ld", target_ts);
     int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, target_ts, AVSEEK_FLAG_BACKWARD);
     if (seek_result < 0)
     {
@@ -295,17 +328,22 @@ bool AVDecoder::seekToGameFrame(rfcommon::FrameIndex frame)
 }
 
 // ----------------------------------------------------------------------------
+bool AVDecoder::seekToTimeStamp(int64_t target_ts, int num, int den)
+{
+    AVRational from = av_make_q(num, den);
+    AVRational to = inputCtx_->streams[videoStreamIdx_]->time_base;
+    return seekToTimeStamp(av_rescale_q(target_ts, from, to));
+}
+
+// ----------------------------------------------------------------------------
 bool AVDecoder::decodeNextPacket()
 {
     PROFILE(VideoDecoder, decodeNextFrame);
 
-    // Returns <0 if an error occurred, or if end of file was reached
     int response;
     while (true)
     {
-        AVPacket packet;
-        memset(&packet, 0, sizeof packet);
-        response = av_read_frame(inputCtx_, &packet);
+        response = av_read_frame(inputCtx_, currentPacket_);
         if (response < 0)
         {
             if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
@@ -315,10 +353,10 @@ bool AVDecoder::decodeNextPacket()
             continue;
         }
 
-        if (packet.stream_index == videoStreamIdx_)
+        if (currentPacket_->stream_index == videoStreamIdx_)
         {
             // Send packet to video decoder
-            response = avcodec_send_packet(videoCodecCtx_, &packet);
+            response = avcodec_send_packet(videoCodecCtx_, currentPacket_);
             if (response < 0)
             {
                 if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
@@ -328,9 +366,20 @@ bool AVDecoder::decodeNextPacket()
                 goto need_next_packet;
             }
 
-            AVFrame frame;
-            memset(&frame, 0, sizeof frame);
-            response = avcodec_receive_frame(videoCodecCtx_, &frame);
+            FrameEntry* frameEntry = framePool_.take();
+            if (frameEntry == nullptr)
+            {
+                frameEntry = freeFrameEntries_.take();
+                if (frameEntry == nullptr)
+                {
+                    log_->error("Used up all free frame entries!");
+                    goto exit_failure;
+                }
+                frameEntry->frame = av_frame_alloc();
+            }
+            AVFrame* frame = frameEntry->frame;
+
+            response = avcodec_receive_frame(videoCodecCtx_, frame);
             if (response == AVERROR(EAGAIN))
                 goto need_next_packet;
             else if (response == AVERROR_EOF)
@@ -344,11 +393,16 @@ bool AVDecoder::decodeNextPacket()
             // Frame is successfully decoded here
 
             // Get a picture we can re-use from the freelist
-            FrameEntry* picEntry = pictureFreeList_.take();
+            FrameEntry* picEntry = picturePool_.take();
             if (picEntry == nullptr)
             {
                 // Have to allocate a new entry
-                picEntry = frameFreeList_.take();
+                picEntry = freeFrameEntries_.take();
+                if (picEntry == nullptr)
+                {
+                    log_->error("Used up all free frame entries!");
+                    goto exit_failure;
+                }
                 picEntry->frame = av_frame_alloc();
 
                 // Allocates the raw image buffer and fills in the frame's data
@@ -369,32 +423,33 @@ bool AVDecoder::decodeNextPacket()
 
             // Convert frame to RGB24 format
             videoScaleCtx_ = sws_getCachedContext(videoScaleCtx_,
-                sourceWidth_, sourceHeight_, static_cast<AVPixelFormat>(frame.format),
+                sourceWidth_, sourceHeight_, static_cast<AVPixelFormat>(frame->format),
                 sourceWidth_, sourceHeight_, AV_PIX_FMT_RGB24,
                 SWS_BILINEAR, nullptr, nullptr, nullptr);
 
             sws_scale(videoScaleCtx_,
-                frame.data, frame.linesize, 0, sourceHeight_,
+                frame->data, frame->linesize, 0, sourceHeight_,
                 picEntry->frame->data, picEntry->frame->linesize);
 
             videoQueue_.putFront(picEntry);
-            av_frame_unref(&frame);
+            av_frame_unref(frame);
+            framePool_.put(frameEntry);
 
             goto exit_success;
         }
 
-        if (packet.stream_index == audioStreamIdx_)
+        if (currentPacket_->stream_index == audioStreamIdx_)
         {
 
         }
 
-        need_next_packet : av_packet_unref(&packet);
+        need_next_packet : av_packet_unref(currentPacket_);
         continue;
 
-        exit_failure : av_packet_unref(&packet);
+        exit_failure : av_packet_unref(currentPacket_);
         return false;
 
-        exit_success: av_packet_unref(&packet);
+        exit_success: av_packet_unref(currentPacket_);
         break;
     }
 

@@ -5,15 +5,27 @@
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Profiler.hpp"
 
+namespace {
+
+class Worker : public QObject
+{
+public:
+    QThread thread;
+};
+}
+
 // ----------------------------------------------------------------------------
-VideoPlayerModel::VideoPlayerModel(rfcommon::Log* log)
-    : log_(log)
+VideoPlayerModel::VideoPlayerModel(rfcommon::Log* log, QObject* parent)
+    : QThread(parent)
+    , log_(log)
 {
 }
 
 // ----------------------------------------------------------------------------
 VideoPlayerModel::~VideoPlayerModel()
-{}
+{
+
+}
 
 // ----------------------------------------------------------------------------
 bool VideoPlayerModel::open(const void* address, uint64_t size)
@@ -23,7 +35,7 @@ bool VideoPlayerModel::open(const void* address, uint64_t size)
     decoder_.reset(new VideoDecoder(address, size, log_->child("Decoder")));
     if (decoder_->isOpen())
     {
-        timer_.setInterval(16);  // TODO get fps from decoder. Hard coded to 60 fps for debugging
+        timer_.setInterval(16);  // TODO sync to audio. Hard coded to 60 fps for now
         connect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onPresentNextFrame);
 
         decoder_->seekToGameFrame(rfcommon::FrameIndex::fromValue(120));
@@ -61,12 +73,14 @@ bool VideoPlayerModel::isPlaying() const
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerModel::seekToFrame(rfcommon::FrameIndex frame)
+void VideoPlayerModel::seekToGameFrame(rfcommon::FrameIndex frame)
 {
     PROFILE(VideoPlayerModel, seekToFrame);
 
     if (decoder_.get())
-        decoder_->seekToGameFrame(frame);
+    {
+        decoder_->seekToTimeStamp(frame, 1, 60);
+    }
     dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
 }
 

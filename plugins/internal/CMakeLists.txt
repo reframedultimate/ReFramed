@@ -10,5 +10,5 @@ foreach (CHILD ${CHILDREN})
 endforeach ()
 
 if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
-    set (REFRAMED_plugin-debug-asserts OFF CACHE FORCE)
+    set (REFRAMED_plugin-debug-asserts OFF CACHE STRING "Enable or disable debug-asserts plugin" FORCE)
 endif ()
