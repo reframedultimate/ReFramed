@@ -5,153 +5,209 @@
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Profiler.hpp"
 
-namespace {
-
-class Worker : public QObject
-{
-public:
-    QThread thread;
-};
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayerModel::VideoPlayerModel(rfcommon::Log* log, QObject* parent)
+BufferedSeekableDecoder::BufferedSeekableDecoder(
+        AVDecoder* decoder,
+        QObject* parent)
     : QThread(parent)
-    , log_(log)
+    , decoder_(decoder)
 {
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayerModel::~VideoPlayerModel()
+BufferedSeekableDecoder::~BufferedSeekableDecoder()
 {
-
 }
 
 // ----------------------------------------------------------------------------
-bool VideoPlayerModel::open(const void* address, uint64_t size)
+bool BufferedSeekableDecoder::openFile(const void* address, uint64_t size)
 {
-    PROFILE(VideoPlayerModel, open);
+    if (decoder_->openFile(address, size) == false)
+        return false;
 
-    decoder_.reset(new VideoDecoder(address, size, log_->child("Decoder")));
-    if (decoder_->isOpen())
+    if (AVFrame* frame = decoder_->takeNextVideoFrame())
     {
-        timer_.setInterval(16);  // TODO sync to audio. Hard coded to 60 fps for now
-        connect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onPresentNextFrame);
-
-        decoder_->seekToGameFrame(rfcommon::FrameIndex::fromValue(120));
-
-        //timer_.start();
-        dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
-        return true;
+        vCurrent_ = freeFrameEntries_.take();
+        vCurrent_->frame = frame;
     }
     else
     {
-        decoder_.reset();
+        decoder_->closeFile();
         return false;
     }
+
+    requestShutdown_ = false;
+    start();
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerModel::close()
+void BufferedSeekableDecoder::closeFile()
 {
-    PROFILE(VideoPlayerModel, close);
+    mutex_.lock();
+        requestShutdown_ = true;
+    mutex_.unlock();
+    wait();
 
-    timer_.stop();
-    disconnect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onPresentNextFrame);
-
-    decoder_.reset();
+    decoder_->closeFile();
+    requestShutdown_ = false;
 }
 
 // ----------------------------------------------------------------------------
-bool VideoPlayerModel::isPlaying() const
+AVFrame* BufferedSeekableDecoder::takeNextVideoFrame()
 {
-    PROFILE(VideoPlayerModel, isPlaying);
-
-    if (decoder_.get())
-        return timer_.isActive();
-    return false;
+    return nullptr;
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerModel::seekToGameFrame(rfcommon::FrameIndex frame)
+void BufferedSeekableDecoder::giveNextVideoFrame(AVFrame* frame)
 {
-    PROFILE(VideoPlayerModel, seekToFrame);
+}
 
-    if (decoder_.get())
+// ----------------------------------------------------------------------------
+AVFrame* BufferedSeekableDecoder::takePrevVideoFrame()
+{
+    return nullptr;
+}
+
+// ----------------------------------------------------------------------------
+void BufferedSeekableDecoder::givePrevVideoFrame(AVFrame* frame)
+{
+}
+
+// ----------------------------------------------------------------------------
+AVFrame* BufferedSeekableDecoder::takeNextAudioFrame()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void BufferedSeekableDecoder::giveNextAudioFrame(AVFrame* frame)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+AVFrame* BufferedSeekableDecoder::takePrevAudioFrame()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void BufferedSeekableDecoder::givePrevAudioFrame(AVFrame* frame)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+bool BufferedSeekableDecoder::seekToKeyframeBefore(int64_t ts)
+{
+}
+
+// ----------------------------------------------------------------------------
+bool BufferedSeekableDecoder::seekToKeyframeBefore(int64_t ts, int num, int den)
+{
+}
+
+// ----------------------------------------------------------------------------
+int BufferedSeekableDecoder::shortSeek(int deltaFrames)
+{
+}
+
+// ----------------------------------------------------------------------------
+void BufferedSeekableDecoder::run()
+{
+    mutex_.lock();
+    while (requestShutdown_ == false)
     {
-        decoder_->seekToTimeStamp(frame, 1, 60);
+        int expectedVFrontSize = freeFrameEntries_.capacity() / 2 - 1;
+        int expectedVBackSize = freeFrameEntries_.capacity() / 2;
+
+        switch (state_)
+        {
+            case DECODE_FORWARDS: {
+                // Try to balance queues (won't always be the case for example when stepping backwards)
+                while (vFront_.count() > expectedVFrontSize)
+                {
+                    FrameEntry* e = vFront_.takeFront();
+                    decoder_->giveNextVideoFrame(e->frame);
+                    freeFrameEntries_.put(e);
+                }
+                while (vBack_.count() > expectedVBackSize)
+                {
+                    FrameEntry* e = vBack_.takeBack();
+                    decoder_->giveNextVideoFrame(e->frame);
+                    freeFrameEntries_.put(e);
+                }
+
+                mutex_.unlock();
+                    AVFrame* vFrame = decoder_->takeNextVideoFrame();
+                    if (vFrame == nullptr)
+                    {
+                        mutex_.lock();
+                        break;
+                    }
+
+                    FrameEntry* e = freeFrameEntries_.take();
+                    e->frame = vFrame;
+                mutex_.lock();
+
+                if (vBack_.count() == 0)
+                    vBack_.putBack(e);
+                else if (vFrame->pts  vBack_.peekFront()->frame->pts)
+                }
+            } break;
+
+            case QUEUES_FLUSHED: {
+                // The queues were flushed which means we need to seek backwards
+                // and start decoding forwards to fill them up again
+                int64_t ts_steps = decoder_->videoFrameToTimeStamp(1);
+                int64_t ts = vCurrent_->frame->pts - ts_steps * (expectedVBackSize - vBack_.count() + 1);
+                if (ts <= 0)
+                    ts = ts_steps;  // This is the earliest seekable frame from my understanding (0 is invalid)
+
+                mutex_.unlock();
+                    if (decoder_->seekToKeyframeBefore(ts) == false)
+                    {
+                        // Not really much we can do. Have to wait for user to seek again.
+                        mutex_.lock();
+                        state_ = IDLE;
+                        break;
+                    }
+
+                too_early:
+                    AVFrame* vFrame = decoder_->takeNextVideoFrame();
+                    if (vFrame == nullptr)
+                    {
+                        mutex_.lock();
+                        state_ = IDLE;
+                        break;
+                    }
+                    if (vFrame->pts < ts)
+                    {
+                        decoder_->giveNextVideoFrame(vFrame);
+                        goto too_early;
+                    }
+                mutex_.lock();
+
+                FrameEntry* e = freeFrameEntries_.take();
+                e->frame = vFrame;
+                vBack_.putBack(e);
+                state_ = DECODE_FORWARDS;
+            } break;
+
+            case IDLE: break;
+        }
+
+        cond_.wait(&mutex_);
     }
-    dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
-}
 
-// ----------------------------------------------------------------------------
-QImage VideoPlayerModel::currentFrameAsImage()
-{
-    PROFILE(VideoPlayerModel, currentFrameAsImage);
-
-    if (decoder_.get())
-    {
-        QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
-        return decoder_->currentVideoFrameAsImage();
-    }
-    return QImage();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::play()
-{
-    PROFILE(VideoPlayerModel, play);
-
-    if (decoder_.get())
-        timer_.start();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::pause()
-{
-    PROFILE(VideoPlayerModel, pause);
-
-    if (decoder_.get())
-        timer_.stop();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::togglePlaying()
-{
-    if (isPlaying())
-        pause();
-    else
-        play();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::advanceFrames(int numFrames)
-{
-    if (decoder_.get() == nullptr)
-        return;
-
-    while (numFrames > 0)
-    {
-        decoder_->nextVideoFrame();
-        numFrames--;
-    }
-    while (numFrames < 0)
-    {
-        decoder_->prevVideoFrame();
-        numFrames++;
-    }
-
-    dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerModel::onPresentNextFrame()
-{
-    PROFILE(VideoPlayerModel, onPresentNextFrame);
-
-    if (decoder_.get() == nullptr)
-        return;
-
-    decoder_->nextVideoFrame();
-    dispatcher.dispatch(&VideoPlayerListener::onPresentCurrentFrame);
+    mutex_.unlock();
 }

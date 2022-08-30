@@ -4,11 +4,6 @@
 #include "rfcommon/FreeList.hpp"
 #include "rfcommon/Queue.hpp"
 
-#include <QThread>
-#include <QImage>
-#include <QMutex>
-#include <QWaitCondition>
-
 extern "C" {
 typedef struct AVIOContext AVIOContext;
 typedef struct AVFormatContext AVFormatContext;
@@ -25,39 +20,63 @@ namespace rfcommon {
     class Log;
 }
 
-struct FrameEntry
-{
-    FrameEntry* next;
-    AVFrame* frame;
-};
-
-class AVDecoder
+class AVDecoderInterface
 {
 public:
-    AVDecoder(rfcommon::Log* log);
-    ~AVDecoder();
-
-    bool openFile(const void* address, uint64_t size);
-    void closeFile();
-
-    bool isOpen() const { return isOpen_; }
+    virtual bool openFile(const void* address, uint64_t size) = 0;
+    virtual void closeFile() = 0;
 
     /*!
      * \brief Decodes the next frame of video and converts it into RGB24.
      */
-    AVFrame* takeNextVideoFrame();
+    virtual AVFrame* takeNextVideoFrame() = 0;
 
-    void giveVideoFrame(AVFrame* frame);
+    virtual void giveNextVideoFrame(AVFrame* frame) = 0;
 
     /*!
      * \brief Decodes the next chunk of audio.
      */
-    AVFrame* takeNextAudioFrame();
+    virtual AVFrame* takeNextAudioFrame() = 0;
 
-    void giveAudioFrame(AVFrame* frame);
+    virtual void giveNextAudioFrame(AVFrame* frame) = 0;
 
-    bool seekToTimeStamp(int64_t ts);
-    bool seekToTimeStamp(int64_t ts, int num, int den);
+    virtual bool seekToKeyframeBefore(int64_t ts) = 0;
+    virtual bool seekToKeyframeBefore(int64_t ts, int num, int den) = 0;
+};
+
+class AVDecoder : public AVDecoderInterface
+{
+public:
+    struct FrameEntry
+    {
+        FrameEntry* next;
+        AVFrame* frame;
+    };
+
+    AVDecoder(rfcommon::Log* log);
+    ~AVDecoder();
+
+    bool openFile(const void* address, uint64_t size) override;
+    void closeFile() override;
+
+    /*!
+     * \brief Decodes the next frame of video and converts it into RGB24.
+     */
+    AVFrame* takeNextVideoFrame() override;
+
+    void giveNextVideoFrame(AVFrame* frame) override;
+
+    /*!
+     * \brief Decodes the next chunk of audio.
+     */
+    AVFrame* takeNextAudioFrame() override;
+
+    void giveNextAudioFrame(AVFrame* frame) override;
+
+    bool seekToKeyframeBefore(int64_t ts) override;
+    bool seekToKeyframeBefore(int64_t ts, int num, int den) override;
+
+    int64_t videoFrameToTimeStamp(int VideoFrameIdx);
 
 private:
     bool decodeNextPacket();
@@ -82,6 +101,4 @@ private:
     rfcommon::FreeList<FrameEntry> picturePool_;
     rfcommon::Queue<FrameEntry> audioQueue_;
     rfcommon::Queue<FrameEntry> videoQueue_;
-
-    bool isOpen_ = false;
 };

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/FrameIndex.hpp"
+#include "video-player/models/VideoDecoder.hpp"
+#include "rfcommon/Deque.hpp"
 #include <QThread>
-#include <QTimer>
-#include <memory>
+#include <QMutex>
+#include <QWaitCondition>
 
 class AVDecoder;
 class VideoPlayerListener;
@@ -13,33 +13,67 @@ namespace rfcommon {
     class Log;
 }
 
-class VideoPlayerModel : public QThread
+class BufferedSeekableDecoder
+        : public QThread
+        , public AVDecoderInterface
 {
     Q_OBJECT
 
 public:
-    explicit VideoPlayerModel(rfcommon::Log* log, QObject* parent);
-    ~VideoPlayerModel();
+    struct FrameEntry
+    {
+        FrameEntry* next;
+        FrameEntry* prev;
+        AVFrame* frame;
+    };
 
-    bool open(const void* address, uint64_t size);
-    void close();
+    explicit BufferedSeekableDecoder(AVDecoder* decoder, QObject* parent);
+    ~BufferedSeekableDecoder();
 
-    bool isPlaying() const;
-    void seekToGameFrame(rfcommon::FrameIndex frame);
+    bool openFile(const void* address, uint64_t size) override;
+    void closeFile() override;
 
-    rfcommon::ListenerDispatcher<VideoPlayerListener> dispatcher;
+    AVFrame* takeNextVideoFrame() override;
+    void giveNextVideoFrame(AVFrame* frame) override;
 
-public slots:
-    void play();
-    void pause();
-    void togglePlaying();
-    void advanceFrames(int numFrames);
+    AVFrame* takePrevVideoFrame();
+    void givePrevVideoFrame(AVFrame* frame);
+
+    AVFrame* takeNextAudioFrame() override;
+    void giveNextAudioFrame(AVFrame* frame) override;
+
+    AVFrame* takePrevAudioFrame();
+    void givePrevAudioFrame(AVFrame* frame);
+
+    bool seekToKeyframeBefore(int64_t ts) override;
+    bool seekToKeyframeBefore(int64_t ts, int num, int den) override;
+
+    int shortSeek(int deltaFrames);
 
 private:
     void run() override;
 
 private:
-    rfcommon::Log* log_;
-    std::unique_ptr<AVDecoder> decoder_;
-    QTimer timer_;
+    enum State
+    {
+        IDLE,
+        DECODE_FORWARDS,
+        QUEUES_FLUSHED
+    } state_ = IDLE;
+
+    AVDecoder* decoder_;
+    QMutex mutex_;
+    QWaitCondition cond_;
+
+    rfcommon::Deque<FrameEntry> vFront_;
+    rfcommon::Deque<FrameEntry> vBack_;
+    FrameEntry* vCurrent_ = nullptr;
+
+    rfcommon::Deque<FrameEntry> aFront_;
+    rfcommon::Deque<FrameEntry> aBack_;
+    FrameEntry* aCurrent_ = nullptr;
+
+    rfcommon::FlatFreeList<FrameEntry, 64> freeFrameEntries_;
+
+    bool requestShutdown_ = false;
 };

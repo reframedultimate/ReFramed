@@ -37,6 +37,8 @@ template <typename Entry, int N>
 class FlatFreeList : public FreeList<Entry>
 {
 public:
+    using Capacity = N;
+
     FlatFreeList()
     {
         for (int i = N - 1; i >= 0; --i)
@@ -44,7 +46,7 @@ public:
     }
 
     Entry* entries() const { return entries_; }
-    int count() const { return N; }
+    int capacity() const { return N; }
 
 private:
     Entry entries_[N];

@@ -247,7 +247,7 @@ AVFrame* AVDecoder::takeNextVideoFrame()
 }
 
 // ----------------------------------------------------------------------------
-void AVDecoder::giveVideoFrame(AVFrame* frame)
+void AVDecoder::giveNextVideoFrame(AVFrame* frame)
 {
     FrameEntry* e = freeFrameEntries_.take();
     if (e == nullptr)
@@ -280,7 +280,7 @@ AVFrame* AVDecoder::takeNextAudioFrame()
 }
 
 // ----------------------------------------------------------------------------
-void AVDecoder::giveAudioFrame(AVFrame* frame)
+void AVDecoder::giveNextAudioFrame(AVFrame* frame)
 {
     FrameEntry* e = freeFrameEntries_.take();
     if (e == nullptr)
@@ -297,7 +297,7 @@ void AVDecoder::giveAudioFrame(AVFrame* frame)
 }
 
 // ----------------------------------------------------------------------------
-bool AVDecoder::seekToTimeStamp(int64_t target_ts)
+bool AVDecoder::seekToKeyframeBefore(int64_t target_ts)
 {
     PROFILE(VideoDecoder, seekToMs);
 
@@ -328,11 +328,11 @@ bool AVDecoder::seekToTimeStamp(int64_t target_ts)
 }
 
 // ----------------------------------------------------------------------------
-bool AVDecoder::seekToTimeStamp(int64_t target_ts, int num, int den)
+bool AVDecoder::seekToKeyframeBefore(int64_t target_ts, int num, int den)
 {
     AVRational from = av_make_q(num, den);
     AVRational to = inputCtx_->streams[videoStreamIdx_]->time_base;
-    return seekToTimeStamp(av_rescale_q(target_ts, from, to));
+    return seekToKeyframeBefore(av_rescale_q(target_ts, from, to));
 }
 
 // ----------------------------------------------------------------------------

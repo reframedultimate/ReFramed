@@ -78,7 +78,7 @@ void VideoPlayerView::onPresentCurrentFrame()
 {
     PROFILE(VideoPlayerView, onPresentCurrentFrame);
 
-    videoSurface_->image = model_->currentFrameAsImage();
+    videoSurface_->image = QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
     videoSurface_->update();
 }
 
