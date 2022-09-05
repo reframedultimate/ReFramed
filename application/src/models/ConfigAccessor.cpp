@@ -11,7 +11,7 @@ ConfigAccessor::ConfigAccessor(Config* config)
 }
 
 // ----------------------------------------------------------------------------
-QJsonObject& ConfigAccessor::getConfig() const
+nlohmann::json& ConfigAccessor::getConfig() const
 {
     PROFILE(ConfigAccessor, getConfig);
 

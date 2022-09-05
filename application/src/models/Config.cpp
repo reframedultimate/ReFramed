@@ -9,6 +9,8 @@
 
 namespace rfapp {
 
+using namespace nlohmann;
+
 // ----------------------------------------------------------------------------
 Config::Config()
 {
@@ -36,7 +38,15 @@ void Config::load()
         rfcommon::Log::root()->error("Failed to open file %s. Can't load settings.", fileName.toUtf8().constData());
         return;
     }
-    root = QJsonDocument::fromJson(f.readAll()).object();
+
+    QByteArray ba = f.readAll();
+    root = json::parse(ba.begin(), ba.end(), nullptr, false);
+    if (root == json::value_t::discarded)
+    {
+        rfcommon::Log::root()->error("Failed to parse config.json");
+        return;
+    }
+
     rfcommon::Log::root()->info("Settings loaded");
 }
 
@@ -45,21 +55,30 @@ void Config::save()
 {
     PROFILE(Config, save);
 
+    auto log = rfcommon::Log::root();
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QFileInfo pathInfo(dir.path());
     if (!pathInfo.exists())
         QDir().mkdir(pathInfo.filePath());
     QString fileName = dir.absoluteFilePath("config.json");
 
-    rfcommon::Log::root()->info("Saving settings to file %s", fileName.toUtf8().constData());
+    log->info("Saving settings to file %s", fileName.toUtf8().constData());
     QFile f(fileName);
     if (!f.open(QIODevice::WriteOnly))
     {
-        rfcommon::Log::root()->error("Failed to open file %s for writing. Can't save settings.", fileName.toUtf8().constData());
+        log->error("Failed to open file %s for writing. Can't save settings.", fileName.toUtf8().constData());
         return;
     }
-    f.write(QJsonDocument(root).toJson());
-    rfcommon::Log::root()->info("Settings saved");
+
+    const std::string jsonStr = root.dump(2);
+    if (f.write(jsonStr.data(), jsonStr.length()) != jsonStr.length())
+    {
+        log->error("Failed to write data to config.json");
+        return;
+    }
+
+    log->info("Settings saved");
 }
 
 }

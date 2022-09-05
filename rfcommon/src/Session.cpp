@@ -14,7 +14,9 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
+#include "rfcommon/VideoFileResolver.hpp"
 #include "rfcommon/time.h"
+
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
 #include "zlib.h"
@@ -720,11 +722,21 @@ static bool loadLegacy_1_4(
 }
 
 // ----------------------------------------------------------------------------
-Session::Session(MappedFile* file, MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
-    : file_(file)
+Session::Session(
+        VideoFileResolver* vfr,
+        MappedFile* file,
+        MappingInfo* mappingInfo,
+        MetaData* metaData,
+        FrameData* frameData,
+        VideoMeta* videoMeta,
+        VideoEmbed* video)
+    : vfr_(vfr)
+    , file_(file)
     , mappingInfo_(mappingInfo)
     , metaData_(metaData)
     , frameData_(frameData)
+    , videoMeta_(videoMeta)
+    , videoEmbed_(video)
 {
     if (frameData_.notNull())
         frameData_->dispatcher.addListener(this);
@@ -738,12 +750,15 @@ Session::~Session()
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newModernSavedSession(MappedFile* file)
+Session* Session::newModernSavedSession(VideoFileResolver* vfr, MappedFile* file)
 {
     PROFILE(Session, newModernSavedSession);
 
     return new Session(
+        vfr,
         file,
+        nullptr,
+        nullptr,
         nullptr,
         nullptr,
         nullptr);
@@ -756,9 +771,12 @@ Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* meta
 
     return new Session(
         nullptr,
+        nullptr,
         mappingInfo,
         metaData,
-        frameData);
+        frameData,
+        nullptr,
+        nullptr);
 }
 
 // ----------------------------------------------------------------------------
@@ -768,13 +786,16 @@ Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* met
 
     return new Session(
         nullptr,
+        nullptr,
         globalMappingInfo,
         metaData,
-        new FrameData(metaData->fighterCount()));
+        new FrameData(metaData->fighterCount()),
+        nullptr,
+        nullptr);
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::load(const char* fileName, uint8_t loadFlags)
+Session* Session::load(VideoFileResolver* vfr, const char* fileName, uint8_t loadFlags)
 {
     PROFILE(Session, load);
 
@@ -789,7 +810,7 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
     const void* magic = deserializer.readFromPtr(4);
     if (memcmp(magic, "RFR1", 4) == 0)
     {
-        Reference<Session> session = newModernSavedSession(file);
+        Reference<Session> session = newModernSavedSession(vfr, file);
 
         // Read content table
         uint8_t numEntries = deserializer.readU8();
@@ -837,7 +858,7 @@ Session* Session::load(const char* fileName, uint8_t loadFlags)
     if (version == "1.4")
     {
         if (loadLegacy_1_4(j, &metaData, &mappingInfo, &frameData))
-            return new Session(nullptr, mappingInfo, metaData, frameData);
+            return newLegacySavedSession(mappingInfo, metaData, frameData);
     }
     else if (version == "1.3")
     {
@@ -1175,7 +1196,18 @@ VideoMeta* Session::tryGetVideoMeta()
 {
     PROFILE(Session, tryGetVideoMeta);
 
-    return nullptr;
+    if (videoMeta_.isNull())
+    {
+        assert(file_.notNull());
+        for (const auto& entry : contentTable_)
+            if (memcmp(entry.type, blobTypeVideoMeta, 4) == 0)
+            {
+                videoMeta_ = VideoMeta::load(file_->addressAtOffset(entry.offset), entry.size);
+                break;
+            }
+    }
+
+    return videoMeta_;
 }
 
 // ----------------------------------------------------------------------------
@@ -1183,7 +1215,80 @@ VideoEmbed* Session::tryGetVideoEmbed()
 {
     PROFILE(Session, tryGetVideoEmbed);
 
-    return nullptr;
+    if (videoEmbed_.isNull())
+    {
+        assert(file_.notNull());
+        for (const auto& entry : contentTable_)
+            if (memcmp(entry.type, blobTypeVideoEmbed, 4) == 0)
+            {
+                videoEmbed_ = new VideoEmbed(file_, file_->addressAtOffset(entry.offset), entry.size);
+                break;
+            }
+    }
+
+    return videoEmbed_;
+}
+
+// ----------------------------------------------------------------------------
+VideoEmbed* Session::tryGetVideo()
+{
+    PROFILE(Session, tryGetVideo);
+
+    if (videoEmbed_.notNull())
+        return videoEmbed_;
+
+    VideoMeta* meta = tryGetVideoMeta();
+    if (meta == nullptr)
+        return nullptr;
+
+    if (meta->isEmbedded())
+        return tryGetVideoEmbed();
+
+    const String fileName = vfr_->resolveVideoFile(meta->fileName());
+    if (fileName.length() == 0)
+        return nullptr;
+
+    Reference<MappedFile> f(new MappedFile);
+    if (f->open(fileName.cStr()) == false)
+        return nullptr;
+
+    videoEmbed_ = new VideoEmbed(f, f->address(), f->size());
+    return videoEmbed_;
+}
+
+// ----------------------------------------------------------------------------
+void Session::setNewVideo(VideoMeta* meta, VideoEmbed* embed)
+{
+    videoMeta_ = meta;
+    videoEmbed_ = embed;
+
+    // Need to update the content table, otherwise the new video meta/embed
+    // won't get saved, and lazy loading will break if the data was set to null
+    if (videoMeta_.isNull())
+        eraseFromContentTable(Flags::VideoMeta);
+    else if (existsInContentTable(Flags::VideoMeta) == false)
+        contentTable_.emplace(blobTypeVideoMeta);
+
+    if (videoEmbed_.isNull())
+        eraseFromContentTable(Flags::VideoEmbed);
+    else if (existsInContentTable(Flags::VideoEmbed) == false)
+        contentTable_.emplace(blobTypeVideoEmbed);
+}
+
+// ----------------------------------------------------------------------------
+void Session::eraseFromContentTable(Flags::Flag flag)
+{
+    for (auto it = contentTable_.begin(); it != contentTable_.end(); ++it)
+    {
+#define X(name, value) \
+        if (flag == Flags::name && memcmp(it->type, blobType##name, 4) == 0) \
+        { \
+            contentTable_.erase(it); \
+            break; \
+        }
+        RFCOMMON_SESSION_SECTIONS_LIST
+#undef ERASE_ENTRY
+    }
 }
 
 // ----------------------------------------------------------------------------

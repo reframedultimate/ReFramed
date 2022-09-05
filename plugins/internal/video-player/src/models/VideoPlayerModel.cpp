@@ -14,6 +14,7 @@ extern "C" {
 VideoPlayerModel::VideoPlayerModel(BufferedSeekableDecoder* decoder, rfcommon::Log* log)
     : decoder_(decoder)
     , currentFrame_(nullptr)
+    , isOpen_(false)
 {
     connect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onTimerTimeout);
 }
@@ -33,6 +34,8 @@ void VideoPlayerModel::onTimerTimeout()
 // ----------------------------------------------------------------------------
 bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
 {
+    closeVideo();
+
     isOpen_ = decoder_->openFile(address, size);
     if (isOpen_)
     {
@@ -51,11 +54,14 @@ void VideoPlayerModel::closeVideo()
     if (isOpen_ == false)
         return;
 
+    pauseVideo();
+
     if (currentFrame_)
         decoder_->giveNextVideoFrame(currentFrame_);
     currentFrame_ = nullptr;
 
     decoder_->closeFile();
+    isOpen_ = false;
 }
 
 // ----------------------------------------------------------------------------

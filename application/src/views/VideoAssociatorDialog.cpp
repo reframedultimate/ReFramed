@@ -74,7 +74,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 
     // Fill in UI with values from the session object
     auto vmeta = session_->tryGetVideoMeta();
-    auto embed = session_->tryGetVideoEmbed();
+    auto embed = session_->tryGetVideo();
     if (embed)
     {
         ui_->lineEdit_fileName->setEnabled(false);
@@ -146,6 +146,20 @@ void VideoAssociatorDialog::onSaveReleased()
             }
         }
     }
+
+    rfcommon::Reference<rfcommon::VideoMeta> meta = new rfcommon::VideoMeta(
+                currentVideoFileName_.toUtf8().constData(),
+                rfcommon::FrameIndex::fromValue(ui_->spinBox_frameOffset->value()),
+                false);
+
+    rfcommon::Reference<rfcommon::VideoEmbed> embed = nullptr;  // TODO support embeds
+
+    session_->setNewVideo(meta, embed);
+
+    if (replayManager_->saveReplayOver(session_, currentSessionFileName_))
+        close();
+    else
+        QMessageBox::critical(this, "Error", "Failed to save file");
 }
 
 // ----------------------------------------------------------------------------

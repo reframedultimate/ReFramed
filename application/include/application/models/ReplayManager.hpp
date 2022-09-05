@@ -5,6 +5,7 @@
 #include "application/models/ConfigAccessor.hpp"
 #include "application/Util.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/VideoFileResolver.hpp"
 #include <QString>
 #include <QDir>
 #include <unordered_map>
@@ -24,6 +25,7 @@ class ReplayManagerListener;
 class ReplayManager
     : public ConfigAccessor
     , public ReplayGroupListener
+    , public rfcommon::VideoFileResolver
 {
 public:
     ReplayManager(Config* config);
@@ -110,9 +112,13 @@ public:
 
 private:
     void scanForReplays();
+    void updateAndSaveConfig();
 
     void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& name) override;
     void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& name) override;
+
+private:
+    rfcommon::String resolveVideoFile(const char* fileName) const override;
 
 private:
     QHash<QString, QDir> replayDirectories_;

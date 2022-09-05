@@ -51,10 +51,13 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
     PROFILE(VideoPlayerPlugin, onGameSessionLoaded);
 
-    activeVideo_ = game->tryGetVideoEmbed();
+    activeVideo_ = game->tryGetVideo();
 
     if (activeVideo_)
+    {
         videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
+        videoPlayer_->playVideo();
+    }
 }
 
 // ----------------------------------------------------------------------------

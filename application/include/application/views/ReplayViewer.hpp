@@ -1,5 +1,7 @@
 #pragma once
 
+#include "application/listeners/ReplayManagerListener.hpp"
+#include "application/listeners/ReplayGroupListener.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include <QTabWidget>
@@ -16,6 +18,7 @@ namespace rfapp {
 
 class PluginManager;
 class Protocol;
+class ReplayManager;
 
 /*!
  * Handles loading/unloading of plugins (user can select which ones
@@ -23,18 +26,20 @@ class Protocol;
  * or multiple replay files. This view can also act as a live session
  * viewer by using setActiveSession()
  */
-class ReplayViewer 
-    : public QTabWidget
-    , public rfcommon::ProtocolListener
+class ReplayViewer
+        : public QTabWidget
+        , public rfcommon::ProtocolListener
+        , public ReplayManagerListener
+        , public ReplayGroupListener
 {
     Q_OBJECT
 public:
-    explicit ReplayViewer(PluginManager* pluginManager, QWidget* parent=nullptr);
+    explicit ReplayViewer(ReplayManager* replayManager, PluginManager* pluginManager, QWidget* parent=nullptr);
     explicit ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWidget* parent=nullptr);
     ~ReplayViewer();
 
     /*!
-     * \brief Loads the specified set of sessions from files and 
+     * \brief Loads the specified set of sessions from files and
      * passes it to the plugins.
      *
      * If a session is active and running, then this will cause all
@@ -51,10 +56,12 @@ public:
      */
     void loadGameReplays(const QStringList& fileNames);
 
+    void reloadReplays();
+
     /*!
      * \brief Clears any sessions loaded from files. This does not affect
      * active sessions. This is used when the user de-selects, moves, or
-     * deletes replays and causes plugins to remove any data they have 
+     * deletes replays and causes plugins to remove any data they have
      * loaded.
      */
     void clearReplays();
@@ -88,6 +95,27 @@ private:
     void onProtocolGameStarted(rfcommon::Session* game) override;
     void onProtocolGameResumed(rfcommon::Session* game) override;
     void onProtocolGameEnded(rfcommon::Session* game) override;
+
+private:
+    void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;
+
+    void onReplayManagerGroupAdded(ReplayGroup* group) override;
+    void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
+    void onReplayManagerGroupRemoved(ReplayGroup* group) override;
+
+    void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override;
+    void onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) override;
+    void onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
+    void onReplayManagerReplaySourceRemoved(const QString& name) override;
+
+    void onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) override;
+    void onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override;
+    void onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
+    void onReplayManagerVideoSourceRemoved(const QString& name) override;
+
+private:
+    void onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile) override;
 
 private:
     struct PluginData
@@ -131,6 +159,7 @@ private:
     int findInCache(const QString& fileName) const;
 
     Protocol* protocol_;
+    ReplayManager* replayManager_;
     PluginManager* pluginManager_;
 
     rfcommon::Reference<rfcommon::Session> activeSession_;

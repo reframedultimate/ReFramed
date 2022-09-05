@@ -40,18 +40,6 @@ bool BufferedSeekableDecoder::openFile(const void* address, uint64_t size)
     if (decoder_->openFile(address, size) == false)
         return false;
 
-    if (AVFrame* frame = decoder_->takeNextVideoFrame())
-    {
-        FrameEntry* e = freeFrameEntries_.take();
-        e->frame = frame;
-        vFront_.putFront(e);
-    }
-    else
-    {
-        decoder_->closeFile();
-        return false;
-    }
-
     requestShutdown_ = false;
     requestSeek_ = false;
     seekRequestFailed_ = false;
@@ -69,6 +57,20 @@ void BufferedSeekableDecoder::closeFile()
         cond_.wakeOne();
     mutex_.unlock();
     wait();
+
+    // Clear queues
+    while (vFront_.count())
+    {
+        FrameEntry* e = vFront_.takeFront();
+        decoder_->giveNextVideoFrame(e->frame);
+        freeFrameEntries_.put(e);
+    }
+    while (vBack_.count())
+    {
+        FrameEntry* e = vBack_.takeFront();
+        decoder_->giveNextVideoFrame(e->frame);
+        freeFrameEntries_.put(e);
+    }
 
     decoder_->closeFile();
 }

@@ -200,17 +200,23 @@ void AVDecoder::closeFile()
 {
     PROFILE(VideoDecoder, closeFile);
 
-    // Free AVFrames left in queues
+    // Remove all entries still left in queues
     while (videoQueue_.count())
+        picturePool_.put(videoQueue_.takeBack());
+    while (audioQueue_.count())
+        framePool_.put(audioQueue_.takeBack());
+
+    // Free all AVFrames and buffers
+    while (picturePool_.peek())
     {
-        FrameEntry* e = videoQueue_.takeBack();
+        FrameEntry* e = picturePool_.take();
         av_free(e->frame->data[0]);  // This is the picture buffer we manually allocated
         av_frame_free(&e->frame);
         freeFrameEntries_.put(e);
     }
-    while (audioQueue_.count())
+    while (framePool_.peek())
     {
-        FrameEntry* e = audioQueue_.takeBack();
+        FrameEntry* e = framePool_.take();
         av_frame_free(&e->frame);
         freeFrameEntries_.put(e);
     }
@@ -432,27 +438,6 @@ bool AVDecoder::decodeNextPacket()
                 }
                 picEntry->frame = av_frame_alloc();
 
-                int bufSize = av_image_fill_arrays(
-                    picEntry->frame->data,           // Data pointers to be filled in
-                    picEntry->frame->linesize,       // linesizes for the image in dst_data to be filled in
-                    nullptr,                         // Source buffer - nullptr means calculate and return the required buffer size in bytes
-                    AV_PIX_FMT_RGB24,                // Destination format
-                    videoCodecCtx_->width,           // Destination width
-                    videoCodecCtx_->height,          // Destination height
-                    1                                // The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1)
-                );
-                /* if (bufSize < 0) ... */
-                unsigned char* imgBuf = (uint8_t*)av_malloc(bufSize);
-                av_image_fill_arrays(
-                    picEntry->frame->data,     // Data pointers to be filled in
-                    picEntry->frame->linesize, // linesizes for the image in dst_data to be filled in
-                    imgBuf,                    // Source buffer
-                    AV_PIX_FMT_RGB24,          // Destination format
-                    videoCodecCtx_->width,     // Destination width
-                    videoCodecCtx_->height,    // Destination height
-                    1                          // The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1)
-                );
-/*
                 // Allocates the raw image buffer and fills in the frame's data
                 // pointers and line sizes.
                 //
@@ -465,8 +450,8 @@ bool AVDecoder::decodeNextPacket()
                     sourceWidth_,
                     sourceHeight_,
                     AV_PIX_FMT_RGB24,
-                    4                           // Alignment
-                );*/
+                    1                           // Alignment
+                );
             }
 
             // Convert frame to RGB24 format

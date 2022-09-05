@@ -1,6 +1,7 @@
 #include "application/views/ReplayViewer.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
+#include "application/models/ReplayManager.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
@@ -15,9 +16,10 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ReplayViewer::ReplayViewer(PluginManager* pluginManager, QWidget* parent)
+ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginManager, QWidget* parent)
     : QTabWidget(parent)
     , protocol_(nullptr)
+    , replayManager_(replayManager)
     , pluginManager_(pluginManager)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
@@ -25,6 +27,10 @@ ReplayViewer::ReplayViewer(PluginManager* pluginManager, QWidget* parent)
     , previousTab_(0)
 {
     addTab(new QWidget, "+");
+
+    replayManager_->dispatcher.addListener(this);
+    for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
+        replayManager_->replayGroup(i)->dispatcher.addListener(this);
 
     connect(this, &QTabWidget::tabBarClicked, this, &ReplayViewer::onTabBarClicked);
     connect(this, &QTabWidget::currentChanged, this, &ReplayViewer::onCurrentTabChanged);
@@ -34,6 +40,7 @@ ReplayViewer::ReplayViewer(PluginManager* pluginManager, QWidget* parent)
 ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWidget* parent)
     : QTabWidget(parent)
     , protocol_(protocol)
+    , replayManager_(nullptr)
     , pluginManager_(pluginManager)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
@@ -53,6 +60,14 @@ ReplayViewer::~ReplayViewer()
 {
     if (protocol_)
         protocol_->dispatcher.removeListener(this);
+
+    if (replayManager_)
+    {
+        for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
+            replayManager_->replayGroup(i)->dispatcher.removeListener(this);
+
+        replayManager_->dispatcher.removeListener(this);
+    }
 
     clearActiveSession();
     clearReplays();
@@ -92,7 +107,7 @@ void ReplayViewer::loadGameReplays(const QStringList& fileNames)
         if (idx == replayCache_.size())
         {
             QByteArray ba = fileName.toUtf8();
-            if (auto session = rfcommon::Session::load(ba.constData()))
+            if (auto session = rfcommon::Session::load(replayManager_, ba.constData()))
             {
                 loadedFileNames.push_back(fileName);
                 loadedSessions.push_back(session);
@@ -102,6 +117,15 @@ void ReplayViewer::loadGameReplays(const QStringList& fileNames)
 
     // TODO background loading
     onGameReplaysLoaded(loadedFileNames, loadedSessions);
+}
+
+// ----------------------------------------------------------------------------
+void ReplayViewer::reloadReplays()
+{
+    QStringList files = pendingReplays_;
+    clearReplays();
+    replayCache_.clear();
+    loadGameReplays(files);
 }
 
 // ----------------------------------------------------------------------------
@@ -140,7 +164,7 @@ void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVect
             if (auto i = data.plugin->replayInterface())
                 i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
     }
-    
+
     replayState_ = GAME_LOADED;
 }
 
@@ -163,6 +187,7 @@ void ReplayViewer::clearReplays()
     }
 
     activeReplays_.clear();
+    pendingReplays_.clear();
 
     // Subtle bug alert: Cache holds references to replays, but the "activeReplay"
     // vector does not. This means that when no plugins are loaded, the cache
@@ -557,7 +582,7 @@ void ReplayViewer::closeTabWithView(QWidget* view)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) 
+void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port)
 {
     PROFILE(ReplayViewer, onProtocolAttemptConnectToServer);
 
@@ -569,7 +594,7 @@ void ReplayViewer::onProtocolAttemptConnectToServer(const char* ipAddress, uint1
         if (auto i = data.plugin->realtimeInterface())
             i->onProtocolAttemptConnectToServer(ipAddress, port);
 }
-void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) 
+void ReplayViewer::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port)
 {
     PROFILE(ReplayViewer, onProtocolFailedToConnectToServer);
 
@@ -589,7 +614,7 @@ void ReplayViewer::onProtocolConnectedToServer(const char* ipAddress, uint16_t p
         if (auto i = data.plugin->realtimeInterface())
             i->onProtocolConnectedToServer(ipAddress, port);
 }
-void ReplayViewer::onProtocolDisconnectedFromServer() 
+void ReplayViewer::onProtocolDisconnectedFromServer()
 {
     PROFILE(ReplayViewer, onProtocolDisconnectedFromServer);
 
@@ -707,6 +732,40 @@ void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
             if (auto i = data.plugin->realtimeInterface())
                 i->onProtocolGameEnded(game);
     }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayViewer::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) {}
+void ReplayViewer::onReplayManagerGroupAdded(ReplayGroup* group)
+{
+    group->dispatcher.addListener(this);
+}
+void ReplayViewer::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) {}
+void ReplayViewer::onReplayManagerGroupRemoved(ReplayGroup* group)
+{
+    group->dispatcher.removeListener(this);
+}
+void ReplayViewer::onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) {}
+void ReplayViewer::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) {}
+void ReplayViewer::onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
+void ReplayViewer::onReplayManagerReplaySourceRemoved(const QString& name) {}
+void ReplayViewer::onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) {}
+void ReplayViewer::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) {}
+void ReplayViewer::onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
+void ReplayViewer::onReplayManagerVideoSourceRemoved(const QString& name) {}
+
+// ----------------------------------------------------------------------------
+void ReplayViewer::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
+{
+}
+void ReplayViewer::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
+{
+    for (auto it = replayCache_.begin(); it != replayCache_.end(); ++it)
+        if (absPathToFile.absoluteFilePath() == it->fileName)
+        {
+            replayCache_.erase(it);
+            break;
+        }
 }
 
 }

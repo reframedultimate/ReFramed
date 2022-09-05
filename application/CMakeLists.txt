@@ -10,7 +10,6 @@ find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/models/ActiveSessionManager.hpp"
-    "include/application/models/DataSetBackgroundLoader.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
     "include/application/views/ActiveSessionView.hpp"
@@ -57,7 +56,6 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/models/CategoryModel.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
-    "src/models/DataSetBackgroundLoader.cpp"
     "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
     "src/models/ProtocolTask.cpp"
@@ -81,10 +79,12 @@ target_compile_options (application
     PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -pedantic>
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-W -Wall -Wextra -pedantic>)
 target_link_libraries (application
-    PRIVATE Qt5::Core
-    PRIVATE Qt5::Gui
-    PRIVATE Qt5::Widgets
-    PRIVATE rfplot)
+    PRIVATE
+        nlohmann_json::nlohmann_json
+        Qt5::Core
+        Qt5::Gui
+        Qt5::Widgets
+        rfplot)
 set_target_properties (application
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${REFRAMED_BUILD_BINDIR}

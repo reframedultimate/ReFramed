@@ -6,6 +6,8 @@
 
 namespace rfapp {
 
+using namespace nlohmann;
+
 // ----------------------------------------------------------------------------
 ConnectView::ConnectView(Config* config, Protocol* protocol, QWidget* parent)
     : QDialog(parent)
@@ -19,18 +21,17 @@ ConnectView::ConnectView(Config* config, Protocol* protocol, QWidget* parent)
     setWindowTitle("Connect to Nintendo Switch");
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
-    QJsonObject& cfg = getConfig();
-    if (cfg["connectview"].isObject() == false)
-        cfg["connectview"] = QJsonObject();
-    auto cfgConnect = cfg["connectview"].toObject();
-    if (cfgConnect["lastip"].isString() == false)
-        cfgConnect["lastip"] = QString();
-    if (cfgConnect["lastport"].isString() == false)
-        cfgConnect["lastport"] = "42069";
-    cfg["connectview"] = cfgConnect;
+    json& cfg = getConfig();
+    json& jConnectView = cfg["connectview"];
+    json& jLastIP = jConnectView["lastip"];
+    json& jLastPort = jConnectView["lastport"];
+    if (jLastIP.is_string() == false)
+        jLastIP = "";
+    if (jLastPort.is_number_unsigned() == false)
+        jLastPort = 42069;
 
-    ui_->lineEdit_address->setText(cfgConnect["lastip"].toString());
-    ui_->lineEdit_port->setText(cfgConnect["lastport"].toString());
+    ui_->lineEdit_address->setText(jLastIP.get<std::string>().c_str());
+    ui_->lineEdit_port->setText(QString::number(jLastPort.get<uint16_t>()));
     ui_->label_info->setText("<font color=\"#000000\">Not connected.</font>");
 
     protocol_->dispatcher.addListener(this);
@@ -78,11 +79,10 @@ void ConnectView::onConnectButtonReleased()
         return;
     }
 
-    QJsonObject& cfg = getConfig();
-    auto cfgConnect = cfg["connectview"].toObject();
-    cfgConnect["lastip"] = ui_->lineEdit_address->text();
-    cfgConnect["lastport"] = QString::number(port);
-    cfg["connectview"] = cfgConnect;
+    json& cfg = getConfig();
+    json& jConnect = cfg["connectview"];
+    jConnect["lastip"] = ui_->lineEdit_address->text().toUtf8().constData();
+    jConnect["lastport"] = port;
 
     protocol_->connectToServer(ui_->lineEdit_address->text(), port);
 }

@@ -15,24 +15,41 @@
 #include <QDateTime>
 #include <QStandardPaths>
 #include <QJsonObject>
+#include <QJsonArray>
 
 namespace rfapp {
+
+using namespace nlohmann;
 
 // ----------------------------------------------------------------------------
 ReplayManager::ReplayManager(Config* config)
     : ConfigAccessor(config)
 {
-    QJsonObject& cfg = getConfig();
-    if (cfg["replaymanager"].isNull())
-        cfg["replaymanager"] = QJsonObject();
-    auto cfgReplayManager = cfg["replaymanager"].toObject();
-    if (cfgReplayManager["defaultreplaypath"].isNull())
+    json& cfg = getConfig();
+    json& jReplayManager = cfg["replaymanager"];
+    json& jDefaultReplayPath = jReplayManager["defaultreplaypath"];
+    json& jVideoSources = jReplayManager["videosources"];
+
+    if (jDefaultReplayPath.is_string() == false)
     {
         QDir defaultReplayPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/replays";
-        cfgReplayManager["defaultreplaypath"] = QDir(defaultReplayPath).absolutePath();
+        jDefaultReplayPath = QDir(defaultReplayPath).absolutePath().toUtf8().constData();
     }
-    cfg["replaymanager"] = cfgReplayManager;
-    saveConfig();
+
+    if (jVideoSources.is_object() == false)
+        jVideoSources = json::object();
+    else
+    {
+        for (const auto& [name, jPath] : jVideoSources.items())
+        {
+            if (jPath.is_string() == false)
+                continue;
+            const std::string path = jPath.get<std::string>();
+            if (path.length() == 0)
+                continue;
+            videoDirectories_.insert(name.c_str(), QDir(path.c_str()));
+        }
+    }
 
     // Default location is always at index 0
     replayDirectories_.insert("Default", defaultReplaySourceDirectory());
@@ -49,7 +66,10 @@ QDir ReplayManager::defaultReplaySourceDirectory() const
 {
     PROFILE(ReplayManager, defaultReplaySourceDirectory);
 
-    return getConfig()["replaymanager"].toObject()["defaultreplaypath"].toString();
+    auto jPath = getConfig()["replaymanager"]["defaultreplaypath"];
+    const std::string path = jPath.get<std::string>();
+
+    return QDir(path.c_str());
 }
 
 // ----------------------------------------------------------------------------
@@ -57,10 +77,9 @@ void ReplayManager::setDefaultReplaySourceDirectory(const QDir& path)
 {
     PROFILE(ReplayManager, setDefaultReplaySourceDirectory);
 
-    QJsonObject& cfg = getConfig();
-    QJsonObject cfgReplayManager = cfg["replaymanager"].toObject();
-    cfgReplayManager["defaultreplaypath"] = path.absolutePath();
-    cfg["replaymanager"] = cfgReplayManager;
+    json& cfg = getConfig();
+    json& jReplayManager = cfg["replaymanager"];
+    jReplayManager["defaultreplaypath"] = path.absolutePath().toUtf8().constData();
     saveConfig();
 
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultReplaySaveLocationChanged, path);
@@ -313,6 +332,8 @@ bool ReplayManager::addVideoSource(const QString& name, const QDir& path)
         return false;
 
     videoDirectories_.insert(name, path);
+    updateAndSaveConfig();
+
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoSourceAdded, name, path);
     return true;
 }
@@ -331,6 +352,7 @@ bool ReplayManager::changeVideoSourceName(const QString& oldName, const QString&
     QDir dir = it.value();
     videoDirectories_.insert(newName, dir);
     videoDirectories_.erase(it);
+    updateAndSaveConfig();
 
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoSourceNameChanged, oldName, newName);
     return true;
@@ -347,6 +369,7 @@ bool ReplayManager::changeVideoSourcePath(const QString& name, const QDir& newPa
 
     QDir oldPath = it.value();
     *it = newPath;
+    updateAndSaveConfig();
 
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoSourcePathChanged, name, oldPath, newPath);
     return true;
@@ -359,6 +382,7 @@ bool ReplayManager::removeVideoSource(const QString& name)
 
     if (videoDirectories_.remove(name) == 0)
         return false;
+    updateAndSaveConfig();
 
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoSourceRemoved, name);
     return true;
@@ -672,21 +696,43 @@ void ReplayManager::scanForReplays()
             allGroup->addFile(QFileInfo(matchDir, file));
     }
 }
+// ----------------------------------------------------------------------------
+void ReplayManager::updateAndSaveConfig()
+{
+    json& cfg = getConfig();
+    json& jReplayManager = cfg["replaymanager"];
+
+    json jVideoSources = json::object();
+    for (auto it = videoDirectories_.begin(); it != videoDirectories_.end(); ++it)
+        jVideoSources[it.key().toUtf8().constData()] = it.value().absolutePath().toUtf8().constData();
+    jReplayManager["videosources"] = jVideoSources;
+
+    saveConfig();
+}
 
 // ----------------------------------------------------------------------------
 void ReplayManager::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& name)
 {
     PROFILE(ReplayManager, onReplayGroupFileAdded);
-
-
 }
 
 // ----------------------------------------------------------------------------
 void ReplayManager::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& name)
 {
     PROFILE(ReplayManager, onReplayGroupFileRemoved);
+}
 
+// ----------------------------------------------------------------------------
+rfcommon::String ReplayManager::resolveVideoFile(const char* fileName) const
+{
+    for (auto dir : videoDirectories_)
+    {
+        QString absName = dir.absoluteFilePath(fileName);
+        if (QFileInfo(absName).isFile())
+            return absName.toUtf8().constData();
+    }
 
+    return "";
 }
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QJsonObject>
+#include "nlohmann/json.hpp"
 
 namespace rfapp {
 
@@ -13,7 +13,7 @@ public:
     void load();
     void save();
 
-    QJsonObject root;
+    nlohmann::json root;
 };
 
 }

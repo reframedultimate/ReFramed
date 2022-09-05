@@ -115,7 +115,7 @@ ReplayGroupView::ReplayGroupView(
     , hash40Strings_(hash40Strings)
     , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
-    , replayViewer_(new ReplayViewer(pluginManager))
+    , replayViewer_(new ReplayViewer(replayManager, pluginManager))
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
@@ -197,7 +197,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     QPoint item = replayListWidget_->mapToGlobal(pos);
 
     QMenu menu;
-    QAction* editMetaData = nullptr; 
+    QAction* editMetaData = nullptr;
     QAction* associateVideo = nullptr;
     QAction* editLabels = nullptr;
     QAction* a = nullptr;
@@ -223,7 +223,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
             {
                 QString absFileName = fileName.absoluteFilePath();
                 QByteArray ba = absFileName.toUtf8();
-                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
                 if (session)
                 {
                     ReplayEditorDialog dialog(replayManager_, session, absFileName);
@@ -239,7 +239,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
             {
                 QString absFileName = fileName.absoluteFilePath();
                 QByteArray ba = absFileName.toUtf8();
-                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(ba.constData());
+                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
                 if (session)
                 {
                     VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
