@@ -29,6 +29,19 @@ public:
         return entry;
     }
 
+    int count() const
+    {
+        const Entry* e = first_;
+        int i = 0;
+        while (e)
+        {
+            i++;
+            e = e->next;
+        }
+
+        return i;
+    }
+
 private:
     Entry* first_;
 };
@@ -37,12 +50,10 @@ template <typename Entry, int N>
 class FlatFreeList : public FreeList<Entry>
 {
 public:
-    using Capacity = N;
-
     FlatFreeList()
     {
         for (int i = N - 1; i >= 0; --i)
-            put(&entries_[i]);
+            FreeList<Entry>::put(&entries_[i]);
     }
 
     Entry* entries() const { return entries_; }

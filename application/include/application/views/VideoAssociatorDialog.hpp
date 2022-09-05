@@ -53,8 +53,6 @@ private:
     QShortcut* togglePlayShortcut_ = nullptr;
     QShortcut* nextFrameShortcut_ = nullptr;
     QShortcut* prevFrameShortcut_ = nullptr;
-
-    int currentGameFrame_;
 };
 
 }

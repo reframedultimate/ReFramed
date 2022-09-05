@@ -12,21 +12,23 @@ project ("plugin-${PLUGIN_NAME}"
 include (ReFramedPlugin)
 reframed_add_plugin (plugin-${PLUGIN_NAME}
     SOURCES
-        "src/models/VideoDecoder.cpp"
+        "src/models/AVDecoder.cpp"
+        "src/models/BufferedSeekableDecoder.cpp"
         "src/models/VideoPlayerModel.cpp"
         "src/views/VideoPlayerView.cpp"
         "src/VideoPlayerPlugin.cpp"
         "src/Plugin.cpp"
     HEADERS
         "include/${PLUGIN_NAME}/listeners/VideoPlayerListener.hpp"
-        "include/${PLUGIN_NAME}/models/VideoDecoder.hpp"
+        "include/${PLUGIN_NAME}/interfaces/AVDecoderInterface.hpp"
+        "include/${PLUGIN_NAME}/models/AVDecoder.hpp"
+        "include/${PLUGIN_NAME}/models/BufferedSeekableDecoder.hpp"
         "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
         "include/${PLUGIN_NAME}/VideoPlayerPlugin.hpp"
     MOC_HEADERS
-        "include/${PLUGIN_NAME}/models/VideoDecoder.hpp"
-        "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
+        "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
     INCLUDE_DIRECTORIES
         "include")
 

@@ -9,6 +9,10 @@
 #include <QOpenGLWidget>
 #include <QShortcut>
 
+extern "C" {
+#include <libavformat/avformat.h>
+}
+
 class VideoSurface : public QOpenGLWidget
 {
 public:
@@ -74,28 +78,20 @@ VideoPlayerView::~VideoPlayerView()
 }
 
 // ----------------------------------------------------------------------------
-void VideoPlayerView::onPresentCurrentFrame()
+void VideoPlayerView::onFileOpened()
+{
+}
+
+// ----------------------------------------------------------------------------
+void VideoPlayerView::onFileClosed()
+{
+}
+
+// ----------------------------------------------------------------------------
+void VideoPlayerView::onPresentImage(const QImage& image)
 {
     PROFILE(VideoPlayerView, onPresentCurrentFrame);
 
-    videoSurface_->image = QImage(rgbFrame_->data[0], sourceWidth_, sourceHeight_, rgbFrame_->linesize[0], QImage::Format_RGB888);
+    videoSurface_->image = image;
     videoSurface_->update();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerView::onInfo(const QString& msg)
-{
-    PROFILE(VideoPlayerView, onInfo);
-
-    logWidget_->textCursor().insertText("[INFO] " + msg + "\n");
-    logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerView::onError(const QString& msg)
-{
-    PROFILE(VideoPlayerView, onError);
-
-    logWidget_->textCursor().insertText("[ERROR] " + msg + "\n");
-    logWidget_->verticalScrollBar()->setValue(logWidget_->verticalScrollBar()->maximum());
 }

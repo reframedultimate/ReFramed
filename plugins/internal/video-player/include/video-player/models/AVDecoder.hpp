@@ -1,5 +1,6 @@
 #pragma once
 
+#include "video-player/interfaces/AVDecoderInterface.hpp"
 #include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/FreeList.hpp"
 #include "rfcommon/Queue.hpp"
@@ -19,30 +20,6 @@ typedef struct SwsContext SwsContext;
 namespace rfcommon {
     class Log;
 }
-
-class AVDecoderInterface
-{
-public:
-    virtual bool openFile(const void* address, uint64_t size) = 0;
-    virtual void closeFile() = 0;
-
-    /*!
-     * \brief Decodes the next frame of video and converts it into RGB24.
-     */
-    virtual AVFrame* takeNextVideoFrame() = 0;
-
-    virtual void giveNextVideoFrame(AVFrame* frame) = 0;
-
-    /*!
-     * \brief Decodes the next chunk of audio.
-     */
-    virtual AVFrame* takeNextAudioFrame() = 0;
-
-    virtual void giveNextAudioFrame(AVFrame* frame) = 0;
-
-    virtual bool seekToKeyframeBefore(int64_t ts) = 0;
-    virtual bool seekToKeyframeBefore(int64_t ts, int num, int den) = 0;
-};
 
 class AVDecoder : public AVDecoderInterface
 {
@@ -73,10 +50,8 @@ public:
 
     void giveNextAudioFrame(AVFrame* frame) override;
 
-    bool seekToKeyframeBefore(int64_t ts) override;
-    bool seekToKeyframeBefore(int64_t ts, int num, int den) override;
-
-    int64_t videoFrameToTimeStamp(int VideoFrameIdx);
+    bool seekNearKeyframe(int64_t codec_ts) override;
+    int64_t toCodecTimeStamp(int64_t ts, int num, int den) override;
 
 private:
     bool decodeNextPacket();

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QString>
+class QImage;
 
 class VideoPlayerListener
 {
 public:
-    virtual void onPresentCurrentFrame() = 0;
-    virtual void onInfo(const QString& msg) = 0;
-    virtual void onError(const QString& msg) = 0;
+    virtual void onFileOpened() = 0;
+    virtual void onFileClosed() = 0;
+    virtual void onPresentImage(const QImage& image) = 0;
 };

@@ -30,7 +30,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     , videoView_(nullptr)
     , session_(session)
     , currentFileName_(currentFileName)
-    , currentGameFrame_(0)
 {
     ui_->setupUi(this);
 
@@ -137,7 +136,8 @@ void VideoAssociatorDialog::onChooseFileReleased()
         this, "Open Video File", "", "Video Files (*.mp4 *.mkv *.avi *.webm)");
     if (fileName.length() == 0)
         return;*/
-    QString fileName = "/media/ssbu/2022-08-04 - Basel Summer Weekly/2022-08-04 - Bo3 - TheComet (Pika) vs DeepFreeze (Joker) Game 1.mp4";
+    //QString fileName = "/media/ssbu/2022-08-04 - Basel Summer Weekly/2022-08-04 - Bo3 - TheComet (Pika) vs DeepFreeze (Joker) Game 1.mp4";
+    QString fileName = "/media/ssbu/2021-04-18 - NullSpace+TAEL/Weekly 2021-04-18 - Bo5 - TheComet (Pika) vs NullSpace (Wolf) Game 1.mp4";
 
     rfcommon::Reference<rfcommon::MappedFile> f = new rfcommon::MappedFile;
     QByteArray ba = fileName.toUtf8();
@@ -173,11 +173,7 @@ void VideoAssociatorDialog::onNextFrame()
         if (auto fdata = session_->tryGetFrameData())
         {
             i->pauseVideo();
-            if (currentGameFrame_ < fdata->frameCount())
-            {
-                currentGameFrame_++;
-                i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(currentGameFrame_));
-            }
+            i->stepVideo(1);
         }
 }
 
@@ -189,11 +185,7 @@ void VideoAssociatorDialog::onPrevFrame()
     if (auto i = videoPlugin_->videoPlayerInterface())
     {
         i->pauseVideo();
-        if (currentGameFrame_ > 0)
-        {
-            currentGameFrame_--;
-            i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(currentGameFrame_));
-        }
+        i->stepVideo(-1);
     }
 }
 

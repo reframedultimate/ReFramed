@@ -3,7 +3,10 @@ project ("ReFramed-tests"
     LANGUAGES CXX)
 
 add_executable (ReFramed-tests
+    "src/test_Deque.cpp"
+    "src/test_FreeList.cpp"
     "src/test_HashMap.cpp"
+    "src/test_Queue.cpp"
     "src/test_Reference.cpp"
     "src/test_SmallLinearMap.cpp"
     "src/test_SmallString.cpp"

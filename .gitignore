@@ -11,3 +11,6 @@
 *.swp
 *.autosave
 
+# Valgrind
+*.grind
+

@@ -1,7 +1,9 @@
-#include "video-player/models/VideoDecoder.hpp"
+#include "video-player/models/AVDecoder.hpp"
 #include "rfcommon/Deserializer.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Log.hpp"
+
+#include <QImage>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -19,8 +21,6 @@ AVDecoder::AVDecoder(rfcommon::Log* log)
 // ----------------------------------------------------------------------------
 AVDecoder::~AVDecoder()
 {
-    if (isOpen_)
-        closeFile();
 }
 
 static int read_callback(void* opaque, uint8_t* buf, int buf_size)
@@ -297,7 +297,7 @@ void AVDecoder::giveNextAudioFrame(AVFrame* frame)
 }
 
 // ----------------------------------------------------------------------------
-bool AVDecoder::seekToKeyframeBefore(int64_t target_ts)
+bool AVDecoder::seekNearKeyframe(int64_t target_ts)
 {
     PROFILE(VideoDecoder, seekToMs);
 
@@ -324,15 +324,17 @@ bool AVDecoder::seekToKeyframeBefore(int64_t target_ts)
         return false;
     }
 
+    avcodec_flush_buffers(videoCodecCtx_);
+
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool AVDecoder::seekToKeyframeBefore(int64_t target_ts, int num, int den)
+int64_t AVDecoder::toCodecTimeStamp(int64_t ts, int num, int den)
 {
     AVRational from = av_make_q(num, den);
     AVRational to = inputCtx_->streams[videoStreamIdx_]->time_base;
-    return seekToKeyframeBefore(av_rescale_q(target_ts, from, to));
+    return av_rescale_q(ts, from, to);
 }
 
 // ----------------------------------------------------------------------------
@@ -355,45 +357,49 @@ bool AVDecoder::decodeNextPacket()
 
         if (currentPacket_->stream_index == videoStreamIdx_)
         {
+            FrameEntry* frameEntry;
+            FrameEntry* picEntry;
+            AVFrame* frame;
+
             // Send packet to video decoder
             response = avcodec_send_packet(videoCodecCtx_, currentPacket_);
             if (response < 0)
             {
                 if ((response == AVERROR_EOF || avio_feof(inputCtx_->pb)))
-                    goto exit_failure;
+                    goto send_error;
                 if (inputCtx_->pb && inputCtx_->pb->error)
-                    goto exit_failure;
-                goto need_next_packet;
+                    goto send_error;
+                goto send_need_next_pkt;
             }
 
-            FrameEntry* frameEntry = framePool_.take();
+            frameEntry = framePool_.take();
             if (frameEntry == nullptr)
             {
                 frameEntry = freeFrameEntries_.take();
                 if (frameEntry == nullptr)
                 {
                     log_->error("Used up all free frame entries!");
-                    goto exit_failure;
+                    goto alloc_frame_failed;
                 }
                 frameEntry->frame = av_frame_alloc();
             }
-            AVFrame* frame = frameEntry->frame;
+            frame = frameEntry->frame;
 
             response = avcodec_receive_frame(videoCodecCtx_, frame);
             if (response == AVERROR(EAGAIN))
-                goto need_next_packet;
+                goto recv_need_next_pkt;
             else if (response == AVERROR_EOF)
-                goto exit_failure;
+                goto recv_eof;
             else if (response < 0)
             {
                 log_->error("Decoder error");
-                goto need_next_packet;
+                goto recv_need_next_pkt;
             }
 
             // Frame is successfully decoded here
 
             // Get a picture we can re-use from the freelist
-            FrameEntry* picEntry = picturePool_.take();
+            picEntry = picturePool_.take();
             if (picEntry == nullptr)
             {
                 // Have to allocate a new entry
@@ -401,10 +407,31 @@ bool AVDecoder::decodeNextPacket()
                 if (picEntry == nullptr)
                 {
                     log_->error("Used up all free frame entries!");
-                    goto exit_failure;
+                    goto alloc_picture_failed;
                 }
                 picEntry->frame = av_frame_alloc();
 
+                int bufSize = av_image_fill_arrays(
+                    picEntry->frame->data,           // Data pointers to be filled in
+                    picEntry->frame->linesize,       // linesizes for the image in dst_data to be filled in
+                    nullptr,                         // Source buffer - nullptr means calculate and return the required buffer size in bytes
+                    AV_PIX_FMT_RGB24,                // Destination format
+                    videoCodecCtx_->width,           // Destination width
+                    videoCodecCtx_->height,          // Destination height
+                    1                                // The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1)
+                );
+                /* if (bufSize < 0) ... */
+                unsigned char* imgBuf = (uint8_t*)av_malloc(bufSize);
+                av_image_fill_arrays(
+                    picEntry->frame->data,     // Data pointers to be filled in
+                    picEntry->frame->linesize, // linesizes for the image in dst_data to be filled in
+                    imgBuf,                    // Source buffer
+                    AV_PIX_FMT_RGB24,          // Destination format
+                    videoCodecCtx_->width,     // Destination width
+                    videoCodecCtx_->height,    // Destination height
+                    1                          // The value used in source buffer for linesize alignment (? no idea what that means but people on SO are using 1)
+                );
+/*
                 // Allocates the raw image buffer and fills in the frame's data
                 // pointers and line sizes.
                 //
@@ -412,13 +439,13 @@ bool AVDecoder::decodeNextPacket()
                 //       av_free(qEntry->frame.data[0]), as av_frame_unref()
                 //       does not take care of this.
                 av_image_alloc(
-                    picEntry->frame->data,      /* Data pointers to be filled in */
-                    picEntry->frame->linesize,  /* linesizes for the image in dst_data to be filled in */
+                    picEntry->frame->data,      // Data pointers to be filled in
+                    picEntry->frame->linesize,  // linesizes for the image in dst_data to be filled in
                     sourceWidth_,
                     sourceHeight_,
                     AV_PIX_FMT_RGB24,
-                    1                           /* Alignment */
-                );
+                    4                           // Alignment
+                );*/
             }
 
             // Convert frame to RGB24 format
@@ -431,26 +458,38 @@ bool AVDecoder::decodeNextPacket()
                 frame->data, frame->linesize, 0, sourceHeight_,
                 picEntry->frame->data, picEntry->frame->linesize);
 
+            // sws_scale() doesn't appear to copy over this data. We make use
+            // of pts, width and height in later stages
+            picEntry->frame->best_effort_timestamp = frame->best_effort_timestamp;
+            picEntry->frame->pts                   = frame->pts;
+            picEntry->frame->width                 = frame->width;
+            picEntry->frame->height                = frame->height;
+
             videoQueue_.putFront(picEntry);
+
             av_frame_unref(frame);
             framePool_.put(frameEntry);
+            av_packet_unref(currentPacket_);
+            break;
 
-            goto exit_success;
+            recv_need_next_pkt      : framePool_.put(frameEntry);
+            send_need_next_pkt      : av_packet_unref(currentPacket_);
+            continue;
+
+            alloc_picture_failed    : av_frame_unref(frame);
+            recv_eof                : framePool_.put(frameEntry);
+            alloc_frame_failed      :
+            send_error              : av_packet_unref(currentPacket_);
+            return false;
         }
-
-        if (currentPacket_->stream_index == audioStreamIdx_)
+        else if (currentPacket_->stream_index == audioStreamIdx_)
         {
 
         }
-
-        need_next_packet : av_packet_unref(currentPacket_);
-        continue;
-
-        exit_failure : av_packet_unref(currentPacket_);
-        return false;
-
-        exit_success: av_packet_unref(currentPacket_);
-        break;
+        else
+        {
+            av_packet_unref(currentPacket_);
+        }
     }
 
     return true;

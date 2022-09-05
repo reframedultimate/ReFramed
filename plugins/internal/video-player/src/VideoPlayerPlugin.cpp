@@ -1,4 +1,6 @@
 #include "video-player/VideoPlayerPlugin.hpp"
+#include "video-player/models/AVDecoder.hpp"
+#include "video-player/models/BufferedSeekableDecoder.hpp"
 #include "video-player/models/VideoPlayerModel.hpp"
 #include "video-player/views/VideoPlayerView.hpp"
 #include "rfcommon/MappedFile.hpp"
@@ -6,12 +8,15 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
+#include "rfcommon/String.hpp"
 
 // ----------------------------------------------------------------------------
 VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* log)
     : Plugin(factory)
     , log_(log)
-    , videoPlayer_(new VideoPlayerModel(log))
+    , decoder_(new AVDecoder(log))
+    , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
+    , videoPlayer_(new VideoPlayerModel(seekableDecoder_.get(), log))
 {}
 
 // ----------------------------------------------------------------------------
@@ -23,7 +28,7 @@ rfcommon::Plugin::UIInterface* VideoPlayerPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* VideoPlayerPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* VideoPlayerPlugin::replayInterface() { return this; }
 rfcommon::Plugin::VisualizerInterface* VideoPlayerPlugin::visualizerInterface() { return nullptr; }
-rfcommon::Plugin::VideoPlayerInterface* VideoPlayerPlugin::videoPlayerInterface() { return this; }
+rfcommon::Plugin::VideoPlayerInterface* VideoPlayerPlugin::videoPlayerInterface() { return videoPlayer_.get(); }
 
 // ----------------------------------------------------------------------------
 QWidget* VideoPlayerPlugin::createView()
@@ -71,7 +76,7 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
     }
 
     if (activeVideo_)
-        openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
+        videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
 }
 
 // ----------------------------------------------------------------------------
@@ -79,7 +84,7 @@ void VideoPlayerPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
     PROFILE(VideoPlayerPlugin, onGameSessionUnloaded);
 
-    closeVideo();
+    videoPlayer_->closeVideo();
 }
 
 void VideoPlayerPlugin::onTrainingSessionLoaded(rfcommon::Session* training) {}
@@ -87,72 +92,3 @@ void VideoPlayerPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {
 
 void VideoPlayerPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
 void VideoPlayerPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
-
-// ----------------------------------------------------------------------------
-bool VideoPlayerPlugin::openVideoFromMemory(const void* address, uint64_t size)
-{
-    PROFILE(VideoPlayerPlugin, openVideoFromMemory);
-
-    return videoPlayer_->open(address, size);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::closeVideo()
-{
-    PROFILE(VideoPlayerPlugin, closeVideo);
-
-    videoPlayer_->close();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::playVideo()
-{
-    PROFILE(VideoPlayerPlugin, playVideo);
-
-    videoPlayer_->play();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::pauseVideo()
-{
-    PROFILE(VideoPlayerPlugin, pauseVideo);
-
-    videoPlayer_->pause();
-}
-
-// ----------------------------------------------------------------------------
-bool VideoPlayerPlugin::isVideoPlaying() const
-{
-    PROFILE(VideoPlayerPlugin, isVideoPlaying);
-
-    return videoPlayer_->isPlaying();
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::setVideoVolume(int percent)
-{
-    PROFILE(VideoPlayerPlugin, setVideoVolume);
-
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::advanceVideoFrames(int videoFrames)
-{
-    PROFILE(VideoPlayerPlugin, advanceVideoFrames);
-
-    videoPlayer_->advanceFrames(videoFrames);
-}
-
-// ----------------------------------------------------------------------------
-void VideoPlayerPlugin::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
-{
-    PROFILE(VideoPlayerPlugin, seekVideoToGameFrame);
-
-    videoPlayer_->seekToFrame(frameNumber);
-}
-
-// ----------------------------------------------------------------------------
-rfcommon::FrameIndex VideoPlayerPlugin::currentVideoGameFrame()
-{
-    return rfcommon::FrameIndex::fromValue(0);
-}

@@ -99,7 +99,7 @@ public:
          * \param frames The number of frames to seek. Can be negative. This
          * value is guaranteed to be "small", i.e. in the range of -30 to 30.
          */
-        virtual void advanceVideoFrames(int videoFrames) = 0;
+        virtual void stepVideo(int videoFrames) = 0;
 
         /*!
          * \brief Try to seek to a specific game-frame (not video frame). Due

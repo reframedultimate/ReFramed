@@ -134,8 +134,10 @@ void ExportView::onOBSSpinBoxNewLinesChanged(int value)
 void ExportView::onOBSBrowseFolderButtonReleased()
 {
     QString dir = QFileDialog::getExistingDirectory(this, "Destination Folder");
-    ui_->lineEdit_obsDestFolder->setText(dir);
+    if (dir.length() == 0)
+        return;
 
+    ui_->lineEdit_obsDestFolder->setText(dir);
     settings_->obsSetDestinationFolder(dir);
 }
 

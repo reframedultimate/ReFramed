@@ -4,6 +4,8 @@
 #include "rfcommon/Reference.hpp"
 #include <memory>
 
+class AVDecoder;
+class BufferedSeekableDecoder;
 class VideoPlayerModel;
 
 namespace rfcommon {
@@ -15,7 +17,6 @@ class VideoPlayerPlugin
         : public rfcommon::Plugin
         , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::ReplayInterface
-        , private rfcommon::Plugin::VideoPlayerInterface
 {
 public:
     VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* log);
@@ -41,18 +42,9 @@ private:
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override final;
 
 private:
-    bool openVideoFromMemory(const void* data, uint64_t size) override final;
-    void closeVideo() override final;
-    void playVideo() override final;
-    void pauseVideo() override final;
-    bool isVideoPlaying() const override final;
-    void setVideoVolume(int percent) override final;
-    void advanceVideoFrames(int videoFrames) override final;
-    void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
-    rfcommon::FrameIndex currentVideoGameFrame() override final;
-
-private:
     rfcommon::Log* log_;
+    std::unique_ptr<AVDecoder> decoder_;
+    std::unique_ptr<BufferedSeekableDecoder> seekableDecoder_;
     std::unique_ptr<VideoPlayerModel> videoPlayer_;
     rfcommon::Reference<rfcommon::VideoEmbed> activeVideo_;
 };

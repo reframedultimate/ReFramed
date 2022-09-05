@@ -1,79 +1,45 @@
 #pragma once
 
-#include "video-player/models/VideoDecoder.hpp"
-#include "rfcommon/Deque.hpp"
-#include <QThread>
-#include <QMutex>
-#include <QWaitCondition>
+#include "rfcommon/Plugin.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
+#include <QObject>
 
-class AVDecoder;
+class BufferedSeekableDecoder;
 class VideoPlayerListener;
+
+extern "C" {
+typedef struct AVFrame AVFrame;
+}
 
 namespace rfcommon {
     class Log;
 }
 
-class BufferedSeekableDecoder
-        : public QThread
-        , public AVDecoderInterface
+class VideoPlayerModel
+        : QObject
+        , public rfcommon::Plugin::VideoPlayerInterface
 {
     Q_OBJECT
 
 public:
-    struct FrameEntry
-    {
-        FrameEntry* next;
-        FrameEntry* prev;
-        AVFrame* frame;
-    };
+    VideoPlayerModel(BufferedSeekableDecoder* decoder, rfcommon::Log* log);
+    ~VideoPlayerModel();
 
-    explicit BufferedSeekableDecoder(AVDecoder* decoder, QObject* parent);
-    ~BufferedSeekableDecoder();
+    rfcommon::ListenerDispatcher<VideoPlayerListener> dispatcher;
 
-    bool openFile(const void* address, uint64_t size) override;
-    void closeFile() override;
-
-    AVFrame* takeNextVideoFrame() override;
-    void giveNextVideoFrame(AVFrame* frame) override;
-
-    AVFrame* takePrevVideoFrame();
-    void givePrevVideoFrame(AVFrame* frame);
-
-    AVFrame* takeNextAudioFrame() override;
-    void giveNextAudioFrame(AVFrame* frame) override;
-
-    AVFrame* takePrevAudioFrame();
-    void givePrevAudioFrame(AVFrame* frame);
-
-    bool seekToKeyframeBefore(int64_t ts) override;
-    bool seekToKeyframeBefore(int64_t ts, int num, int den) override;
-
-    int shortSeek(int deltaFrames);
+public:
+    bool openVideoFromMemory(const void* data, uint64_t size) override final;
+    void closeVideo() override final;
+    void playVideo() override final;
+    void pauseVideo() override final;
+    bool isVideoPlaying() const override final;
+    void setVideoVolume(int percent) override final;
+    void stepVideo(int videoFrames) override final;
+    void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
+    rfcommon::FrameIndex currentVideoGameFrame() override final;
 
 private:
-    void run() override;
-
-private:
-    enum State
-    {
-        IDLE,
-        DECODE_FORWARDS,
-        QUEUES_FLUSHED
-    } state_ = IDLE;
-
-    AVDecoder* decoder_;
-    QMutex mutex_;
-    QWaitCondition cond_;
-
-    rfcommon::Deque<FrameEntry> vFront_;
-    rfcommon::Deque<FrameEntry> vBack_;
-    FrameEntry* vCurrent_ = nullptr;
-
-    rfcommon::Deque<FrameEntry> aFront_;
-    rfcommon::Deque<FrameEntry> aBack_;
-    FrameEntry* aCurrent_ = nullptr;
-
-    rfcommon::FlatFreeList<FrameEntry, 64> freeFrameEntries_;
-
-    bool requestShutdown_ = false;
+    BufferedSeekableDecoder* decoder_;
+    AVFrame* currentFrame_;
+    bool isOpen_;
 };
