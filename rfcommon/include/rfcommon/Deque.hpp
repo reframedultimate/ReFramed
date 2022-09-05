@@ -117,7 +117,7 @@ public:
         return front_;
     }
 
-    Entry* peekback() const
+    Entry* peekBack() const
     {
         return back_;
     }

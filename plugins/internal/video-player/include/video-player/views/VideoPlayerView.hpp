@@ -3,8 +3,6 @@
 #include "video-player/listeners/VideoPlayerListener.hpp"
 #include <QWidget>
 
-class QPlainTextEdit;
-class VideoDecoder;
 class VideoSurface;
 class VideoPlayerModel;
 
@@ -27,7 +25,6 @@ private:
 
 private:
     VideoPlayerModel* model_;
-    QPlainTextEdit* logWidget_;
     VideoSurface* videoSurface_;
     AVFrame* currentFrame_ = nullptr;
 };

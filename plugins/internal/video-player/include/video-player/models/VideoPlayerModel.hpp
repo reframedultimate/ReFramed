@@ -3,6 +3,7 @@
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include <QObject>
+#include <QTimer>
 
 class BufferedSeekableDecoder;
 class VideoPlayerListener;
@@ -16,7 +17,7 @@ namespace rfcommon {
 }
 
 class VideoPlayerModel
-        : QObject
+        : public QObject
         , public rfcommon::Plugin::VideoPlayerInterface
 {
     Q_OBJECT
@@ -26,6 +27,9 @@ public:
     ~VideoPlayerModel();
 
     rfcommon::ListenerDispatcher<VideoPlayerListener> dispatcher;
+
+public slots:
+    void onTimerTimeout();
 
 public:
     bool openVideoFromMemory(const void* data, uint64_t size) override final;
@@ -39,6 +43,7 @@ public:
     rfcommon::FrameIndex currentVideoGameFrame() override final;
 
 private:
+    QTimer timer_;
     BufferedSeekableDecoder* decoder_;
     AVFrame* currentFrame_;
     bool isOpen_;

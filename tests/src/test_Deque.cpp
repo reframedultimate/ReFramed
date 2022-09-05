@@ -26,7 +26,7 @@ TEST(NAME, front_and_back_are_null_in_empty_deque)
     Deque<Entry<int>> d;
     ASSERT_THAT(d.count(), Eq(0));
     ASSERT_THAT(d.peekFront(), IsNull());
-    ASSERT_THAT(d.peekback(), IsNull());
+    ASSERT_THAT(d.peekBack(), IsNull());
 }
 
 TEST(NAME, put_front_first_entry_correctly_sets_members)
@@ -36,7 +36,7 @@ TEST(NAME, put_front_first_entry_correctly_sets_members)
     d.putFront(&e1);
     ASSERT_THAT(d.count(), Eq(1));
     ASSERT_THAT(d.peekFront(), Eq(&e1));
-    ASSERT_THAT(d.peekback(), Eq(&e1));
+    ASSERT_THAT(d.peekBack(), Eq(&e1));
     ASSERT_THAT(e1.prev, IsNull());
     ASSERT_THAT(e1.next, IsNull());
 }
@@ -49,7 +49,7 @@ TEST(NAME, put_front_first_and_second_entry_correctly_sets_members)
     d.putFront(&e2);
     ASSERT_THAT(d.count(), Eq(2));
     ASSERT_THAT(d.peekFront(), Eq(&e2));
-    ASSERT_THAT(d.peekback(), Eq(&e1));
+    ASSERT_THAT(d.peekBack(), Eq(&e1));
     ASSERT_THAT(e1.prev, IsNull());
     ASSERT_THAT(e1.next, Eq(&e2));
     ASSERT_THAT(e2.prev, Eq(&e1));
@@ -63,7 +63,7 @@ TEST(NAME, put_back_first_entry_correctly_sets_members)
     d.putBack(&e1);
     ASSERT_THAT(d.count(), Eq(1));
     ASSERT_THAT(d.peekFront(), Eq(&e1));
-    ASSERT_THAT(d.peekback(), Eq(&e1));
+    ASSERT_THAT(d.peekBack(), Eq(&e1));
     ASSERT_THAT(e1.prev, IsNull());
     ASSERT_THAT(e1.next, IsNull());
 }
@@ -76,7 +76,7 @@ TEST(NAME, put_back_first_and_second_entry_correctly_sets_members)
     d.putBack(&e2);
     ASSERT_THAT(d.count(), Eq(2));
     ASSERT_THAT(d.peekFront(), Eq(&e1));
-    ASSERT_THAT(d.peekback(), Eq(&e2));
+    ASSERT_THAT(d.peekBack(), Eq(&e2));
     ASSERT_THAT(e1.prev, Eq(&e2));
     ASSERT_THAT(e1.next, IsNull());
     ASSERT_THAT(e2.prev, IsNull());
@@ -91,7 +91,7 @@ TEST(NAME, take_front_last_entry_correctly_resets_members)
     ASSERT_THAT(d.takeFront(), Eq(&e1));
     ASSERT_THAT(d.count(), Eq(0));
     ASSERT_THAT(d.peekFront(), IsNull());
-    ASSERT_THAT(d.peekback(), IsNull());
+    ASSERT_THAT(d.peekBack(), IsNull());
 }
 
 TEST(NAME, take_front_last_two_entries_correctly_resets_members)
@@ -104,7 +104,7 @@ TEST(NAME, take_front_last_two_entries_correctly_resets_members)
     ASSERT_THAT(d.takeFront(), Eq(&e1));
     ASSERT_THAT(d.count(), Eq(0));
     ASSERT_THAT(d.peekFront(), IsNull());
-    ASSERT_THAT(d.peekback(), IsNull());
+    ASSERT_THAT(d.peekBack(), IsNull());
 }
 
 TEST(NAME, take_front_second_last_entry_correctly_sets_members)
@@ -116,7 +116,7 @@ TEST(NAME, take_front_second_last_entry_correctly_sets_members)
     ASSERT_THAT(d.takeFront(), Eq(&e2));
     ASSERT_THAT(d.count(), Eq(1));
     ASSERT_THAT(d.peekFront(), Eq(&e1));
-    ASSERT_THAT(d.peekback(), Eq(&e1));
+    ASSERT_THAT(d.peekBack(), Eq(&e1));
     ASSERT_THAT(e1.prev, IsNull());
     ASSERT_THAT(e1.next, IsNull());
 }
@@ -129,7 +129,7 @@ TEST(NAME, take_back_last_entry_correctly_resets_members)
     ASSERT_THAT(d.takeBack(), Eq(&e1));
     ASSERT_THAT(d.count(), Eq(0));
     ASSERT_THAT(d.peekFront(), IsNull());
-    ASSERT_THAT(d.peekback(), IsNull());
+    ASSERT_THAT(d.peekBack(), IsNull());
 }
 
 TEST(NAME, take_back_last_two_entries_correctly_resets_members)
@@ -142,7 +142,7 @@ TEST(NAME, take_back_last_two_entries_correctly_resets_members)
     ASSERT_THAT(d.takeBack(), Eq(&e1));
     ASSERT_THAT(d.count(), Eq(0));
     ASSERT_THAT(d.peekFront(), IsNull());
-    ASSERT_THAT(d.peekback(), IsNull());
+    ASSERT_THAT(d.peekBack(), IsNull());
 }
 
 TEST(NAME, take_back_second_last_entry_correctly_sets_members)
@@ -154,7 +154,7 @@ TEST(NAME, take_back_second_last_entry_correctly_sets_members)
     ASSERT_THAT(d.takeBack(), Eq(&e2));
     ASSERT_THAT(d.count(), Eq(1));
     ASSERT_THAT(d.peekFront(), Eq(&e1));
-    ASSERT_THAT(d.peekback(), Eq(&e1));
+    ASSERT_THAT(d.peekBack(), Eq(&e1));
     ASSERT_THAT(e1.prev, IsNull());
     ASSERT_THAT(e1.next, IsNull());
 }

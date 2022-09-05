@@ -58,14 +58,9 @@ public:
 VideoPlayerView::VideoPlayerView(VideoPlayerModel* model, QWidget *parent)
     : QWidget(parent)
     , model_(model)
-    , logWidget_(new QPlainTextEdit)
     , videoSurface_(new VideoSurface)
 {
     setLayout(new QVBoxLayout);
-
-    logWidget_->setReadOnly(true);
-    logWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    layout()->addWidget(logWidget_);
     layout()->addWidget(videoSurface_);
 
     model_->dispatcher.addListener(this);

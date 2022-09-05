@@ -2,6 +2,7 @@
 
 #include "rfcommon/Reference.hpp"
 #include <QDialog>
+#include <QTimer>
 
 class QShortcut;
 
@@ -29,7 +30,7 @@ public:
             PluginManager* pluginManager,
             ReplayManager* replayManager,
             rfcommon::Session* session,
-            const QString& currentFileName,
+            const QString& currentSessionFileName,
             QWidget* parent=nullptr);
     ~VideoAssociatorDialog();
 
@@ -40,6 +41,8 @@ private slots:
     void onNextFrame();
     void onPrevFrame();
 
+    void updateTimesFromVideo();
+
 private:
     Ui::VideoAssociatorDialog* ui_;
     PluginManager* pluginManager_;
@@ -47,12 +50,16 @@ private:
     rfcommon::Plugin* videoPlugin_;
     QWidget* videoView_;
     rfcommon::Reference<rfcommon::Session> session_;
+    const QString currentSessionFileName_;
+
     rfcommon::Reference<rfcommon::MappedFile> currentVideoFile_;
-    const QString currentFileName_;
+    QString currentVideoFileName_;
+    QString currentVideoFilePath_;
 
     QShortcut* togglePlayShortcut_ = nullptr;
     QShortcut* nextFrameShortcut_ = nullptr;
     QShortcut* prevFrameShortcut_ = nullptr;
+    QTimer timer_;
 };
 
 }

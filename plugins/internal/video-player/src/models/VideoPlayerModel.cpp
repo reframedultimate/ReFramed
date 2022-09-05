@@ -15,6 +15,7 @@ VideoPlayerModel::VideoPlayerModel(BufferedSeekableDecoder* decoder, rfcommon::L
     : decoder_(decoder)
     , currentFrame_(nullptr)
 {
+    connect(&timer_, &QTimer::timeout, this, &VideoPlayerModel::onTimerTimeout);
 }
 
 // ----------------------------------------------------------------------------
@@ -24,11 +25,20 @@ VideoPlayerModel::~VideoPlayerModel()
 }
 
 // ----------------------------------------------------------------------------
+void VideoPlayerModel::onTimerTimeout()
+{
+    stepVideo(1);
+}
+
+// ----------------------------------------------------------------------------
 bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
 {
     isOpen_ = decoder_->openFile(address, size);
     if (isOpen_)
     {
+        int num, den;
+        decoder_->frameRate(&num, &den);
+        timer_.setInterval(den * 1000 / num);
         dispatcher.dispatch(&VideoPlayerListener::onFileOpened);
         return true;
     }
@@ -51,19 +61,19 @@ void VideoPlayerModel::closeVideo()
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::playVideo()
 {
-    //videoPlayer_->play();
+    timer_.start();
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::pauseVideo()
 {
-    //videoPlayer_->pause();
+    timer_.stop();
 }
 
 // ----------------------------------------------------------------------------
 bool VideoPlayerModel::isVideoPlaying() const
 {
-    return false;
+    return timer_.isActive();
 }
 
 // ----------------------------------------------------------------------------
@@ -124,5 +134,9 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 // ----------------------------------------------------------------------------
 rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame()
 {
-    return rfcommon::FrameIndex::fromValue(0);
+    if (isOpen_ == false || currentFrame_ == nullptr)
+        return rfcommon::FrameIndex::fromValue(0);
+
+    return rfcommon::FrameIndex::fromValue(
+                decoder_->fromCodecTimeStamp(currentFrame_->pts, 1, 60));
 }

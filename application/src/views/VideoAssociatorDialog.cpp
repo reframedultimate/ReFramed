@@ -1,6 +1,7 @@
 #include "application/ui_VideoAssociatorDialog.h"
 #include "application/views/VideoAssociatorDialog.hpp"
 #include "application/models/PluginManager.hpp"
+#include "application/models/ReplayManager.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Plugin.hpp"
@@ -12,6 +13,7 @@
 #include <QShortcut>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QMessageBox>
 
 namespace rfapp {
 
@@ -29,7 +31,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     , videoPlugin_(nullptr)
     , videoView_(nullptr)
     , session_(session)
-    , currentFileName_(currentFileName)
+    , currentSessionFileName_(currentFileName)
 {
     ui_->setupUi(this);
 
@@ -76,7 +78,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     if (embed)
     {
         ui_->lineEdit_fileName->setEnabled(false);
-        ui_->lineEdit_filePath->setEnabled(false);
         ui_->pushButton_extractOrEmbed->setText("Extract Embed...");
     }
     else
@@ -84,7 +85,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
         if (vmeta)
         {
             ui_->lineEdit_fileName->setText(vmeta->fileName());
-            ui_->lineEdit_filePath->setText(vmeta->filePath());
         }
         ui_->pushButton_extractOrEmbed->setText("Embed File");
     }
@@ -99,10 +99,15 @@ VideoAssociatorDialog::VideoAssociatorDialog(
         ui_->timeEdit_timeOffset->setTime(time);
     }*/
 
-
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &VideoAssociatorDialog::close);
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
     connect(ui_->pushButton_chooseFile, &QPushButton::released, this, &VideoAssociatorDialog::onChooseFileReleased);
+
+    // Kind of ugly, but we don't have a callback for when the next video frame
+    // is decoded, so the best we can do is to update the UI frequently while
+    // the video is playing
+    timer_.setInterval(50);
+    connect(&timer_, &QTimer::timeout, this, &VideoAssociatorDialog::updateTimesFromVideo);
 }
 
 // ----------------------------------------------------------------------------
@@ -123,7 +128,24 @@ void VideoAssociatorDialog::onSaveReleased()
 {
     PROFILE(VideoAssociatorDialog, onSaveReleased);
 
-
+    if (currentVideoFilePath_.length() > 0)
+    {
+        if ([this]{
+            for (int i = 0; i != replayManager_->videoSourcesCount(); ++i)
+                if (replayManager_->videoSourcePath(i) == currentVideoFilePath_)
+                    return false;
+            return true;
+        }()) {
+            if (QMessageBox::question(this, "New Video Source Path",
+                    "Would you like to add \"" + currentVideoFilePath_ + "\" to the video search path?\n\n"
+                    ""
+                    "If you say no, the information will still be saved, but ReFramed will be unable to locate the video"
+                    "file when loading the replay.") == QMessageBox::Yes)
+            {
+                replayManager_->addVideoSource(currentVideoFilePath_, currentVideoFilePath_);
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -131,23 +153,29 @@ void VideoAssociatorDialog::onChooseFileReleased()
 {
     PROFILE(VideoAssociatorDialog, onChooseFileReleased);
 
-    /*
     QString fileName = QFileDialog::getOpenFileName(
         this, "Open Video File", "", "Video Files (*.mp4 *.mkv *.avi *.webm)");
     if (fileName.length() == 0)
-        return;*/
-    //QString fileName = "/media/ssbu/2022-08-04 - Basel Summer Weekly/2022-08-04 - Bo3 - TheComet (Pika) vs DeepFreeze (Joker) Game 1.mp4";
-    QString fileName = "/media/ssbu/2021-04-18 - NullSpace+TAEL/Weekly 2021-04-18 - Bo5 - TheComet (Pika) vs NullSpace (Wolf) Game 1.mp4";
+        return;
 
     rfcommon::Reference<rfcommon::MappedFile> f = new rfcommon::MappedFile;
     QByteArray ba = fileName.toUtf8();
     if (f->open(ba.constData()) == false)
         return;
 
+    QFileInfo fi(fileName);
+    currentVideoFileName_ = fi.fileName();
+    currentVideoFilePath_ = fi.absolutePath();
+    ui_->lineEdit_fileName->setText(currentVideoFileName_);
+
     currentVideoFile_ = f;
 
     if (videoPlugin_)
-        videoPlugin_->videoPlayerInterface()->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
+        if (auto i = videoPlugin_->videoPlayerInterface())
+        {
+            i->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
+            i->stepVideo(1);
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -158,9 +186,17 @@ void VideoAssociatorDialog::onPlayToggled()
     if (auto i = videoPlugin_->videoPlayerInterface())
     {
         if (i->isVideoPlaying())
+        {
             i->pauseVideo();
+            timer_.stop();
+        }
         else
+        {
             i->playVideo();
+            timer_.start();
+        }
+
+        updateTimesFromVideo();
     }
 }
 
@@ -170,11 +206,11 @@ void VideoAssociatorDialog::onNextFrame()
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
-        if (auto fdata = session_->tryGetFrameData())
-        {
-            i->pauseVideo();
-            i->stepVideo(1);
-        }
+    {
+        i->pauseVideo();
+        i->stepVideo(1);
+        updateTimesFromVideo();
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -186,6 +222,21 @@ void VideoAssociatorDialog::onPrevFrame()
     {
         i->pauseVideo();
         i->stepVideo(-1);
+        updateTimesFromVideo();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::updateTimesFromVideo()
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        auto frame = i->currentVideoGameFrame();
+
+        ui_->spinBox_frameOffset->setValue(frame.index());
+        ui_->timeEdit_timeOffset->setTime(QTime(0, 0).addMSecs(frame.secondsPassed() * 1000));
     }
 }
 

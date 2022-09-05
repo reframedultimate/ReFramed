@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     }
 
     rfapp::MainWindow mainWindow(hash40Strings);
-    
+
     // Make the main window as large as possible when not maximized
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());
 

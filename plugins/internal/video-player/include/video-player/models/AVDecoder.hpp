@@ -51,7 +51,9 @@ public:
     void giveNextAudioFrame(AVFrame* frame) override;
 
     bool seekNearKeyframe(int64_t codec_ts) override;
-    int64_t toCodecTimeStamp(int64_t ts, int num, int den) override;
+    int64_t toCodecTimeStamp(int64_t ts, int num, int den) const override;
+    int64_t fromCodecTimeStamp(int64_t codec_ts, int num, int den) const override;
+    void frameRate(int* num, int* den) const override;
 
 private:
     bool decodeNextPacket();
@@ -71,7 +73,7 @@ private:
     AVPacket* currentPacket_ = nullptr;
 
     // queues
-    rfcommon::FlatFreeList<FrameEntry, 64> freeFrameEntries_;
+    rfcommon::FlatFreeList<FrameEntry, 128> freeFrameEntries_;
     rfcommon::FreeList<FrameEntry> framePool_;
     rfcommon::FreeList<FrameEntry> picturePool_;
     rfcommon::Queue<FrameEntry> audioQueue_;

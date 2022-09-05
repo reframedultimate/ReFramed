@@ -66,6 +66,7 @@ void BufferedSeekableDecoder::closeFile()
 {
     mutex_.lock();
         requestShutdown_ = true;
+        cond_.wakeOne();
     mutex_.unlock();
     wait();
 
@@ -208,9 +209,21 @@ bool BufferedSeekableDecoder::seekNearKeyframe(int64_t ts)
 }
 
 // ----------------------------------------------------------------------------
-int64_t BufferedSeekableDecoder::toCodecTimeStamp(int64_t ts, int num, int den)
+int64_t BufferedSeekableDecoder::toCodecTimeStamp(int64_t ts, int num, int den) const
 {
     return decoder_->toCodecTimeStamp(ts, num, den);
+}
+
+// ----------------------------------------------------------------------------
+int64_t BufferedSeekableDecoder::fromCodecTimeStamp(int64_t codec_ts, int num, int den) const
+{
+    return decoder_->fromCodecTimeStamp(codec_ts, num, den);
+}
+
+// ----------------------------------------------------------------------------
+void BufferedSeekableDecoder::frameRate(int* num, int* den) const
+{
+    decoder_->frameRate(num, den);
 }
 
 // ----------------------------------------------------------------------------
@@ -394,7 +407,99 @@ void BufferedSeekableDecoder::run()
         }
         else if (vBack_.count() < vBackThreshold)
         {
+            int64_t earliestDecodedPTS;
+            if (vBack_.count())
+                earliestDecodedPTS = vBack_.peekBack()->frame->pts;
+            else if (vFront_.count())
+                earliestDecodedPTS = vFront_.peekBack()->frame->pts;
+            else
+            {
+                decodeFailed_ = true;
+                goto go_idle;
+            }
 
+            // We Try to decode the entire back queue in one go
+            rfcommon::Deque<FrameEntry> tmpDeque;
+            rfcommon::FreeList<FrameEntry> tmpPool;
+            for (int i = 0; i != balancedVBackSize - vBack_.count(); ++i)
+            {
+                FrameEntry* e = freeFrameEntries_.take();
+                if (e == nullptr)
+                    break;
+                tmpPool.put(e);
+            }
+
+            mutex_.unlock();
+                // Calculate where we need to seek to by subtracting the number
+                // of free frames we need to fill in from the current PTS
+                int fpsNum, fpsDen;
+                decoder_->frameRate(&fpsNum, &fpsDen);
+                int seekPTS = earliestDecodedPTS - decoder_->toCodecTimeStamp(tmpPool.count(), fpsDen, fpsNum);
+                if (seekPTS < 0)
+                    seekPTS = 0;
+
+                // Seek to that location
+                if (decoder_->seekNearKeyframe(seekPTS) == false)
+                {
+                    mutex_.lock();
+
+                    while (tmpPool.peek())
+                        freeFrameEntries_.put(tmpPool.take());
+
+                    decodeFailed_ = true;
+                    goto go_idle;
+                }
+
+                AVFrame* frame;
+                while (1)
+                {
+                    frame = decoder_->takeNextVideoFrame();
+                    if (frame == nullptr)
+                    {
+                        mutex_.lock();
+
+                        while (tmpDeque.count())
+                            vBack_.putBack(tmpDeque.takeFront());
+                        while (tmpPool.peek())
+                            freeFrameEntries_.put(tmpPool.take());
+
+                        decodeFailed_ = true;
+                        goto go_idle;
+                    }
+
+                    if (frame->pts >= earliestDecodedPTS)
+                    {
+                        decoder_->giveNextVideoFrame(frame);
+                        break;
+                    }
+
+                    FrameEntry* e = tmpPool.take();
+                    if (e)
+                    {
+                        e->frame = frame;
+                        tmpDeque.putFront(e);
+                    }
+                    else
+                    {
+                        e = tmpDeque.takeBack();
+                        decoder_->giveNextVideoFrame(e->frame);
+                        e->frame = frame;
+                        tmpDeque.putFront(e);
+                    }
+                }
+            mutex_.lock();
+
+            decodeFailed_ = tmpDeque.count() == 0;
+
+            while (tmpDeque.count())
+                vBack_.putBack(tmpDeque.takeFront());
+            while (tmpPool.peek())
+                freeFrameEntries_.put(tmpPool.take());
+
+            if (decodeFailed_)
+                goto go_idle;
+
+            continue;
         }
 
         go_idle:

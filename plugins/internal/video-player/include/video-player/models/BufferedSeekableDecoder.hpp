@@ -45,7 +45,9 @@ public:
     void givePrevAudioFrame(AVFrame* frame);
 
     bool seekNearKeyframe(int64_t ts) override;
-    int64_t toCodecTimeStamp(int64_t ts, int num, int den) override;
+    int64_t toCodecTimeStamp(int64_t ts, int num, int den) const override;
+    int64_t fromCodecTimeStamp(int64_t codec_ts, int num, int den) const override;
+    void frameRate(int* num, int* den) const override;
 
     int step(int deltaFrames);
 
@@ -57,7 +59,7 @@ private:
     QMutex mutex_;
     QWaitCondition cond_;
 
-    rfcommon::FlatFreeList<FrameEntry, 32> freeFrameEntries_;
+    rfcommon::FlatFreeList<FrameEntry, 128> freeFrameEntries_;
 
     rfcommon::Deque<FrameEntry> vFront_;
     rfcommon::Deque<FrameEntry> vBack_;

@@ -315,8 +315,13 @@ bool AVDecoder::seekNearKeyframe(int64_t target_ts)
     // https://stackoverflow.com/questions/20734814/ffmpeg-av-seek-frame-with-avseek-flag-any-causes-grey-screen
 
     // Seek and decode frame
-    log_->info("Seeking to %ld", target_ts);
     int seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, target_ts, AVSEEK_FLAG_BACKWARD);
+
+    // Some files don't start with a keyframe (mp4's created by Nintendo Switch)
+    // in which case the above seek will fail. Try again and seek to any frame.
+    if (seek_result < 0)
+        seek_result = av_seek_frame(inputCtx_, videoStreamIdx_, target_ts, AVSEEK_FLAG_ANY);
+
     if (seek_result < 0)
     {
         char buf[AV_ERROR_MAX_STRING_SIZE];
@@ -330,11 +335,27 @@ bool AVDecoder::seekNearKeyframe(int64_t target_ts)
 }
 
 // ----------------------------------------------------------------------------
-int64_t AVDecoder::toCodecTimeStamp(int64_t ts, int num, int den)
+int64_t AVDecoder::toCodecTimeStamp(int64_t ts, int num, int den) const
 {
     AVRational from = av_make_q(num, den);
     AVRational to = inputCtx_->streams[videoStreamIdx_]->time_base;
     return av_rescale_q(ts, from, to);
+}
+
+// ----------------------------------------------------------------------------
+int64_t AVDecoder::fromCodecTimeStamp(int64_t codec_ts, int num, int den) const
+{
+    AVRational from = inputCtx_->streams[videoStreamIdx_]->time_base;
+    AVRational to = av_make_q(num, den);
+    return av_rescale_q(codec_ts, from, to);
+}
+
+// ----------------------------------------------------------------------------
+void AVDecoder::frameRate(int* num, int* den) const
+{
+    AVRational r = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
+    *num = r.num;
+    *den = r.den;
 }
 
 // ----------------------------------------------------------------------------

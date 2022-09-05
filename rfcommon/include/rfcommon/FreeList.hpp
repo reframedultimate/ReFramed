@@ -29,6 +29,11 @@ public:
         return entry;
     }
 
+    Entry* peek() const
+    {
+        return first_;
+    }
+
     int count() const
     {
         const Entry* e = first_;

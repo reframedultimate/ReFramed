@@ -51,29 +51,7 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
     PROFILE(VideoPlayerPlugin, onGameSessionLoaded);
 
-    auto vmeta = game->tryGetVideoMeta();
-    if (!vmeta)
-        return;
-
-    if (vmeta->isEmbedded())
-    {
-        if (auto embed = game->tryGetVideoEmbed())
-            activeVideo_ = embed;
-    }
-    else
-    {
-#if defined(_WIN32)
-#   define SEPARATOR "\\"
-#else
-#   define SEPARATOR "/"
-#endif
-        rfcommon::String absFileName = rfcommon::String(vmeta->filePath()) + SEPARATOR + vmeta->fileName();
-        rfcommon::Reference<rfcommon::MappedFile> videoFile = new rfcommon::MappedFile;
-        if (videoFile->open(absFileName.cStr()) == false)
-            return;
-
-        activeVideo_ = new rfcommon::VideoEmbed(videoFile, videoFile->address(), videoFile->size());
-    }
+    activeVideo_ = game->tryGetVideoEmbed();
 
     if (activeVideo_)
         videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
