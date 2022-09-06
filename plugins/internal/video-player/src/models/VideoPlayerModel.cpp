@@ -58,12 +58,15 @@ void VideoPlayerModel::closeVideo()
 
     pauseVideo();
 
+    dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
     if (currentFrame_)
         decoder_->giveNextVideoFrame(currentFrame_);
     currentFrame_ = nullptr;
 
     decoder_->closeFile();
     isOpen_ = false;
+
+    dispatcher.dispatch(&VideoPlayerListener::onFileClosed);
 }
 
 // ----------------------------------------------------------------------------
