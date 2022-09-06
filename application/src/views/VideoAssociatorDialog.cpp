@@ -74,7 +74,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 
     // Fill in UI with values from the session object
     auto vmeta = session_->tryGetVideoMeta();
-    auto embed = session_->tryGetVideo();
+    auto embed = session_->tryGetVideoEmbed();
     if (embed)
     {
         ui_->lineEdit_fileName->setEnabled(false);
@@ -84,24 +84,31 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     {
         if (vmeta)
         {
-            ui_->lineEdit_fileName->setText(vmeta->fileName());
+            currentVideoFileName_ = vmeta->fileName();
+            ui_->lineEdit_fileName->setText(currentVideoFileName_);
         }
+
         ui_->pushButton_extractOrEmbed->setText("Embed File");
     }
 
-    /*
     if (vmeta)
     {
-        QTime time;
-        time.addSecs(vmeta->frameOffset().seconds());
+        ui_->spinBox_frameOffset->setValue(vmeta->frameOffset().index());
+        ui_->timeEdit_timeOffset->setTime(QTime(0, 0).addMSecs(vmeta->frameOffset().secondsPassed() * 1000));
+    }
 
-        ui_->spinBox_frameOffset->setValue(vmeta->frameOffset().frames());
-        ui_->timeEdit_timeOffset->setTime(time);
-    }*/
+    // Load video if possible
+    if (videoView_)
+        if (auto video = session_->tryGetVideo())
+            if (auto i = videoPlugin_->videoPlayerInterface())
+                if (i->openVideoFromMemory(video->address(), video->size()))
+                    if (vmeta)
+                        i->seekVideoToGameFrame(vmeta->frameOffset());
 
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &VideoAssociatorDialog::close);
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
     connect(ui_->pushButton_chooseFile, &QPushButton::released, this, &VideoAssociatorDialog::onChooseFileReleased);
+    connect(ui_->spinBox_frameOffset, qOverload<int>(&QSpinBox::valueChanged), this, &VideoAssociatorDialog::onFrameOffsetChanged);
 
     // Kind of ugly, but we don't have a callback for when the next video frame
     // is decoded, so the best we can do is to update the UI frequently while
@@ -187,9 +194,26 @@ void VideoAssociatorDialog::onChooseFileReleased()
     if (videoPlugin_)
         if (auto i = videoPlugin_->videoPlayerInterface())
         {
+            timer_.stop();
+            i->pauseVideo();
             i->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
             i->stepVideo(1);
+            updateTimesFromVideo();
         }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onFrameOffsetChanged(int value)
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        timer_.stop();
+        i->pauseVideo();
+        i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(value));
+        updateTimesFromVideo();
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -201,13 +225,13 @@ void VideoAssociatorDialog::onPlayToggled()
     {
         if (i->isVideoPlaying())
         {
-            i->pauseVideo();
             timer_.stop();
+            i->pauseVideo();
         }
         else
         {
-            i->playVideo();
             timer_.start();
+            i->playVideo();
         }
 
         updateTimesFromVideo();
@@ -249,8 +273,14 @@ void VideoAssociatorDialog::updateTimesFromVideo()
     {
         auto frame = i->currentVideoGameFrame();
 
+        bool save1 = ui_->spinBox_frameOffset->blockSignals(true);
+        bool save2 = ui_->timeEdit_timeOffset->blockSignals(true);
+
         ui_->spinBox_frameOffset->setValue(frame.index());
         ui_->timeEdit_timeOffset->setTime(QTime(0, 0).addMSecs(frame.secondsPassed() * 1000));
+
+        ui_->spinBox_frameOffset->blockSignals(save1);
+        ui_->timeEdit_timeOffset->blockSignals(save2);
     }
 }
 

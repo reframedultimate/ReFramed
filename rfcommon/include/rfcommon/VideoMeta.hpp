@@ -19,7 +19,7 @@ public:
     uint32_t save(FILE* fp);
 
     const char* fileName() const { return fileName_.cStr(); }
-    rfcommon::FrameIndex offset() const { return offset_; }
+    rfcommon::FrameIndex frameOffset() const { return offset_; }
     bool isEmbedded() const { return isEmbedded_; }
 
 private:

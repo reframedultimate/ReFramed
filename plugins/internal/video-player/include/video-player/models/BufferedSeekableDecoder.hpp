@@ -52,6 +52,9 @@ public:
     int step(int deltaFrames);
 
 private:
+    bool handleSeekRequest(const int balancedVBackSize);
+    bool handleDecodeForwards(const int vFrontThreshold, const int balancedVFrontSize);
+    bool handleDecodeBackwards(const int vBackThreshold, const int balancedVBackSize);
     void run() override;
 
 private:

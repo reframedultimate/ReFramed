@@ -259,7 +259,7 @@ void AVDecoder::giveNextVideoFrame(AVFrame* frame)
     if (e == nullptr)
     {
         // Should never happen but just in case if it does, clean up
-        log_->error("Used up all free frame entries!");
+        log_->error("AVDecoder::giveNextVideoFrame(): Used up all free frame entries!");
         av_free(frame->data[0]);
         av_frame_free(&frame);
     }
@@ -292,7 +292,7 @@ void AVDecoder::giveNextAudioFrame(AVFrame* frame)
     if (e == nullptr)
     {
         // Should never happen but just in case if it does, clean up
-        log_->error("Used up all free frame entries!");
+        log_->error("AVDecoder::giveNextAudioFrame(): Used up all free frame entries!");
         av_frame_free(&frame);
     }
     else
@@ -405,7 +405,7 @@ bool AVDecoder::decodeNextPacket()
                 frameEntry = freeFrameEntries_.take();
                 if (frameEntry == nullptr)
                 {
-                    log_->error("Used up all free frame entries!");
+                    log_->error("AVDecoder::decodeNextPacket(): framePool_.take(): Used up all free frame entries!");
                     goto alloc_frame_failed;
                 }
                 frameEntry->frame = av_frame_alloc();
@@ -433,7 +433,7 @@ bool AVDecoder::decodeNextPacket()
                 picEntry = freeFrameEntries_.take();
                 if (picEntry == nullptr)
                 {
-                    log_->error("Used up all free frame entries!");
+                    log_->error("AVDecoder::decodeNextPacket(): picturePool_.take(): Used up all free frame entries!");
                     goto alloc_picture_failed;
                 }
                 picEntry->frame = av_frame_alloc();

@@ -73,7 +73,7 @@ private:
     AVPacket* currentPacket_ = nullptr;
 
     // queues
-    rfcommon::FlatFreeList<FrameEntry, 128> freeFrameEntries_;
+    rfcommon::FlatFreeList<FrameEntry, 128+16> freeFrameEntries_;
     rfcommon::FreeList<FrameEntry> framePool_;
     rfcommon::FreeList<FrameEntry> picturePool_;
     rfcommon::Queue<FrameEntry> audioQueue_;

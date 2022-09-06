@@ -122,16 +122,34 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
     if (isOpen_ == false)
         return;
 
+    // Check if seeking is even necessary, as it's quite expensive
+    if (currentFrame_)
+    {
+        int currentFrame = decoder_->fromCodecTimeStamp(currentFrame_->pts, 1, 60);
+        int diff = frameNumber.index() - currentFrame;
+        if (std::abs(diff) < 32)
+        {
+            stepVideo(diff);
+            return;
+        }
+    }
+
     if (currentFrame_)
         decoder_->giveNextVideoFrame(currentFrame_);
 
     int64_t targetPTS = decoder_->toCodecTimeStamp(frameNumber.index(), 1, 60);
     if (decoder_->seekNearKeyframe(targetPTS) == false)
+    {
+        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
         return;
+    }
 
     currentFrame_ = decoder_->takeNextVideoFrame();
     if (currentFrame_ == nullptr)
+    {
+        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
         return;
+    }
 
     QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
     dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);

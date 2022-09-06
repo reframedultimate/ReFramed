@@ -37,6 +37,7 @@ public:
 private slots:
     void onSaveReleased();
     void onChooseFileReleased();
+    void onFrameOffsetChanged(int value);
     void onPlayToggled();
     void onNextFrame();
     void onPrevFrame();
