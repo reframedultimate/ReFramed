@@ -43,6 +43,8 @@ bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
         decoder_->frameRate(&num, &den);
         timer_.setInterval(den * 1000 / num);
         dispatcher.dispatch(&VideoPlayerListener::onFileOpened);
+
+        stepVideo(1);
         return true;
     }
     return false;

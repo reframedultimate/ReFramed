@@ -41,7 +41,6 @@ bool MappedFile::open(const char* fileName)
         goto fstat_failed;
     if (!S_ISREG(stbuf.st_mode))
         goto fstat_failed;
-    size_ = stbuf.st_size;
 
     // Map file into memory. We use MAP_PRIVATE since the file will always
     // be opened in read-only mode and thus we don't need to worry about

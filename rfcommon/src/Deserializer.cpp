@@ -162,7 +162,7 @@ uint64_t Deserializer::read(void* dst, uint64_t len)
 {
     NOPROFILE();
 
-    int actual = bytesLeft();
+    uint64_t actual = bytesLeft();
     if (len > actual)
         len = actual;
     memcpy(dst, readPtr_, len);
@@ -219,7 +219,10 @@ void Deserializer::seekSet(int64_t offset)
     NOPROFILE();
 
     readPtr_ = begin_ + offset;
-    assert(readPtr_ <= end_ && readPtr_ >= begin_);
+    if (readPtr_ > end_)
+        readPtr_ = end_;
+    if (readPtr_ < begin_)
+        readPtr_ = begin_;
 }
 
 // ----------------------------------------------------------------------------
@@ -228,7 +231,10 @@ void Deserializer::seekCur(int64_t offset)
     NOPROFILE();
 
     readPtr_ += offset;
-    assert(readPtr_ <= end_ && readPtr_ >= begin_);
+    if (readPtr_ > end_)
+        readPtr_ = end_;
+    if (readPtr_ < begin_)
+        readPtr_ = begin_;
 }
 
 // ----------------------------------------------------------------------------
@@ -237,7 +243,10 @@ void Deserializer::seekEnd(int64_t offset)
     NOPROFILE();
 
     readPtr_ = end_ - offset;
-    assert(readPtr_ <= end_ && readPtr_ >= begin_);
+    if (readPtr_ > end_)
+        readPtr_ = end_;
+    if (readPtr_ < begin_)
+        readPtr_ = begin_;
 }
 
 }

@@ -53,11 +53,19 @@ void VideoPlayerPlugin::onGameSessionLoaded(rfcommon::Session* game)
 
     activeVideo_ = game->tryGetVideo();
 
-    if (activeVideo_)
+    if (activeVideo_.isNull())
+        return;
+
+    if (videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size()) == false)
     {
-        videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size());
-        videoPlayer_->playVideo();
+        activeVideo_.drop();
+        return;
     }
+
+    if (auto vmeta = game->tryGetVideoMeta())
+        videoPlayer_->seekVideoToGameFrame(vmeta->frameOffset());
+
+    videoPlayer_->playVideo();
 }
 
 // ----------------------------------------------------------------------------
