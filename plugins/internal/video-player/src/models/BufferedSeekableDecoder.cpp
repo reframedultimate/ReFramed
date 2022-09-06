@@ -1,5 +1,5 @@
-#include "video-player/models/AVDecoder.hpp"
-#include "video-player/models/BufferedSeekableDecoder.hpp"
+#include "vod-review/models/AVDecoder.hpp"
+#include "vod-review/models/BufferedSeekableDecoder.hpp"
 
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Profiler.hpp"

@@ -1,7 +1,7 @@
 #include "ui_VODReviewView.h"
-#include "video-player/views/VODReviewView.hpp"
-#include "video-player/views/VideoPlayerView.hpp"
-#include "video-player/models/VideoPlayerModel.hpp"
+#include "vod-review/views/VODReviewView.hpp"
+#include "vod-review/views/VideoPlayerView.hpp"
+#include "vod-review/models/VideoPlayerModel.hpp"
 
 // ----------------------------------------------------------------------------
 VODReviewView::VODReviewView(VideoPlayerModel* videoPlayer, QWidget* parent)

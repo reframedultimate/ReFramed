@@ -1,8 +1,8 @@
-#include "video-player/VODReviewPlugin.hpp"
-#include "video-player/models/AVDecoder.hpp"
-#include "video-player/models/BufferedSeekableDecoder.hpp"
-#include "video-player/models/VideoPlayerModel.hpp"
-#include "video-player/views/VODReviewView.hpp"
+#include "vod-review/VODReviewPlugin.hpp"
+#include "vod-review/models/AVDecoder.hpp"
+#include "vod-review/models/BufferedSeekableDecoder.hpp"
+#include "vod-review/models/VideoPlayerModel.hpp"
+#include "vod-review/views/VODReviewView.hpp"
 
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"

@@ -1,6 +1,6 @@
-#include "video-player/listeners/VideoPlayerListener.hpp"
-#include "video-player/models/BufferedSeekableDecoder.hpp"
-#include "video-player/models/VideoPlayerModel.hpp"
+#include "vod-review/listeners/VideoPlayerListener.hpp"
+#include "vod-review/models/BufferedSeekableDecoder.hpp"
+#include "vod-review/models/VideoPlayerModel.hpp"
 
 #include "rfcommon/Profiler.hpp"
 

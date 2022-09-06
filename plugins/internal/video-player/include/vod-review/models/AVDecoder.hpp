@@ -1,6 +1,6 @@
 #pragma once
 
-#include "video-player/interfaces/AVDecoderInterface.hpp"
+#include "vod-review/interfaces/AVDecoderInterface.hpp"
 #include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/FreeList.hpp"
 #include "rfcommon/Queue.hpp"

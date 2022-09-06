@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.2)
 
 cmake_policy (SET CMP0074 NEW)
-set (PLUGIN_NAME "video-player")
+set (PLUGIN_NAME "vod-review")
 
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 

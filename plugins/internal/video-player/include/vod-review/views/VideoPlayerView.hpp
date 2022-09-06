@@ -1,6 +1,6 @@
 #pragma once
 
-#include "video-player/listeners/VideoPlayerListener.hpp"
+#include "vod-review/listeners/VideoPlayerListener.hpp"
 #include <QWidget>
 
 class VideoSurface;

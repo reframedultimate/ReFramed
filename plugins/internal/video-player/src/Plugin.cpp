@@ -1,6 +1,6 @@
-#include "video-player/PluginConfig.hpp"
-#include "video-player/VideoPlayerPlugin.hpp"
-#include "video-player/VODReviewPlugin.hpp"
+#include "vod-review/PluginConfig.hpp"
+#include "vod-review/VideoPlayerPlugin.hpp"
+#include "vod-review/VODReviewPlugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"
 

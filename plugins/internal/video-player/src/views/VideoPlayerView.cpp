@@ -1,6 +1,6 @@
 #include "rfcommon/Profiler.hpp"
-#include "video-player/views/VideoPlayerView.hpp"
-#include "video-player/models/VideoPlayerModel.hpp"
+#include "vod-review/views/VideoPlayerView.hpp"
+#include "vod-review/models/VideoPlayerModel.hpp"
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 #include <QPainter>
