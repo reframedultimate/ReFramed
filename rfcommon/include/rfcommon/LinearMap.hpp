@@ -44,7 +44,7 @@ public:
         swap(first.values_, second.values_);
     }
 
-    Iterator insertNew(const K& key, const V& value)
+    Iterator insertIfNew(const K& key, const V& value)
     {
         S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
         if (offset == keys_.count() || keys_[offset] != key)
@@ -106,6 +106,12 @@ public:
     {
         keys_.clear();
         values_.clear();
+    }
+
+    void clearCompact()
+    {
+        keys_.clearCompact();
+        values_.clearCompact();
     }
 
     S count() { return keys_.count(); }

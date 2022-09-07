@@ -81,6 +81,18 @@ public:
         return tmp;
     }
 
+    LinearMapIterator& operator+=(int rhs)
+    {
+        keyIt_ += rhs;
+        valueIt_ += rhs;
+    }
+
+    LinearMapIterator& operator-=(int rhs)
+    {
+        keyIt_ -= rhs;
+        valueIt_ -= rhs;
+    }
+
     inline bool operator==(const LinearMapIterator& rhs) const { return keyIt_ == rhs.keyIt_; }
     inline bool operator!=(const LinearMapIterator& rhs) const { return !operator==(rhs); }
 
@@ -88,6 +100,19 @@ private:
     typename SmallVector<K, N, S>::Iterator keyIt_;
     typename SmallVector<V, N, S>::Iterator valueIt_;
 };
+
+template <typename K, typename V, int N, typename S>
+inline LinearMapIterator<K, V, N, S> operator+(LinearMapIterator<K, V, N, S> lhs, int rhs)
+{
+    lhs += rhs;
+    return lhs;
+}
+template <typename K, typename V, int N, typename S>
+inline LinearMapIterator<K, V, N, S> operator-(LinearMapIterator<K, V, N, S> lhs, int rhs)
+{
+    lhs -= rhs;
+    return lhs;
+}
 
 template <typename K, typename V, int N, typename S>
 class ConstLinearMapIterator
@@ -131,6 +156,18 @@ public:
         return tmp;
     }
 
+    ConstLinearMapIterator& operator+=(int rhs)
+    {
+        keyIt_ += rhs;
+        valueIt_ += rhs;
+    }
+
+    ConstLinearMapIterator& operator-=(int rhs)
+    {
+        keyIt_ -= rhs;
+        valueIt_ -= rhs;
+    }
+
     inline bool operator==(const ConstLinearMapIterator& rhs) const { return keyIt_ == rhs.keyIt_; }
     inline bool operator!=(const ConstLinearMapIterator& rhs) const { return !operator==(rhs); }
 
@@ -138,5 +175,18 @@ private:
     typename SmallVector<K, N, S>::ConstIterator keyIt_;
     typename SmallVector<V, N, S>::ConstIterator valueIt_;
 };
+
+template <typename K, typename V, int N, typename S>
+inline ConstLinearMapIterator<K, V, N, S> operator+(ConstLinearMapIterator<K, V, N, S> lhs, int rhs)
+{
+    lhs += rhs;
+    return lhs;
+}
+template <typename K, typename V, int N, typename S>
+inline ConstLinearMapIterator<K, V, N, S> operator-(ConstLinearMapIterator<K, V, N, S> lhs, int rhs)
+{
+    lhs -= rhs;
+    return lhs;
+}
 
 }

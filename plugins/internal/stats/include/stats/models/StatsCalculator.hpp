@@ -17,7 +17,7 @@ class StatsCalculatorListener;
 class StatsCalculator
 {
 public:
-    static const int MAX_FIGHTERS = 2; 
+    static const int MAX_FIGHTERS = 2;
 
     StatsCalculator();
 
@@ -33,6 +33,11 @@ public:
      */
     void updateStatistics(const rfcommon::Frame<4>& frame);
 
+    /*!
+     * \brief Calculates statistics for all frames in fdata and adds them
+     * (incrementally) to the current stats.
+     * \param fdata Frame data
+     */
     void udpateStatisticsBulk(const rfcommon::FrameData* fdata);
 
     double avgDeathPercent(int fighterIdx) const;

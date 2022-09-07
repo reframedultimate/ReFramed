@@ -486,7 +486,7 @@ double StatsCalculator::openingsPerKill(int fighterIdx) const
 {
     // See issue #10 - Used to be numNeutralWins() / numStocksTaken(),
     // but the problem is this assumes that the last few neutral openings
-    // lead to a kill.
+    // lead to a kill. Thanks to kensen on pikacord for pointing this out.
     //
     // suppose:
     //   you win neutral 2 times to take the first stock

@@ -40,7 +40,7 @@ void MappingInfoStage::add(StageID stageID, const char* name)
 
     if (stageID.isValid() == false)
         return;
-    map_.insertNew(stageID, name);
+    map_.insertIfNew(stageID, name);
 }
 
 // ----------------------------------------------------------------------------
