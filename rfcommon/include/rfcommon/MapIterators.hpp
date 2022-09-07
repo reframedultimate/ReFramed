@@ -85,12 +85,14 @@ public:
     {
         keyIt_ += rhs;
         valueIt_ += rhs;
+        return *this;
     }
 
     LinearMapIterator& operator-=(int rhs)
     {
         keyIt_ -= rhs;
         valueIt_ -= rhs;
+        return *this;
     }
 
     inline bool operator==(const LinearMapIterator& rhs) const { return keyIt_ == rhs.keyIt_; }
@@ -160,12 +162,14 @@ public:
     {
         keyIt_ += rhs;
         valueIt_ += rhs;
+        return *this;
     }
 
     ConstLinearMapIterator& operator-=(int rhs)
     {
         keyIt_ -= rhs;
         valueIt_ -= rhs;
+        return *this;
     }
 
     inline bool operator==(const ConstLinearMapIterator& rhs) const { return keyIt_ == rhs.keyIt_; }
