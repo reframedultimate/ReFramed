@@ -45,6 +45,7 @@ bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
         dispatcher.dispatch(&VideoPlayerListener::onFileOpened);
 
         stepVideo(1);
+
         return true;
     }
     return false;

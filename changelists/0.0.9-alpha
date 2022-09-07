@@ -1,8 +1,8 @@
 Enhancements
-- Statistics Plugin
-  + Added a websocket server that sends statistics as JSON
 - Replay files can now store video metadata and embedded video files
 - Video player works (tm)
+- Statistics Plugin
+  + Added a websocket server that sends statistics as JSON
 
 Bugfixes
 - Fixed order of event dispatches when plugins are loaded/unloaded

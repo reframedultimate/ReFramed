@@ -67,7 +67,7 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
                 VERBATIM)
 			install (
 				FILES ${DLL_FILENAME}
-				DESTINATION ${REFRAMED_BUILD_PLUGINDEPSDIR})
+				DESTINATION ${REFRAMED_INSTALL_PLUGINDEPSDIR})
         endforeach ()
     endif ()
 endif ()

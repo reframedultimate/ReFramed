@@ -109,12 +109,16 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
     connect(ui_->pushButton_chooseFile, &QPushButton::released, this, &VideoAssociatorDialog::onChooseFileReleased);
     connect(ui_->spinBox_frameOffset, qOverload<int>(&QSpinBox::valueChanged), this, &VideoAssociatorDialog::onFrameOffsetChanged);
+    connect(ui_->timeEdit_timeOffset, &QTimeEdit::timeChanged, this, &VideoAssociatorDialog::onTimeOffsetChanged);
+    connect(ui_->pushButton_stepForwards, &QPushButton::released, this, &VideoAssociatorDialog::onNextFrame);
+    connect(ui_->pushButton_stepBackwards, &QPushButton::released, this, &VideoAssociatorDialog::onPrevFrame);
+    connect(ui_->pushButton_playPause, &QPushButton::released, this, &VideoAssociatorDialog::onPlayToggled);
 
     // Kind of ugly, but we don't have a callback for when the next video frame
     // is decoded, so the best we can do is to update the UI frequently while
     // the video is playing
     timer_.setInterval(50);
-    connect(&timer_, &QTimer::timeout, this, &VideoAssociatorDialog::updateTimesFromVideo);
+    connect(&timer_, &QTimer::timeout, this, &VideoAssociatorDialog::updateUIOffsets);
 }
 
 // ----------------------------------------------------------------------------
@@ -146,7 +150,7 @@ void VideoAssociatorDialog::onSaveReleased()
             if (QMessageBox::question(this, "New Video Source Path",
                     "Would you like to add \"" + currentVideoFilePath_ + "\" to the video search path?\n\n"
                     ""
-                    "If you say no, the information will still be saved, but ReFramed will be unable to locate the video"
+                    "If you say no, the information will still be saved, but ReFramed will be unable to locate the video "
                     "file when loading the replay.") == QMessageBox::Yes)
             {
                 replayManager_->addVideoSource(currentVideoFilePath_, currentVideoFilePath_);
@@ -196,9 +200,10 @@ void VideoAssociatorDialog::onChooseFileReleased()
         {
             timer_.stop();
             i->pauseVideo();
+            updateUIVideoButtons();
+
             i->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
-            i->stepVideo(1);
-            updateTimesFromVideo();
+            updateUIOffsets();
         }
 }
 
@@ -211,8 +216,27 @@ void VideoAssociatorDialog::onFrameOffsetChanged(int value)
     {
         timer_.stop();
         i->pauseVideo();
+        updateUIVideoButtons();
+
         i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(value));
-        updateTimesFromVideo();
+        updateUIOffsets();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::onTimeOffsetChanged(const QTime& time)
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        int offsetMS = QTime(0, 0).msecsTo(time);
+        timer_.stop();
+        i->pauseVideo();
+        updateUIVideoButtons();
+
+        i->seekVideoToGameFrame(rfcommon::FrameIndex::fromSeconds(offsetMS / 1000.0));
+        updateUIOffsets();
     }
 }
 
@@ -234,7 +258,8 @@ void VideoAssociatorDialog::onPlayToggled()
             i->playVideo();
         }
 
-        updateTimesFromVideo();
+        updateUIVideoButtons();
+        updateUIOffsets();
     }
 }
 
@@ -246,8 +271,10 @@ void VideoAssociatorDialog::onNextFrame()
     if (auto i = videoPlugin_->videoPlayerInterface())
     {
         i->pauseVideo();
+        updateUIVideoButtons();
+
         i->stepVideo(1);
-        updateTimesFromVideo();
+        updateUIOffsets();
     }
 }
 
@@ -259,13 +286,15 @@ void VideoAssociatorDialog::onPrevFrame()
     if (auto i = videoPlugin_->videoPlayerInterface())
     {
         i->pauseVideo();
+        updateUIVideoButtons();
+
         i->stepVideo(-1);
-        updateTimesFromVideo();
+        updateUIOffsets();
     }
 }
 
 // ----------------------------------------------------------------------------
-void VideoAssociatorDialog::updateTimesFromVideo()
+void VideoAssociatorDialog::updateUIOffsets()
 {
     if (videoPlugin_ == nullptr)
         return;
@@ -281,6 +310,17 @@ void VideoAssociatorDialog::updateTimesFromVideo()
 
         ui_->spinBox_frameOffset->blockSignals(save1);
         ui_->timeEdit_timeOffset->blockSignals(save2);
+    }
+}
+
+// ----------------------------------------------------------------------------
+void VideoAssociatorDialog::updateUIVideoButtons()
+{
+    if (videoPlugin_ == nullptr)
+        return;
+    if (auto i = videoPlugin_->videoPlayerInterface())
+    {
+        ui_->pushButton_playPause->setText(i->isVideoPlaying() ? "Pause" : "Play");
     }
 }
 

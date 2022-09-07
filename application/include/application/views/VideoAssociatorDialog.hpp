@@ -38,11 +38,13 @@ private slots:
     void onSaveReleased();
     void onChooseFileReleased();
     void onFrameOffsetChanged(int value);
+    void onTimeOffsetChanged(const QTime& time);
     void onPlayToggled();
     void onNextFrame();
     void onPrevFrame();
 
-    void updateTimesFromVideo();
+    void updateUIOffsets();
+    void updateUIVideoButtons();
 
 private:
     Ui::VideoAssociatorDialog* ui_;

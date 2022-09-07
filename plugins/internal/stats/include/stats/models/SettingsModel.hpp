@@ -139,5 +139,5 @@ private:
     bool obsEnabled_ = false;
     bool wsEnabled_ = false;
     bool wsAutoStart_ = false;
-    bool wsSecureMode_ = true;
+    bool wsSecureMode_ = false;
 };

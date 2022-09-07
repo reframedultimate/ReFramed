@@ -50,6 +50,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_4">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Set None</string>
             </property>
@@ -169,21 +172,21 @@
    <item row="1" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="pushButton_stepBackwards">
        <property name="text">
         <string>&lt;</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="pushButton_playPause">
        <property name="text">
         <string>Play</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="pushButton_stepForwards">
        <property name="text">
         <string>&gt;</string>
        </property>
@@ -191,6 +194,9 @@
      </item>
      <item>
       <widget class="QSlider" name="slider_videoPosition">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

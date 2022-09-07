@@ -12,6 +12,14 @@ FrameIndex FrameIndex::fromValue(Type value)
 }
 
 // ----------------------------------------------------------------------------
+FrameIndex FrameIndex::fromSeconds(double seconds)
+{
+    NOPROFILE();
+
+    return FrameIndex(static_cast<Type>(seconds * 60.0));
+}
+
+// ----------------------------------------------------------------------------
 FrameIndex::~FrameIndex()
 {}
 

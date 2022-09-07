@@ -11,6 +11,7 @@ public:
     typedef uint32_t Type;
 
     static FrameIndex fromValue(Type value);
+    static FrameIndex fromSeconds(double seconds);
 
     ~FrameIndex();
 
