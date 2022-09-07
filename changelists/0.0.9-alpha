@@ -1,0 +1,11 @@
+Enhancements
+- Statistics Plugin
+  + Added a websocket server that sends statistics as JSON
+- Replay files can now store video metadata and embedded video files
+- Video player works (tm)
+
+Bugfixes
+- Fixed order of event dispatches when plugins are loaded/unloaded
+
+Known Bugs
+- Video player may crash when seeking. Issue is known but hard to fix.
