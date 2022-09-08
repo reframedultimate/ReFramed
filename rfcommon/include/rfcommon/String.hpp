@@ -64,6 +64,14 @@ public:
         return *this;
     }
 
+    bool replaceWith(SmallString other)
+    {
+        if (*this == other)
+            return true;
+        swap(*this, other);
+        return false;
+    }
+
     void resize(S count)
     {
         int nullPos = length();  // number of chars without null terminator

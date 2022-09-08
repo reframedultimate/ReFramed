@@ -6,12 +6,13 @@
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/FighterFlags.hpp"
 #include "rfcommon/FighterStocks.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
+#include "rfcommon/TrainingMetaData.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoFileResolver.hpp"
@@ -312,6 +313,7 @@ static bool loadLegacy_1_3(
     SmallVector<FighterID, 2> playerFighterIDs;
     SmallVector<String, 2> playerTags;
     SmallVector<String, 2> playerNames;
+    SmallVector<String, 2> playerSponsors;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -321,6 +323,7 @@ static bool loadLegacy_1_3(
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
+        playerSponsors.emplace("");
     }
 
     // There must be at least 2 fighters, otherwise the data is invalid
@@ -337,15 +340,19 @@ static bool loadLegacy_1_3(
     json jWinner = jGameInfo["winner"];
 
     Reference<MetaData> metaData = MetaData::newSavedGameSession(
+        "", "",
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
+        std::move(playerSponsors),
+        SmallVector<String, 2>(),
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
         SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
         SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
+        "",
         jWinner.get<int>());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -432,7 +439,7 @@ static bool loadLegacy_1_3(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        assert(winner == static_cast<GameMetaData*>(metaData.get())->winner());
+        assert(winner == metaData->asGame()->winner());
     }
 #endif
 
@@ -554,6 +561,7 @@ static bool loadLegacy_1_4(
     SmallVector<FighterID, 2> playerFighterIDs;
     SmallVector<String, 2> playerTags;
     SmallVector<String, 2> playerNames;
+    SmallVector<String, 2> playerSponsors;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
@@ -567,6 +575,7 @@ static bool loadLegacy_1_4(
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
         playerNames.emplace(jName.is_string() ?
             jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+        playerSponsors.emplace("");
 
         fighterCount++;
     }
@@ -607,9 +616,21 @@ static bool loadLegacy_1_4(
         winner = -1;
 
     Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        timeStarted, timeEnded, stageID, std::move(playerFighterIDs),
-            std::move(playerTags), std::move(playerNames), gameNumber,
-            setNumber, format, winner);
+        "",
+        "",
+        timeStarted,
+        timeEnded,
+        stageID,
+        std::move(playerFighterIDs),
+        std::move(playerTags),
+        std::move(playerNames),
+        std::move(playerSponsors),
+        SmallVector<String, 2>(),
+        gameNumber,
+        setNumber,
+        format,
+        "",
+        winner);
 
     const std::string streamDecoded = jPlayerStates.is_string() ?
         base64_decode(jPlayerStates.get<std::string>()) : "";
@@ -1300,7 +1321,7 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
 
     // Winner might have changed
     if (metaData_ && metaData_->type() == MetaData::GAME)
-        static_cast<GameMetaData*>(metaData_.get())->setWinner(findWinner(frame));
+        metaData_->asGame()->setWinner(findWinner(frame));
 }
 
 // ----------------------------------------------------------------------------
@@ -1320,6 +1341,16 @@ static int findWinner(const Frame<4>& frame)
 {
     PROFILE(SessionGlobal, findWinner);
 
+    // Small caveat: When a player dies, his stock count is decreased before his
+    // damage is reset, which means there can be a brief period where it looks 
+    // like he lost the lead even though the opponent technically has less damage.
+    // 
+    // The player transitions to FIGHTER_STATUS_KIND_DEAD for 1 frame, and
+    // then the stock count is decreased and the state changes to FIGHTER_STATUS_KIND_STANDBY
+    // for 61 total frames, until finally the damage is reset and the state changes
+    // to FIGHTER_STATUS_KIND_REBIRTH
+    static const auto FIGHTER_STATUS_KIND_STANDBY = FighterStatus::fromValue(470);
+
     // The winner is the player with most stocks and least damage
     int winneridx = 0;
     for (int i = 1; i != frame.count(); ++i)
@@ -1330,8 +1361,13 @@ static int findWinner(const Frame<4>& frame)
         if (current.stocks() > winner.stocks())
             winneridx = i;
         else if (current.stocks() == winner.stocks())
-            if (current.damage() < winner.damage())
+        {
+            const float currentDmg = current.status() == FIGHTER_STATUS_KIND_STANDBY ? 0.0 : current.damage();
+            const float winnerDmg = winner.status() == FIGHTER_STATUS_KIND_STANDBY ? 0.0 : winner.damage();
+
+            if (currentDmg < winnerDmg)
                 winneridx = i;
+        }
     }
 
     return winneridx;

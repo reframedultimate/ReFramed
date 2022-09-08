@@ -2,12 +2,12 @@
 #include "application/views/ReplayEditorDialog.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/SetFormat.hpp"
 
-#include <QFormLayout>
+#include <QGridLayout>
 #include <QLineEdit>
 #include <QLabel>
 #include <QMessageBox>
@@ -45,16 +45,30 @@ ReplayEditorDialog::ReplayEditorDialog(
     switch (mdata->type())
     {
         case rfcommon::MetaData::GAME: {
-            auto game = static_cast<rfcommon::GameMetaData*>(mdata);
-            ui_->gameNumber->setValue(game->gameNumber().value());
+            auto game = mdata->asGame();
+
+            ui_->tournamentName->setText(game->tournamentName().cStr());
+            ui_->eventName->setText(game->eventName().cStr());
+
             ui_->setNumber->setValue(game->setNumber().value());
             ui_->setFormat->setCurrentIndex(game->setFormat().index());
             ui_->customSetFormat->setVisible(game->setFormat().type() == rfcommon::SetFormat::OTHER);
             if (game->setFormat().type() == rfcommon::SetFormat::OTHER)
                 ui_->customSetFormat->setText(game->setFormat().longDescription());
+            ui_->gameNumber->setValue(game->gameNumber().value());
+            ui_->round->setText(game->roundName().cStr());
+
+            const auto& comms = game->commentators();
+            if (comms.count() > 0)
+                ui_->commentator1->setText(comms[0].cStr());
+            if (comms.count() > 1)
+                ui_->commentator2->setText(comms[1].cStr());
         } break;
 
         case rfcommon::MetaData::TRAINING: {
+            ui_->groupBox_tournament->setVisible(false);
+            ui_->groupBox_event->setVisible(false);
+            ui_->groupBox_commentators->setVisible(false);
             ui_->gameNumber->setVisible(false);
             ui_->setNumber->setVisible(false);
             ui_->setFormat->setVisible(false);
@@ -62,26 +76,48 @@ ReplayEditorDialog::ReplayEditorDialog(
         } break;
     }
 
-    QFormLayout* playerInfoLayout = new QFormLayout;
+    QGridLayout* playerInfoLayout = new QGridLayout;
     ui_->groupBox_playerInfo->setLayout(playerInfoLayout);
     for (int fighterIdx = 0; fighterIdx != mdata->fighterCount(); ++fighterIdx)
     {
-        QLineEdit* edit = new QLineEdit;
-        edit->setText(mdata->name(fighterIdx).cStr());
-        playerInfoLayout->addRow("Player " + QString::number(fighterIdx + 1) + " name:", edit);
+        QLineEdit* sponsor = new QLineEdit;
+        sponsor->setText(mdata->sponsor(fighterIdx).cStr());
+        sponsor->setFixedWidth(100);
+        sponsor->setPlaceholderText("Sponsor");
 
-        connect(edit, &QLineEdit::textChanged, [this, fighterIdx](const QString& text){
+        QLineEdit* name = new QLineEdit;
+        name->setText(mdata->name(fighterIdx).cStr());
+
+        QLabel* label = new QLabel();
+        label->setText("Player " + QString::number(fighterIdx + 1) + ":");
+
+        playerInfoLayout->addWidget(label, fighterIdx, 0);
+        playerInfoLayout->addWidget(sponsor, fighterIdx, 1);
+        playerInfoLayout->addWidget(name, fighterIdx, 2);
+
+        connect(sponsor, &QLineEdit::textChanged, [this, fighterIdx](const QString& text) {
+            onPlayerSponsorChanged(fighterIdx, text);
+        });
+        connect(name, &QLineEdit::textChanged, [this, fighterIdx](const QString& text) {
             onPlayerNameChanged(fighterIdx, text);
         });
     }
 
     connect(ui_->cancel, &QPushButton::released, this, &ReplayEditorDialog::close);
     connect(ui_->save, &QPushButton::released, this, &ReplayEditorDialog::onSaveClicked);
+
+    connect(ui_->tournamentName, &QLineEdit::textChanged, this, &ReplayEditorDialog::onTournamentNameChanged);
+    connect(ui_->eventName, &QLineEdit::textChanged, this, &ReplayEditorDialog::onEventNameChanged);
+
     connect(ui_->timeStarted, &QDateTimeEdit::dateTimeChanged, this, &ReplayEditorDialog::onTimeStartedChanged);
-    connect(ui_->gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ReplayEditorDialog::onGameNumberChanged);
     connect(ui_->setNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ReplayEditorDialog::onSetNumberChanged);
     connect(ui_->setFormat, qOverload<int>(&QComboBox::currentIndexChanged), this, &ReplayEditorDialog::onSetFormatChanged);
     connect(ui_->customSetFormat, &QLineEdit::textChanged, this, &ReplayEditorDialog::customFormatTextChanged);
+    connect(ui_->gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ReplayEditorDialog::onGameNumberChanged);
+    connect(ui_->round, &QLineEdit::textChanged, this, &ReplayEditorDialog::onRoundChanged);
+
+    connect(ui_->commentator1, &QLineEdit::textChanged, this, &ReplayEditorDialog::onCommentatorChanged);
+    connect(ui_->commentator2, &QLineEdit::textChanged, this, &ReplayEditorDialog::onCommentatorChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -102,6 +138,22 @@ void ReplayEditorDialog::onSaveClicked()
 }
 
 // ----------------------------------------------------------------------------
+void ReplayEditorDialog::onTournamentNameChanged(const QString& name)
+{
+    if (auto mdata = session_->tryGetMetaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->setTournamentName(name.toUtf8().constData());
+}
+
+// ----------------------------------------------------------------------------
+void ReplayEditorDialog::onEventNameChanged(const QString& name)
+{
+    if (auto mdata = session_->tryGetMetaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->setEventName(name.toUtf8().constData());
+}
+
+// ----------------------------------------------------------------------------
 void ReplayEditorDialog::onTimeStartedChanged(const QDateTime& started)
 {
     PROFILE(ReplayEditorDialog, onTimeStartedChanged);
@@ -116,25 +168,13 @@ void ReplayEditorDialog::onTimeStartedChanged(const QDateTime& started)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayEditorDialog::onGameNumberChanged(int value)
-{
-    PROFILE(ReplayEditorDialog, onGameNumberChanged);
-
-    if (auto mdata = session_->tryGetMetaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
-            static_cast<rfcommon::GameMetaData*>(mdata)->setGameNumber(
-                    rfcommon::GameNumber::fromValue(value));
-}
-
-// ----------------------------------------------------------------------------
 void ReplayEditorDialog::onSetNumberChanged(int value)
 {
     PROFILE(ReplayEditorDialog, onSetNumberChanged);
 
     if (auto mdata = session_->tryGetMetaData())
         if (mdata->type() == rfcommon::MetaData::GAME)
-            static_cast<rfcommon::GameMetaData*>(mdata)->setSetNumber(
-                    rfcommon::SetNumber::fromValue(value));
+            mdata->asGame()->setSetNumber(rfcommon::SetNumber::fromValue(value));
 }
 
 // ----------------------------------------------------------------------------
@@ -147,15 +187,11 @@ void ReplayEditorDialog::onSetFormatChanged(int index)
     if (auto mdata = session_->tryGetMetaData())
     {
         if (index < rfcommon::SetFormat::OTHER)
-        {
-            static_cast<rfcommon::GameMetaData*>(mdata)->setSetFormat(
-                    rfcommon::SetFormat::fromIndex(index));
-        }
+            mdata->asGame()->setSetFormat(rfcommon::SetFormat::fromIndex(index));
         else
         {
             QByteArray ba = ui_->customSetFormat->text().toUtf8();
-            static_cast<rfcommon::GameMetaData*>(mdata)->setSetFormat(
-                    rfcommon::SetFormat::makeOther(ba.constData()));
+            mdata->asGame()->setSetFormat(rfcommon::SetFormat::makeOther(ba.constData()));
         }
     }
 }
@@ -168,8 +204,39 @@ void ReplayEditorDialog::customFormatTextChanged(const QString& text)
     if (auto mdata = session_->tryGetMetaData())
     {
         QByteArray ba = text.toUtf8();
-        static_cast<rfcommon::GameMetaData*>(mdata)->setSetFormat(
-                rfcommon::SetFormat::makeOther(ba.constData()));
+        mdata->asGame()->setSetFormat(rfcommon::SetFormat::makeOther(ba.constData()));
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayEditorDialog::onGameNumberChanged(int value)
+{
+    PROFILE(ReplayEditorDialog, onGameNumberChanged);
+
+    if (auto mdata = session_->tryGetMetaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->setGameNumber(rfcommon::GameNumber::fromValue(value));
+}
+
+// ----------------------------------------------------------------------------
+void ReplayEditorDialog::onRoundChanged(const QString& name)
+{
+    PROFILE(ReplayEditorDialog, onRoundChanged);
+
+    if (auto mdata = session_->tryGetMetaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->setRoundName(name.toUtf8().constData());
+}
+
+// ----------------------------------------------------------------------------
+void ReplayEditorDialog::onPlayerSponsorChanged(int fighterIdx, const QString& sponsor)
+{
+    PROFILE(ReplayEditorDialog, onPlayerSponsorChanged);
+
+    if (auto mdata = session_->tryGetMetaData())
+    {
+        QByteArray ba = sponsor.toUtf8();
+        mdata->asGame()->setSponsor(fighterIdx, ba.constData());
     }
 }
 
@@ -181,8 +248,28 @@ void ReplayEditorDialog::onPlayerNameChanged(int fighterIdx, const QString& name
     if (auto mdata = session_->tryGetMetaData())
     {
         QByteArray ba = name.toUtf8();
-        static_cast<rfcommon::GameMetaData*>(mdata)->setName(fighterIdx, ba.constData());
+        mdata->asGame()->setName(fighterIdx, ba.constData());
     }
+}
+
+// ----------------------------------------------------------------------------
+static void updateCommentators(rfcommon::GameMetaData* mdata, QLineEdit* c1, QLineEdit* c2)
+{
+    rfcommon::SmallVector<rfcommon::String, 2> names;
+    if (c1->text().length() > 0)
+        names.push(c1->text().toUtf8().constData());
+    if (c2->text().length() > 0)
+        names.push(c2->text().toUtf8().constData());
+
+    mdata->setCommentators(std::move(names));
+}
+
+// ----------------------------------------------------------------------------
+void ReplayEditorDialog::onCommentatorChanged(const QString& name)
+{
+    if (auto mdata = session_->tryGetMetaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            updateCommentators(mdata->asGame(), ui_->commentator1, ui_->commentator2);
 }
 
 }

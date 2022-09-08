@@ -10,8 +10,8 @@
 
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Session.hpp"
 
 // ----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ void StatsPlugin::resetStatsIfAppropriate(rfcommon::Session* session)
             auto mdata = session->tryGetMetaData();
             if (mdata && mdata->type() == rfcommon::MetaData::GAME)
             {
-                if (static_cast<rfcommon::GameMetaData*>(mdata)->gameNumber().value() == 1)
+                if (mdata->asGame()->gameNumber().value() == 1)
                     statsCalculator_->resetStatistics();
             }
         } break;

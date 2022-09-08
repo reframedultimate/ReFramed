@@ -5,7 +5,7 @@
 #include "stats/models/WebSocketServer.hpp"
 #include "stats/util/StatsFormatter.hpp"
 
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 
 #include <QJsonObject>
 #include <QJsonArray>

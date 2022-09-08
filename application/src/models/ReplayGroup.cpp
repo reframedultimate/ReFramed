@@ -74,4 +74,13 @@ void ReplayGroup::removeAllFiles()
     fileList_.clear();
 }
 
+// ----------------------------------------------------------------------------
+bool ReplayGroup::exists(const QFileInfo& absPathToFile) const
+{
+    for (const auto file : fileList_)
+        if (file == absPathToFile)
+            return true;
+    return false;
+}
+
 }

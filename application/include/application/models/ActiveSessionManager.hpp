@@ -92,7 +92,12 @@ private:
     void onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
     void onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
 
-    void onMetaDataPlayerNameChanged(int player, const rfcommon::String& name) override;
+    void onMetaDataPlayerNameChanged(int player, const char* name) override;
+    void onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) override;
+    void onMetaDataTournamentNameChanged(const char* name) override;
+    void onMetaDataEventNameChanged(const char* name) override;
+    void onMetaDataRoundNameChanged(const char* name) override;
+    void onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) override;
     void onMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
     void onMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
     void onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;

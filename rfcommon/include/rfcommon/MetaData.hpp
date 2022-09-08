@@ -5,15 +5,17 @@
 #include "rfcommon/GameNumber.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/RefCounted.hpp"
-#include "rfcommon/StageID.hpp"
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/SetNumber.hpp"
+#include "rfcommon/StageID.hpp"
 #include "rfcommon/TimeStamp.hpp"
 #include <cstdio>
 
 namespace rfcommon {
 
 class MetaDataListener;
+class GameMetaData;
+class TrainingMetaData;
 
 class RFCOMMON_PUBLIC_API MetaData : public RefCounted
 {
@@ -45,8 +47,7 @@ public:
     static MetaData* newActiveGameSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<String, 2>&& tags,
-            SmallVector<String, 2>&& names);
+            SmallVector<String, 2>&& tags);
 
     /*!
      * \brief Constructs a new TrainingMetaData object from the specified
@@ -60,15 +61,20 @@ public:
             SmallVector<String, 2>&& tags);
 
     static MetaData* newSavedGameSession(
+            const char* tournamentName,
+            const char* eventName,
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags,
             SmallVector<String, 2>&& names,
+            SmallVector<String, 2>&& sponsors,
+            SmallVector<String, 2>&& commentators,
             GameNumber gameNumber,
             SetNumber setNumber,
             SetFormat setFormat,
+            const char* roundName,
             int winner);
 
     static MetaData* newSavedTrainingSession(
@@ -82,6 +88,10 @@ public:
     virtual ~MetaData();
 
     virtual Type type() const = 0;
+    GameMetaData* asGame();
+    const GameMetaData* asGame() const;
+    TrainingMetaData* asTraining();
+    const TrainingMetaData* asTraining() const;
 
     static MetaData* load(const void*, uint32_t size);
     uint32_t save(FILE* fp) const;
@@ -108,6 +118,8 @@ public:
      * \param fighterIdx Which player to get
      */
     virtual const String& name(int fighterIdx) const = 0;
+
+    virtual const String& sponsor(int fighterIdx) const = 0;
 
     /*!
      * \brief Gets the fighter ID being used by the specified player. The ID
@@ -178,130 +190,6 @@ protected:
     SmallVector<FighterID, 2> fighterIDs_;
     SmallVector<String, 2> tags_;
     StageID stageID_;
-};
-
-class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
-{
-    GameMetaData(
-            TimeStamp timeStarted,
-            TimeStamp timeEnded,
-            StageID stageID,
-            SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<String, 2>&& tags,
-            SmallVector<String, 2>&& names,
-            GameNumber gameNumber,
-            SetNumber setNumber,
-            SetFormat setFormat,
-            int winner);
-
-public:
-    Type type() const override;
-
-    /*!
-     * \brief Gets the name of the player. By default this will be the same as
-     * the tag, but many players like to create tags that are shorter or a
-     * variation of their real name. This string is their real name.
-     * Unlike tags, there is also no character limit to a player's name.
-     * \note If training mode, this will always be the same as the tag.
-     * \param fighterIdx Which player to get
-     */
-    const String& name(int fighterIdx) const override;
-
-    void setName(int fighterIdx, const String& name);
-
-    /*!
-     * \brief Gets the current game number. Starts at 1 and counts upwards as
-     * sets progress.
-     */
-    GameNumber gameNumber() const;
-
-    /*!
-     * \brief Sets the current game number. Should start at 1.
-     */
-    void setGameNumber(GameNumber gameNumber);
-
-    /*!
-     * \brief Resets the game number to 1
-     */
-    void resetGameNumber();
-
-    /*!
-     * \brief Gets the set number. Usually 1. This number is used to disambiguate
-     * sets where the same two players play the same characters on the same day.
-     */
-    SetNumber setNumber() const;
-
-    /*!
-     * \brief Sets the current set number. Should start at 1.
-     */
-    void setSetNumber(SetNumber setNumber);
-
-    /*!
-     * \brief Resets the current set number to 1.
-     */
-    void resetSetNumber();
-
-    /*!
-     * \brief Gets the format of the set, \see SetFormat
-     */
-    SetFormat setFormat() const;
-
-    /*!
-     * \brief Sets the format of the set, \see SetFormat
-     */
-    void setSetFormat(SetFormat format);
-
-    /*!
-     * \brief Gets the index of the player who won the game, or is currently in
-     * the lead in the case of an on-going session.
-     * \note If there is no winner, for example, if this is a training session,
-     * or if the session has no frames, then -1 is returned.
-     * \return Returns the player index. Can return -1 if no winner exists.
-     */
-    int winner() const;
-
-    /*!
-     * \brief Set the index of the player who won the game, or is currently in
-     * the lead in the case of an on-going session.
-     */
-    void setWinner(int fighterIdx);
-
-private:
-    friend class MetaData;
-
-    SmallVector<String, 2> names_;
-    GameNumber gameNumber_;
-    SetNumber setNumber_;
-    SetFormat setFormat_;
-    int winner_;
-};
-
-class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
-{
-    TrainingMetaData(
-            TimeStamp timeStarted,
-            TimeStamp timeEnded,
-            StageID stageID,
-            SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<String, 2>&& tags,
-            GameNumber sessionNumber);
-
-public:
-    Type type() const override;
-
-    const String& name(int playerIdx) const override;
-
-    FighterID playerFighterID() const;
-    FighterID cpuFighterID() const;
-
-    GameNumber sessionNumber() const;
-    void setSessionNumber(GameNumber sessionNumber);
-    void resetSessionNumber();
-
-private:
-    friend class MetaData;
-
-    GameNumber sessionNumber_;
 };
 
 }

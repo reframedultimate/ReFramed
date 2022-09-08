@@ -1,7 +1,7 @@
 #include "stage-stats/listeners/StageStatsListener.hpp"
 #include "stage-stats/models/StageStatsModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------

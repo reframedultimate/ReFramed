@@ -51,7 +51,7 @@ rfcommon::GameMetaData* PlayerMeta::latestMetaData() const
         return nullptr;
     if (mdata_->type() != rfcommon::MetaData::GAME)
         return nullptr;
-    return static_cast<rfcommon::GameMetaData*>(mdata_.get());
+    return mdata_->asGame();
 }
 
 // ----------------------------------------------------------------------------
@@ -105,18 +105,23 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 }
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
+void PlayerMeta::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) {}
+void PlayerMeta::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
+
+void PlayerMeta::onMetaDataPlayerNameChanged(int fighterIdx, const char* name)
 {
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
-
-// ----------------------------------------------------------------------------
-void PlayerMeta::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)  {}
-void PlayerMeta::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
+void PlayerMeta::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
+void PlayerMeta::onMetaDataTournamentNameChanged(const char* name) {}
+void PlayerMeta::onMetaDataEventNameChanged(const char* name) {}
+void PlayerMeta::onMetaDataRoundNameChanged(const char* name) {}
+void PlayerMeta::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
 void PlayerMeta::onMetaDataSetNumberChanged(rfcommon::SetNumber number) {}
 void PlayerMeta::onMetaDataGameNumberChanged(rfcommon::GameNumber number) {}
 void PlayerMeta::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) {}
 void PlayerMeta::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
+
 void PlayerMeta::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) {}
 
 // ----------------------------------------------------------------------------

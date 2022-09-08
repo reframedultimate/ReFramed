@@ -33,7 +33,7 @@ public:
     virtual void onActiveSessionManagerTimeStartedChanged(rfcommon::TimeStamp timeStarted) = 0;
     virtual void onActiveSessionManagerTimeEndedChanged(rfcommon::TimeStamp timeEnded) = 0;
 
-    virtual void onActiveSessionManagerPlayerNameChanged(int fighterIdx, const rfcommon::String& name) = 0;
+    virtual void onActiveSessionManagerPlayerNameChanged(int fighterIdx, const char* name) = 0;
     virtual void onActiveSessionManagerSetNumberChanged(rfcommon::SetNumber number) = 0;
     virtual void onActiveSessionManagerGameNumberChanged(rfcommon::GameNumber number) = 0;
     virtual void onActiveSessionManagerSetFormatChanged(const rfcommon::SetFormat& format) = 0;

@@ -25,6 +25,7 @@ public:
     void addFile(const QFileInfo& absPathToFile);
     bool removeFile(const QFileInfo& absPathToFile);
     void removeAllFiles();
+    bool exists(const QFileInfo& absPathToFile) const;
 
     rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 

@@ -28,13 +28,21 @@ public:
 
 private slots:
     void onSaveClicked();
+
+    void onTournamentNameChanged(const QString& name);
+    void onEventNameChanged(const QString& name);
+
     void onTimeStartedChanged(const QDateTime& started);
-    void onGameNumberChanged(int value);
     void onSetNumberChanged(int value);
     void onSetFormatChanged(int index);
     void customFormatTextChanged(const QString& text);
+    void onGameNumberChanged(int value);
+    void onRoundChanged(const QString& name);
 
+    void onPlayerSponsorChanged(int fighterIdx, const QString& name);
     void onPlayerNameChanged(int fighterIdx, const QString& name);
+
+    void onCommentatorChanged(const QString& name);
 
 private:
     Ui::ReplayEditorDialog* ui_;

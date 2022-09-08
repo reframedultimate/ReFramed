@@ -223,24 +223,24 @@ void ActiveSessionView::onActiveSessionManagerTimeEndedChanged(rfcommon::TimeSta
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionView::onActiveSessionManagerPlayerNameChanged(int playerIdx, const rfcommon::String& name)
+void ActiveSessionView::onActiveSessionManagerPlayerNameChanged(int playerIdx, const char* name)
 {
     PROFILE(ActiveSessionView, onActiveSessionManagerPlayerNameChanged);
 
     if (names_.size() <= playerIdx)
         return;
 
-    names_[playerIdx]->setTitle(name.cStr());
+    names_[playerIdx]->setTitle(name);
 
     if (playerIdx == 0)
     {
         const QSignalBlocker blocker(ui_->lineEdit_player1);
-        ui_->lineEdit_player1->setText(name.cStr());
+        ui_->lineEdit_player1->setText(name);
     }
     else if (playerIdx == 1)
     {
         const QSignalBlocker blocker(ui_->lineEdit_player2);
-        ui_->lineEdit_player2->setText(name.cStr());
+        ui_->lineEdit_player2->setText(name);
     }
 }
 

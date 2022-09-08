@@ -107,6 +107,7 @@ public:
     bool findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
     bool saveReplayOver(rfcommon::Session* session, const QFileInfo& oldFile);
     bool saveReplayWithDefaultSettings(rfcommon::Session* session);
+    bool deleteReplay(const QFileInfo& absFilePath);
 
     rfcommon::ListenerDispatcher<ReplayManagerListener> dispatcher;
 

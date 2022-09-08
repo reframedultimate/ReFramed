@@ -54,7 +54,7 @@ private:
     void onActiveSessionManagerTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
     void onActiveSessionManagerTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
 
-    void onActiveSessionManagerPlayerNameChanged(int fighterIdx, const rfcommon::String& name) override;
+    void onActiveSessionManagerPlayerNameChanged(int fighterIdx, const char* name) override;
     void onActiveSessionManagerSetNumberChanged(rfcommon::SetNumber number) override;
     void onActiveSessionManagerGameNumberChanged(rfcommon::GameNumber number) override;
     void onActiveSessionManagerSetFormatChanged(const rfcommon::SetFormat& format) override;

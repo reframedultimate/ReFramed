@@ -20,6 +20,7 @@
 #include <QShortcut>
 #include <QMenu>
 #include <QAction>
+#include <QMessageBox>
 
 namespace rfapp {
 
@@ -199,7 +200,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     QMenu menu;
     QAction* editMetaData = nullptr;
     QAction* associateVideo = nullptr;
-    QAction* editLabels = nullptr;
+    QAction* deleteReplay = nullptr;
     QAction* a = nullptr;
 
     const auto selected = replayListWidget_->selectedItems();
@@ -207,6 +208,8 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     {
         editMetaData = menu.addAction("Edit Meta Data...");
         associateVideo = menu.addAction("Associate Video...");
+        menu.addSeparator();
+        deleteReplay = menu.addAction("Delete");
         a = menu.exec(item);
     }
     else if (selected.size() > 1)
@@ -216,37 +219,40 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
     if (a == nullptr)
         return;
 
-    if (a == editMetaData)
-    {
+    auto getSelectedSessionFile = [this, &selected]() -> QFileInfo {
         for (const auto& fileName : currentGroup_->absFilePathList())
             if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
-            {
-                QString absFileName = fileName.absoluteFilePath();
-                QByteArray ba = absFileName.toUtf8();
-                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
-                if (session)
-                {
-                    ReplayEditorDialog dialog(replayManager_, session, absFileName);
-                    dialog.exec();
-                }
-                break;
-            }
+                return fileName;
+        return "";
+    };
+
+    if (a == editMetaData)
+    {
+        QString absFileName = getSelectedSessionFile().absoluteFilePath();
+        QByteArray ba = absFileName.toUtf8();
+        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
+        if (session)
+        {
+            ReplayEditorDialog dialog(replayManager_, session, absFileName);
+            dialog.exec();
+        }
     }
     else if (a == associateVideo)
     {
-        for (const auto& fileName : currentGroup_->absFilePathList())
-            if (replayListWidget_->itemMatchesReplayFileName(selected[0], fileName))
-            {
-                QString absFileName = fileName.absoluteFilePath();
-                QByteArray ba = absFileName.toUtf8();
-                rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
-                if (session)
-                {
-                    VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
-                    dialog.exec();
-                }
-                break;
-            }
+        QString absFileName = getSelectedSessionFile().absoluteFilePath();
+        QByteArray ba = absFileName.toUtf8();
+        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, ba.constData());
+        if (session)
+        {
+            VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, absFileName);
+            dialog.exec();
+        }
+    }
+    else if (a == deleteReplay)
+    {
+        if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete this replay?") == QMessageBox::Yes)
+            if (replayManager_->deleteReplay(getSelectedSessionFile()) == false)
+                QMessageBox::critical(this, "Error deleting file", "Failed to delete the file because it doesn't exist. It was probably deleted by an external process.");
     }
 }
 
@@ -334,8 +340,30 @@ void ReplayGroupView::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo
     PROFILE(ReplayGroupView, onReplayGroupFileAdded);
 
     (void)group;
+    auto items = replayListWidget_->selectedItems();
+
     replayListWidget_->addReplayFileName(absPathToFile);
     replayListWidget_->sortItems(Qt::DescendingOrder);
+
+    if (items.size() > 0)
+    {
+        for (const auto& item : items)
+            replayListWidget_->setItemSelected(item, true);
+        replayListWidget_->scrollToItem(items[items.size() - 1]);
+    }
+    else
+    {
+        for (int i = 0; i < replayListWidget_->count(); ++i)
+        {
+            auto item = replayListWidget_->item(i);
+            if (replayListWidget_->itemMatchesReplayFileName(item, absPathToFile))
+            {
+                replayListWidget_->setItemSelected(item, true);
+                replayListWidget_->scrollToItem(item);
+                break;
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

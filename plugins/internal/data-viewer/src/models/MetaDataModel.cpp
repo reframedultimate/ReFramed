@@ -1,7 +1,8 @@
+#include "rfcommon/GameMetaData.hpp"
 #include "data-viewer/models/MetaDataModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/TrainingMetaData.hpp"
 #include <QDateTime>
 
 namespace Game {
@@ -285,7 +286,7 @@ void MetaDataModel::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::String& name)
+void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const char* name)
 {
     PROFILE(MetaDataModel, onMetaDataPlayerNameChanged);
 
@@ -299,6 +300,12 @@ void MetaDataModel::onMetaDataPlayerNameChanged(int fighterIdx, const rfcommon::
             break;
     }
 }
+
+void MetaDataModel::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
+void MetaDataModel::onMetaDataTournamentNameChanged(const char* name) {}
+void MetaDataModel::onMetaDataEventNameChanged(const char* name) {}
+void MetaDataModel::onMetaDataRoundNameChanged(const char* name) {}
+void MetaDataModel::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
 
 // ----------------------------------------------------------------------------
 void MetaDataModel::onMetaDataSetNumberChanged(rfcommon::SetNumber number)

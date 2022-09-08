@@ -4,10 +4,11 @@
 #include "application/models/ReplayManager.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
+#include "rfcommon/TrainingMetaData.hpp"
 #include "rfcommon/tcp_socket.h"
 #include <QDateTime>
 
@@ -63,16 +64,16 @@ void ActiveSessionManager::setP1Name(const QString& name)
     {
         auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         if (name == "")
-            meta->setName(0, meta->tag(0));
+            meta->setName(0, meta->tag(0).cStr());
         else
-            meta->setName(0, name.toStdString().c_str());
+            meta->setName(0, name.toUtf8().constData());
 
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, meta->name(0));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, meta->name(0).cStr());
     }
     else
     {
         p1Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, rfcommon::String(name.toStdString().c_str()));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, name.toUtf8().constData());
     }
 }
 
@@ -87,16 +88,16 @@ void ActiveSessionManager::setP2Name(const QString& name)
     {
         auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
         if (name == "")
-            meta->setName(1, meta->tag(1));
+            meta->setName(1, meta->tag(1).cStr());
         else
-            meta->setName(1, name.toStdString().c_str());
+            meta->setName(1, name.toUtf8().constData());
 
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, meta->name(1));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, meta->name(1).cStr());
     }
     else
     {
         p2Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, rfcommon::String(name.toStdString().c_str()));
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, name.toUtf8().constData());
     }
 }
 
@@ -107,13 +108,13 @@ void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
 
     if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
     {
-        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-        meta->setGameNumber(number);
+        auto mdata = activeMetaData_->asGame();
+        mdata->setGameNumber(number);
 
-        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
+        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, mdata);
 
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, mdata->setNumber());
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, mdata->gameNumber());
     }
     else
     {
@@ -129,12 +130,12 @@ void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
 
     if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::TRAINING)
     {
-        auto meta = static_cast<rfcommon::TrainingMetaData*>(activeMetaData_.get());
-        meta->setSessionNumber(number);
+        auto mdata = activeMetaData_->asTraining();
+        mdata->setSessionNumber(number);
 
-        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
+        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, mdata);
 
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
+        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, mdata->sessionNumber());
     }
     else
     {
@@ -192,40 +193,32 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 
     switch (meta->setFormat().type())
     {
-        case rfcommon::SetFormat::BO3:
-        case rfcommon::SetFormat::BO3MM: {
+        case rfcommon::SetFormat::BO3: {
             if (win[0] >= 2 || win[1] >= 2)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::BO5:
-        case rfcommon::SetFormat::BO5MM: {
+        case rfcommon::SetFormat::BO5: {
             if (win[0] >= 3 || win[1] >= 3)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::BO7:
-        case rfcommon::SetFormat::BO7MM: {
+        case rfcommon::SetFormat::BO7: {
             if (win[0] >= 4 || win[1] >= 4)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::FT5:
-        case rfcommon::SetFormat::FT5MM: {
+        case rfcommon::SetFormat::FT5: {
             if (win[0] >= 5 || win[1] >= 5)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::FT10:
-        case rfcommon::SetFormat::FT10MM: {
+        case rfcommon::SetFormat::FT10: {
             if (win[0] >= 10 || win[1] >= 10)
                 return true;
         } break;
 
         case rfcommon::SetFormat::FRIENDLIES:
-        case rfcommon::SetFormat::PRACTICE:
-        case rfcommon::SetFormat::TRAINING:
-        case rfcommon::SetFormat::COACHING:
         case rfcommon::SetFormat::OTHER:
             break;
     }
@@ -303,9 +296,9 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
     if (meta->fighterCount() == 2)
     {
         if (p1Name_.length() > 0)
-            meta->setName(0, p1Name_.toStdString().c_str());
+            meta->setName(0, p1Name_.toUtf8().constData());
         if (p2Name_.length() > 0)
-            meta->setName(1, p2Name_.toStdString().c_str());
+            meta->setName(1, p2Name_.toUtf8().constData());
     }
 
     if (shouldStartNewSet(meta))
@@ -332,9 +325,9 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
     if (meta->fighterCount() == 2)
     {
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
-                0, meta->name(0));
+                0, meta->name(0).cStr());
         dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
-                1, meta->name(1));
+                1, meta->name(1).cStr());
     }
 
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameStarted, game);
@@ -429,7 +422,7 @@ void ActiveSessionManager::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEn
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommon::String& name)
+void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const char* name)
 {
     PROFILE(ActiveSessionManager, onMetaDataPlayerNameChanged);
 
@@ -441,6 +434,12 @@ void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const rfcommo
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, name);
     }
 }
+
+void ActiveSessionManager::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
+void ActiveSessionManager::onMetaDataTournamentNameChanged(const char* name) {}
+void ActiveSessionManager::onMetaDataEventNameChanged(const char* name) {}
+void ActiveSessionManager::onMetaDataRoundNameChanged(const char* name) {}
+void ActiveSessionManager::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onMetaDataSetNumberChanged(rfcommon::SetNumber number)

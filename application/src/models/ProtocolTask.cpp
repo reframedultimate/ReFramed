@@ -470,7 +470,6 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 const auto stageID = rfcommon::StageID::fromValue((stageH << 8) | (stageL << 0));
                 auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeResized(playerCount);
                 auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
-                auto names = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
 
                 log_->info("stageID: %d, player count: %d", stageID, playerCount);
 
@@ -505,9 +504,8 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                     if (tcp_socket_read_exact(&socket, tag, len) != len) { log_->error("Failed to player tag string"); goto disconnect; }
                     tag[static_cast<int>(len)] = '\0';
                     tags.push(tag);
-                    names.push(tag);
 
-                    log_->info("idx %d: Tag: %s, Name: %s", i, tags[i].cStr(), names[i].cStr());
+                    log_->info("idx %d: Tag: %s", i, tags[i].cStr());
                 }
 #undef stageH
 #undef stageL
@@ -516,8 +514,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 rfcommon::MetaData* meta = rfcommon::MetaData::newActiveGameSession(
                         stageID,
                         std::move(fighterIDs),
-                        std::move(tags),
-                        std::move(names));
+                        std::move(tags));
 
                 if (msg == GameStart)
                     emit gameStarted(meta);

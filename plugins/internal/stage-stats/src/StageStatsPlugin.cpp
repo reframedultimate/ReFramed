@@ -1,7 +1,8 @@
 #include "stage-stats/StageStatsPlugin.hpp"
 #include "stage-stats/models/StageStatsModel.hpp"
 #include "stage-stats/views/StageStatsView.hpp"
-#include "rfcommon/MetaData.hpp"
+
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -54,7 +55,7 @@ void StageStatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int num
         if (auto mdata = games[i]->tryGetMetaData())
             if (auto map = games[i]->tryGetMappingInfo())
                 if (mdata->type() == rfcommon::MetaData::GAME)
-                    model_->addSessionData(map, static_cast<rfcommon::GameMetaData*>(mdata));
+                    model_->addSessionData(map, mdata->asGame());
     model_->notifyUpdated();
 }
 

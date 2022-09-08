@@ -4,13 +4,14 @@
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
+#include "rfcommon/TrainingMetaData.hpp"
 
 #include <QDateTime>
 #include <QStandardPaths>
@@ -472,7 +473,7 @@ QString ReplayManager::composeFileName(rfcommon::MappingInfo* map, rfcommon::Met
     // Game session case
     if (mdata->type() == MetaData::GAME)
     {
-        const GameMetaData* gameMeta = static_cast<const GameMetaData*>(mdata);
+        const GameMetaData* gameMeta = mdata->asGame();
 
         QString formatDesc = gameMeta->setFormat().shortDescription();
         QString setNumber = QString::number(gameMeta->setNumber().value());
@@ -549,23 +550,15 @@ bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcomm
                 switch (gameMeta->setFormat().type())
                 {
                     case rfcommon::SetFormat::FRIENDLIES:
-                    case rfcommon::SetFormat::PRACTICE:
-                    case rfcommon::SetFormat::TRAINING:
-                    case rfcommon::SetFormat::COACHING:
                     case rfcommon::SetFormat::OTHER:
                         gameMeta->setGameNumber(gameMeta->gameNumber() + 1);
                         break;
 
                     case rfcommon::SetFormat::BO3:
-                    case rfcommon::SetFormat::BO3MM:
                     case rfcommon::SetFormat::BO5:
-                    case rfcommon::SetFormat::BO5MM:
                     case rfcommon::SetFormat::BO7:
-                    case rfcommon::SetFormat::BO7MM:
                     case rfcommon::SetFormat::FT5:
-                    case rfcommon::SetFormat::FT5MM:
                     case rfcommon::SetFormat::FT10:
-                    case rfcommon::SetFormat::FT10MM:
                         gameMeta->setSetNumber(gameMeta->setNumber() + 1);
                         break;
                 }
@@ -600,9 +593,17 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
 
     QFileInfo newFile(dir, composeFileName(session->tryGetMappingInfo(), mdata, formatStr));
 
+    if (allReplayGroup()->exists(oldFile) == false)
+    {
+        log->error("Attempted to save replay over \"%s\", but file did not exist. Aborting", oldFileName.toUtf8().constData());
+        return false;
+    }
+
     log->info("Renaming %s -> %s", oldFile.absoluteFilePath().toUtf8().constData(), newFile.absoluteFilePath().toUtf8().constData());
     log->info("Dir: %s", dir.absolutePath().toUtf8().constData());
 
+    // Allow overwriting the same file, but disallow overwriting a different file
+    // that already exists
     if (oldFile != newFile)
     {
         if (newFile.exists())
@@ -636,12 +637,37 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QFileInfo& 
         // to the session are dropped
         QByteArray ba = dir.absoluteFilePath(tmpFile).toUtf8();
         if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
-            log->error("Failed to remove temporary file %s");
+            log->error("Failed to remove file %s");
     }
 
     for (auto& group : groups_)
         if (group.second->removeFile(oldFile.absoluteFilePath()))
             group.second->addFile(newFile.absoluteFilePath());
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::deleteReplay(const QFileInfo& absFilePath)
+{
+    rfcommon::Log* log = rfcommon::Log::root();
+    QDir dir(absFilePath.path());
+    if (dir.remove(absFilePath.fileName()) == false)
+    {
+        // On Windows, it's not possible to delete a file when it is memory mapped,
+        // which is the case with session files. What we can do is set the FILE_FLAG_DELETE_ON_CLOSE
+        // flag on the file, which will cause it to be deleted as soon as all references
+        // to the session are dropped
+        QByteArray ba = absFilePath.absoluteFilePath().toUtf8();
+        if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
+        {
+            log->error("Failed to remove file %s");
+            return false;
+        }
+    }
+
+    for (auto& group : groups_)
+        group.second->removeFile(absFilePath);
 
     return true;
 }
