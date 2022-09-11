@@ -16,10 +16,10 @@ public:
     explicit ReplayListWidget(QWidget* parent=nullptr);
     ~ReplayListWidget();
 
-    void addReplayFileName(const QFileInfo& absPathToFile);
-    void removeReplayFileName(const QFileInfo& absPathToFile);
-    bool itemMatchesReplayFileName(QListWidgetItem* item, const QFileInfo& absPathToFile);
-    QVector<QFileInfo> selectedReplayFilePaths() const;
+    void addReplay(const QString& appearName, const QString& fileName);
+    void removeReplay(const QString& fileName);
+    QString itemFileName(QListWidgetItem* item) const;
+    QVector<QString> selectedReplayFileNames() const;
 
 protected:
     QStringList mimeTypes() const override;

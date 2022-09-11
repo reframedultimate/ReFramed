@@ -41,7 +41,7 @@ void Config::load()
 
     QByteArray ba = f.readAll();
     root = json::parse(ba.begin(), ba.end(), nullptr, false);
-    if (root == json::value_t::discarded)
+    if (root.is_discarded())
     {
         rfcommon::Log::root()->error("Failed to parse config.json");
         return;

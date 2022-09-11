@@ -20,6 +20,14 @@ FrameIndex FrameIndex::fromSeconds(double seconds)
 }
 
 // ----------------------------------------------------------------------------
+FrameIndex FrameIndex::makeInvalid()
+{
+    NOPROFILE();
+
+    return FrameIndex(Type(-1));
+}
+
+// ----------------------------------------------------------------------------
 FrameIndex::~FrameIndex()
 {}
 

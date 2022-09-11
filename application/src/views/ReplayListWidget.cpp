@@ -22,41 +22,45 @@ ReplayListWidget::~ReplayListWidget()
 }
 
 // ----------------------------------------------------------------------------
-void ReplayListWidget::addReplayFileName(const QFileInfo& absPathToFile)
+void ReplayListWidget::addReplay(const QString& appearName, const QString& fileName)
 {
-    PROFILE(ReplayListWidget, addReplayFileName);
+    PROFILE(ReplayListWidget, addReplay);
 
-    QListWidgetItem* item = new QListWidgetItem(absPathToFile.completeBaseName());
-    item->setData(Qt::UserRole, QVariant(absPathToFile.absoluteFilePath()));
+    QListWidgetItem* item = new QListWidgetItem(appearName);
+    item->setData(Qt::UserRole, QVariant(fileName));
     addItem(item);
 }
 
 // ----------------------------------------------------------------------------
-void ReplayListWidget::removeReplayFileName(const QFileInfo& absPathToFile)
+void ReplayListWidget::removeReplay(const QString& fileName)
 {
-    PROFILE(ReplayListWidget, removeReplayFileName);
+    PROFILE(ReplayListWidget, removeReplay);
 
-    for (const auto& item : findItems(absPathToFile.completeBaseName(), Qt::MatchExactly))
-        delete item;
+    for (int i = 0; i != count(); ++i)
+        if (item(i)->data(Qt::UserRole).toString() == fileName)
+        {
+            delete item(i);
+            break;
+        }
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayListWidget::itemMatchesReplayFileName(QListWidgetItem* item, const QFileInfo& absPathToFile)
+QString ReplayListWidget::itemFileName(QListWidgetItem* item) const
 {
-    PROFILE(ReplayListWidget, itemMatchesReplayFileName);
+    PROFILE(ReplayListWidget, itemMatchesFileName);
 
-    return item->data(Qt::UserRole).toString() == absPathToFile.absoluteFilePath();
+    return item->data(Qt::UserRole).toString();
 }
 
 // ----------------------------------------------------------------------------
-QVector<QFileInfo> ReplayListWidget::selectedReplayFilePaths() const
+QVector<QString> ReplayListWidget::selectedReplayFileNames() const
 {
     PROFILE(ReplayListWidget, selectedReplayFilePaths);
 
-    QVector<QFileInfo> recordings;
+    QVector<QString> fileNames;
     for (const auto& item : selectedItems())
-        recordings.push_back(item->data(Qt::UserRole).toString());
-    return recordings;
+        fileNames.push_back(item->data(Qt::UserRole).toString());
+    return fileNames;
 }
 
 // ----------------------------------------------------------------------------
@@ -65,7 +69,7 @@ QStringList ReplayListWidget::mimeTypes() const
     PROFILE(ReplayListWidget, mimeTypes);
 
     QStringList types;
-    types << "application/x-ultimate-hindsight-rfr";
+    types << "application/x-reframed-rfr";
     return types;
 }
 
@@ -81,7 +85,7 @@ QMimeData* ReplayListWidget::mimeData(const QList<QListWidgetItem*> items) const
     for (const auto& item : items)
         stream << item->data(Qt::UserRole).toString();
 
-    mimeData->setData("application/x-ultimate-hindsight-rfr", encodedData);
+    mimeData->setData("application/x-reframed-rfr", encodedData);
     return mimeData;
 }
 

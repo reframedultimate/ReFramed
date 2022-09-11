@@ -10,6 +10,7 @@
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/CategoryView.hpp"
 #include "application/views/ConnectView.hpp"
+#include "application/views/ImportReplayPackDialog.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
@@ -72,6 +73,8 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
             this, &MainWindow::onConnectActionTriggered);
     connect(ui_->action_disconnect, &QAction::triggered,
             this, &MainWindow::onDisconnectActionTriggered);
+    connect(ui_->action_importReplayPack, &QAction::triggered,
+            this, &MainWindow::onImportReplayPackTriggered);
     connect(ui_->action_userLabelsEditor, &QAction::triggered,
             this, &MainWindow::onUserLabelsEditorActionTriggered);
 
@@ -110,49 +113,38 @@ void MainWindow::negotiateDefaultRecordingLocation()
         );
     };
 
-    QDir replayDir = replayManager_->defaultReplaySourceDirectory();
-    QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
-    QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
-    if (!gamesDir.exists() || !trainingDir.exists())
+    QDir gamesDir = replayManager_->defaultGamePath();
+    if (gamesDir.exists() == false)
     {
         int option = QMessageBox::warning(
             this,
             "Default directory for replays not found",
             QString("The directory for saving replays was not found or has not been configured yet.\n"
                 "Would you like to create the directory now?\n\n") +
-            replayDir.path(),
+            gamesDir.path(),
             QMessageBox::Yes | QMessageBox::Open
         );
 
         if (option == QMessageBox::Open)
         {
-            QFileInfo dirInfo = askForDir(replayDir.path());
+            QFileInfo dirInfo = askForDir(gamesDir.path());
             if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
             {
-                replayManager_->setDefaultReplaySourceDirectory(dirInfo.filePath());
-                QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
-                QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
-
+                replayManager_->setDefaultGamePath(dirInfo.filePath());
+                gamesDir = replayManager_->defaultGamePath();
                 if (gamesDir.exists() == false)
                     gamesDir.mkpath(".");
-                if (trainingDir.exists() == false)
-                    trainingDir.mkpath(".");
             }
             else
                 close();
         }
         else
         {
-            if (replayDir.mkpath("."))
+            if (gamesDir.mkpath("."))
             {
-                replayManager_->setDefaultReplaySourceDirectory(replayDir);
-                QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
-                QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
-
+                replayManager_->setDefaultGamePath(gamesDir);
                 if (gamesDir.exists() == false)
                     gamesDir.mkpath(".");
-                if (trainingDir.exists() == false)
-                    trainingDir.mkpath(".");
             }
             else
             {
@@ -160,24 +152,20 @@ void MainWindow::negotiateDefaultRecordingLocation()
                     this,
                     "Failed to create directory",
                     QString("Could not create the directory:\n") +
-                    replayDir.path() +
+                    gamesDir.path() +
                     "\n\nWould you like to choose a directory?",
                     QMessageBox::Yes | QMessageBox::No
                 );
 
                 if (option == QMessageBox::Yes)
                 {
-                    QFileInfo dirInfo = askForDir(replayDir.path());
+                    QFileInfo dirInfo = askForDir(gamesDir.path());
                     if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
                     {
-                        replayManager_->setDefaultReplaySourceDirectory(dirInfo.filePath());
-                        QDir gamesDir = replayManager_->defaultGameSessionSourceDirectory();
-                        QDir trainingDir = replayManager_->defaultTrainingSessionSourceDirectory();
-
+                        replayManager_->setDefaultGamePath(dirInfo.filePath());
+                        QDir gamesDir = replayManager_->defaultGamePath();
                         if (gamesDir.exists() == false)
                             gamesDir.mkpath(".");
-                        if (trainingDir.exists() == false)
-                            trainingDir.mkpath(".");
                     }
                     else
                         close();
@@ -189,6 +177,10 @@ void MainWindow::negotiateDefaultRecordingLocation()
             }
         }
     }
+
+    QDir trainingDir = replayManager_->defaultTrainingPath();
+    if (trainingDir.exists() == false)
+        trainingDir.mkpath(".");
 }
 
 // ----------------------------------------------------------------------------
@@ -216,6 +208,13 @@ void MainWindow::onDisconnectActionTriggered()
 
     // Should also trigger onRunningGameSessionManagerDisconnectedFromServer()
     protocol_->disconnectFromServer();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onImportReplayPackTriggered()
+{
+    ImportReplayPackDialog dialog(replayManager_.get(), this);
+    dialog.exec();
 }
 
 // ----------------------------------------------------------------------------

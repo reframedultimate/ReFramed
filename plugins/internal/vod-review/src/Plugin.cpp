@@ -8,9 +8,10 @@
 
 static rfcommon::Plugin* createVideoPlayerPlugin(
         RFPluginFactory* factory,
+        rfcommon::VisualizerContext* visCtx,
+        rfcommon::Log* log,
         rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings,
-        rfcommon::Log* log)
+        rfcommon::Hash40Strings* hash40Strings)
 {
     PROFILE(PluginGlobal, createVideoPlayerPlugin);
 
@@ -19,13 +20,14 @@ static rfcommon::Plugin* createVideoPlayerPlugin(
 
 static rfcommon::Plugin* createVODReviewPlugin(
         RFPluginFactory* factory,
+        rfcommon::VisualizerContext* visCtx,
+        rfcommon::Log* log,
         rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings,
-        rfcommon::Log* log)
+        rfcommon::Hash40Strings* hash40Strings)
 {
-    PROFILE(PluginGlobal, createVideoPlayerPlugin);
+    PROFILE(PluginGlobal, createVODReviewPlugin);
 
-    return new VODReviewPlugin(factory, log);
+    return new VODReviewPlugin(factory, visCtx, log);
 }
 
 static void destroyPlugin(rfcommon::Plugin* plugin)

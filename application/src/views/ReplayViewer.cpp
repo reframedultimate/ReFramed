@@ -4,8 +4,9 @@
 #include "application/models/ReplayManager.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/Session.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/VisualizerContext.hpp"
 #include <QTabBar>
 #include <QMenu>
 #include <QAction>
@@ -21,6 +22,7 @@ ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginMa
     , protocol_(nullptr)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
+    , visCtx_(new rfcommon::VisualizerContext)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
     , replayState_(NONE_LOADED)
@@ -29,6 +31,7 @@ ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginMa
     addTab(new QWidget, "+");
 
     replayManager_->dispatcher.addListener(this);
+    replayManager_->allReplayGroup()->dispatcher.addListener(this);
     for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
         replayManager_->replayGroup(i)->dispatcher.addListener(this);
 
@@ -65,6 +68,7 @@ ReplayViewer::~ReplayViewer()
     {
         for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
             replayManager_->replayGroup(i)->dispatcher.removeListener(this);
+        replayManager_->allReplayGroup()->dispatcher.removeListener(this);
 
         replayManager_->dispatcher.removeListener(this);
     }
@@ -103,10 +107,11 @@ void ReplayViewer::loadGameReplays(const QStringList& fileNames)
     QVector<rfcommon::Session*> loadedSessions;
     for (auto fileName : pendingReplays_)
     {
+        assert(QDir(fileName).isAbsolute());
         int idx = findInCache(fileName);
         if (idx == replayCache_.size())
         {
-            QByteArray ba = fileName.toUtf8();
+            QByteArray ba = fileName.toLocal8Bit();
             if (auto session = rfcommon::Session::load(replayManager_, ba.constData()))
             {
                 loadedFileNames.push_back(fileName);
@@ -277,7 +282,7 @@ void ReplayViewer::onTabBarClicked(int index)
     // Create plugin
     PluginData data;
     data.name = action->text();
-    data.plugin = pluginManager_->create(data.name);
+    data.plugin = pluginManager_->create(data.name, visCtx_);
     if (data.plugin == nullptr)
         return;
 
@@ -735,7 +740,7 @@ void ReplayViewer::onProtocolGameEnded(rfcommon::Session* game)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) {}
+void ReplayViewer::onReplayManagerDefaultGamePathChanged(const QDir& path) {}
 void ReplayViewer::onReplayManagerGroupAdded(ReplayGroup* group)
 {
     group->dispatcher.addListener(this);
@@ -745,23 +750,23 @@ void ReplayViewer::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
     group->dispatcher.removeListener(this);
 }
-void ReplayViewer::onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) {}
-void ReplayViewer::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) {}
-void ReplayViewer::onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
-void ReplayViewer::onReplayManagerReplaySourceRemoved(const QString& name) {}
-void ReplayViewer::onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) {}
-void ReplayViewer::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) {}
-void ReplayViewer::onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
-void ReplayViewer::onReplayManagerVideoSourceRemoved(const QString& name) {}
+void ReplayViewer::onReplayManagerGamePathAdded(const QString& name, const QDir& path) {}
+void ReplayViewer::onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName) {}
+void ReplayViewer::onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
+void ReplayViewer::onReplayManagerGamePathRemoved(const QString& name) {}
+void ReplayViewer::onReplayManagerVideoPathAdded(const QString& name, const QDir& path) {}
+void ReplayViewer::onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName) {}
+void ReplayViewer::onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
+void ReplayViewer::onReplayManagerVideoPathRemoved(const QString& name) {}
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onReplayGroupFileAdded(ReplayGroup* group, const QFileInfo& absPathToFile)
+void ReplayViewer::onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName)
 {
 }
-void ReplayViewer::onReplayGroupFileRemoved(ReplayGroup* group, const QFileInfo& absPathToFile)
+void ReplayViewer::onReplayGroupFileRemoved(ReplayGroup* group, const QString& fileName)
 {
     for (auto it = replayCache_.begin(); it != replayCache_.end(); ++it)
-        if (absPathToFile.absoluteFilePath() == it->fileName)
+        if (fileName == QFileInfo(it->fileName).fileName())
         {
             replayCache_.erase(it);
             break;

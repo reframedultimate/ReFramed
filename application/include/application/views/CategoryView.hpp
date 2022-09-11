@@ -36,21 +36,21 @@ private slots:
     void onItemChanged(QTreeWidgetItem* item, int column);
 
 private:
-    void onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path) override;
+    void onReplayManagerDefaultGamePathChanged(const QDir& path) override;
 
     void onReplayManagerGroupAdded(ReplayGroup* group) override;
     void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
     void onReplayManagerGroupRemoved(ReplayGroup* group) override;
 
-    void onReplayManagerReplaySourceAdded(const QString& name, const QDir& path) override;
-    void onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName) override;
-    void onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
-    void onReplayManagerReplaySourceRemoved(const QString& name) override;
+    void onReplayManagerGamePathAdded(const QString& name, const QDir& path) override;
+    void onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName) override;
+    void onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
+    void onReplayManagerGamePathRemoved(const QString& name) override;
 
-    void onReplayManagerVideoSourceAdded(const QString& name, const QDir& path) override;
-    void onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName) override;
-    void onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
-    void onReplayManagerVideoSourceRemoved(const QString& name) override;
+    void onReplayManagerVideoPathAdded(const QString& name, const QDir& path) override;
+    void onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName) override;
+    void onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
+    void onReplayManagerVideoPathRemoved(const QString& name) override;
 
 private:
     void onCategorySelected(CategoryType category) override;

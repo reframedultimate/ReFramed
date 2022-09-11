@@ -50,6 +50,7 @@ private slots:
 
     void onConnectActionTriggered();
     void onDisconnectActionTriggered();
+    void onImportReplayPackTriggered();
     void onUserLabelsEditorActionTriggered();
 
     void onAboutActionTriggered();

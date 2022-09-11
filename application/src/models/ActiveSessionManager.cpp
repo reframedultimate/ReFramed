@@ -380,9 +380,9 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
+void ActiveSessionManager::onReplayManagerDefaultGamePathChanged(const QDir& path)
 {
-    PROFILE(ActiveSessionManager, onReplayManagerDefaultReplaySaveLocationChanged);
+    PROFILE(ActiveSessionManager, onReplayManagerDefaultGamePathChanged);
 
     (void)path;
     if (activeMetaData_.isNull())

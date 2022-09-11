@@ -19,7 +19,9 @@ uint8_t Deserializer::readU8()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 1 <= end_);
+    if (readPtr_ + 1 > end_)
+        return 0;
+
     return *readPtr_++;
 }
 
@@ -28,7 +30,8 @@ uint16_t Deserializer::readLU16()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 2 <= end_);
+    if (readPtr_ + 2 > end_)
+        return 0;
 
     uint16_t le;
     std::memcpy(&le, readPtr_, 2);
@@ -41,7 +44,8 @@ uint32_t Deserializer::readLU32()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 4 <= end_);
+    if (readPtr_ + 4 > end_)
+        return 0;
 
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
@@ -54,7 +58,8 @@ uint64_t Deserializer::readLU64()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 8 <= end_);
+    if (readPtr_ + 8 > end_)
+        return 0;
 
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
@@ -67,7 +72,8 @@ float Deserializer::readLF32()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 4 <= end_);
+    if (readPtr_ + 4 > end_)
+        return 0.0f;
 
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
@@ -81,7 +87,8 @@ double Deserializer::readLF64()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 8 <= end_);
+    if (readPtr_ + 8 > end_)
+        return 0.0f;
 
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
@@ -95,7 +102,8 @@ uint16_t Deserializer::readBU16()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 2 <= end_);
+    if (readPtr_ + 2 > end_)
+        return 0;
 
     uint16_t le;
     std::memcpy(&le, readPtr_, 2);
@@ -108,7 +116,8 @@ uint32_t Deserializer::readBU32()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 4 <= end_);
+    if (readPtr_ + 4 > end_)
+        return 0;
 
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
@@ -121,7 +130,8 @@ uint64_t Deserializer::readBU64()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 8 <= end_);
+    if (readPtr_ + 8 > end_)
+        return 0;
 
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
@@ -134,7 +144,8 @@ float Deserializer::readBF32()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 4 <= end_);
+    if (readPtr_ + 4 > end_)
+        return 0.0f;
 
     uint32_t le;
     std::memcpy(&le, readPtr_, 4);
@@ -148,7 +159,8 @@ double Deserializer::readBF64()
 {
     NOPROFILE();
 
-    assert(readPtr_ + 8 <= end_);
+    if (readPtr_ + 8 > end_)
+        return 0.0f;
 
     uint64_t le;
     std::memcpy(&le, readPtr_, 8);
@@ -175,7 +187,8 @@ const void* Deserializer::readFromPtr(int len)
 {
     NOPROFILE();
 
-    assert(readPtr_ + len <= end_);
+    if (readPtr_ + len > end_)
+        return nullptr;
     const void* ptr = static_cast<const void*>(readPtr_);
     readPtr_ += len;
     return ptr;

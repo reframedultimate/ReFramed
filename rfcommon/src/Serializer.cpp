@@ -26,6 +26,16 @@ void* Serializer::writeToPtr(int bytes)
 }
 
 // ----------------------------------------------------------------------------
+void Serializer::write(const void* data, int bytes)
+{
+    NOPROFILE();
+    assert(writePtr_ + bytes <= end_);
+
+    memcpy(writePtr_, data, bytes);
+    writePtr_ += bytes;
+}
+
+// ----------------------------------------------------------------------------
 void Serializer::writeU8(uint8_t value)
 {
     NOPROFILE();

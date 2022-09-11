@@ -37,12 +37,13 @@ CategoryView::CategoryView(
     replayGroupsItem_->setFlags(replayGroupsItem_->flags() | Qt::ItemIsDropEnabled);
 
     // Populate various children based on the data available in the model
+    onReplayManagerGroupAdded(replayManager_->allReplayGroup());
     for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
         onReplayManagerGroupAdded(replayManager_->replayGroup(i));
-    for (int i = 0; i != replayManager_->replaySourcesCount(); ++i)
-        onReplayManagerReplaySourceAdded(replayManager_->replaySourceName(i), replayManager_->replaySourcePath(i));
-    for (int i = 0; i != replayManager_->videoSourcesCount(); ++i)
-        onReplayManagerVideoSourceAdded(replayManager_->videoSourceName(i), replayManager_->videoSourcePath(i));
+    for (int i = 0; i != replayManager_->gamePathCount(); ++i)
+        onReplayManagerGamePathAdded(replayManager_->gamePathName(i), replayManager_->gamePath(i));
+    for (int i = 0; i != replayManager_->videoPathCount(); ++i)
+        onReplayManagerVideoPathAdded(replayManager_->videoPathName(i), replayManager_->videoPath(i));
 
     replayGroupsItem_->setExpanded(true);
 
@@ -361,9 +362,9 @@ void CategoryView::onCategoryItemSelected(CategoryType category, const QString& 
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerDefaultReplaySaveLocationChanged(const QDir& path)
+void CategoryView::onReplayManagerDefaultGamePathChanged(const QDir& path)
 {
-    PROFILE(CategoryView, onReplayManagerDefaultReplaySaveLocationChanged);
+    PROFILE(CategoryView, onReplayManagerDefaultGamePathChanged);
 
     // TODO update tooltip
 }
@@ -432,61 +433,61 @@ void CategoryView::onReplayManagerGroupRemoved(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerReplaySourceAdded(const QString& name, const QDir& path)
+void CategoryView::onReplayManagerGamePathAdded(const QString& name, const QDir& path)
 {
-    PROFILE(CategoryView, onReplayManagerReplaySourceAdded);
+    PROFILE(CategoryView, onReplayManagerGamePathAdded);
 
     //replaySourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_REPLAY_SOURCE)));
     // TODO tooltip for path
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerReplaySourceNameChanged(const QString& oldName, const QString& newName)
+void CategoryView::onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName)
 {
-    PROFILE(CategoryView, onReplayManagerReplaySourceNameChanged);
+    PROFILE(CategoryView, onReplayManagerGamePathNameChanged);
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerReplaySourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
+void CategoryView::onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
 {
-    PROFILE(CategoryView, onReplayManagerReplaySourcePathChanged);
+    PROFILE(CategoryView, onReplayManagerGamePathChanged);
 
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerReplaySourceRemoved(const QString& name)
+void CategoryView::onReplayManagerGamePathRemoved(const QString& name)
 {
-    PROFILE(CategoryView, onReplayManagerReplaySourceRemoved);
+    PROFILE(CategoryView, onReplayManagerGamePathRemoved);
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerVideoSourceAdded(const QString& name, const QDir& path)
+void CategoryView::onReplayManagerVideoPathAdded(const QString& name, const QDir& path)
 {
-    PROFILE(CategoryView, onReplayManagerVideoSourceAdded);
+    PROFILE(CategoryView, onReplayManagerVideoPathAdded);
 
     //videoSourcesItem_->addChild(new QTreeWidgetItem({name}, static_cast<int>(CategoryType::ITEM_VIDEO_SOURCE)));
     // TODO tooltip for path
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerVideoSourceNameChanged(const QString& oldName, const QString& newName)
+void CategoryView::onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName)
 {
-    PROFILE(CategoryView, onReplayManagerVideoSourceNameChanged);
+    PROFILE(CategoryView, onReplayManagerVideoPathNameChanged);
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerVideoSourcePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
+void CategoryView::onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath)
 {
-    PROFILE(CategoryView, onReplayManagerVideoSourcePathChanged);
+    PROFILE(CategoryView, onReplayManagerVideoPathChanged);
 
     // TODO update tooltip
 }
 
 // ----------------------------------------------------------------------------
-void CategoryView::onReplayManagerVideoSourceRemoved(const QString& name)
+void CategoryView::onReplayManagerVideoPathRemoved(const QString& name)
 {
-    PROFILE(CategoryView, onReplayManagerVideoSourceRemoved);
+    PROFILE(CategoryView, onReplayManagerVideoPathRemoved);
 }
 
 }

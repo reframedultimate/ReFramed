@@ -8,6 +8,7 @@ namespace rfcommon {
     class Log;
     class Plugin;
     class UserMotionLabels;
+    class VisualizerContext;
 }
 
 class QWidget;
@@ -25,7 +26,7 @@ struct RFPluginFactoryInfo
 
 struct RFPluginFactory
 {
-    rfcommon::Plugin* (*create)(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log);
+    rfcommon::Plugin* (*create)(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
     void (*destroy)(rfcommon::Plugin* plugin);
 
     RFPluginType type;

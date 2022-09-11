@@ -184,6 +184,8 @@ add_library (rfcommon SHARED
     "src/Vec2.cpp"
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
+	"src/VisualizerContext.cpp"
+	"src/VisualizerData.cpp"
     "${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>

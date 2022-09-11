@@ -9,6 +9,7 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
+#include "rfcommon/VisualizerContext.hpp"
 
 #include <QShortcut>
 #include <QPushButton>
@@ -35,11 +36,15 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 {
     ui_->setupUi(this);
 
+    // Window icon
+    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
+
     // Start video plugin and add it to the UI
     const auto availableVideoPlugins = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::VIDEO_PLAYER);
     for (const auto& factoryName : availableVideoPlugins)
     {
-        videoPlugin_ = pluginManager_->create(factoryName);
+        rfcommon::Reference<rfcommon::VisualizerContext> visCtx(new rfcommon::VisualizerContext);
+        videoPlugin_ = pluginManager_->create(factoryName, visCtx);
         if (videoPlugin_)
             if (videoPlugin_->videoPlayerInterface())
                 if (auto i = videoPlugin_->uiInterface())
@@ -140,23 +145,15 @@ void VideoAssociatorDialog::onSaveReleased()
     PROFILE(VideoAssociatorDialog, onSaveReleased);
 
     if (currentVideoFilePath_.length() > 0)
-    {
-        if ([this]{
-            for (int i = 0; i != replayManager_->videoSourcesCount(); ++i)
-                if (replayManager_->videoSourcePath(i) == currentVideoFilePath_)
-                    return false;
-            return true;
-        }()) {
+        if (replayManager_->videoPathExists(currentVideoFilePath_) == false)
             if (QMessageBox::question(this, "New Video Source Path",
                     "Would you like to add \"" + currentVideoFilePath_ + "\" to the video search path?\n\n"
                     ""
                     "If you say no, the information will still be saved, but ReFramed will be unable to locate the video "
                     "file when loading the replay.") == QMessageBox::Yes)
             {
-                replayManager_->addVideoSource(currentVideoFilePath_, currentVideoFilePath_);
+                replayManager_->addVideoPath(currentVideoFilePath_, currentVideoFilePath_);
             }
-        }
-    }
 
     rfcommon::Reference<rfcommon::VideoMeta> meta = new rfcommon::VideoMeta(
                 currentVideoFileName_.toUtf8().constData(),

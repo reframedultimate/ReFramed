@@ -129,6 +129,32 @@ public:
             return tmp;
         }
 
+        Iterator& operator+=(int rhs)
+        {
+            while (rhs--)
+                operator++();
+            return *this;
+        }
+        Iterator& operator-=(int rhs)
+        {
+            while (rhs--)
+                operator--();
+            return *this;
+        }
+
+        Iterator operator+(int rhs)
+        {
+            Iterator tmp(*this);
+            tmp += rhs;
+            return tmp;
+        }
+        Iterator operator-(int rhs)
+        {
+            Iterator tmp(*this);
+            tmp -= rhs;
+            return tmp;
+        }
+
         inline bool operator==(const Iterator& rhs) const { return pos_ == rhs.pos_; }
         inline bool operator!=(const Iterator& rhs) const { return !operator==(rhs); }
 
@@ -515,7 +541,7 @@ public:
         return Iterator(table_, keys_, values_, newPos);
     }
 
-    S erase(const K& key)
+    bool erase(const K& key)
     {
         S pos = findImpl(key);
         if (pos != table_.count())
@@ -524,10 +550,10 @@ public:
             table_[pos] = RIP;
             keys_[pos].~K();
             values_[pos].~V();
-            return 1;
+            return true;
         }
 
-        return 0;
+        return false;
     }
 
     Iterator erase(Iterator it)

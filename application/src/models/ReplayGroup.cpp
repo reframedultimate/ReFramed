@@ -1,9 +1,11 @@
-#include "rfcommon/Profiler.hpp"
 #include "application/Util.hpp"
 #include "application/listeners/ReplayGroupListener.hpp"
 #include "application/models/ReplayGroup.hpp"
 
-#include <QDebug>
+#include "rfcommon/Profiler.hpp"
+
+#include <QDir>
+#include <cassert>
 
 namespace rfapp {
 
@@ -14,7 +16,7 @@ ReplayGroup::ReplayGroup(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-const QSet<QFileInfo>& ReplayGroup::absFilePathList() const
+const QSet<QString>& ReplayGroup::fileNames() const
 {
     PROFILE(ReplayGroup, absFilePathList);
 
@@ -38,30 +40,31 @@ void ReplayGroup::setName(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayGroup::addFile(const QFileInfo& absPathToFile)
+void ReplayGroup::addFile(const QString& fileName)
 {
     PROFILE(ReplayGroup, addFile);
+    assert(QDir(fileName).isRelative());
 
-    if (fileList_.contains(absPathToFile))
+    if (fileList_.contains(fileName))
         return;
 
-    fileList_.insert(absPathToFile);
-    dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileAdded, this, absPathToFile);
+    fileList_.insert(fileName);
+    dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileAdded, this, fileName);
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayGroup::removeFile(const QFileInfo& absPathToFile)
+bool ReplayGroup::removeFile(const QString& fileName)
 {
     PROFILE(ReplayGroup, removeFile);
+    assert(QDir(fileName).isRelative());
 
-    for (auto it = fileList_.begin(); it != fileList_.end(); ++it)
-        if (*it == absPathToFile)
-        {
-            fileList_.erase(it);
-            dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileRemoved, this, absPathToFile);
-            return true;
-        }
-    return false;
+    auto it = fileList_.find(fileName);
+    if (it == fileList_.end())
+        return false;
+
+    fileList_.erase(it);
+    dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileRemoved, this, fileName);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -75,12 +78,10 @@ void ReplayGroup::removeAllFiles()
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayGroup::exists(const QFileInfo& absPathToFile) const
+bool ReplayGroup::isInGroup(const QString& fileName) const
 {
-    for (const auto file : fileList_)
-        if (file == absPathToFile)
-            return true;
-    return false;
+    assert(QDir(fileName).isRelative());
+    return fileList_.contains(fileName);
 }
 
 }

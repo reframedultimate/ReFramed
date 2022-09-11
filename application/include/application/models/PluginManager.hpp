@@ -16,13 +16,14 @@ struct RFPluginFactoryInfo;
 class QWidget;
 
 namespace rfcommon {
+    class AnalyzerPlugin;
     class Hash40Strings;
     class Plugin;
-    class AnalyzerPlugin;
-    class VisualizerPlugin;
     class RealtimePlugin;
     class StandalonePlugin;
     class UserMotionLabels;
+    class VisualizerContext;
+    class VisualizerPlugin;
 }
 
 namespace rfapp {
@@ -66,7 +67,7 @@ public:
      */
     const RFPluginFactoryInfo* getFactoryInfo(const QString& name) const;
 
-    rfcommon::Plugin* create(const QString& name);
+    rfcommon::Plugin* create(const QString& name, rfcommon::VisualizerContext* visCtx);
     void destroy(rfcommon::Plugin* plugin);
 
 private:

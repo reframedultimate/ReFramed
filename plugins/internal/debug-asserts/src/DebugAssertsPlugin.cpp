@@ -179,7 +179,12 @@ private:
     SessionState sessionState_ = NONE;
 };
 
-static rfcommon::Plugin* createPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log)
+static rfcommon::Plugin* createPlugin(
+        RFPluginFactory* factory,
+        rfcommon::VisualizerContext* visCtx,
+        rfcommon::Log* log,
+        rfcommon::UserMotionLabels* userLabels,
+        rfcommon::Hash40Strings* hash40Strings)
     { return new DebugAssertsPlugin(factory); }
 static void destroyPlugin(rfcommon::Plugin* plugin)
     { delete plugin; }

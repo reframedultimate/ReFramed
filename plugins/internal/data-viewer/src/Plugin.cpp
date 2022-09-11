@@ -3,7 +3,12 @@
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"
 
-static rfcommon::Plugin* createPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log)
+static rfcommon::Plugin* createPlugin(
+    RFPluginFactory* factory,
+    rfcommon::VisualizerContext* visCtx,
+    rfcommon::Log* log,
+    rfcommon::UserMotionLabels* userLabels,
+    rfcommon::Hash40Strings* hash40Strings)
 {
     PROFILE(PluginGlobal, createPlugin);
 

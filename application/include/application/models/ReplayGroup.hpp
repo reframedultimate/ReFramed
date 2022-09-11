@@ -2,7 +2,6 @@
 
 #include "rfcommon/ListenerDispatcher.hpp"
 #include <QString>
-#include <QFileInfo>
 #include <QSet>
 
 namespace rfapp {
@@ -20,12 +19,12 @@ public:
      */
     const QString& name() const;
 
-    const QSet<QFileInfo>& absFilePathList() const;
+    const QSet<QString>& fileNames() const;
 
-    void addFile(const QFileInfo& absPathToFile);
-    bool removeFile(const QFileInfo& absPathToFile);
+    void addFile(const QString& fileName);
+    bool removeFile(const QString& fileName);
     void removeAllFiles();
-    bool exists(const QFileInfo& absPathToFile) const;
+    bool isInGroup(const QString& fileName) const;
 
     rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
@@ -38,7 +37,7 @@ private:
 
 private:
     QString name_;
-    QSet<QFileInfo> fileList_;
+    QSet<QString> fileList_;
 };
 
 }

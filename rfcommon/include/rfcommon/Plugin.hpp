@@ -1,8 +1,11 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/FrameIndex.hpp"
+#include "rfcommon/ProtocolListener.hpp"
+#include "rfcommon/Reference.hpp"
+#include "rfcommon/String.hpp"
+#include "rfcommon/Vector.hpp"
 
 class QWidget;
 struct RFPluginFactory;
@@ -10,6 +13,8 @@ struct RFPluginFactory;
 namespace rfcommon {
 
 class Session;
+class VisualizerContext;
+class VisualizerData;
 
 class RFCOMMON_PUBLIC_API Plugin
 {
@@ -33,9 +38,21 @@ public:
         virtual void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) = 0;
     };
 
-    class VisualizerInterface
+    class RFCOMMON_PUBLIC_API VisualizerInterface
     {
     public:
+        VisualizerInterface(VisualizerContext* visCtx, const RFPluginFactory* factory);
+        virtual ~VisualizerInterface();
+
+        int visualizerSourceCount() const;
+        const VisualizerData& visualizerData(int sourceIdx) const;
+        void setVisualizerData(VisualizerData&& data);
+
+        virtual void onVisualizerDataChanged() = 0;
+
+    private:
+        Reference<VisualizerContext> visCtx_;
+        const String name_;
     };
 
     class RealtimeInterface : public ProtocolListener
@@ -111,12 +128,14 @@ public:
         virtual rfcommon::FrameIndex currentVideoGameFrame() = 0;
     };
 
-    Plugin(RFPluginFactory* factory);
+    Plugin(const RFPluginFactory* factory);
     virtual ~Plugin();
 
     // These avoid the need for ReFramed to dynamic_cast the plugin to a
     // derived type. Plugins should simply return "this" if they implement
-    // the interface, and nullptr if they don't.
+    // the interface, and nullptr if they don't. Plugins may also separate
+    // the interfaces into individual objects and return those, if it's more
+    // convenient.
     virtual Plugin::UIInterface* uiInterface() = 0;
     virtual Plugin::ReplayInterface* replayInterface() = 0;
     virtual Plugin::VisualizerInterface* visualizerInterface() = 0;

@@ -12,14 +12,20 @@ public:
 
     static FrameIndex fromValue(Type value);
     static FrameIndex fromSeconds(double seconds);
+    static FrameIndex makeInvalid();
 
     ~FrameIndex();
 
+    bool isValid() const { return value_ != Type(-1); }
     Type index() const { return value_; }
     double secondsPassed() const { return static_cast<double>(value_) / 60.0; }
 
     bool operator==(FrameIndex other) const { return value_ == other.value_; }
     bool operator!=(FrameIndex other) const { return value_ != other.value_; }
+    bool operator< (FrameIndex other) const { return value_ < other.value_; }
+    bool operator> (FrameIndex other) const { return value_ > other.value_; }
+    bool operator<=(FrameIndex other) const { return value_ <= other.value_; }
+    bool operator>=(FrameIndex other) const { return value_ >= other.value_; }
 
 private:
     FrameIndex(Type value);

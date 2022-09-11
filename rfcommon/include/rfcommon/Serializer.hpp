@@ -20,7 +20,7 @@ public:
      */
     void* writeToPtr(int bytes);
 
-    void write(const void* data, int len);
+    void write(const void* data, int bytes);
 
     void writeU8(uint8_t value);
 
@@ -39,6 +39,7 @@ public:
     void seekW(int offset);
 
     uint64_t bytesWritten() const;
+    const void* data() const { return begin_; }
 
 private:
     unsigned char* writePtr_;

@@ -15,7 +15,7 @@
 #include "rfcommon/TrainingMetaData.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
-#include "rfcommon/VideoFileResolver.hpp"
+#include "rfcommon/FilePathResolver.hpp"
 #include "rfcommon/time.h"
 
 #include "nlohmann/json.hpp"
@@ -744,14 +744,14 @@ static bool loadLegacy_1_4(
 
 // ----------------------------------------------------------------------------
 Session::Session(
-        VideoFileResolver* vfr,
+        FilePathResolver* pathResolver,
         MappedFile* file,
         MappingInfo* mappingInfo,
         MetaData* metaData,
         FrameData* frameData,
         VideoMeta* videoMeta,
         VideoEmbed* video)
-    : vfr_(vfr)
+    : pathResolver_(pathResolver)
     , file_(file)
     , mappingInfo_(mappingInfo)
     , metaData_(metaData)
@@ -771,12 +771,12 @@ Session::~Session()
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newModernSavedSession(VideoFileResolver* vfr, MappedFile* file)
+Session* Session::newModernSavedSession(FilePathResolver* pathResolver, MappedFile* file)
 {
     PROFILE(Session, newModernSavedSession);
 
     return new Session(
-        vfr,
+        pathResolver,
         file,
         nullptr,
         nullptr,
@@ -816,7 +816,7 @@ Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* met
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::load(VideoFileResolver* vfr, const char* fileName, uint8_t loadFlags)
+Session* Session::load(FilePathResolver* pathResolver, const char* fileName, uint8_t loadFlags)
 {
     PROFILE(Session, load);
 
@@ -831,7 +831,7 @@ Session* Session::load(VideoFileResolver* vfr, const char* fileName, uint8_t loa
     const void* magic = deserializer.readFromPtr(4);
     if (memcmp(magic, "RFR1", 4) == 0)
     {
-        Reference<Session> session = newModernSavedSession(vfr, file);
+        Reference<Session> session = newModernSavedSession(pathResolver, file);
 
         // Read content table
         uint8_t numEntries = deserializer.readU8();
@@ -844,10 +844,11 @@ Session* Session::load(VideoFileResolver* vfr, const char* fileName, uint8_t loa
         }
 
         // Load sections immediately if necessary
-#define X(name, value)                                 \
-        if (loadFlags & Flags::name)                   \
-            if (session->tryGet##name() == nullptr)    \
-                return nullptr;
+#define X(name, value)                                      \
+        if (loadFlags & Flags::name)                        \
+            if (session->existsInContentTable(Flags::name)) \
+                if (session->tryGet##name() == nullptr)     \
+                    return nullptr;
         RFCOMMON_SESSION_SECTIONS_LIST
 #undef X
 
@@ -863,7 +864,7 @@ Session* Session::load(VideoFileResolver* vfr, const char* fileName, uint8_t loa
             continue;
 
         j = json::parse(std::move(s), nullptr, false);
-        if (j == json::value_t::discarded)
+        if (j.is_discarded())
             return nullptr;
 
         break;
@@ -906,10 +907,34 @@ Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
 // ----------------------------------------------------------------------------
 bool Session::save(const char* fileName, uint8_t saveFlags)
 {
-    PROFILE(Session, save);
+    PROFILE(Session, save_FileName);
 
     Log* log = Log::root();
     log->beginDropdown("Saving session %s", fileName);
+
+    FILE* fp = fopen(fileName, "wb");
+    if (fp == nullptr)
+    {
+        log->error("Failed to open file %s: %s", fileName, strerror(errno));
+        return false;
+    }
+
+    if (Session::save(fp, saveFlags) == 0)
+    {
+        fclose(fp);
+        remove(fileName);
+        return false;
+    }
+
+    fclose(fp);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+uint64_t Session::save(FILE* fp, uint8_t saveFlags)
+{
+    PROFILE(Session, save_FilePointer);
+    Log* log = Log::root();
 
     // This could either be a session that was recorded live, or a session
     // loaded from disk. If loaded from disk, then we have to make sure to
@@ -964,21 +989,14 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
     // Calculate header size and data offset
     const int headerSize = 5 + 12 * table.count();
     uint8_t numEntries = static_cast<uint8_t>(table.count());
-    int offset = headerSize;
+    const uint64_t beginOffset = ftell(fp);  // store location for header data for later, as it might not be at 0
+    uint64_t offset = headerSize;
 
     log->info("Content Table has %d entries. Header size %d", numEntries, headerSize);
 
-    FILE* file;
-    file = fopen(fileName, "wb");
-    if (file == nullptr)
-    {
-        log->error("Failed to open file %s: %s", fileName, strerror(errno));
-        goto fopen_fail;
-    }
-
     // We skip writing the header until after data is written, because
     // there is not enough information yet
-    if (fseek(file, headerSize, SEEK_SET) != 0)
+    if (fseek(fp, beginOffset + offset, SEEK_SET) != 0)
     {
         log->error("Failed to seek to first offset 0x%x", headerSize);
         goto write_fail;
@@ -993,7 +1011,7 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
                 if (memcmp(existingEntry.type, entry.type, 4) == 0)   \
                 {                                                     \
                     entry.offset = offset;                            \
-                    entry.size = fwrite(file_->addressAtOffset(existingEntry.offset), 1, existingEntry.size, file); \
+                    entry.size = fwrite(file_->addressAtOffset(existingEntry.offset), 1, existingEntry.size, fp); \
                     if (entry.size != existingEntry.size)             \
                     {                                                 \
                         log->error("Failed to write 0x%x bytes to file. Only wrote 0x%x bytes.", existingEntry.size, entry.size); \
@@ -1010,8 +1028,8 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
             {
                 entry.offset = offset;
                 entry.size = metaData_ && frameData_ ?
-                    mappingInfo_->saveNecessary(file, metaData_, frameData_) :
-                    mappingInfo_->save(file);
+                    mappingInfo_->saveNecessary(fp, metaData_, frameData_) :
+                    mappingInfo_->save(fp);
                 if (entry.size == 0)
                     goto write_fail;
             }
@@ -1021,7 +1039,7 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
         else if (memcmp(entry.type, blobTypeMetaData, 4) == 0)
         {
             entry.offset = offset;
-            entry.size = metaData_->save(file);
+            entry.size = metaData_->save(fp);
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
@@ -1034,7 +1052,7 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
             else
             {
                 entry.offset = offset;
-                entry.size = frameData_->save(file);
+                entry.size = frameData_->save(fp);
                 if (entry.size == 0)
                     goto write_fail;
             }
@@ -1044,7 +1062,7 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
         else if (memcmp(entry.type, blobTypeVideoMeta, 4) == 0)
         {
             entry.offset = offset;
-            entry.size = videoMeta_->save(file);
+            entry.size = videoMeta_->save(fp);
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
@@ -1057,7 +1075,7 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
             else
             {
                 entry.offset = offset;
-                entry.size = fwrite(videoEmbed_->address(), 1, videoEmbed_->size(), file);
+                entry.size = fwrite(videoEmbed_->address(), 1, videoEmbed_->size(), fp);
                 if (entry.size == 0)
                     goto write_fail;
             }
@@ -1072,21 +1090,22 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
     }
 
     // Rewind and write header
-    if (fseek(file, 0, SEEK_SET) != 0)
+    uint64_t endOffset = ftell(fp);
+    if (fseek(fp, beginOffset, SEEK_SET) != 0)
     {
         log->error("Failed to seek to beginning");
         goto write_fail;
     }
 
     // Write magic
-    if (fwrite(magic, 1, 4, file) != 4)
+    if (fwrite(magic, 1, 4, fp) != 4)
     {
         log->error("Failed to write magic");
         goto write_fail;
     }
 
     // Write contents table
-    if (fwrite(&numEntries, 1, 1, file) != 1)
+    if (fwrite(&numEntries, 1, 1, fp) != 1)
     {
         log->error("Failed to write content table size");
         goto write_fail;
@@ -1095,23 +1114,18 @@ bool Session::save(const char* fileName, uint8_t saveFlags)
     {
         uint32_t offsetLE = toLittleEndian32(entry.offset);
         uint32_t sizeLE = toLittleEndian32(entry.size);
-        if (fwrite(entry.type, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
-        if (fwrite(&offsetLE, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
-        if (fwrite(&sizeLE, 1, 4, file) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
-    }
-
-    if (fclose(file) != 0)
-    {
-        log->error("Failed to close file");
-        goto write_fail;
+        if (fwrite(entry.type, 1, 4, fp) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
+        if (fwrite(&offsetLE, 1, 4, fp) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
+        if (fwrite(&sizeLE, 1, 4, fp) != 4) { log->error("Failed to write content table entry"); goto write_fail; }
     }
 
     log->endDropdown();
-    return true;
+
+    fseek(fp, endOffset, SEEK_SET);
+    return endOffset - beginOffset;
 
     write_fail:
-        fclose(file);
-        remove(fileName);
+        return 0;
     fopen_fail:;
         /*
         if (QMessageBox::warning(nullptr, "Failed to save recording", QString("Failed to open file for writing: ") + f.fileName() + "\n\nWould you like to save the file manually?", QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
@@ -1265,7 +1279,7 @@ VideoEmbed* Session::tryGetVideo()
     if (meta->isEmbedded())
         return tryGetVideoEmbed();
 
-    const String fileName = vfr_->resolveVideoFile(meta->fileName());
+    const String fileName = pathResolver_->resolveVideoFile(meta->fileName());
     if (fileName.length() == 0)
         return nullptr;
 

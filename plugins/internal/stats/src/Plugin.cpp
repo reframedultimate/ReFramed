@@ -9,7 +9,12 @@
 #endif
 
 // Gets called when the main application wants to create your plugin
-static rfcommon::Plugin* createStatsPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings, rfcommon::Log* log)
+static rfcommon::Plugin* createStatsPlugin(
+    RFPluginFactory* factory,
+    rfcommon::VisualizerContext* visCtx,
+    rfcommon::Log* log,
+    rfcommon::UserMotionLabels* userLabels,
+    rfcommon::Hash40Strings* hash40Strings)
 {
     return new StatsPlugin(factory, userLabels, hash40Strings);
 }

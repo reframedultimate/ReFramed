@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vod-review/listeners/VideoPlayerListener.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Reference.hpp"
 #include <memory>
@@ -18,9 +19,10 @@ class VODReviewPlugin
         , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::ReplayInterface
         , private rfcommon::Plugin::VisualizerInterface
+        , private VideoPlayerListener
 {
 public:
-    VODReviewPlugin(RFPluginFactory* factory, rfcommon::Log* log);
+    VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log);
     ~VODReviewPlugin();
 
     Plugin::UIInterface* uiInterface() override final;
@@ -41,6 +43,14 @@ private:
 
     void onGameSessionSetLoaded(rfcommon::Session** games, int numGames) override final;
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override final;
+
+private:
+    void onVisualizerDataChanged() override;
+
+private:
+    void onFileOpened() override;
+    void onFileClosed() override;
+    void onPresentImage(const QImage& image) override;
 
 private:
     rfcommon::Log* log_;

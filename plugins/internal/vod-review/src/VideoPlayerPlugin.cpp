@@ -6,9 +6,9 @@
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
+#include "rfcommon/String.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
-#include "rfcommon/String.hpp"
 
 // ----------------------------------------------------------------------------
 VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* log)

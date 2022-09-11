@@ -158,7 +158,7 @@ const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString& name) co
 }
 
 // ----------------------------------------------------------------------------
-rfcommon::Plugin* PluginManager::create(const QString& name)
+rfcommon::Plugin* PluginManager::create(const QString& name, rfcommon::VisualizerContext* visCtx)
 {
     PROFILE(PluginManager, create);
 
@@ -186,7 +186,8 @@ rfcommon::Plugin* PluginManager::create(const QString& name)
 
                 // Instantiate object
                 rfcommon::Log::root()->info("Creating plugin \"%s\"", factory->info.name);
-                rfcommon::Plugin* plugin = factory->create(factory, userLabels_, hash40Strings_, rfcommon::Log::root()->child(factory->info.name));
+                rfcommon::Log* pluginLog = rfcommon::Log::root()->child(factory->info.name);
+                rfcommon::Plugin* plugin = factory->create(factory, visCtx, pluginLog, userLabels_, hash40Strings_);
                 if (plugin == nullptr)
                     log->error("Call to create() failed for plugin factory \"%s\"", factory->info.name);
                 return plugin;

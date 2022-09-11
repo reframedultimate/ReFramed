@@ -32,7 +32,7 @@ MappingInfo* MappingInfo::load(const void* data, uint32_t size)
     const unsigned char* const begin = static_cast<const unsigned char*>(data);
     const unsigned char* const end = static_cast<const unsigned char*>(data) + size;
     json j = json::parse(begin, end, nullptr, false);
-    if (j == json::value_t::discarded)
+    if (j.is_discarded())
         return nullptr;
 
     if (j["version"] == "1.5")

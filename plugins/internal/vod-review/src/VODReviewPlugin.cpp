@@ -8,19 +8,25 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
+#include "rfcommon/VisualizerData.hpp"
 
 // ----------------------------------------------------------------------------
-VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::Log* log)
+VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log)
     : Plugin(factory)
+    , Plugin::VisualizerInterface(visCtx, factory)
     , log_(log)
     , decoder_(new AVDecoder(log))
     , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
     , videoPlayer_(new VideoPlayerModel(seekableDecoder_.get(), log))
-{}
+{
+    videoPlayer_->dispatcher.addListener(this);
+}
 
 // ----------------------------------------------------------------------------
 VODReviewPlugin::~VODReviewPlugin()
-{}
+{
+    videoPlayer_->dispatcher.removeListener(this);
+}
 
 // ----------------------------------------------------------------------------
 rfcommon::Plugin::UIInterface* VODReviewPlugin::uiInterface() { return this; }
@@ -80,3 +86,20 @@ void VODReviewPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 
 void VODReviewPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
 void VODReviewPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
+
+// ----------------------------------------------------------------------------
+void VODReviewPlugin::onVisualizerDataChanged()
+{
+    for (int i = 0; i != visualizerSourceCount(); ++i)
+    {
+        const auto& timeIntervals = visualizerData(i).timeIntervals;
+        if (timeIntervals.count() > 0)
+            videoPlayer_->seekVideoToGameFrame(timeIntervals[0].start);
+    }
+}
+
+void VODReviewPlugin::onFileOpened() {}
+void VODReviewPlugin::onFileClosed() {}
+void VODReviewPlugin::onPresentImage(const QImage& image)
+{
+}

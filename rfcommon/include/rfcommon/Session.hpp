@@ -14,19 +14,19 @@
     X(VideoEmbed, 0x10)
 
 namespace rfcommon {
-
+    
+class FilePathResolver;
 class MappedFile;
 class MappingInfo;
 class MetaData;
 class FrameData;
 class VideoMeta;
 class VideoEmbed;
-class VideoFileResolver;
 
 class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
 {
     Session(
-            VideoFileResolver* vfr,
+            FilePathResolver* pathResolver,
             MappedFile* file,
             MappingInfo* mappingInfo,
             MetaData* metaData,
@@ -48,11 +48,12 @@ public:
 
     ~Session();
 
-    static Session* newModernSavedSession(VideoFileResolver* vfr, MappedFile* file);
+    static Session* newModernSavedSession(FilePathResolver* pathResolver, MappedFile* file);
     static Session* newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
     static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
-    static Session* load(VideoFileResolver* vfr, const char* fileName, uint8_t loadFlags=Flags::None);
+    static Session* load(FilePathResolver* pathResolver, const char* fileName, uint8_t loadFlags=Flags::None);
     bool save(const char* fileNamem, uint8_t saveFlags=Flags::All);
+    uint64_t save(FILE* fp, uint8_t saveFlags = Flags::All);
 
     bool existsInContentTable(Flags::Flag flag) const;
 
@@ -90,7 +91,7 @@ private:
     };
     SmallVector<ContentTableEntry, 5> contentTable_;
 
-    const VideoFileResolver* vfr_;
+    const FilePathResolver* pathResolver_;
     Reference<MappedFile> file_;
     Reference<MappingInfo> mappingInfo_;
     Reference<MetaData> metaData_;
