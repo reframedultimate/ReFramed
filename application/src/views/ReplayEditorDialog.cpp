@@ -30,6 +30,9 @@ ReplayEditorDialog::ReplayEditorDialog(
 {
     ui_->setupUi(this);
 
+    // Window icon
+    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
+
 #define X(name, shortstr, longstr) ui_->setFormat->addItem(longstr);
     SET_FORMAT_LIST
 #undef X

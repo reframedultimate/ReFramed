@@ -15,6 +15,8 @@
 
 #include <iostream>
 
+static bool enableDarkStyle = false;
+
 static int processOptions(int argc, char** argv)
 {
     NOPROFILE();
@@ -26,6 +28,7 @@ static int processOptions(int argc, char** argv)
             std::cout << "Available styles:" << std::endl;
             for (const auto& name : QStyleFactory::keys())
                 std::cout << "  " << name.toStdString() << std::endl;
+            return -1;
         }
 
         if (strcmp(argv[i], "--style") == 0)
@@ -37,6 +40,11 @@ static int processOptions(int argc, char** argv)
                 std::cout << "Failed to set style \"" << argv[i] << "\"" << std::endl;
                 return -1;
             }
+        }
+
+        if (strcmp(argv[i], "--dark") == 0)
+        {
+            enableDarkStyle = true;
         }
     }
 
@@ -72,7 +80,8 @@ int main(int argc, char** argv)
 {
     NOPROFILE();
 
-    processOptions(argc, argv);
+    if (processOptions(argc, argv) != 0)
+        return -1;
 
 #ifdef _WIN32
     QApplication::setStyle("fusion");
@@ -80,6 +89,9 @@ int main(int argc, char** argv)
     //applyStyle(1, qApp);
 
     QApplication app(argc, argv);
+
+    if (enableDarkStyle)
+        applyStyle(1, &app);
 
 #if defined(RFCOMMON_LOGGING)
     QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);

@@ -320,7 +320,6 @@ void ReplayGroupView::onFiltersTextChanged(const QString& text)
     QStringList rules = text.split(",");
     for (const auto& rule : rules)
     {
-
     }
 }
 

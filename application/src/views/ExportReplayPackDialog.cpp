@@ -37,7 +37,11 @@ ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathR
         ui_->listWidget_replays->addItem(name);
     ui_->listWidget_replays->selectAll();
 
-    connect(ui_->pushButton_next, &QPushButton::released, [this] { ui_->stackedWidget->setCurrentIndex(1); });
+    connect(ui_->pushButton_next, &QPushButton::released, [this] { 
+        ui_->stackedWidget->setCurrentIndex(1);
+        if (ui_->lineEdit_packFileName->text().length() == 0)
+            ExportReplayPackDialog::onChoosePackFile();
+    });
     connect(ui_->pushButton_back, &QPushButton::released, [this] { ui_->stackedWidget->setCurrentIndex(0); });
     connect(ui_->listWidget_replays, &QListWidget::itemSelectionChanged, this, &ExportReplayPackDialog::onSelectionChanged);
     connect(ui_->toolButton_packFileName, &QToolButton::released, this, &ExportReplayPackDialog::onChoosePackFile);
