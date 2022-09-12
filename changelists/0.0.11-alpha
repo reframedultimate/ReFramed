@@ -1,0 +1,3 @@
+Bugfixes
+- Fixed string encoding issues with replay files
+- Fixed a bug where the absolute path to the replay was added to the list instead of the name
