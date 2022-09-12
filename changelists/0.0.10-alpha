@@ -1,0 +1,11 @@
+Enhancements
+- Added a dark mode (start ReFramed-dark.bat)
+- Added additional fields to metadata such as tournament name, sponsor, event, round, etc.
+  Access via right-click on replay -> Edit Meta Data
+- Replays can now be exported and imported via right-click on replay -> Export, and under File -> Import
+- Included user motion label layers in the distribution
+- ReFramed-server
+  + Kazuya and Sora should now appear correctly (copy new .nro to your SD card)
+
+Known Bugs
+- Video player may crash when seeking or jumping between replays too quickly. Issue is known but hard to fix.
