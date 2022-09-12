@@ -112,8 +112,7 @@ void ReplayViewer::loadGameReplays(const QStringList& fileNames)
         int idx = findInCache(fileName);
         if (idx == replayCache_.size())
         {
-            QByteArray ba = fileName.toLocal8Bit();
-            if (auto session = rfcommon::Session::load(replayManager_, ba.constData()))
+            if (auto session = rfcommon::Session::load(replayManager_, fileName.toLocal8Bit().constData()))
             {
                 loadedFileNames.push_back(fileName);
                 loadedSessions.push_back(session);
@@ -171,7 +170,9 @@ void ReplayViewer::onGameReplaysLoaded(const QStringList& fileNames, const QVect
                 i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
     }
 
-    replayState_ = GAME_LOADED;
+    // Only switch states if we successfully loaded a replay
+    if (activeReplays_.size() > 0)
+        replayState_ = GAME_LOADED;
 }
 
 // ----------------------------------------------------------------------------

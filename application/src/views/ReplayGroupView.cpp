@@ -23,6 +23,8 @@
 #include <QAction>
 #include <QMessageBox>
 
+#include <QDebug>
+
 namespace rfapp {
 
 class ReplayNameCompleter : public QCompleter
@@ -291,11 +293,11 @@ void ReplayGroupView::onItemSelectionChanged()
     if (selected.size() == 1)
     {
         const auto fileName = replayListWidget_->itemFileName(selected[0]);
+        assert(QDir(fileName).isRelative());
         const auto absFilePath = replayManager_->resolveGameFile(fileName.toLocal8Bit().constData());
         if (absFilePath.length() == 0)
             return;
-        replayViewer_->clearReplays();
-        replayViewer_->loadGameReplays({ absFilePath.cStr()});
+        replayViewer_->loadGameReplays({ QString::fromLocal8Bit(absFilePath.cStr()) });
     }
     else if (selected.size() > 1)
     {
@@ -305,7 +307,7 @@ void ReplayGroupView::onItemSelectionChanged()
             const auto absFilePath = replayManager_->resolveGameFile(fileName.toLocal8Bit().constData());
             if (absFilePath.length() == 0)
                 continue;
-            absFilePaths.push_back(absFilePath.cStr());
+            absFilePaths.push_back(QString::fromLocal8Bit(absFilePath.cStr()));
         }
 
         replayViewer_->loadGameReplays(absFilePaths);

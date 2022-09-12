@@ -680,11 +680,10 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
     if (dir.exists() == false)
         dir.mkpath(".");
     QFileInfo fileInfo(dir, composeFileName(map, mdata, formatStr));
-    QByteArray ba = fileInfo.absoluteFilePath().toLocal8Bit();
-    if (session->save(ba.constData()))
+    if (session->save(fileInfo.absoluteFilePath().toLocal8Bit()))
     {
         // Add the session to the "All" recording group
-        allReplayGroup()->addFile(fileInfo.absoluteFilePath());
+        allReplayGroup()->addFile(fileInfo.fileName());
         return true;
     }
 
@@ -744,9 +743,9 @@ rfcommon::String ReplayManager::resolveGameFile(const char* fileName) const
 {
     for (auto dir : gamePaths_)
     {
-        QString absName = dir.absoluteFilePath(fileName);
-        if (QFileInfo(absName).isFile())
-            return absName.toLocal8Bit().constData();
+        QString name = QString::fromLocal8Bit(fileName);
+        if (dir.exists(name))
+            return dir.absoluteFilePath(name).toLocal8Bit().constData();
     }
 
     return "";
@@ -757,9 +756,9 @@ rfcommon::String ReplayManager::resolveVideoFile(const char* fileName) const
 {
     for (auto dir : videoPaths_)
     {
-        QString absName = dir.absoluteFilePath(fileName);
-        if (QFileInfo(absName).isFile())
-            return absName.toLocal8Bit().constData();
+        QString name = QString::fromLocal8Bit(fileName);
+        if (dir.exists(name))
+            return dir.absoluteFilePath(name).toLocal8Bit().constData();
     }
 
     return "";
