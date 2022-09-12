@@ -42,15 +42,11 @@ private:
     void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
     void onReplayManagerGroupRemoved(ReplayGroup* group) override;
 
-    void onReplayManagerGamePathAdded(const QString& name, const QDir& path) override;
-    void onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName) override;
-    void onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
-    void onReplayManagerGamePathRemoved(const QString& name) override;
+    void onReplayManagerGamePathAdded(const QDir& path) override;
+    void onReplayManagerGamePathRemoved(const QDir& path) override;
 
-    void onReplayManagerVideoPathAdded(const QString& name, const QDir& path) override;
-    void onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName) override;
-    void onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override;
-    void onReplayManagerVideoPathRemoved(const QString& name) override;
+    void onReplayManagerVideoPathAdded(const QDir& path) override;
+    void onReplayManagerVideoPathRemoved(const QDir& path) override;
 
 private:
     void onCategorySelected(CategoryType category) override;

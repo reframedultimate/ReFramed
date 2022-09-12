@@ -32,7 +32,7 @@ ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginMa
 
     replayManager_->dispatcher.addListener(this);
     replayManager_->allReplayGroup()->dispatcher.addListener(this);
-    for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
+    for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
         replayManager_->replayGroup(i)->dispatcher.addListener(this);
 
     connect(this, &QTabWidget::tabBarClicked, this, &ReplayViewer::onTabBarClicked);
@@ -45,6 +45,7 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
     , protocol_(protocol)
     , replayManager_(nullptr)
     , pluginManager_(pluginManager)
+    , visCtx_(new rfcommon::VisualizerContext)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
     , replayState_(NONE_LOADED)
@@ -66,7 +67,7 @@ ReplayViewer::~ReplayViewer()
 
     if (replayManager_)
     {
-        for (int i = 0; i != replayManager_->replayGroupsCount(); ++i)
+        for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
             replayManager_->replayGroup(i)->dispatcher.removeListener(this);
         replayManager_->allReplayGroup()->dispatcher.removeListener(this);
 
@@ -750,14 +751,10 @@ void ReplayViewer::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
     group->dispatcher.removeListener(this);
 }
-void ReplayViewer::onReplayManagerGamePathAdded(const QString& name, const QDir& path) {}
-void ReplayViewer::onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName) {}
-void ReplayViewer::onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
-void ReplayViewer::onReplayManagerGamePathRemoved(const QString& name) {}
-void ReplayViewer::onReplayManagerVideoPathAdded(const QString& name, const QDir& path) {}
-void ReplayViewer::onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName) {}
-void ReplayViewer::onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) {}
-void ReplayViewer::onReplayManagerVideoPathRemoved(const QString& name) {}
+void ReplayViewer::onReplayManagerGamePathAdded(const QDir& path) {}
+void ReplayViewer::onReplayManagerGamePathRemoved(const QDir& path) {}
+void ReplayViewer::onReplayManagerVideoPathAdded(const QDir& path) {}
+void ReplayViewer::onReplayManagerVideoPathRemoved(const QDir& path) {}
 
 // ----------------------------------------------------------------------------
 void ReplayViewer::onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName)

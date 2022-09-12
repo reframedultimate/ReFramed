@@ -66,14 +66,10 @@ private:
 
     void onReplayManagerGroupAdded(ReplayGroup* group) override { (void)group; }
     void onReplayManagerDefaultGamePathChanged(const QDir& path) override { (void)path; }
-    void onReplayManagerGamePathAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onReplayManagerGamePathNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onReplayManagerGamePathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
-    void onReplayManagerGamePathRemoved(const QString& name) override { (void)name; }
-    void onReplayManagerVideoPathAdded(const QString& name, const QDir& path) override { (void)name; (void)path; }
-    void onReplayManagerVideoPathNameChanged(const QString& oldName, const QString& newName) override { (void)oldName; (void)newName; }
-    void onReplayManagerVideoPathChanged(const QString& name, const QDir& oldPath, const QDir& newPath) override { (void)name; (void)oldPath; (void)newPath; }
-    void onReplayManagerVideoPathRemoved(const QString& name) override { (void)name; }
+    void onReplayManagerGamePathAdded(const QDir& path) override { (void)path; }
+    void onReplayManagerGamePathRemoved(const QDir& path) override { (void)path; }
+    void onReplayManagerVideoPathAdded(const QDir& path) override { (void)path; }
+    void onReplayManagerVideoPathRemoved(const QDir& path) override { (void)path; }
 
 private:
     void onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName) override;

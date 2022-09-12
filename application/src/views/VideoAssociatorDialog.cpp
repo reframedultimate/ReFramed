@@ -152,7 +152,7 @@ void VideoAssociatorDialog::onSaveReleased()
                     "If you say no, the information will still be saved, but ReFramed will be unable to locate the video "
                     "file when loading the replay.") == QMessageBox::Yes)
             {
-                replayManager_->addVideoPath(currentVideoFilePath_, currentVideoFilePath_);
+                replayManager_->addVideoPath(currentVideoFilePath_);
             }
 
     rfcommon::Reference<rfcommon::VideoMeta> meta = new rfcommon::VideoMeta(

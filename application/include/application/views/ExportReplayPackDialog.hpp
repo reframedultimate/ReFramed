@@ -3,7 +3,6 @@
 #include <QDialog>
 
 class QStringList;
-class QProgressBar;
 
 namespace Ui {
     class ExportReplayPackDialog;
@@ -14,21 +13,6 @@ namespace rfcommon {
 }
 
 namespace rfapp {
-
-class ProgressDialog : public QWidget
-{
-    Q_OBJECT
-
-public:
-    ProgressDialog(const QString& title, const QString& text, QWidget* parent=nullptr);
-    ~ProgressDialog();
-
-public slots:
-    void setPercent(int percent);
-
-private:
-    QProgressBar* bar_;
-};
 
 class ExportReplayPackDialog : public QDialog
 {

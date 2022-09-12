@@ -23,7 +23,8 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/ReplayListWidget.hpp"
     "include/application/views/ReplayViewer.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
-    "include/application/views/VideoAssociatorDialog.hpp")
+    "include/application/views/VideoAssociatorDialog.hpp"
+    "include/application/widgets/ProgressDialog.hpp")
 qt5_wrap_ui (APPLICATION_FORMS_MOC
     "forms/ActiveSessionView.ui"
     "forms/AnalysisInputView.ui"
@@ -54,8 +55,6 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     ${APPLICATION_QM_FILES}
     ${APPLICATION_RESOURCES_GEN}
     $<$<PLATFORM_ID:Windows>:res/windows.rc>
-    "src/main.cpp"
-    "src/Util.cpp"
     "src/models/ActiveSessionManager.cpp"
     "src/models/CategoryModel.cpp"
     "src/models/Config.cpp"
@@ -77,7 +76,11 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/ReplayViewer.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
-    "src/views/MainWindow.cpp")
+    "src/widgets/ProgressDialog.cpp"
+	
+    "src/views/MainWindow.cpp"
+    "src/Util.cpp"
+    "src/main.cpp")
 target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)

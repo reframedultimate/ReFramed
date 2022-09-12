@@ -1,5 +1,6 @@
 #include "application/ui_ExportReplayPackDialog.h"
 #include "application/views/ExportReplayPackDialog.hpp"
+#include "application/widgets/ProgressDialog.hpp"
 
 #include "rfcommon/Endian.hpp"
 #include "rfcommon/FilePathResolver.hpp"
@@ -16,36 +17,8 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QProgressBar>
 
 namespace rfapp {
-
-ProgressDialog::ProgressDialog(const QString& title, const QString& text, QWidget* parent)
-    : QWidget(parent)
-    , bar_(new QProgressBar)
-{
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
-    setWindowTitle(title);
-    //setWindowFlags(Qt::WindowStaysOnTopHint);
-
-    bar_->setMinimum(0);
-    bar_->setMaximum(100);
-    bar_->setValue(0);
-
-    QLabel* label = new QLabel(text);
-
-    QVBoxLayout* layout = new QVBoxLayout;
-    layout->addWidget(label);
-    layout->addWidget(bar_);
-    setLayout(layout);
-}
-ProgressDialog::~ProgressDialog()
-{}
-void ProgressDialog::setPercent(int percent)
-{
-    bar_->setValue(percent);
-    qApp->processEvents();
-}
 
 // ----------------------------------------------------------------------------
 ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathResolver, const QStringList& replayNames, const QStringList& replayFileNames, QWidget* parent)
@@ -284,7 +257,7 @@ void ExportReplayPackDialog::onExport()
             table.push(entry);
         }
 
-        progress.setPercent(10 + i * 10 / sessions.count());
+        progress.setPercent(10 + i * 10 / sessions.count(), "Writing " + sessions[i].name);
     }
 
     int i = 0;
@@ -319,7 +292,7 @@ void ExportReplayPackDialog::onExport()
         offset += entry.size;
         table.push(entry);
 
-        progress.setPercent(20 + i * 80 / videoFiles.count());
+        progress.setPercent(20 + i * 80 / videoFiles.count(), QString("Writing ") + it.key().cStr());
         i++;
     }
 

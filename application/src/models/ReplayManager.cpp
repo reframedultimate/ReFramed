@@ -31,8 +31,8 @@ ReplayManager::ReplayManager(Config* config)
     json& jGamePaths = jReplayManager["gamepaths"];
     json& jTrainingPaths = jReplayManager["trainingpaths"];
     json& jVideoPaths = jReplayManager["videopaths"];
-    json& jDefaultGamePath = jGamePaths["Default"];
-    json& jDefaultTrainingPath = jTrainingPaths["Default"];
+    json& jDefaultGamePath = jReplayManager["defaultgamepath"];
+    json& jDefaultTrainingPath = jReplayManager["defaulttrainingpath"];
 
     // Ensure the "Default" locations always exist
     if (jDefaultGamePath.is_string() == false || jDefaultGamePath.get<std::string>().length() == 0)
@@ -49,32 +49,32 @@ ReplayManager::ReplayManager(Config* config)
     // Populate all search paths
     defaultGamePath_ = QString::fromLocal8Bit(jDefaultGamePath.get<std::string>().c_str());
     defaultTrainingPath_ = QString::fromLocal8Bit(jDefaultTrainingPath.get<std::string>().c_str());
-    for (const auto& [name, jPath] : jGamePaths.items())
+    for (const auto& jPath : jGamePaths)
     {
         if (jPath.is_string() == false)
             continue;
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        gamePaths_.insert(QString::fromLocal8Bit(name.c_str()), QString::fromLocal8Bit(path.c_str()));
+        gamePaths_.insert(QString::fromLocal8Bit(path.c_str()));
     }
-    for (const auto& [name, jPath] : jTrainingPaths.items())
+    for (const auto& jPath : jTrainingPaths)
     {
         if (jPath.is_string() == false)
             continue;
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        trainingPaths_.insert(QString::fromLocal8Bit(name.c_str()), QString::fromLocal8Bit(path.c_str()));
+        trainingPaths_.insert(QString::fromLocal8Bit(path.c_str()));
     }
-    for (const auto& [name, jPath] : jVideoPaths.items())
+    for (const auto& jPath : jVideoPaths)
     {
         if (jPath.is_string() == false)
             continue;
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        videoPaths_.insert(QString::fromLocal8Bit(name.c_str()), QString::fromLocal8Bit(path.c_str()));
+        videoPaths_.insert(QString::fromLocal8Bit(path.c_str()));
     }
 
     // The "all" recording group can't be changed or deleted and contains all
@@ -84,17 +84,25 @@ ReplayManager::ReplayManager(Config* config)
 
     for (const auto& [name, fileNames] : jReplayManager["groups"].items())
     {
-        auto pair = groups_.emplace(name, std::make_unique<ReplayGroup>(name.c_str()));
-        if (pair.second == false)
-            continue;
+        QString qName = QString::fromUtf8(name.c_str());
+        auto it = groups_.insert(qName, new ReplayGroup(qName));
 
         if (fileNames.is_array() == false)
             continue;
 
-        ReplayGroup* group = pair.first->second.get();
         for (const auto& fileName : fileNames)
-            group;
+            if (fileName.is_string())
+                it.value()->addFile(QString::fromLocal8Bit(fileName.get<std::string>().c_str()));
     }
+}
+
+// ----------------------------------------------------------------------------
+ReplayManager::~ReplayManager()
+{
+    updateConfig();  // Makes sure to include changes to groups into the config
+
+    for (ReplayGroup* group : groups_)
+        delete group;
 }
 
 // ----------------------------------------------------------------------------
@@ -109,21 +117,12 @@ void ReplayManager::setDefaultGamePath(const QDir& path)
 {
     PROFILE(ReplayManager, setDefaultGamePath);
 
-    if (gamePathExists(path) == false)
-    {
-        QString unusedName = "Default";
-        for (int i = 2; i < 1e9; ++i)
-        {
-            if (gamePathNameExists(unusedName) == false)
-                break;
-            unusedName = "Default" + QString::number(i);
-        }
-
-        addGamePath(unusedName, path);
-    }
+    // Will fail if it already exists but that's fine
+    addGamePath(path);
 
     defaultGamePath_ = path;
-    updateAndSaveConfig();
+    updateConfig();
+    saveConfig();
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerDefaultGamePathChanged, path);
 }
 
@@ -135,65 +134,31 @@ QDir ReplayManager::defaultTrainingPath() const
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayManager::addGamePath(const QString& name, const QDir& path)
+bool ReplayManager::addGamePath(const QDir& path)
 {
     PROFILE(ReplayManager, addGamePath);
 
-    if (gamePaths_.contains(name))
+    if (gamePaths_.contains(path))
         return false;
 
-    gamePaths_.insert(name, path);
-    updateAndSaveConfig();
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathAdded, name, path);
+    gamePaths_.insert(path);
+    updateConfig();
+    saveConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathAdded, path);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayManager::changeGamePathName(const QString& oldName, const QString& newName)
-{
-    PROFILE(ReplayManager, changeGamePathName);
-
-    auto it = gamePaths_.find(oldName);
-    if (it == gamePaths_.end())
-        return false;
-    if (gamePaths_.contains(newName))
-        return false;
-
-    QDir dir = it.value();
-    gamePaths_.erase(it);
-    gamePaths_.insert(newName, dir);
-    updateAndSaveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathNameChanged, oldName, newName);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::changeGamePath(const QString& name, const QDir& newPath)
-{
-    PROFILE(ReplayManager, changeGamePath);
-
-    auto it = gamePaths_.find(name);
-    if (it == gamePaths_.end())
-        return false;
-
-    QDir oldPath = it.value();
-    *it = newPath;
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathChanged, name, oldPath, newPath);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::removeGamePath(const QString& name)
+bool ReplayManager::removeGamePath(const QDir& path)
 {
     PROFILE(ReplayManager, removeGamePath);
 
-    if (gamePaths_.remove(name) == 0)
+    if (gamePaths_.remove(path) == false)
         return false;
 
-    updateAndSaveConfig();
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathRemoved, name);
+    updateConfig();
+    saveConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathRemoved, path);
     return true;
 }
 
@@ -206,31 +171,7 @@ int ReplayManager::gamePathCount() const
 }
 
 // ----------------------------------------------------------------------------
-QString ReplayManager::gamePathName(int idx) const
-{
-    PROFILE(ReplayManager, gamePathName);
-
-    for (auto it = gamePaths_.begin(); it != gamePaths_.end(); ++it)
-        if (idx-- == 0)
-            return it.key();
-
-    std::terminate();
-}
-
-// ----------------------------------------------------------------------------
-QString ReplayManager::gamePathName(const QDir& path) const
-{
-    PROFILE(ReplayManager, gamePathName);
-
-    for (auto it = gamePaths_.begin(); it != gamePaths_.end(); ++it)
-        if (path == it.value())
-            return it.key();
-
-    std::terminate();
-}
-
-// ----------------------------------------------------------------------------
-QDir ReplayManager::gamePath(int idx) const
+const QDir& ReplayManager::gamePath(int idx) const
 {
     PROFILE(ReplayManager, gamePath);
 
@@ -242,29 +183,66 @@ QDir ReplayManager::gamePath(int idx) const
 }
 
 // ----------------------------------------------------------------------------
-QDir ReplayManager::gamePath(const QString& name) const
-{
-    PROFILE(ReplayManager, gamePath);
-    assert(gamePaths_.contains(name));
-    return gamePaths_.find(name).value();
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::gamePathNameExists(const QString& name) const
-{
-    PROFILE(ReplayManager, gamePathNameExists);
-    return gamePaths_.contains(name);
-}
-
-// ----------------------------------------------------------------------------
 bool ReplayManager::gamePathExists(const QDir& path) const
 {
     PROFILE(ReplayManager, gamePathExists);
+    return gamePaths_.contains(path);
+}
 
-    for (auto it = gamePaths_.begin(); it != gamePaths_.end(); ++it)
-        if (path == it.value())
-            return true;
-    return false;
+// ----------------------------------------------------------------------------
+bool ReplayManager::addVideoPath(const QDir& path)
+{
+    PROFILE(ReplayManager, addVideoPath);
+
+    if (videoPaths_.contains(path))
+        return false;
+
+    videoPaths_.insert(path);
+    updateConfig();
+    saveConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathAdded, path);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::removeVideoPath(const QDir& path)
+{
+    PROFILE(ReplayManager, removeVideoPath);
+
+    if (videoPaths_.remove(path) == false)
+        return false;
+
+    updateConfig();
+    saveConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathRemoved, path);
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+int ReplayManager::videoPathCount() const
+{
+    PROFILE(ReplayManager, videoPathCount);
+
+    return videoPaths_.size();
+}
+
+// ----------------------------------------------------------------------------
+const QDir& ReplayManager::videoPath(int idx) const
+{
+    PROFILE(ReplayManager, videoPath);
+
+    for (const auto& dir : videoPaths_)
+        if (idx-- == 0)
+            return dir;
+
+    std::terminate();
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayManager::videoPathExists(const QDir& path) const
+{
+    PROFILE(ReplayManager, videoPathExists);
+    return videoPaths_.contains(path);
 }
 
 // ----------------------------------------------------------------------------
@@ -293,14 +271,14 @@ ReplayGroup* ReplayManager::addReplayGroup(const QString& name)
 
     if (name.length() == 0)
         return nullptr;
-
-    auto it = groups_.emplace(name.toStdString(), std::make_unique<ReplayGroup>(name));
-    if (it.second == false)
+    if (groups_.contains(name))
         return nullptr;
 
-    updateAndSaveConfig();
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupAdded, it.first->second.get());
-    return it.first->second.get();
+    auto it = groups_.insert(name, new ReplayGroup(name));
+
+    updateConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupAdded, it.value());
+    return it.value();
 }
 
 // ----------------------------------------------------------------------------
@@ -315,7 +293,7 @@ ReplayGroup* ReplayManager::duplicateReplayGroup(ReplayGroup* group, const QStri
     for (const auto& it : group->fileNames())
         newGroup->addFile(it);
 
-    updateAndSaveConfig();
+    updateConfig();
 
     return newGroup;
 }
@@ -325,24 +303,24 @@ bool ReplayManager::renameReplayGroup(ReplayGroup* group, const QString& newName
 {
     PROFILE(ReplayManager, renameReplayGroup);
 
-    const QString& oldName = group->name();
     if (newName.length() == 0)
         return false;
 
-    auto result = groups_.emplace(newName.toStdString(), std::make_unique<ReplayGroup>(nullptr));
-    if (result.second == false)
+    if (groups_.contains(newName))
         return false;
 
-    auto newIt = result.first;
-    auto oldIt = groups_.find(oldName.toStdString());
+    QString oldName = group->name();
+
+    auto newIt = groups_.insert(newName, nullptr);
+    auto oldIt = groups_.find(oldName);
     assert(oldIt != groups_.end());
 
-    oldIt->second->setName(newName);
-    newIt->second = std::move(oldIt->second);
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupNameChanged, newIt->second.get(), oldName, newName);
+    oldIt.value()->setName(newName);
+    newIt.value() = std::move(oldIt.value());
     groups_.erase(oldIt);
-    updateAndSaveConfig();
+
+    updateConfig();
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupNameChanged, group, oldName, newName);
     return true;
 }
 
@@ -351,13 +329,13 @@ bool ReplayManager::removeReplayGroup(ReplayGroup* group)
 {
     PROFILE(ReplayManager, removeReplayGroup);
 
-    auto it = groups_.find(group->name().toStdString());
-    if (it == groups_.end())
-        return false;
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupRemoved, it->second.get());
+    auto it = groups_.find(group->name());
+    assert(it != groups_.end());
     groups_.erase(it);
-    updateAndSaveConfig();
+
+    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGroupRemoved, group);
+    delete group;
+    updateConfig();
     return true;
 }
 
@@ -366,10 +344,10 @@ ReplayGroup* ReplayManager::replayGroup(const QString& name) const
 {
     PROFILE(ReplayManager, replayGroup);
 
-    auto it = groups_.find(name.toStdString());
+    auto it = groups_.find(name);
     if (it == groups_.end())
         return nullptr;
-    return it->second.get();
+    return it.value();
 }
 
 // ----------------------------------------------------------------------------
@@ -377,17 +355,15 @@ ReplayGroup* ReplayManager::replayGroup(int idx) const
 {
     PROFILE(ReplayManager, replayGroup);
 
-    for (const auto& it : groups_)
-    {
+    for (ReplayGroup* group : groups_)
         if (idx-- == 0)
-            return it.second.get();
-    }
+            return group;
 
     std::terminate();
 }
 
 // ----------------------------------------------------------------------------
-int ReplayManager::replayGroupsCount() const
+int ReplayManager::replayGroupCount() const
 {
     PROFILE(ReplayManager, replayGroupsCount);
 
@@ -400,122 +376,6 @@ ReplayGroup* ReplayManager::allReplayGroup() const
     PROFILE(ReplayManager, allReplayGroup);
 
     return allGroup_.get();
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::addVideoPath(const QString& name, const QDir& path)
-{
-    PROFILE(ReplayManager, addVideoPath);
-
-    if (videoPaths_.contains(name))
-        return false;
-
-    videoPaths_.insert(name, path);
-    updateAndSaveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathAdded, name, path);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::changeVideoPathName(const QString& oldName, const QString& newName)
-{
-    PROFILE(ReplayManager, changeVideoPathName);
-
-    auto it = videoPaths_.find(oldName);
-    if (it == videoPaths_.end())
-        return false;
-    if (videoPaths_.contains(newName))
-        return false;
-
-    QDir dir = it.value();
-    videoPaths_.insert(newName, dir);
-    videoPaths_.erase(it);
-    updateAndSaveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathNameChanged, oldName, newName);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::changeVideoPath(const QString& name, const QDir& newPath)
-{
-    PROFILE(ReplayManager, changeVideoPath);
-
-    auto it = videoPaths_.find(name);
-    if (it == videoPaths_.end())
-        return false;
-
-    QDir oldPath = it.value();
-    *it = newPath;
-    updateAndSaveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathChanged, name, oldPath, newPath);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::removeVideoPath(const QString& name)
-{
-    PROFILE(ReplayManager, removeVideoPath);
-
-    if (videoPaths_.remove(name) == 0)
-        return false;
-    updateAndSaveConfig();
-
-    dispatcher.dispatch(&ReplayManagerListener::onReplayManagerVideoPathRemoved, name);
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-int ReplayManager::videoPathCount() const
-{
-    PROFILE(ReplayManager, videoPathCount);
-
-    return videoPaths_.size();
-}
-
-// ----------------------------------------------------------------------------
-QString ReplayManager::videoPathName(int idx) const
-{
-    PROFILE(ReplayManager, videoPathName);
-
-    for (auto it = videoPaths_.begin(); it != videoPaths_.end(); ++it)
-        if (idx-- == 0)
-            return it.key();
-
-    std::terminate();
-}
-
-// ----------------------------------------------------------------------------
-QDir ReplayManager::videoPath(int idx) const
-{
-    PROFILE(ReplayManager, videoPath);
-
-    for (const auto& dir : videoPaths_)
-        if (idx-- == 0)
-            return dir;
-
-    std::terminate();
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::videoPathNameExists(const QString& name) const
-{
-    PROFILE(ReplayManager, videoPathNameExists);
-    return videoPaths_.contains(name);
-}
-
-// ----------------------------------------------------------------------------
-bool ReplayManager::videoPathExists(const QDir& path) const
-{
-    PROFILE(ReplayManager, videoPathExists);
-
-    for (const auto& it : videoPaths_)
-        if (it == path)
-            return true;
-
-    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -747,8 +607,8 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
     if (allGroup_->removeFile(oldFileName))
         allGroup_->addFile(newFile.fileName());
     for (auto& group : groups_)
-        if (group.second->removeFile(oldFileName))
-            group.second->addFile(newFile.fileName());
+        if (group->removeFile(oldFileName))
+            group->addFile(newFile.fileName());
 
     return true;
 }
@@ -793,7 +653,7 @@ bool ReplayManager::deleteReplay(const QString& fileName)
 
     // Delete from group, regardless of whether the file was successfully deleted or not
     for (auto& group : groups_)
-        group.second->removeFile(fileName);
+        group->removeFile(fileName);
     allGroup_->removeFile(fileName);
 
     return success;
@@ -845,7 +705,7 @@ void ReplayManager::scanForReplays()
     }
 }
 // ----------------------------------------------------------------------------
-void ReplayManager::updateAndSaveConfig()
+void ReplayManager::updateConfig()
 {
     json& cfg = getConfig();
     json& jReplayManager = cfg["replaymanager"];
@@ -853,32 +713,30 @@ void ReplayManager::updateAndSaveConfig()
     jReplayManager["defaultgamepath"] = defaultGamePath_.absolutePath().toLocal8Bit().constData();
     jReplayManager["defaulttrainingpath"] = defaultTrainingPath_.absolutePath().toLocal8Bit().constData();
 
-    json jGamePaths = json::object();
-    for (auto it = gamePaths_.begin(); it != gamePaths_.end(); ++it)
-        jGamePaths[it.key().toLocal8Bit().constData()] = it.value().absolutePath().toLocal8Bit().constData();
+    json jGamePaths = json::array();
+    for (const QDir& dir : gamePaths_)
+        jGamePaths.push_back(dir.absolutePath().toLocal8Bit().constData());
     jReplayManager["gamepaths"] = jGamePaths;
 
-    json jTrainingPaths = json::object();
-    for (auto it = trainingPaths_.begin(); it != trainingPaths_.end(); ++it)
-        jTrainingPaths[it.key().toLocal8Bit().constData()] = it.value().absolutePath().toLocal8Bit().constData();
+    json jTrainingPaths = json::array();
+    for (const QDir& dir : trainingPaths_)
+        jTrainingPaths.push_back(dir.absolutePath().toLocal8Bit().constData());
     jReplayManager["trainingpaths"] = jTrainingPaths;
 
-    json jVideoPaths = json::object();
-    for (auto it = videoPaths_.begin(); it != videoPaths_.end(); ++it)
-        jVideoPaths[it.key().toLocal8Bit().constData()] = it.value().absolutePath().toLocal8Bit().constData();
+    json jVideoPaths = json::array();
+    for (const QDir& dir : videoPaths_)
+        jVideoPaths.push_back(dir.absolutePath().toLocal8Bit().constData());
     jReplayManager["videopaths"] = jVideoPaths;
 
     json jGroups = json::object();
-    for (const auto& [name, group] : groups_)
+    for (auto it = groups_.begin(); it != groups_.end(); ++it)
     {
         json jFiles = json::array();
-        for (const auto& file : group->fileNames())
+        for (const auto& file : it.value()->fileNames())
             jFiles.push_back(file.toLocal8Bit().constData());
-        jGroups[name] = jFiles;
+        jGroups[it.key().toUtf8().constData()] = jFiles;
     }
     jReplayManager["groups"] = jGroups;
-
-    saveConfig();
 }
 
 // ----------------------------------------------------------------------------
