@@ -537,14 +537,14 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
     assert(QDir(oldFileName).isRelative());
 
     rfcommon::Log* log = rfcommon::Log::root();
-    auto absFilePath = resolveGameFile(oldFileName.toLocal8Bit().constData());
+    QString absFilePath = QString::fromLocal8Bit(resolveGameFile(oldFileName.toLocal8Bit().constData()).cStr());
     if (absFilePath.length() == 0)
     {
         log->error("Failed to resolve file path to \"%s\"", oldFileName.toLocal8Bit().constData());
         return false;
     }
 
-    QFileInfo oldFile(absFilePath.cStr());
+    QFileInfo oldFile(absFilePath);
     QString tmpFile = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
     QDir dir(oldFile.path());
 
@@ -621,14 +621,14 @@ bool ReplayManager::deleteReplay(const QString& fileName)
     bool success = true;
 
     rfcommon::Log* log = rfcommon::Log::root();
-    auto absFilePath = resolveGameFile(fileName.toLocal8Bit().constData());
+    QString absFilePath = QString::fromLocal8Bit(resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
     if (absFilePath.length() == 0)
     {
         log->error("Failed to resolve file path to \"%s\"", fileName.toLocal8Bit().constData());
         return false;
     }
 
-    QDir dir(QFileInfo(absFilePath.cStr()).path());
+    QDir dir(QFileInfo(absFilePath).path());
     QString tmpFile = "." + fileName + ".tmp" + QString::number(tmpCounter++);
 
     if (dir.rename(fileName, tmpFile) == false)

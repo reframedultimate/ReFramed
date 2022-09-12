@@ -294,20 +294,19 @@ void ReplayGroupView::onItemSelectionChanged()
     {
         const auto fileName = replayListWidget_->itemFileName(selected[0]);
         assert(QDir(fileName).isRelative());
-        const auto absFilePath = replayManager_->resolveGameFile(fileName.toLocal8Bit().constData());
+        const QString absFilePath = QString::fromLocal8Bit(replayManager_->resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
         if (absFilePath.length() == 0)
             return;
-        replayViewer_->loadGameReplays({ QString::fromLocal8Bit(absFilePath.cStr()) });
+        replayViewer_->loadGameReplays({ absFilePath });
     }
     else if (selected.size() > 1)
     {
         QStringList absFilePaths;
         for (const auto& fileName : replayListWidget_->selectedReplayFileNames())
         {
-            const auto absFilePath = replayManager_->resolveGameFile(fileName.toLocal8Bit().constData());
-            if (absFilePath.length() == 0)
-                continue;
-            absFilePaths.push_back(QString::fromLocal8Bit(absFilePath.cStr()));
+            const QString absFilePath = QString::fromLocal8Bit(replayManager_->resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
+            if (absFilePath.length() > 0)
+                absFilePaths.push_back(absFilePath);
         }
 
         replayViewer_->loadGameReplays(absFilePaths);
