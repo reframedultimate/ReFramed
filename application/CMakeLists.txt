@@ -112,7 +112,10 @@ target_include_directories (application
 
 add_custom_command (TARGET application POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_DATADIR}
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/ParamLabels.csv" ${REFRAMED_BUILD_DATADIR}
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/ParamLabels.csv" "${REFRAMED_BUILD_DATADIR}/motion/ParamLabels.csv"
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/1_Specific.json" "${REFRAMED_BUILD_DATADIR}/motion/1_Specific.json"
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/2_General.json" "${REFRAMED_BUILD_DATADIR}/motion/2_General.json"
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/3_English.json" "${REFRAMED_BUILD_DATADIR}/motion/3_English.json"
 	COMMENT "Copying data files to ${REFRAMED_BUILD_DATADIR}"
 	VERBATIM)
 

@@ -44,20 +44,36 @@ bool UserMotionLabelsManager::loadAllLayers()
 
     bool success = true;
 
+    // Prepare "motion" dir in appdata
     QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     if (dir.exists("motion") == false)
-        return true;
-
+        dir.mkdir("motion");
     dir.cd("motion");
 
-    for (const auto& file : dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name))
+    // ReFramed ships with layers that are updated from version to version
+    QDir shipDir("share/reframed/data/motion");
+    QStringList shippedLayers = shipDir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
+    QStringList localLayers = dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
+
+    // Only load a shipped layer if it does not exist yet 
+    QStringList layers;
+    for (const auto& file : shippedLayers)
+    {
+        if (localLayers.contains(file))
+            continue;
+        layers.append(shipDir.absoluteFilePath(file));;
+    }
+    for (const auto& file : localLayers)
     {
         if (file == "unlabeled.json")
             continue;
+        layers.append(dir.absoluteFilePath(file));
+    }
 
-        QByteArray ba = dir.absoluteFilePath(file).toUtf8();
+    for (const auto& file : layers)
+    {
         rfcommon::MappedFile f;
-        if (f.open(ba.constData()) == false)
+        if (f.open(dir.absoluteFilePath(file).toLocal8Bit().constData()) == false)
         {
             success = false;
             continue;
@@ -67,11 +83,9 @@ bool UserMotionLabelsManager::loadAllLayers()
     }
 
     QString fileName = dir.absoluteFilePath("unlabeled.json");
-    QByteArray ba = fileName.toUtf8();
     rfcommon::MappedFile f;
-    if (f.open(ba.constData()) == false)
-        return false;
-    userMotionLabels_->loadUnlabeled(f.address(), f.size());
+    if (f.open(fileName.toLocal8Bit().constData()))
+        userMotionLabels_->loadUnlabeled(f.address(), f.size());
 
     return success;
 }
@@ -89,7 +103,6 @@ bool UserMotionLabelsManager::saveAllLayers()
     QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     if (dir.exists("motion") == false)
         dir.mkdir("motion");
-
     dir.cd("motion");
     
     // Temporary backup of previous files
@@ -100,8 +113,7 @@ bool UserMotionLabelsManager::saveAllLayers()
     for (int layerIdx = 0; layerIdx != userMotionLabels_->layerCount(); ++layerIdx)
     {
         QString fileName = dir.absoluteFilePath(QString::number(layerIdx + 1) + "_" + userMotionLabels_->layerName(layerIdx) + ".json");
-        QByteArray ba = fileName.toUtf8();
-        FILE* fp = fopen(ba.constData(), "wb");
+        FILE* fp = fopen(fileName.toLocal8Bit().constData(), "wb");
         if (fp == nullptr)
         {
             success = false;
