@@ -1,14 +1,11 @@
 #pragma once
 
-#include "application/models/CategoryType.hpp"
-#include "application/listeners/CategoryListener.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Reference.hpp"
 #include <QMainWindow>
 #include <QDir>
 #include <memory>
 
-class QStackedWidget;
 class QTreeWidgetItem;
 
 namespace Ui {
@@ -21,8 +18,7 @@ namespace rfcommon {
 
 namespace rfapp {
 
-class CategoryView;
-class CategoryModel;
+class CategoryTabsView;
 class Config;
 class PluginManager;
 class Protocol;
@@ -33,9 +29,8 @@ class ReplayManager;
 class UserMotionLabelsManager;
 class UserMotionLabelsEditor;
 
-class MainWindow 
+class MainWindow
         : public QMainWindow
-        , public CategoryListener
         , public rfcommon::ProtocolListener
 {
     Q_OBJECT
@@ -58,11 +53,6 @@ private slots:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
-
-private:
-    // Category callbacks
-    void onCategorySelected(CategoryType category) override;
-    void onCategoryItemSelected(CategoryType category, const QString& name) override { (void)category; (void)name; }
 
 private:
     // Protocol callbacks
@@ -94,11 +84,9 @@ private:
     std::unique_ptr<PluginManager> pluginManager_;
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<ActiveSessionManager> activeSessionManager_;
-    std::unique_ptr<CategoryModel> categoryModel_;
-    CategoryView* categoryView_;
+    CategoryTabsView* categoryTabsView_;
     ReplayGroupView* replayGroupView_;
     ActiveSessionView* activeSessionView_;
-    QStackedWidget* mainView_;
     Ui::MainWindow* ui_;
 
     // Non-modal views that appear in a separate window

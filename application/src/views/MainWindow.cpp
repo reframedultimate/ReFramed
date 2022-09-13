@@ -2,13 +2,12 @@
 #include "application/config.hpp"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/models/Config.hpp"
-#include "application/models/CategoryModel.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/models/UserMotionLabelsManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
-#include "application/views/CategoryView.hpp"
+#include "application/views/CategoryTabsView.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/views/ImportReplayPackDialog.hpp"
 #include "application/views/MainWindow.hpp"
@@ -43,11 +42,9 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
-    , categoryModel_(new CategoryModel)
-    , categoryView_(new CategoryView(categoryModel_.get(), replayManager_.get()))
+    , categoryTabsView_(new CategoryTabsView)
     , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
     , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
-    , mainView_(new QStackedWidget)
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
@@ -56,18 +53,18 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     setWindowTitle("ReFramed - " APP_VERSION_STR);
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
-    mainView_->addWidget(activeSessionView_);
-    mainView_->addWidget(replayGroupView_);
-    setCentralWidget(mainView_);
+    categoryTabsView_->addTab(activeSessionView_, "Session");
+    categoryTabsView_->addTab(replayGroupView_, "Replays");
+    setCentralWidget(categoryTabsView_);
 
+    /*
     QDockWidget* categoryDock = new QDockWidget(this);
     categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     categoryDock->setWidget(categoryView_);
     categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::LeftDockWidgetArea, categoryDock);
+    addDockWidget(Qt::LeftDockWidgetArea, categoryDock);*/
 
     protocol_->dispatcher.addListener(this);
-    categoryModel_->dispatcher.addListener(this);
 
     connect(ui_->action_connect, &QAction::triggered,
             this, &MainWindow::onConnectActionTriggered);
@@ -86,7 +83,6 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
 // ----------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-    categoryModel_->dispatcher.removeListener(this);
     protocol_->dispatcher.removeListener(this);
 
     // This is to fix an issue with listeners. The RunningGameSessionView (child of central widget)
@@ -94,7 +90,6 @@ MainWindow::~MainWindow()
     // would ordinarily be deleted in the base class of this class, after we've deleted the
     // RunningGameSessionManager which gets deleted in this destructor.
     delete takeCentralWidget();
-    delete categoryView_;
 
     delete ui_;
 }
@@ -284,25 +279,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
     if (userMotionLabelsEditor_)
         userMotionLabelsEditor_->close();
-}
-
-// ----------------------------------------------------------------------------
-void MainWindow::onCategorySelected(CategoryType category)
-{
-    PROFILE(MainWindow, onCategorySelected);
-
-    switch (category)
-    {
-    case CategoryType::TOP_LEVEL_SESSION:
-        mainView_->setCurrentIndex(0);
-        break;
-
-    case CategoryType::TOP_LEVEL_REPLAY_GROUPS:
-        mainView_->setCurrentIndex(1);
-        break;
-
-    default: break;
-    }
 }
 
 // ----------------------------------------------------------------------------

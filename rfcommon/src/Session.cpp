@@ -990,6 +990,7 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
     const int headerSize = 5 + 12 * table.count();
     uint8_t numEntries = static_cast<uint8_t>(table.count());
     const uint64_t beginOffset = ftell(fp);  // store location for header data for later, as it might not be at 0
+    uint64_t endOffset;
     uint64_t offset = headerSize;
 
     log->info("Content Table has %d entries. Header size %d", numEntries, headerSize);
@@ -1090,7 +1091,7 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
     }
 
     // Rewind and write header
-    uint64_t endOffset = ftell(fp);
+    endOffset = ftell(fp);
     if (fseek(fp, beginOffset, SEEK_SET) != 0)
     {
         log->error("Failed to seek to beginning");
@@ -1124,16 +1125,9 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
     fseek(fp, endOffset, SEEK_SET);
     return endOffset - beginOffset;
 
-    write_fail:
-        return 0;
-    fopen_fail:;
-        /*
-        if (QMessageBox::warning(nullptr, "Failed to save recording", QString("Failed to open file for writing: ") + f.fileName() + "\n\nWould you like to save the file manually?", QMessageBox::Save | QMessageBox::Discard) == QMessageBox::Save)
-        {
-            QFileDialog::getSaveFileName(nullptr, "Save Recording", f.fileName());
-        }*/
-        log->endDropdown();
-    return false;
+write_fail:
+    log->endDropdown();
+    return 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -1356,9 +1350,9 @@ static int findWinner(const Frame<4>& frame)
     PROFILE(SessionGlobal, findWinner);
 
     // Small caveat: When a player dies, his stock count is decreased before his
-    // damage is reset, which means there can be a brief period where it looks 
+    // damage is reset, which means there can be a brief period where it looks
     // like he lost the lead even though the opponent technically has less damage.
-    // 
+    //
     // The player transitions to FIGHTER_STATUS_KIND_DEAD for 1 frame, and
     // then the stock count is decreased and the state changes to FIGHTER_STATUS_KIND_STANDBY
     // for 61 total frames, until finally the damage is reset and the state changes

@@ -2,9 +2,13 @@
 
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/listeners/ReplayGroupListener.hpp"
+
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ProtocolListener.hpp"
+
 #include <QTabWidget>
+#include "ads/DockManager.h"
+
 #include <QHash>
 #include <QVector>
 #include <QString>

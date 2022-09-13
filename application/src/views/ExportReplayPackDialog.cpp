@@ -37,7 +37,7 @@ ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathR
         ui_->listWidget_replays->addItem(name);
     ui_->listWidget_replays->selectAll();
 
-    connect(ui_->pushButton_next, &QPushButton::released, [this] { 
+    connect(ui_->pushButton_next, &QPushButton::released, [this] {
         ui_->stackedWidget->setCurrentIndex(1);
         if (ui_->lineEdit_packFileName->text().length() == 0)
             ExportReplayPackDialog::onChoosePackFile();
@@ -264,7 +264,7 @@ void ExportReplayPackDialog::onExport()
         progress.setPercent(10 + i * 10 / sessions.count(), "Writing " + sessions[i].name);
     }
 
-    int i = 0;
+    { int i = 0;
     for (auto it : videoFiles)
     {
         Entry entry;
@@ -298,7 +298,7 @@ void ExportReplayPackDialog::onExport()
 
         progress.setPercent(20 + i * 80 / videoFiles.count(), QString("Writing ") + it.key().cStr());
         i++;
-    }
+    }}
 
     // Rewind to write header
     if (fseek(fp, 0, SEEK_SET) != 0)
@@ -308,7 +308,7 @@ void ExportReplayPackDialog::onExport()
     memcpy(header.writeToPtr(4), "RFP1", 4);  // Magic
     header.writeU8(1);  // Major
     header.writeU8(1);  // Minor
-    
+
     // Write content table
     header.writeLU32(table.count());  // Table entries
     for (const auto& entry : table)
@@ -331,7 +331,7 @@ void ExportReplayPackDialog::onExport()
 
 fail_with_error:
     QMessageBox::critical(this, "Write error", "Failed to write data to file \"" + ui_->lineEdit_packFileName->text() + "\"\n\n" + strerror(errno));
-out: 
+out:
     fclose(fp);
     close();
 }

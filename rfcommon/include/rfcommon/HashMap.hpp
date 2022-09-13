@@ -135,23 +135,11 @@ public:
                 operator++();
             return *this;
         }
-        Iterator& operator-=(int rhs)
-        {
-            while (rhs--)
-                operator--();
-            return *this;
-        }
 
         Iterator operator+(int rhs)
         {
             Iterator tmp(*this);
             tmp += rhs;
-            return tmp;
-        }
-        Iterator operator-(int rhs)
-        {
-            Iterator tmp(*this);
-            tmp -= rhs;
             return tmp;
         }
 

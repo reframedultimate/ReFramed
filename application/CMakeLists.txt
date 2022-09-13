@@ -13,11 +13,12 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
     "include/application/views/ActiveSessionView.hpp"
-    "include/application/views/CategoryView.hpp"
+    "include/application/views/CategoryTabsView.hpp"
     "include/application/views/ConnectView.hpp"
     "include/application/views/ExportReplayPackDialog.hpp"
     "include/application/views/ImportReplayPackDialog.hpp"
     "include/application/views/MainWindow.hpp"
+    "include/application/views/PluginDockView.hpp"
     "include/application/views/ReplayEditorDialog.hpp"
     "include/application/views/ReplayGroupView.hpp"
     "include/application/views/ReplayListWidget.hpp"
@@ -56,7 +57,6 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     ${APPLICATION_RESOURCES_GEN}
     $<$<PLATFORM_ID:Windows>:res/windows.rc>
     "src/models/ActiveSessionManager.cpp"
-    "src/models/CategoryModel.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
     "src/models/PluginManager.cpp"
@@ -66,10 +66,11 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/models/ReplayManager.cpp"
     "src/models/UserMotionLabelsManager.cpp"
     "src/views/ActiveSessionView.cpp"
-    "src/views/CategoryView.cpp"
+    "src/views/CategoryTabsView.cpp"
     "src/views/ConnectView.cpp"
     "src/views/ExportReplayPackDialog.cpp"
 	"src/views/ImportReplayPackDialog.cpp"
+    "src/views/PluginDockView.cpp"
     "src/views/ReplayEditorDialog.cpp"
     "src/views/ReplayGroupView.cpp"
     "src/views/ReplayListWidget.cpp"
@@ -77,7 +78,7 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/ProgressDialog.cpp"
-	
+
     "src/views/MainWindow.cpp"
     "src/Util.cpp"
     "src/main.cpp")
@@ -93,6 +94,7 @@ target_link_libraries (application
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
+        ads::qtadvanceddocking
         rfplot)
 set_target_properties (application
     PROPERTIES

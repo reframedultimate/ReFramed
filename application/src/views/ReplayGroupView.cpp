@@ -9,6 +9,8 @@
 #include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/views/VideoAssociatorDialog.hpp"
 
+#include "application/views/PluginDockView.hpp"
+
 #include "rfcommon/Session.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/Profiler.hpp"
