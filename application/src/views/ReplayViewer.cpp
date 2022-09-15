@@ -2,11 +2,16 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
+
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VisualizerContext.hpp"
+
+#include "ads/DockAreaWidget.h"
+#include "ads/DockAreaTitleBar.h"
+
 #include <QTabBar>
 #include <QMenu>
 #include <QAction>
@@ -18,7 +23,7 @@ namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginManager, QWidget* parent)
-    : QTabWidget(parent)
+    : CDockManager(parent)
     , protocol_(nullptr)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
@@ -28,20 +33,27 @@ ReplayViewer::ReplayViewer(ReplayManager* replayManager, PluginManager* pluginMa
     , replayState_(NONE_LOADED)
     , previousTab_(0)
 {
-    addTab(new QWidget, "+");
+    ads::CDockWidget* pluginHomePage = new ads::CDockWidget("Home");
+    pluginHomePage->setWidget(new QWidget);
+    pluginHomePage->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+    pluginHomePage->setFeature(ads::CDockWidget::DockWidgetFloatable, false);
+    ads::CDockAreaWidget* dockArea = addDockWidget(ads::CenterDockWidgetArea, pluginHomePage);
+
+    QToolButton* launchPluginButton = new QToolButton;
+    launchPluginButton->setText("+");
+    dockArea->titleBar()->insertWidget(1, launchPluginButton);
 
     replayManager_->dispatcher.addListener(this);
     replayManager_->allReplayGroup()->dispatcher.addListener(this);
     for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
         replayManager_->replayGroup(i)->dispatcher.addListener(this);
 
-    connect(this, &QTabWidget::tabBarClicked, this, &ReplayViewer::onTabBarClicked);
-    connect(this, &QTabWidget::currentChanged, this, &ReplayViewer::onCurrentTabChanged);
+    connect(launchPluginButton, &QToolButton::released, this, &ReplayViewer::onAddNewPluginButtonReleased);
 }
 
 // ----------------------------------------------------------------------------
 ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWidget* parent)
-    : QTabWidget(parent)
+    : CDockManager(parent)
     , protocol_(protocol)
     , replayManager_(nullptr)
     , pluginManager_(pluginManager)
@@ -51,12 +63,7 @@ ReplayViewer::ReplayViewer(Protocol* protocol, PluginManager* pluginManager, QWi
     , replayState_(NONE_LOADED)
     , previousTab_(0)
 {
-    addTab(new QWidget, "+");
-
     protocol_->dispatcher.addListener(this);
-
-    connect(this, &QTabWidget::tabBarClicked, this, &ReplayViewer::onTabBarClicked);
-    connect(this, &QTabWidget::currentChanged, this, &ReplayViewer::onCurrentTabChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -243,12 +250,9 @@ void ReplayViewer::clearActiveSession()
 }
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onTabBarClicked(int index)
+void ReplayViewer::onAddNewPluginButtonReleased()
 {
     PROFILE(ReplayViewer, onTabBarClicked);
-
-    if (index < count() - 1 || index < 0)
-        return;
 
     auto pluginLoaded = [this](const QString& name) -> bool {
         for (const auto& data : plugins_)
@@ -266,7 +270,7 @@ void ReplayViewer::onTabBarClicked(int index)
     auto pluginNames = protocol_ ?
             pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REALTIME) :
             pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REPLAY);
-    qSort(pluginNames.begin(), pluginNames.end());
+    std::sort(pluginNames.begin(), pluginNames.end());
 
     // Open popup menu with all of the plugins that aren't loaded yet
     QMenu popup;
@@ -304,15 +308,15 @@ void ReplayViewer::onTabBarClicked(int index)
     QToolButton* closeButton = new QToolButton;
     closeButton->setStyleSheet("border: none;");
     closeButton->setIcon(closeIcon);
-    insertTab(index, data.view, data.name);
-    tabBar()->setTabButton(index, QTabBar::RightSide, closeButton);
+
+    ads::CDockWidget* dockWidget = new ads::CDockWidget(data.name);
+    dockWidget->setWidget(data.view);
+    addDockWidget(ads::CenterDockWidgetArea, dockWidget);
 
     QWidget* view = data.view;
     connect(closeButton, &QToolButton::released, [this, view]() {
         closeTabWithView(view);
     });
-
-    previousTab_ = index;
 
     switch (sessionState_)
     {
@@ -499,27 +503,9 @@ void ReplayViewer::onTabBarClicked(int index)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayViewer::onCurrentTabChanged(int index)
-{
-    PROFILE(ReplayViewer, onCurrentTabChanged);
-
-    if (index >= 0 && index < count() - 1)
-        previousTab_ = index;
-    else
-        setCurrentIndex(previousTab_);
-}
-
-// ----------------------------------------------------------------------------
 void ReplayViewer::closeTabWithView(QWidget* view)
 {
     PROFILE(ReplayViewer, closeTabWithView);
-
-    int currentTab = currentIndex();
-    int tabCount = count();
-    if (currentTab == tabCount - 2 && currentTab > 0)
-    {
-        previousTab_ = currentTab - 1;
-    }
 
     for (auto it = plugins_.begin(); it != plugins_.end(); ++it)
     {
@@ -584,8 +570,6 @@ void ReplayViewer::closeTabWithView(QWidget* view)
         plugins_.erase(it);
         break;
     }
-
-    setCurrentIndex(previousTab_);
 }
 
 // ----------------------------------------------------------------------------

@@ -6,7 +6,6 @@
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 
-#include <QTabWidget>
 #include "ads/DockManager.h"
 
 #include <QHash>
@@ -32,7 +31,7 @@ class ReplayManager;
  * viewer by using setActiveSession()
  */
 class ReplayViewer
-        : public QTabWidget
+        : public ads::CDockManager
         , public rfcommon::ProtocolListener
         , public ReplayManagerListener
         , public ReplayGroupListener
@@ -81,8 +80,7 @@ public:
 
 private slots:
     void onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions);
-    void onTabBarClicked(int index);
-    void onCurrentTabChanged(int index);
+    void onAddNewPluginButtonReleased();
 
 private:
     void closeTabWithView(QWidget* view);
