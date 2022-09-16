@@ -20,12 +20,12 @@ namespace rfcommon {
 
 namespace rfapp {
 
+class PluginDockView;
 class PluginManager;
 class ReplayManager;
 class ReplayGroup;
 class ReplayNameCompleter;
 class ReplayListWidget;
-class ReplayViewer;
 class UserMotionLabelsManager;
 
 class ReplayGroupView
@@ -84,7 +84,7 @@ private:
     ReplayGroup* currentGroup_ = nullptr;
     ReplayListWidget* replayListWidget_;
     ReplayNameCompleter* filterCompleter_;
-    ReplayViewer* replayViewer_;
+    PluginDockView* pluginDockView_;
 };
 
 }

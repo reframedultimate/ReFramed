@@ -1,7 +1,7 @@
 #include "application/ui_ActiveSessionView.h"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
-#include "application/views/ReplayViewer.hpp"
+#include "application/views/PluginDockView.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
@@ -25,7 +25,7 @@ ActiveSessionView::ActiveSessionView(
 {
     ui_->setupUi(this);
     ui_->lineEdit_formatOther->setVisible(false);
-    ui_->layout_sessionViewer->addWidget(new ReplayViewer(activeSessionManager_->protocol(), pluginManager));
+    ui_->layout_sessionViewer->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
 
 #define X(type, shortstr, longstr) ui_->comboBox_format->addItem(longstr);
     SET_FORMAT_LIST

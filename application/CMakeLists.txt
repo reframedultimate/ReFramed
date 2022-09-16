@@ -22,7 +22,6 @@ qt5_wrap_cpp (APPLICATION_SOURCES_MOC
     "include/application/views/ReplayEditorDialog.hpp"
     "include/application/views/ReplayGroupView.hpp"
     "include/application/views/ReplayListWidget.hpp"
-    "include/application/views/ReplayViewer.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
     "include/application/widgets/ProgressDialog.hpp")
@@ -74,7 +73,6 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/ReplayEditorDialog.cpp"
     "src/views/ReplayGroupView.cpp"
     "src/views/ReplayListWidget.cpp"
-    "src/views/ReplayViewer.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/ProgressDialog.cpp"

@@ -2,10 +2,10 @@
 #include "application/models/ReplayGroup.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/views/ExportReplayPackDialog.hpp"
+#include "application/views/PluginDockView.hpp"
 #include "application/views/ReplayEditorDialog.hpp"
 #include "application/views/ReplayGroupView.hpp"
 #include "application/views/ReplayListWidget.hpp"
-#include "application/views/ReplayViewer.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/views/VideoAssociatorDialog.hpp"
 
@@ -121,14 +121,14 @@ ReplayGroupView::ReplayGroupView(
     , hash40Strings_(hash40Strings)
     , replayListWidget_(new ReplayListWidget)
     /*, filterCompleter_(new ReplayNameCompleter)*/
-    , replayViewer_(new ReplayViewer(replayManager, pluginManager))
+    , pluginDockView_(new PluginDockView(replayManager, pluginManager))
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
     ui_->splitter->setStretchFactor(1, 1);
     ui_->splitter->setSizes({600});
     ui_->layout_recordingList->addWidget(replayListWidget_);
-    ui_->layout_data->addWidget(replayViewer_);
+    ui_->layout_data->addWidget(pluginDockView_);
 
     replayListWidget_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(replayListWidget_, &QListWidget::customContextMenuRequested, this, &ReplayGroupView::onItemRightClicked);
@@ -166,7 +166,7 @@ void ReplayGroupView::setReplayGroup(ReplayGroup* group)
 
     assert(currentGroup_ == nullptr);
 
-    replayViewer_->clearReplays();
+    pluginDockView_->clearReplays();
 
     currentGroup_ = group;
     currentGroup_->dispatcher.addListener(this);
@@ -185,7 +185,7 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
 
     assert(currentGroup_ == group && group != nullptr);
 
-    replayViewer_->clearReplays();
+    pluginDockView_->clearReplays();
 
     currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
@@ -289,7 +289,7 @@ void ReplayGroupView::onItemSelectionChanged()
     if (currentGroup_ == nullptr)
         return;
 
-    replayViewer_->clearReplays();
+    pluginDockView_->clearReplays();
 
     const auto selected = replayListWidget_->selectedItems();
     if (selected.size() == 1)
@@ -299,7 +299,7 @@ void ReplayGroupView::onItemSelectionChanged()
         const QString absFilePath = QString::fromLocal8Bit(replayManager_->resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
         if (absFilePath.length() == 0)
             return;
-        replayViewer_->loadGameReplays({ absFilePath });
+        pluginDockView_->loadGameReplays({ absFilePath });
     }
     else if (selected.size() > 1)
     {
@@ -311,7 +311,7 @@ void ReplayGroupView::onItemSelectionChanged()
                 absFilePaths.push_back(absFilePath);
         }
 
-        replayViewer_->loadGameReplays(absFilePaths);
+        pluginDockView_->loadGameReplays(absFilePaths);
     }
 }
 
