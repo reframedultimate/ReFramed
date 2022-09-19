@@ -16,6 +16,11 @@ namespace rfapp {
 
 class Protocol;
 
+/*!
+ * \brief This class is responsible for loading and saving user layers
+ * to and from disk, as well as updating the "rfcommon::UserMotionLabels"
+ * structure with new motion values from live sessions as the data comes in.
+ */
 class UserMotionLabelsManager 
         : public rfcommon::UserMotionLabelsListener
         , public rfcommon::ProtocolListener

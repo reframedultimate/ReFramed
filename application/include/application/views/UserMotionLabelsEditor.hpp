@@ -30,10 +30,10 @@ class UserMotionLabelsEditor
 
 public:
     explicit UserMotionLabelsEditor(
+            MainWindow* mainWindow,
             UserMotionLabelsManager* manager,
-            rfcommon::MappingInfo* globalMappingInfo,
             rfcommon::Hash40Strings* hash40Strings, 
-            MainWindow* mainWindow);
+            rfcommon::MappingInfo* globalMappingInfo=nullptr);
     ~UserMotionLabelsEditor();
 
     void populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo);
@@ -58,10 +58,10 @@ private:
     void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
 
 private:
+    MainWindow* mainWindow_;
     UserMotionLabelsManager* manager_;
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
-    MainWindow* mainWindow_;
     QComboBox* comboBox_fighters;
     QTabWidget* tabWidget_categories;
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;

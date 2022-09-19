@@ -190,7 +190,7 @@ public:
 private:
     void repopulateEntries()
     {
-    PROFILE(UserMotionLabelsEditorGlobal, repopulateEntries);
+        PROFILE(UserMotionLabelsEditorGlobal, repopulateEntries);
 
         table_.clearCompact();
         if (fighterID_.isValid() == false)
@@ -215,7 +215,7 @@ private:
 
     void sortTable()
     {
-    PROFILE(UserMotionLabelsEditorGlobal, sortTable);
+        PROFILE(UserMotionLabelsEditorGlobal, sortTable);
 
         std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b){
             return a.string < b.string;
@@ -228,7 +228,7 @@ private:
 
     int findTableInsertIdx(const Entry& entry)
     {
-    PROFILE(UserMotionLabelsEditorGlobal, findTableInsertIdx);
+        PROFILE(UserMotionLabelsEditorGlobal, findTableInsertIdx);
 
         auto insertIt = std::lower_bound(table_.begin(), table_.end(), entry, [](const Entry& a, const Entry& b){
             return a.string < b.string;
@@ -366,15 +366,15 @@ public:
 
 // ----------------------------------------------------------------------------
 UserMotionLabelsEditor::UserMotionLabelsEditor(
+        MainWindow* mainWindow,
         UserMotionLabelsManager* manager,
-        rfcommon::MappingInfo* globalMappingInfo,
         rfcommon::Hash40Strings* hash40Strings,
-        MainWindow* mainWindow)
+        rfcommon::MappingInfo* globalMappingInfo)
     : QWidget(nullptr)
-    , manager_(manager)
-    , globalMappingInfo_(globalMappingInfo)
-    , hash40Strings_(hash40Strings)
     , mainWindow_(mainWindow)
+    , manager_(manager)
+    , hash40Strings_(hash40Strings)
+    , globalMappingInfo_(globalMappingInfo)
     , comboBox_fighters(new QComboBox)
 {
     // Window icon and title

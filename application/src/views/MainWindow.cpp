@@ -225,7 +225,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     {
         QDir configPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
         QString mappingFileName = configPath.absoluteFilePath("mappingInfo.json");
-        QMessageBox::critical(this, "Error",
+        QMessageBox::critical(this, "No Mapping Info",
             "Global mapping information file is missing: " + mappingFileName + "\n\n"
             "Connecting to your Nintendo Switch will re-download this file.");
         return;
@@ -236,7 +236,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
     // NOTE: This editor manages its own deletion when it closes via deleteLater()
-    userMotionLabelsEditor_ = new UserMotionLabelsEditor(userMotionLabelsManager_.get(), map, hash40Strings_, this);
+    userMotionLabelsEditor_ = new UserMotionLabelsEditor(this, userMotionLabelsManager_.get(), hash40Strings_, map);
     userMotionLabelsEditor_->setGeometry(calculatePopupGeometryActiveScreen());
     userMotionLabelsEditor_->show();
     userMotionLabelsEditor_->raise();
