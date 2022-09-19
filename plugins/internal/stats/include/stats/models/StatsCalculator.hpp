@@ -81,6 +81,16 @@ private:
     void updateStatsSilent(const rfcommon::Frame<4>& frame);
 
 private:
+    // Helper, tracks when players enter and leave neutral state
+    struct Helpers {
+        void reset();
+        void update(const rfcommon::Frame<4>& frame);
+
+        int wasInNeutralState[MAX_FIGHTERS];
+        int isInNeutralState[MAX_FIGHTERS];
+        int neutralStateResetCounter_[MAX_FIGHTERS];
+    } helpers;
+
     // Variables for tracking damage taken/dealt
     struct DamageCounters {
         void reset();
@@ -120,10 +130,8 @@ private:
     // Variables for tracking stage control
     struct StageControl {
         void reset();
-        void update(const rfcommon::Frame<4>& frame);
+        void update(const Helpers& helpers, const rfcommon::Frame<4>& frame);
 
-        int isInNeutralState_[MAX_FIGHTERS];
-        int neutralStateResetCounter_[MAX_FIGHTERS];
         int stageControl[MAX_FIGHTERS];
     } stageControl;
 
@@ -131,7 +139,7 @@ private:
     // the resulting string does, and whether it kills or not
     struct StringFinder {
         void reset();
-        void update(const rfcommon::Frame<4>& frame);
+        void update(const Helpers& helpers, const rfcommon::Frame<4>& frame);
 
         struct String {
             rfcommon::Vector<rfcommon::FighterMotion> moves;  // List of all moves in the string/combo
@@ -145,8 +153,6 @@ private:
         double oldDamage_[MAX_FIGHTERS];
         double oldHitstun_[MAX_FIGHTERS];
         int oldStocks_[MAX_FIGHTERS];
-        int isInNeutralState_[MAX_FIGHTERS];
-        int neutralStateResetCounter_[MAX_FIGHTERS];
         int beingCombodByIdx_[MAX_FIGHTERS];  // Stores the index of the fighter that's doing the combo on me
         double opponentDamageAtOpening_[MAX_FIGHTERS];
     } stringFinder;

@@ -50,6 +50,7 @@ StatsCalculator::StatsCalculator()
 // ----------------------------------------------------------------------------
 void StatsCalculator::resetStatistics()
 {
+    helpers.reset();
     damageCounters.reset();
     damagesAtDeath.reset();
     firstBlood.reset();
@@ -67,12 +68,17 @@ void StatsCalculator::updateStatsSilent(const rfcommon::Frame<4>& frame)
     if (frame.count() != 2)
         return;
 
+    // Important to update helpers first, because other stats depend on these
+    // results
+    helpers.update(frame);
+
+    // Calculate stats
     damageCounters.update(frame);
     damagesAtDeath.update(frame);
     firstBlood.update(frame);
     deaths.update(frame);
-    stageControl.update(frame);
-    stringFinder.update(frame);
+    stageControl.update(helpers, frame);
+    stringFinder.update(helpers, frame);
 }
 
 // ----------------------------------------------------------------------------
@@ -95,6 +101,50 @@ void StatsCalculator::udpateStatisticsBulk(const rfcommon::FrameData* fdata)
     }
 
     dispatcher.dispatch(&StatsCalculatorListener::onStatsUpdated);
+}
+
+// ----------------------------------------------------------------------------
+void StatsCalculator::Helpers::reset()
+{
+    for (int i = 0; i != MAX_FIGHTERS; ++i)
+    {
+        wasInNeutralState[i] = 1;
+        isInNeutralState[i] = 1;
+        neutralStateResetCounter_[i] = 0;
+    }
+}
+void StatsCalculator::Helpers::update(const rfcommon::Frame<4>& frame)
+{
+    for (int i = 0; i != frame.count(); ++i)
+        wasInNeutralState[i] = isInNeutralState[i];
+
+    // Detect if a move hit by seeing if the damage increased, and if the player enters
+    // hitstun. The player can receive damage from the blastzone, this is why we check
+    // hitstun as well. Shield breaks also count as losing neutral.
+    for (int i = 0; i != frame.count(); ++i)
+        if (frame[i].hitstun() > 0.0 || frame[i].status() == FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY)
+        {
+            isInNeutralState[i] = 0;
+            neutralStateResetCounter_[i] = 45;  // Some arbitrary value to make sure we don't reset
+                                                // back to neutral state too early
+        }
+
+    // If player is no longer in hitstun and touches the ground, we put them back
+    // into neutral state
+    for (int i = 0; i != frame.count(); ++i)
+        if (frame[i].hitstun() == 0.0 && isTouchingGround(frame[i]))
+        {
+            if (neutralStateResetCounter_[i] > 0)
+                neutralStateResetCounter_[i]--;
+            else
+                isInNeutralState[i] = 1;
+        }
+
+    // If the player dies, put them back into neutral state
+    // If the player dies, mark that the string killed
+    for (int i = 0; i != frame.count(); ++i)
+        if (frame[i].status() == FIGHTER_STATUS_KIND_REBIRTH)
+            isInNeutralState[i] = 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -214,40 +264,16 @@ void StatsCalculator::Deaths::update(const rfcommon::Frame<4>& frame)
 void StatsCalculator::StageControl::reset()
 {
     for (int i = 0; i != MAX_FIGHTERS; ++i)
-    {
-        isInNeutralState_[i] = 1;
-        neutralStateResetCounter_[i] = 0;
         stageControl[i] = 0;
-    }
 }
-void StatsCalculator::StageControl::update(const rfcommon::Frame<4>& frame)
+void StatsCalculator::StageControl::update(const Helpers& helpers, const rfcommon::Frame<4>& frame)
 {
-    // Got hit? No longer in neutral state
-    for (int i = 0; i != frame.count(); ++i)
-        if (frame[i].hitstun() > 0.0 || frame[i].status() == FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY)
-        {
-            isInNeutralState_[i] = 0;
-            neutralStateResetCounter_[i] = 45;  // Some arbitrary value to make sure we don't reset
-                                                // back to neutral state too early
-        }
-
-    // If player is no longer in hitstun and touches the ground, we put them back
-    // into neutral state
-    for (int i = 0; i != frame.count(); ++i)
-        if (frame[i].hitstun() == 0.0 && isTouchingGround(frame[i]))
-        {
-            if (neutralStateResetCounter_[i] > 0)
-                neutralStateResetCounter_[i]--;
-            else
-                isInNeutralState_[i] = 1;
-        }
-
     // Figure out which player is in neutral and closest to stage center
     int playerInStageControl = -1;
     double distanceToCenter = std::numeric_limits<double>::max();
     for (int i = 0; i != frame.count(); ++i)
     {
-        if (isInNeutralState_[i] && std::abs(frame[i].pos().x()) < distanceToCenter)
+        if (helpers.isInNeutralState[i] && std::abs(frame[i].pos().x()) < distanceToCenter)
         {
             distanceToCenter = std::abs(frame[i].pos().x());
             playerInStageControl = i;
@@ -268,28 +294,22 @@ void StatsCalculator::StringFinder::reset()
         oldStatus_[i] = 0;
         oldHitstun_[i] = 0.0;
         oldStocks_[i] = 0;
-        isInNeutralState_[i] = 1;
-        neutralStateResetCounter_[i] = 0;
         beingCombodByIdx_[i] = -1;
         opponentDamageAtOpening_[i] = 0.0;
     }
 }
-void StatsCalculator::StringFinder::update(const rfcommon::Frame<4>& frame)
+void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommon::Frame<4>& frame)
 {
     // To make things a little clearer, we are looking at this from the
     // perspective of the player dealing the damage ("me"). The player
     // getting combo'd is "them"
     for (int them = 0; them != frame.count(); ++them)
     {
-        // Detect if a move hit by seeing if the damage increased, and if the player enters
-        // hitstun. The player can receive damage from the blastzone, this is why we check
-        // hitstun as well.
-        if ((frame[them].hitstun() > oldHitstun_[them]) ||
-            (frame[them].status() == FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY && oldStatus_[them] != FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY.value()))
+        if (helpers.isInNeutralState[them] == 0)
         {
             // This is the first time they got hit in neutral. We set up some counters so we can
             // follow the string and see how much damage it does/whether it kills
-            if (isInNeutralState_[them])
+            if (helpers.wasInNeutralState[them])
             {
                 // Figure out which player started the combo.
                 // XXX: Currently we only support 1v1
@@ -315,42 +335,25 @@ void StatsCalculator::StringFinder::update(const rfcommon::Frame<4>& frame)
                 strings[me].back().moves.push(frame[me].motion());
                 strings[me].back().damage = frame[them].damage() - opponentDamageAtOpening_[me];
             }
-
-            isInNeutralState_[them] = 0;
-            neutralStateResetCounter_[them] = 45;  // Some arbitrary value to make sure we don't reset
-                                                   // back to neutral state too early
         }
     }
 
     // If the player dies, mark that the string killed
     for (int i = 0; i != frame.count(); ++i)
     {
-        if (beingCombodByIdx_[i] > -1 && frame[i].status() == FIGHTER_STATUS_KIND_DEAD && oldStatus_[i] != FIGHTER_STATUS_KIND_DEAD.value())
+        if (beingCombodByIdx_[i] > -1 && frame[i].status() == FIGHTER_STATUS_KIND_DEAD)
         {
             int me = beingCombodByIdx_[i];
             strings[me].back().damage = opponentDamageAtOpening_[me] - frame[i].damage();
             strings[me].back().killed = true;
             beingCombodByIdx_[i] = -1;
-            neutralStateResetCounter_[i] = 0;
-            isInNeutralState_[i] = 1;
         }
     }
 
-    // If player is no longer in hitstun and touches the ground, we put them back
-    // into neutral state
+    // If player players returns to neutral state, end the string
     for (int i = 0; i != frame.count(); ++i)
-        if (frame[i].hitstun() == 0.0 && isTouchingGround(frame[i]))
-        {
-            if (neutralStateResetCounter_[i] > 0)
-            {
-                neutralStateResetCounter_[i]--;
-                if (neutralStateResetCounter_[i] == 0)
-                {
-                    isInNeutralState_[i] = 1;
-                    beingCombodByIdx_[i] = -1;
-                }
-            }
-        }
+        if (helpers.isInNeutralState[i])
+            beingCombodByIdx_[i] = -1;
 
     // Have to update old vars
     for (int i = 0; i != frame.count(); ++i)
