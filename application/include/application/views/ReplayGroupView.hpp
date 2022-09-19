@@ -25,7 +25,7 @@ class PluginManager;
 class ReplayManager;
 class ReplayGroup;
 class ReplayNameCompleter;
-class ReplayListWidget;
+class ReplayListView;
 class UserMotionLabelsManager;
 
 class ReplayGroupView
@@ -82,7 +82,7 @@ private:
     UserMotionLabelsManager* userMotionLabelsManager_;
     rfcommon::Hash40Strings* hash40Strings_;
     ReplayGroup* currentGroup_ = nullptr;
-    ReplayListWidget* replayListWidget_;
+    ReplayListView* replayListView_;
     ReplayNameCompleter* filterCompleter_;
     PluginDockView* pluginDockView_;
 };

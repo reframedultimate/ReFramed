@@ -55,6 +55,9 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
 
     categoryTabsView_->addTab(activeSessionView_, "Session");
     categoryTabsView_->addTab(replayGroupView_, "Replays");
+    categoryTabsView_->addTab(new QWidget, "Compare");
+    categoryTabsView_->addTab(new QWidget, "Marketplace");
+    categoryTabsView_->setCurrentIndex(1);
     setCentralWidget(categoryTabsView_);
 
     /*

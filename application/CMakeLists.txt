@@ -8,53 +8,7 @@ configure_file ("cmake/templates/config.hpp.in" "include/application/config.hpp"
 
 find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
-qt5_wrap_cpp (APPLICATION_SOURCES_MOC
-    "include/application/models/ActiveSessionManager.hpp"
-    "include/application/models/Protocol.hpp"
-    "include/application/models/ProtocolTask.hpp"
-    "include/application/views/ActiveSessionView.hpp"
-    "include/application/views/CategoryTabsView.hpp"
-    "include/application/views/ConnectView.hpp"
-    "include/application/views/ExportReplayPackDialog.hpp"
-    "include/application/views/ImportReplayPackDialog.hpp"
-    "include/application/views/MainWindow.hpp"
-    "include/application/views/PluginDockView.hpp"
-    "include/application/views/ReplayEditorDialog.hpp"
-    "include/application/views/ReplayGroupView.hpp"
-    "include/application/views/ReplayListWidget.hpp"
-    "include/application/views/UserMotionLabelsEditor.hpp"
-    "include/application/views/VideoAssociatorDialog.hpp"
-    "include/application/widgets/ProgressDialog.hpp")
-qt5_wrap_ui (APPLICATION_FORMS_MOC
-    "forms/ActiveSessionView.ui"
-    "forms/AnalysisInputView.ui"
-    "forms/ConnectView.ui"
-    "forms/ExportReplayPackDialog.ui"
-    "forms/ImportReplayPackDialog.ui"
-	"forms/ReplayEditorDialog.ui"
-    "forms/ReplayGroupView.ui"
-    "forms/TrainingModeView.ui"
-    "forms/VideoAssociatorDialog.ui"
-    "forms/MainWindow.ui")
-qt5_add_resources (APPLICATION_RESOURCES_GEN
-    "res/reframed.qrc"
-	"res/qdarkstyle/light/lightstyle.qrc"
-	"res/qdarkstyle/dark/darkstyle.qrc")
-qt5_add_translation (APPLICATION_QM_FILES
-    "")
-
-set (APPLICATION_WIN32_EXE "WIN32")
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set (APPLICATION_WIN32_EXE "")
-endif ()
-
-add_executable (application ${APPLICATION_WIN32_EXE}
-    ${APPLICATION_SOURCES_MOC}
-    ${APPLICATION_FORMS_MOC}
-    ${APPLICATION_RESOURCES_GEN}
-    ${APPLICATION_QM_FILES}
-    ${APPLICATION_RESOURCES_GEN}
-    $<$<PLATFORM_ID:Windows>:res/windows.rc>
+set (APPLICATION_SOURCES
     "src/models/ActiveSessionManager.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
@@ -68,18 +22,90 @@ add_executable (application ${APPLICATION_WIN32_EXE}
     "src/views/CategoryTabsView.cpp"
     "src/views/ConnectView.cpp"
     "src/views/ExportReplayPackDialog.cpp"
-	"src/views/ImportReplayPackDialog.cpp"
+    "src/views/ImportReplayPackDialog.cpp"
     "src/views/PluginDockView.cpp"
     "src/views/ReplayEditorDialog.cpp"
     "src/views/ReplayGroupView.cpp"
-    "src/views/ReplayListWidget.cpp"
+    "src/views/ReplayListView.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/ProgressDialog.cpp"
-
     "src/views/MainWindow.cpp"
     "src/Util.cpp"
     "src/main.cpp")
+set (APPLICATION_HEADERS
+    "include/application/listeners/ActiveSessionManagerListener.hpp"
+    "include/application/listeners/DataSetBackgroundLoaderListener.hpp"
+    "include/application/listeners/ReplayGroupListener.hpp"
+    "include/application/listeners/ReplayManagerListener.hpp"
+    "include/application/listeners/RunningGameSessionManagerListener.hpp"
+    "include/application/models/ActiveSessionManager.hpp"
+    "include/application/models/ConfigAccessor.hpp"
+    "include/application/models/Config.hpp"
+    "include/application/models/PluginManager.hpp"
+    "include/application/models/Protocol.hpp"
+    "include/application/models/ProtocolTask.hpp"
+    "include/application/models/ReplayGroup.hpp"
+    "include/application/models/ReplayManager.hpp"
+    "include/application/models/RunningGameSessionManager.hpp"
+    "include/application/models/UserMotionLabelsManager.hpp"
+    "include/application/views/ActiveGameSessionView.hpp"
+    "include/application/views/RunningGameSessionView.hpp"
+    "include/application/Util.hpp")
+set (APPLICATION_HEADERS_MOC
+    "include/application/models/ActiveSessionManager.hpp"
+    "include/application/models/Protocol.hpp"
+    "include/application/models/ProtocolTask.hpp"
+    "include/application/views/ActiveSessionView.hpp"
+    "include/application/views/CategoryTabsView.hpp"
+    "include/application/views/ConnectView.hpp"
+    "include/application/views/ExportReplayPackDialog.hpp"
+    "include/application/views/ImportReplayPackDialog.hpp"
+    "include/application/views/MainWindow.hpp"
+    "include/application/views/PluginDockView.hpp"
+    "include/application/views/ReplayEditorDialog.hpp"
+    "include/application/views/ReplayGroupView.hpp"
+    "include/application/views/ReplayListView.hpp"
+    "include/application/views/UserMotionLabelsEditor.hpp"
+    "include/application/views/VideoAssociatorDialog.hpp"
+    "include/application/widgets/ProgressDialog.hpp")
+set (APPLICATION_FORMS
+    "forms/ActiveSessionView.ui"
+    "forms/AnalysisInputView.ui"
+    "forms/ConnectView.ui"
+    "forms/ExportReplayPackDialog.ui"
+    "forms/ImportReplayPackDialog.ui"
+    "forms/ReplayEditorDialog.ui"
+    "forms/ReplayGroupView.ui"
+    "forms/TrainingModeView.ui"
+    "forms/VideoAssociatorDialog.ui"
+    "forms/MainWindow.ui")
+set (APPLICATION_RES
+    "res/reframed.qrc"
+    "res/qdarkstyle/light/lightstyle.qrc"
+    "res/qdarkstyle/dark/darkstyle.qrc")
+
+qt5_wrap_cpp (APPLICATION_SOURCES_MOC ${APPLICATION_HEADERS_MOC})
+qt5_wrap_ui (APPLICATION_FORMS_MOC ${APPLICATION_FORMS})
+qt5_add_resources (APPLICATION_RESOURCES_GEN ${APPLICATION_RES})
+qt5_add_translation (APPLICATION_QM_FILES "")
+
+set (APPLICATION_WIN32_EXE "WIN32")
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set (APPLICATION_WIN32_EXE "")
+endif ()
+
+add_executable (application ${APPLICATION_WIN32_EXE}
+    ${APPLICATION_SOURCES}
+    ${APPLICATION_SOURCES_MOC}
+    ${APPLICATION_HEADERS}
+    ${APPLICATION_HEADERS_MOC}
+    ${APPLICATION_FORMS}
+    ${APPLICATION_FORMS_MOC}
+    ${APPLICATION_RESOURCES}
+    ${APPLICATION_RESOURCES_GEN}
+    ${APPLICATION_QM_FILES}
+    $<$<PLATFORM_ID:Windows>:res/windows.rc>)
 target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
@@ -111,13 +137,13 @@ target_include_directories (application
 ###############################################################################
 
 add_custom_command (TARGET application POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_DATADIR}
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/ParamLabels.csv" "${REFRAMED_BUILD_DATADIR}/motion/ParamLabels.csv"
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/1_Specific.json" "${REFRAMED_BUILD_DATADIR}/motion/1_Specific.json"
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/2_General.json" "${REFRAMED_BUILD_DATADIR}/motion/2_General.json"
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/3_English.json" "${REFRAMED_BUILD_DATADIR}/motion/3_English.json"
-	COMMENT "Copying data files to ${REFRAMED_BUILD_DATADIR}"
-	VERBATIM)
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_DATADIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/ParamLabels.csv" "${REFRAMED_BUILD_DATADIR}/motion/ParamLabels.csv"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/1_Specific.json" "${REFRAMED_BUILD_DATADIR}/motion/1_Specific.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/2_General.json" "${REFRAMED_BUILD_DATADIR}/motion/2_General.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/3_English.json" "${REFRAMED_BUILD_DATADIR}/motion/3_English.json"
+    COMMENT "Copying data files to ${REFRAMED_BUILD_DATADIR}"
+    VERBATIM)
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
@@ -152,8 +178,8 @@ if (WIN32 OR CYGWIN)
 endif ()
 
 install (
-	DIRECTORY ${PROJECT_SOURCE_DIR}/data/
-	DESTINATION ${REFRAMED_INSTALL_DATADIR})
+    DIRECTORY ${PROJECT_SOURCE_DIR}/data/
+    DESTINATION ${REFRAMED_INSTALL_DATADIR})
 install (
     TARGETS application
     RUNTIME DESTINATION "${REFRAMED_INSTALL_BINDIR}")

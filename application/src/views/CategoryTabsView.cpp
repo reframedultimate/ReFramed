@@ -54,8 +54,8 @@ CategoryTabsView::CategoryTabsView(QWidget* parent)
          "}\n"*/
         "QTabBar#categoryTab::tab {\n"
         "   width: 50px;\n"
-        "   height: 140px;\n"
-        "   font-size: 14pt;\n"
+        "   height: 160px;\n"
+        "   font-size: 12pt;\n"
         "}\n"
     );
 }
