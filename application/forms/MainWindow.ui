@@ -73,7 +73,7 @@
   </action>
   <action name="action_importReplayPack">
    <property name="text">
-    <string>Import Reply Pack...</string>
+    <string>Import Replay Pack...</string>
    </property>
   </action>
  </widget>
