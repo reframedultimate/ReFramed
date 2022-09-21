@@ -6,7 +6,7 @@
 
 // ----------------------------------------------------------------------------
 StatsFormatter::StatsFormatter(
-        const StatsCalculator* stats, 
+        const StatsCalculator* stats,
         const PlayerMeta* playerMeta)
     : stats_(stats)
     , playerMeta_(playerMeta)
@@ -18,9 +18,15 @@ QString StatsFormatter::playerStatAsString(int fighterIdx, StatType type) const
 {
     switch (type)
     {
-    case STAT_AVERAGE_DEATH_PERCENT: return QString::number(stats_->avgDeathPercent(fighterIdx), 'f', 1) + "%";
-    case STAT_EARLIEST_DEATH: return QString::number(stats_->earliestDeathPercent(fighterIdx), 'f', 1) + "%";
-    case STAT_LATEST_DEATH: return QString::number(stats_->latestDeathPercent(fighterIdx), 'f', 1) + "%";
+    case STAT_AVERAGE_DEATH_PERCENT:
+            return QString::number(stats_->avgDeathPercentBeforeHit(fighterIdx), 'f', 1) + "% / " +
+                    QString::number(stats_->avgDeathPercentAfterHit(fighterIdx), 'f', 1) + "%";
+    case STAT_EARLIEST_DEATH:
+            return QString::number(stats_->earliestDeathPercentBeforeHit(fighterIdx), 'f', 1) + "% / " +
+                    QString::number(stats_->earliestDeathPercentAfterHit(fighterIdx), 'f', 1) + "%";
+    case STAT_LATEST_DEATH:
+            return QString::number(stats_->latestDeathPercentBeforeHit(fighterIdx), 'f', 1) + "% / " +
+                    QString::number(stats_->latestDeathPercentAfterHit(fighterIdx), 'f', 1) + "%";
     case STAT_NEUTRAL_WINS: return QString::number(stats_->numNeutralWins(fighterIdx));
     case STAT_NEUTRAL_LOSSES: return QString::number(stats_->numNeutralLosses(fighterIdx));
     case STAT_NON_KILLING_NEUTRAL_WINS: return QString::number(stats_->numNonKillingNeutralWins(fighterIdx));
@@ -45,6 +51,8 @@ QString StatsFormatter::playerStatAsString(int fighterIdx, StatType type) const
         const rfcommon::FighterMotion motion = stats_->mostCommonNeutralOpenerIntoKillMove(fighterIdx);
         return playerMeta_->moveName(fighterIdx, motion);
     }break;
+
+    case STAT_COUNT: break;
     }
 
     return "";

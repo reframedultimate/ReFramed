@@ -291,11 +291,7 @@ void StatsCalculator::StringFinder::reset()
     for (int i = 0; i != MAX_FIGHTERS; ++i)
     {
         strings[i].clearCompact();
-        oldStatus_[i] = 0;
-        oldHitstun_[i] = 0.0;
-        oldStocks_[i] = 0;
         beingCombodByIdx_[i] = -1;
-        opponentDamageAtOpening_[i] = 0.0;
     }
 }
 void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommon::Frame<4>& frame)
@@ -321,34 +317,30 @@ void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommo
 
                 // Store the opening move that started the combo
                 strings[me].back().moves.push(frame[me].motion());
-                strings[me].back().damage = frame[them].damage() - oldDamage_[them];
-
-                // Start a new damage counter for this string
-                opponentDamageAtOpening_[me] = oldDamage_[them];  // Store damage before the hit
+                strings[me].back().damageAtStart = oldDamage_[them];  // Store damage before the hit
+                strings[me].back().damageAtEnd = frame[them].damage();
             }
             // The string is being continued
             else if (beingCombodByIdx_[them] >= 0)
             {
                 int me = beingCombodByIdx_[them];
 
-                // Add move to list
-                strings[me].back().moves.push(frame[me].motion());
-                strings[me].back().damage = frame[them].damage() - opponentDamageAtOpening_[me];
+                // Add move to list if it is different
+                if (strings[me].back().moves.back() != frame[me].motion())
+                    strings[me].back().moves.push(frame[me].motion());
+                strings[me].back().damageAtEnd = frame[them].damage();
             }
         }
     }
 
     // If the player dies, mark that the string killed
     for (int i = 0; i != frame.count(); ++i)
-    {
         if (beingCombodByIdx_[i] > -1 && frame[i].status() == FIGHTER_STATUS_KIND_DEAD)
         {
             int me = beingCombodByIdx_[i];
-            strings[me].back().damage = opponentDamageAtOpening_[me] - frame[i].damage();
             strings[me].back().killed = true;
             beingCombodByIdx_[i] = -1;
         }
-    }
 
     // If player players returns to neutral state, end the string
     for (int i = 0; i != frame.count(); ++i)
@@ -357,15 +349,11 @@ void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommo
 
     // Have to update old vars
     for (int i = 0; i != frame.count(); ++i)
-    {
-        oldHitstun_[i] = frame[i].hitstun();
         oldDamage_[i] = frame[i].damage();
-        oldStatus_[i] = frame[i].status().value();
-    }
 }
 
 // ----------------------------------------------------------------------------
-double StatsCalculator::avgDeathPercent(int fighterIdx) const
+double StatsCalculator::avgDeathPercentAfterHit(int fighterIdx) const
 {
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
@@ -378,7 +366,29 @@ double StatsCalculator::avgDeathPercent(int fighterIdx) const
 }
 
 // ----------------------------------------------------------------------------
-double StatsCalculator::earliestDeathPercent(int fighterIdx) const
+double StatsCalculator::avgDeathPercentBeforeHit(int fighterIdx) const
+{
+    // Figure out who killed us
+    // XXX: Currently we only support 1v1
+    if (fighterIdx > 1)
+        return 0.0;
+    int killer = 1 - fighterIdx;
+
+    double sum = 0.0;
+    int i = 0;
+    for (const auto& string : stringFinder.strings[killer])
+        if (string.killed)
+        {
+            sum += string.damageAtStart;
+            i++;
+        }
+    if (i > 0)
+        sum /= i;
+    return sum;
+}
+
+// ----------------------------------------------------------------------------
+double StatsCalculator::earliestDeathPercentAfterHit(int fighterIdx) const
 {
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
@@ -391,7 +401,42 @@ double StatsCalculator::earliestDeathPercent(int fighterIdx) const
 }
 
 // ----------------------------------------------------------------------------
-double StatsCalculator::latestDeathPercent(int fighterIdx) const
+double StatsCalculator::earliestDeathPercentBeforeHit(int fighterIdx) const
+{
+    // Figure out who killed us
+    // XXX: Currently we only support 1v1
+    if (fighterIdx > 1)
+        return 0.0;
+    int killer = 1 - fighterIdx;
+
+    if (stringFinder.strings[killer].count() == 0)
+        return 0.0;
+
+    double low = std::numeric_limits<double>::max();
+    for (const auto& string : stringFinder.strings[killer])
+        if (string.killed)
+            if (low > string.damageAtStart)
+                low = string.damageAtStart;
+
+    puts("\nStrings:");
+    for (const auto& string : stringFinder.strings[fighterIdx])
+    {
+        if (string.killed)
+            puts("  (killed)");
+        printf("  %.1f%% -> %.1f%%: ", string.damageAtStart, string.damageAtEnd);
+        for (int i = 0; i != string.moves.count(); ++i)
+        {
+            if (i != 0)
+                printf(" -> ");
+            printf("0x%lx", string.moves[i].value());
+        }
+        puts("");
+    }
+    return low;
+}
+
+// ----------------------------------------------------------------------------
+double StatsCalculator::latestDeathPercentAfterHit(int fighterIdx) const
 {
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
@@ -400,6 +445,23 @@ double StatsCalculator::latestDeathPercent(int fighterIdx) const
     for (double percent : damagesAtDeath.damagesAtDeath[fighterIdx])
         if (high < percent)
             high = percent;
+    return high;
+}
+
+// ----------------------------------------------------------------------------
+double StatsCalculator::latestDeathPercentBeforeHit(int fighterIdx) const
+{
+    // Figure out who killed us
+    // XXX: Currently we only support 1v1
+    if (fighterIdx > 1)
+        return 0.0;
+    int killer = 1 - fighterIdx;
+
+    double high = 0.0;
+    for (const auto& string : stringFinder.strings[killer])
+        if (string.killed)
+            if (high < string.damageAtStart)
+                high = string.damageAtStart;
     return high;
 }
 

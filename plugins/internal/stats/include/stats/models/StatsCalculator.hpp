@@ -40,9 +40,12 @@ public:
      */
     void udpateStatisticsBulk(const rfcommon::FrameData* fdata);
 
-    double avgDeathPercent(int fighterIdx) const;
-    double earliestDeathPercent(int fighterIdx) const;
-    double latestDeathPercent(int fighterIdx) const;
+    double avgDeathPercentAfterHit(int fighterIdx) const;
+    double avgDeathPercentBeforeHit(int fighterIdx) const;
+    double earliestDeathPercentAfterHit(int fighterIdx) const;
+    double earliestDeathPercentBeforeHit(int fighterIdx) const;
+    double latestDeathPercentAfterHit(int fighterIdx) const;
+    double latestDeathPercentBeforeHit(int fighterIdx) const;
     int numNeutralWins(int fighterIdx) const;
     int numNeutralLosses(int fighterIdx) const;
     int numNonKillingNeutralWins(int fighterIdx) const;
@@ -143,17 +146,14 @@ private:
 
         struct String {
             rfcommon::Vector<rfcommon::FighterMotion> moves;  // List of all moves in the string/combo
-            double damage = 0.0;  // Damage dealt by the whole string/combo
+            double damageAtStart = 0.0;  // Damage before the first hit connected
+            double damageAtEnd = 0.0;    // Damage after the last hit connected
             bool killed = false;  // Whether the string/combo killed
         };
 
         rfcommon::Vector<String> strings[MAX_FIGHTERS];
 
-        rfcommon::FighterStatus::Type oldStatus_[MAX_FIGHTERS];
         double oldDamage_[MAX_FIGHTERS];
-        double oldHitstun_[MAX_FIGHTERS];
-        int oldStocks_[MAX_FIGHTERS];
         int beingCombodByIdx_[MAX_FIGHTERS];  // Stores the index of the fighter that's doing the combo on me
-        double opponentDamageAtOpening_[MAX_FIGHTERS];
     } stringFinder;
 };
