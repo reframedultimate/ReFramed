@@ -178,7 +178,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
             }
         } break;
 
-        case Qt::TextAlignmentRole:
+        case Qt::TextAlignmentRole: {
             switch (index.column())
             {
                 case StatusName:
@@ -190,6 +190,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 default:
                     return Qt::AlignHCenter + Qt::AlignVCenter;
             }
+        } break;
 
         case Qt::CheckStateRole:
         case Qt::DecorationRole:

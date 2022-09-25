@@ -1,5 +1,6 @@
 #include "application/ui_ReplayGroupView.h"
 #include "application/models/ReplayGroup.hpp"
+#include "application/models/ReplayListModel.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/views/ExportReplayPackDialog.hpp"
 #include "application/views/PluginDockView.hpp"
@@ -29,83 +30,6 @@
 
 namespace rfapp {
 
-class ReplayNameCompleter : public QCompleter
-{
-public:
-    ReplayNameCompleter(QObject* parent=nullptr);
-
-    void setGroupWeakRef(ReplayGroup* group);
-    void groupExpired();
-
-    void setCompleteCategories();
-    void setCompleteTags();
-
-    QStringList splitPath(const QString &path) const override;
-
-private:
-    ReplayGroup* group_ = nullptr;
-    QStringListModel* model_;
-};
-
-ReplayNameCompleter::ReplayNameCompleter(QObject* parent)
-    : QCompleter(parent)
-    , model_(new QStringListModel)
-{
-    setCaseSensitivity(Qt::CaseInsensitive);
-    setCompletionMode(QCompleter::UnfilteredPopupCompletion);
-    setModel(model_);
-}
-
-void ReplayNameCompleter::setGroupWeakRef(ReplayGroup* group)
-{
-    PROFILE(ReplayNameCompleter, setGroupWeakRef);
-
-    group_ = group;
-    setCompleteCategories();
-}
-
-void ReplayNameCompleter::groupExpired()
-{
-    PROFILE(ReplayNameCompleter, groupExpired);
-
-    group_ = nullptr;
-    model_->setStringList({});
-}
-
-void ReplayNameCompleter::setCompleteCategories()
-{
-    PROFILE(ReplayNameCompleter, setCompleteCategories);
-
-    QStringList list = {
-        "name:",
-        "tag:",
-        "after:",
-        "before:",
-        "fighter:",
-        "format:",
-        "game:",
-        "set:",
-        "stage:",
-        "winner:"
-    };
-
-    model_->setStringList(std::move(list));
-}
-
-void ReplayNameCompleter::setCompleteTags()
-{
-    PROFILE(ReplayNameCompleter, setCompleteTags);
-
-    model_->setStringList({"TheComet", "Stino"});
-}
-
-QStringList ReplayNameCompleter::splitPath(const QString &path) const
-{
-    PROFILE(ReplayNameCompleter, splitPath);
-
-    return path.split("[:,]");
-}
-
 // ----------------------------------------------------------------------------
 ReplayGroupView::ReplayGroupView(
         ReplayManager* replayManager,
@@ -119,9 +43,9 @@ ReplayGroupView::ReplayGroupView(
     , replayManager_(replayManager)
     , userMotionLabelsManager_(userMotionLabelsManager)
     , hash40Strings_(hash40Strings)
+    , replayListModel_(new ReplayListModel)
     , replayListView_(new ReplayListView)
     /*, filterCompleter_(new ReplayNameCompleter)*/
-    , pluginDockView_(new PluginDockView(replayManager, pluginManager))
 {
     ui_->setupUi(this);
     ui_->splitter->setStretchFactor(0, 0);
@@ -131,6 +55,7 @@ ReplayGroupView::ReplayGroupView(
     ui_->layout_data->addWidget(pluginDockView_);
 
     replayListView_->setContextMenuPolicy(Qt::CustomContextMenu);
+    replayListView_->setModel(replayListModel_.get());
     connect(replayListView_, &QListWidget::customContextMenuRequested, this, &ReplayGroupView::onItemRightClicked);
 
     /*ui_->lineEdit_filters->setCompleter(filterCompleter_);*/
@@ -139,8 +64,8 @@ ReplayGroupView::ReplayGroupView(
 
     replayManager_->dispatcher.addListener(this);
 
-    /*connect(replayListView_, &QListWidget::itemSelectionChanged,
-            this, &ReplayGroupView::onItemSelectionChanged);*/
+    connect(replayListView_->selectionModel(), &QItemSelectionModel::selectionChanged,
+            this, &ReplayGroupView::onItemSelectionChanged);
     connect(ui_->lineEdit_filters, &QLineEdit::textChanged,
             this, &ReplayGroupView::onFiltersTextChanged);
     connect(shortcut, &QShortcut::activated,
@@ -172,7 +97,7 @@ void ReplayGroupView::setReplayGroup(ReplayGroup* group)
     currentGroup_->dispatcher.addListener(this);
 
     for (const auto& fileName : group->fileNames())
-        replayListView_->addReplay(QString(fileName).remove(".rfr"), fileName);
+        replayListModel_->addReplay(QString(fileName).remove(".rfr"), fileName);
     //replayListView_->sortItems(Qt::DescendingOrder);
 
     /*filterCompleter_->setRecordingGroupWeakRef(group);*/
@@ -190,7 +115,7 @@ void ReplayGroupView::clearReplayGroup(ReplayGroup* group)
     currentGroup_->dispatcher.removeListener(this);
     currentGroup_ = nullptr;
 
-    replayListView_->clear();
+    replayListModel_->clear();
 
     /*filterCompleter_->recordingGroupExpired();*/
 }
@@ -283,7 +208,7 @@ void ReplayGroupView::onItemRightClicked(const QPoint& pos)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayGroupView::onItemSelectionChanged()
+void ReplayGroupView::onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
     PROFILE(ReplayGroupView, onItemSelectionChanged);
 
@@ -292,29 +217,35 @@ void ReplayGroupView::onItemSelectionChanged()
 
     pluginDockView_->clearReplays();
 
-    /*
-    const auto selected = replayListView_->selectedItems();
-    if (selected.size() == 1)
+    auto indexes = replayListView_->selectionModel()->selectedRows();
+    if (indexes.size() == 1)
     {
-        const auto fileName = replayListView_->itemFileName(selected[0]);
+        const auto fileName = replayListModel_->fileName(indexes[0]);
+        if (fileName == "")
+            return;
         assert(QDir(fileName).isRelative());
+
         const QString absFilePath = QString::fromLocal8Bit(replayManager_->resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
         if (absFilePath.length() == 0)
             return;
         pluginDockView_->loadGameReplays({ absFilePath });
     }
-    else if (selected.size() > 1)
+    else if (indexes.size() > 1)
     {
         QStringList absFilePaths;
-        for (const auto& fileName : replayListView_->selectedReplayFileNames())
+        for (const auto& index : indexes)
         {
+            const QString fileName = replayListModel_->fileName(index);
+            if (fileName == "")
+                continue;
+
             const QString absFilePath = QString::fromLocal8Bit(replayManager_->resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
             if (absFilePath.length() > 0)
                 absFilePaths.push_back(absFilePath);
         }
 
         pluginDockView_->loadGameReplays(absFilePaths);
-    }*/
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -337,8 +268,13 @@ void ReplayGroupView::onDeleteKeyPressed()
     if (currentGroup_ == nullptr || currentGroup_ == replayManager_->allReplayGroup())
         return;
 
-    for (const auto& fileName : replayListView_->selectedReplayFileNames())
+    for (const auto& index : replayListView_->selectionModel()->selectedRows())
+    {
+        const QString fileName = replayListModel_->fileName(index);
+        if (fileName == "")
+            continue;
         currentGroup_->removeFile(fileName);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -396,7 +332,7 @@ void ReplayGroupView::onReplayGroupFileRemoved(ReplayGroup* group, const QString
     PROFILE(ReplayGroupView, onReplayGroupFileRemoved);
 
     (void)group;
-    replayListView_->removeReplay(fileName);
+    replayListModel_->removeReplay(fileName);
 }
 
 }

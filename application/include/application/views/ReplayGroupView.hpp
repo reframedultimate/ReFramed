@@ -5,9 +5,10 @@
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Vector.hpp"
 #include <QWidget>
+#include <memory>
 
-class QListWidgetItem;
 class QStringListModel;
+class QItemSelection;
 
 namespace Ui {
     class ReplayGroupView;
@@ -25,6 +26,7 @@ class PluginManager;
 class ReplayManager;
 class ReplayGroup;
 class ReplayNameCompleter;
+class ReplayListModel;
 class ReplayListView;
 class UserMotionLabelsManager;
 
@@ -55,7 +57,7 @@ public slots:
 
 private slots:
     void onItemRightClicked(const QPoint& pos);
-    void onItemSelectionChanged();
+    void onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
     void onFiltersTextChanged(const QString& text);
     void onDeleteKeyPressed();
 
@@ -77,14 +79,7 @@ private:
 
 private:
     Ui::ReplayGroupView* ui_;
-    PluginManager* pluginManager_;
-    ReplayManager* replayManager_;
-    UserMotionLabelsManager* userMotionLabelsManager_;
-    rfcommon::Hash40Strings* hash40Strings_;
     ReplayGroup* currentGroup_ = nullptr;
-    ReplayListView* replayListView_;
-    ReplayNameCompleter* filterCompleter_;
-    PluginDockView* pluginDockView_;
 };
 
 }

@@ -1,60 +1,26 @@
-#include "rfcommon/Profiler.hpp"
+#include "application/models/ReplayListModel.hpp"
 #include "application/views/ReplayListView.hpp"
 
-#include <QFileInfo>
-#include <QMimeData>
-#include <QByteArray>
-#include <QDataStream>
+#include "rfcommon/Profiler.hpp"
+
+#include <QTreeView>
 
 namespace rfapp {
 
-namespace {
-
-class ReplayListModel : public QObject
-{
-public:
-};
-
-}
-
 // ----------------------------------------------------------------------------
 ReplayListView::ReplayListView(QWidget* parent)
-    : QTreeView(parent)
+    : QWidget(parent)
+    , replayListModel_(new ReplayListModel)
+    , treeView_(new QTreeView)
 {
-    setDragDropMode(DragOnly);
-    setSelectionMode(ExtendedSelection);
+    treeView_->setDragDropMode(QTreeView::DragOnly);
+    treeView_->setSelectionMode(QTreeView::ExtendedSelection);
+    treeView_->setModel(replayListModel_.get());
 }
 
 // ----------------------------------------------------------------------------
 ReplayListView::~ReplayListView()
 {
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListView::addReplay(const QString& appearName, const QString& fileName)
-{
-    PROFILE(ReplayListView, addReplay);
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListView::removeReplay(const QString& fileName)
-{
-    PROFILE(ReplayListView, removeReplay);
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListView::clear()
-{
-    PROFILE(ReplayListView, clear);
-}
-
-// ----------------------------------------------------------------------------
-QVector<QString> ReplayListView::selectedReplayFileNames() const
-{
-    PROFILE(ReplayListView, selectedReplayFilePaths);
-
-    QVector<QString> fileNames;
-    return fileNames;
 }
 
 }

@@ -409,14 +409,13 @@ double StatsCalculator::earliestDeathPercentBeforeHit(int fighterIdx) const
         return 0.0;
     int killer = 1 - fighterIdx;
 
-    if (stringFinder.strings[killer].count() == 0)
-        return 0.0;
-
     double low = std::numeric_limits<double>::max();
     for (const auto& string : stringFinder.strings[killer])
         if (string.killed)
             if (low > string.damageAtStart)
                 low = string.damageAtStart;
+    if (low == std::numeric_limits<double>::max())
+        return 0.0;
 
     puts("\nStrings:");
     for (const auto& string : stringFinder.strings[fighterIdx])

@@ -16,6 +16,7 @@ set (APPLICATION_SOURCES
     "src/models/Protocol.cpp"
     "src/models/ProtocolTask.cpp"
     "src/models/ReplayGroup.cpp"
+    "src/models/ReplayListModel.cpp"
     "src/models/ReplayManager.cpp"
     "src/models/UserMotionLabelsManager.cpp"
     "src/views/ActiveSessionView.cpp"
@@ -26,7 +27,9 @@ set (APPLICATION_SOURCES
     "src/views/PluginDockView.cpp"
     "src/views/ReplayEditorDialog.cpp"
     "src/views/ReplayGroupView.cpp"
+    "src/views/ReplayGroupListView.cpp"
     "src/views/ReplayListView.cpp"
+    "src/views/ReplayManagerView.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/ProgressDialog.cpp"
@@ -46,10 +49,12 @@ set (APPLICATION_HEADERS
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
     "include/application/models/ReplayGroup.hpp"
+    "include/application/models/ReplayListModel.hpp"
     "include/application/models/ReplayManager.hpp"
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/UserMotionLabelsManager.hpp"
     "include/application/views/ActiveGameSessionView.hpp"
+    "include/application/views/ReplayManagerView.hpp"
     "include/application/views/RunningGameSessionView.hpp"
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
@@ -66,6 +71,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/ReplayEditorDialog.hpp"
     "include/application/views/ReplayGroupView.hpp"
     "include/application/views/ReplayListView.hpp"
+    "include/application/views/ReplayGroupListView.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
     "include/application/widgets/ProgressDialog.hpp")

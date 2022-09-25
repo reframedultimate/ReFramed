@@ -11,7 +11,7 @@
 #include "application/views/ConnectView.hpp"
 #include "application/views/ImportReplayPackDialog.hpp"
 #include "application/views/MainWindow.hpp"
-#include "application/views/ReplayGroupView.hpp"
+#include "application/views/ReplayManagerView.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/Util.hpp"
 
@@ -43,7 +43,7 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get()))
     , categoryTabsView_(new CategoryTabsView)
-    , replayGroupView_(new ReplayGroupView(replayManager_.get(), pluginManager_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
+    , replayManagerView_(new ReplayManagerView(replayManager_.get(), pluginManager_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
     , activeSessionView_(new ActiveSessionView(activeSessionManager_.get(), pluginManager_.get()))
     , ui_(new Ui::MainWindow)
 {
@@ -54,7 +54,7 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
     categoryTabsView_->addTab(activeSessionView_, "Session");
-    categoryTabsView_->addTab(replayGroupView_, "Replays");
+    categoryTabsView_->addTab(replayManagerView_, "Replays");
     categoryTabsView_->addTab(new QWidget, "Compare");
     categoryTabsView_->addTab(new QWidget, "Marketplace");
     categoryTabsView_->setCurrentIndex(1);
