@@ -339,7 +339,7 @@ Log* Log::child(const char* logName)
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
 #   define SEP "\\"
 #else
-#   define SEP "\\"
+#   define SEP "/"
 #endif
     childLog->d_->absFileName = childLog->d_->path + SEP + "ReFramed_";
     for (const char* name : parentNames)

@@ -468,7 +468,7 @@ void Protocol::tryLoadGlobalMappingInfo()
     PROFILE(Protocol, tryLoadGlobalMappingInfo);
 
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
-    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
+    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toLocal8Bit();
     rfcommon::MappedFile file;
     if (file.open(ba.constData()) == false)
         return;
@@ -482,7 +482,7 @@ void Protocol::saveGlobalMappingInfo()
     PROFILE(Protocol, saveGlobalMappingInfo);
 
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
-    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
+    QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toLocal8Bit();
     FILE* fp = fopen(ba.constData(), "wb");
     if (fp == nullptr)
         return;
