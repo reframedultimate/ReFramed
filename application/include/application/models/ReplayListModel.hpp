@@ -1,5 +1,6 @@
 #pragma once
 
+#include "application/listeners/ReplayGroupListener.hpp"
 #include "rfcommon/SetFormat.hpp"
 #include "rfcommon/GameNumber.hpp"
 #include "rfcommon/SetNumber.hpp"
@@ -8,7 +9,9 @@
 
 namespace rfapp {
 
-class ReplayListModel : public QAbstractItemModel
+class ReplayListModel
+        : public QAbstractItemModel
+        , public ReplayGroupListener
 {
 public:
     enum ColumnType
@@ -24,9 +27,14 @@ public:
         ColumnCount
     };
 
-    void addReplay(const QString& fileName);
-    void removeReplay(const QString& fileName);
-    void clear();
+    /*!
+     * \brief Updates the view with data from the specified group. If the group
+     * changes (files added/removed) the view will automatically update. If
+     * the group is deleted the view will clear itself.
+     */
+    void setReplayGroup(ReplayGroup* group);
+    void clearReplayGroup(ReplayGroup* group);
+
     QString fileName(const QModelIndex& index) const;
 
     QModelIndex index(int row, int column, const QModelIndex& parent=QModelIndex()) const override;
@@ -35,6 +43,14 @@ public:
     int columnCount(const QModelIndex& parent=QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override;
+
+private:
+    void addReplay(const QString& fileName);
+    void removeReplay(const QString& fileName);
+
+private:
+    void onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QString& fileName) override;
 
 private:
     struct ReplaysOnDay;
@@ -57,6 +73,7 @@ private:
     };
 
     QVector<ReplaysOnDay> days_;
+    ReplayGroup* currentGroup_ = nullptr;
 };
 
 }
