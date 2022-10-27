@@ -128,3 +128,31 @@ TEST(NAME, hash_collision_insert_ab_erase_b_find_a)
     EXPECT_THAT(it->key(), Eq(KEY1));
     EXPECT_THAT(it->value(), FloatEq(5.6));
 }
+
+TEST(NAME, rehash)
+{
+    HashMap<int, String, ShittyHash> hm(8);
+    ASSERT_THAT(hm.insertIfNew(0, "Wolf"), Ne(hm.end()));
+    ASSERT_THAT(hm.insertIfNew(1, "Ike"), Ne(hm.end()));
+    ASSERT_THAT(hm.insertIfNew(2, "Snake"), Ne(hm.end()));
+    ASSERT_THAT(hm.insertIfNew(3, "Wario"), Ne(hm.end()));
+
+    const auto print = [&hm]() {
+        auto result = Vector<String>::makeReserved(hm.count());
+        for (const auto it : hm)
+            result.push(it->value());
+        puts("hashmap:");
+        for (const auto& it : result)
+            printf("  %s\n", it.cStr());
+    };
+
+    print();
+    hm.rehash();
+    print();
+
+    ASSERT_THAT(hm.find(0), Ne(hm.end())); EXPECT_THAT(hm.find(0)->value(), Eq("Wolf"));
+    ASSERT_THAT(hm.find(1), Ne(hm.end())); EXPECT_THAT(hm.find(1)->value(), Eq("Ike"));
+    ASSERT_THAT(hm.find(2), Ne(hm.end())); EXPECT_THAT(hm.find(2)->value(), Eq("Snake"));
+    ASSERT_THAT(hm.find(3), Ne(hm.end())); EXPECT_THAT(hm.find(3)->value(), Eq("Wario"));
+
+}

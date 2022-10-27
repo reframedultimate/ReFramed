@@ -303,6 +303,8 @@ public:
 
     void rehash()
     {
+        K* newKeys = reinterpret_cast<K*>(allocate<K>(table_.count()));
+        V* newValues = reinterpret_cast<V*>(allocate<V>(table_.count()));
         auto newTable = Vector<H, S>::makeResized(table_.count());
 
         for (S oldPos = 0; oldPos != table_.count(); ++oldPos)
@@ -313,30 +315,26 @@ public:
             H hash = table_[oldPos];
             S newPos = hash & (newTable.count() - 1);
             S i = 0;
-            S lastTombtone = newTable.count();
             while (newTable[newPos] != UNUSED)
             {
-                if (newTable[newPos] == hash && newTable[newPos] == RIP)
-                    lastTombtone = newPos;
                 i++;
                 newPos += i;
                 newPos = newPos & (newTable.count() - 1);
             }
 
-            if (lastTombtone != newTable.count())
-                newPos = lastTombtone;
-
             newTable[newPos] = hash;
-            if (newPos != oldPos)
-            {
-                new (keys_ + newPos) K(std::move(keys_[oldPos]));
-                new (values_ + newPos) V(std::move(values_[oldPos]));
-                keys_[oldPos].~K();
-                values_[oldPos].~V();
-            }
+            new (newKeys + newPos) K(std::move(keys_[oldPos]));
+            new (newValues + newPos) V(std::move(values_[oldPos]));
+            keys_[oldPos].~K();
+            values_[oldPos].~V();
         }
 
+        deallocate(reinterpret_cast<char*>(keys_));
+        deallocate(reinterpret_cast<char*>(values_));
+
         table_ = std::move(newTable);
+        keys_ = newKeys;
+        values_ = newValues;
     }
 
 private:
