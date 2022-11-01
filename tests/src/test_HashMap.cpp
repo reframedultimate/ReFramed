@@ -38,7 +38,7 @@ TEST(NAME, erase_decreases_count)
     HashMap<int, float> hm;
     hm.insertOrGet(KEY1, 5.6);
     ASSERT_THAT(hm.count(), Eq(1));
-    EXPECT_THAT(hm.erase(KEY1), Eq(1));
+    EXPECT_THAT(hm.erase(KEY1), IsTrue());
     ASSERT_THAT(hm.count(), Eq(0));
 }
 
@@ -60,8 +60,8 @@ TEST(NAME, erase_same_key_twice_only_erases_once)
     HashMap<int, float> hm;
     hm.insertOrGet(KEY1, 5.6);
     ASSERT_THAT(hm.count(), Eq(1));
-    EXPECT_THAT(hm.erase(KEY1), Eq(1));
-    EXPECT_THAT(hm.erase(KEY1), Eq(0));
+    EXPECT_THAT(hm.erase(KEY1), IsTrue());
+    EXPECT_THAT(hm.erase(KEY1), IsFalse());
     ASSERT_THAT(hm.count(), Eq(0));
 }
 
@@ -71,8 +71,8 @@ TEST(NAME, hash_collision_insert_ab_erase_ba)
     EXPECT_THAT(hm.insertOrGet(KEY1, 5.6)->value(), FloatEq(5.6));
     EXPECT_THAT(hm.insertOrGet(KEY2, 3.4)->value(), FloatEq(3.4));
     EXPECT_THAT(hm.count(), Eq(2));
-    EXPECT_THAT(hm.erase(KEY2), Eq(1));
-    EXPECT_THAT(hm.erase(KEY1), Eq(1));
+    EXPECT_THAT(hm.erase(KEY2), IsTrue());
+    EXPECT_THAT(hm.erase(KEY1), IsTrue());
     EXPECT_THAT(hm.count(), Eq(0));
 }
 
@@ -82,8 +82,8 @@ TEST(NAME, hash_collision_insert_ab_erase_ab)
     EXPECT_THAT(hm.insertOrGet(KEY1, 5.6)->value(), FloatEq(5.6));
     EXPECT_THAT(hm.insertOrGet(KEY2, 3.4)->value(), FloatEq(3.4));
     EXPECT_THAT(hm.count(), Eq(2));
-    EXPECT_THAT(hm.erase(KEY1), Eq(1));
-    EXPECT_THAT(hm.erase(KEY2), Eq(1));
+    EXPECT_THAT(hm.erase(KEY1), IsTrue());
+    EXPECT_THAT(hm.erase(KEY2), IsTrue());
     EXPECT_THAT(hm.count(), Eq(0));
 }
 
@@ -109,7 +109,7 @@ TEST(NAME, hash_collision_insert_ab_erase_a_find_b)
     EXPECT_THAT(hm.insertOrGet(KEY1, 5.6)->value(), FloatEq(5.6));
     EXPECT_THAT(hm.insertOrGet(KEY2, 3.4)->value(), FloatEq(3.4));
     EXPECT_THAT(hm.count(), Eq(2));
-    EXPECT_THAT(hm.erase(KEY1), Eq(1));
+    EXPECT_THAT(hm.erase(KEY1), IsTrue());
     auto it = hm.find(KEY2);
     ASSERT_THAT(it, Ne(hm.end()));
     EXPECT_THAT(it->key(), Eq(KEY2));
@@ -122,7 +122,7 @@ TEST(NAME, hash_collision_insert_ab_erase_b_find_a)
     EXPECT_THAT(hm.insertOrGet(KEY1, 5.6)->value(), FloatEq(5.6));
     EXPECT_THAT(hm.insertOrGet(KEY2, 3.4)->value(), FloatEq(3.4));
     EXPECT_THAT(hm.count(), Eq(2));
-    EXPECT_THAT(hm.erase(KEY2), Eq(1));
+    EXPECT_THAT(hm.erase(KEY2), IsTrue());
     auto it = hm.find(KEY1);
     ASSERT_THAT(it, Ne(hm.end()));
     EXPECT_THAT(it->key(), Eq(KEY1));
