@@ -1,8 +1,9 @@
 #pragma once
 
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/ReplayFileParts.hpp"
 #include <QString>
-#include <QSet>
+#include <QVector>
 
 namespace rfapp {
 
@@ -19,12 +20,12 @@ public:
      */
     const QString& name() const;
 
-    const QSet<QString>& fileNames() const;
+    const QVector<rfcommon::ReplayFileParts>& files() const;
 
-    void addFile(const QString& fileName);
-    bool removeFile(const QString& fileName);
+    bool addFile(const rfcommon::ReplayFileParts& file);
+    bool removeFile(const rfcommon::ReplayFileParts& file);
     void removeAllFiles();
-    bool isInGroup(const QString& fileName) const;
+    bool isInGroup(const rfcommon::ReplayFileParts& file) const;
 
     rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
@@ -37,7 +38,7 @@ private:
 
 private:
     QString name_;
-    QSet<QString> fileList_;
+    QVector<rfcommon::ReplayFileParts> files_;
 };
 
 }

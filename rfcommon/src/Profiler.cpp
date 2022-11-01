@@ -1,5 +1,4 @@
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/Log.hpp"
 
 #include <limits>
 
@@ -8,6 +7,7 @@
 #   include <Windows.h>
 #else
 #   include <sys/syscall.h>
+#   include <unistd.h>
 #endif
 
 #if defined(max)

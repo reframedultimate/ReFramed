@@ -9,18 +9,33 @@ namespace rfapp {
 
 // ----------------------------------------------------------------------------
 ReplayListView::ReplayListView(QWidget* parent)
-    : QWidget(parent)
-    , replayListModel_(new ReplayListModel)
-    , treeView_(new QTreeView)
+    : QTreeView(parent)
 {
-    treeView_->setDragDropMode(QTreeView::DragOnly);
-    treeView_->setSelectionMode(QTreeView::ExtendedSelection);
-    treeView_->setModel(replayListModel_.get());
+    setDragDropMode(QTreeView::DragOnly);
+    setSelectionMode(QTreeView::ExtendedSelection);
 }
 
 // ----------------------------------------------------------------------------
 ReplayListView::~ReplayListView()
 {
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListView::onItemRightClicked(const QPoint& pos)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListView::onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListView::onDeleteKeyPressed()
+{
+
 }
 
 }

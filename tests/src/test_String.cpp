@@ -76,3 +76,39 @@ TEST(NAME, move_construct_stringvec)
     ASSERT_THAT(sv2[0].cStr(), StrEq("Player 1"));
     ASSERT_THAT(sv2[1].cStr(), StrEq("Player 2"));
 }
+
+TEST(NAME, decimal_zero)
+{
+    auto s = String::decimal(0);
+    EXPECT_THAT(s.cStr(), StrEq("0"));
+}
+
+TEST(NAME, decimal_positive_values)
+{
+    auto s1 = String::decimal(1);
+    auto s2 = String::decimal(9);
+    auto s3 = String::decimal(10);
+    auto s4 = String::decimal(399);
+    auto s5 = String::decimal(2147483647);
+    EXPECT_THAT(s1.cStr(), StrEq("1"));
+    EXPECT_THAT(s2.cStr(), StrEq("9"));
+    EXPECT_THAT(s3.cStr(), StrEq("10"));
+    EXPECT_THAT(s4.cStr(), StrEq("399"));
+    EXPECT_THAT(s5.cStr(), StrEq("2147483647"));
+}
+
+TEST(NAME, decimal_negative_values)
+{
+    auto s1 = String::decimal(-1);
+    auto s2 = String::decimal(-9);
+    auto s3 = String::decimal(-10);
+    auto s4 = String::decimal(-399);
+    auto s5 = String::decimal(-2147483647);
+    auto s6 = String::decimal(-2147483648);
+    EXPECT_THAT(s1.cStr(), StrEq("-1"));
+    EXPECT_THAT(s2.cStr(), StrEq("-9"));
+    EXPECT_THAT(s3.cStr(), StrEq("-10"));
+    EXPECT_THAT(s4.cStr(), StrEq("-399"));
+    EXPECT_THAT(s5.cStr(), StrEq("-2147483647"));
+    EXPECT_THAT(s6.cStr(), StrEq("-2147483648"));
+}

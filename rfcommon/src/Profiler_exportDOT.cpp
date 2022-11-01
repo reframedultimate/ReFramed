@@ -5,6 +5,7 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 namespace rfcommon {
 

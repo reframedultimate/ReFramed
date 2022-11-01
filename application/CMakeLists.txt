@@ -26,7 +26,7 @@ set (APPLICATION_SOURCES
     "src/views/ImportReplayPackDialog.cpp"
     "src/views/PluginDockView.cpp"
     "src/views/ReplayEditorDialog.cpp"
-    "src/views/ReplayGroupView.cpp"
+    #"src/views/ReplayGroupView.cpp"
     "src/views/ReplayGroupListView.cpp"
     "src/views/ReplayListView.cpp"
     "src/views/ReplayManagerView.cpp"
@@ -69,7 +69,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/MainWindow.hpp"
     "include/application/views/PluginDockView.hpp"
     "include/application/views/ReplayEditorDialog.hpp"
-    "include/application/views/ReplayGroupView.hpp"
+    #"include/application/views/ReplayGroupView.hpp"
     "include/application/views/ReplayListView.hpp"
     "include/application/views/ReplayGroupListView.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
@@ -82,7 +82,7 @@ set (APPLICATION_FORMS
     "forms/ExportReplayPackDialog.ui"
     "forms/ImportReplayPackDialog.ui"
     "forms/ReplayEditorDialog.ui"
-    "forms/ReplayGroupView.ui"
+    #"forms/ReplayGroupView.ui"
     "forms/TrainingModeView.ui"
     "forms/VideoAssociatorDialog.ui"
     "forms/MainWindow.ui")
@@ -116,7 +116,7 @@ target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
 target_compile_options (application
-    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -pedantic>
+    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-W -Wall -Wextra -Wno-unused-parameter -pedantic>
     PRIVATE $<$<CXX_COMPILER_ID:Clang>:-W -Wall -Wextra -pedantic>)
 target_link_libraries (application
     PRIVATE

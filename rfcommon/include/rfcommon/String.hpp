@@ -4,6 +4,8 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <cstdio>
+
 namespace rfcommon {
 
 template <int N, typename S=int32_t>
@@ -27,20 +29,22 @@ public:
 
     SmallString()
         : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(1))
-    {
-        this->begin_[0] = '\0';
-    }
+    {}
 
     SmallString(S resizeCount)
         : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(resizeCount + 1))
     {}
 
+    SmallString(S resizeCount, char init)
+        : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(resizeCount + 1))
+    {
+        memset(this->begin_, init, this->count_ - 1);
+    }
+
     SmallString(const char* data, S len)
         : SmallVector<char, N+1, S>(SmallVector<char, N+1, S>::makeResized(len + 1))
     {
         std::memcpy(this->begin_, data, len);
-        this->begin_[len] = '\0';
-        //this->count_ = len + 1;
     }
 
     SmallString(const char* cStr)
@@ -49,13 +53,54 @@ public:
 
     SmallString(const SmallString& other)
         : SmallString(other.data(), other.length())
-    {
-    }
+    {}
 
     SmallString(SmallString&& other) noexcept
         : SmallString()
     {
         swap(*this, other);
+    }
+
+    static SmallString decimal(int value)
+    {
+        // Special case
+        if (value == -2147483648)
+            return "-2147483648";
+
+        bool isNegative = value < 0;
+        if (isNegative)
+            value = -value;
+
+        int div = 1;
+        int len = 1;
+        while (int64_t(div)*10 <= value)
+        {
+            len++;
+            div *= 10;
+        }
+
+        SmallString s(len + isNegative, '0');
+        char* p = s.begin_;
+
+        if (isNegative)
+            *p++ = '-';
+
+        while (1)
+        {
+            while (value >= div)
+            {
+                value -= div;
+                (*p)++;
+            }
+
+            if (value == 0)
+                break;
+
+            div /= 10;
+            p++;
+        }
+
+        return s;
     }
 
     SmallString& operator=(SmallString other)
@@ -70,6 +115,19 @@ public:
             return true;
         swap(*this, other);
         return false;
+    }
+
+    SmallString copy() const
+    {
+        return *this;
+    }
+
+    SmallString& replaceAll(char find, char replace)
+    {
+        for (auto& c : *this)
+            if (c == find)
+                c = replace;
+        return *this;
     }
 
     void resize(S count)

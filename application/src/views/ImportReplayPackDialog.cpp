@@ -41,7 +41,7 @@ ImportReplayPackDialog::ImportReplayPackDialog(ReplayManager* replayManager, QWi
     connect(ui_->radioButton_noVideos, &QRadioButton::toggled, [this](bool enable) { if (enable) onExtractVideoSettingChanged();  });
     connect(ui_->comboBox_selectGroup, qOverload<int>(&QComboBox::currentIndexChanged), this, &ImportReplayPackDialog::onTargetReplayGroupChanged);
     connect(ui_->lineEdit_newGroupName, &QLineEdit::textChanged, this, &ImportReplayPackDialog::onNewGroupNameChanged);
-    
+
     connect(ui_->pushButton_import, &QPushButton::released, this, &ImportReplayPackDialog::onImport);
 }
 
@@ -197,8 +197,8 @@ void ImportReplayPackDialog::onImport()
     rfcommon::MappedFile file;
     if (file.open(ui_->lineEdit_packFileName->text().toLocal8Bit().constData()) == false)
     {
-        QMessageBox::critical(this, 
-            "File Error", 
+        QMessageBox::critical(this,
+            "File Error",
             "Failed to open file \"" + ui_->lineEdit_packFileName->text() + "\"");
         return;
     }
@@ -308,9 +308,10 @@ void ImportReplayPackDialog::onImport()
 
         if (memcmp(type, "REPL", 4) == 0)
         {
-            replayManager_->allReplayGroup()->addFile(fileName.cStr());
+            auto parts = rfcommon::ReplayFileParts::fromFileName(fileName.cStr());
+            replayManager_->allReplayGroup()->addFile(parts);
             if (group)
-                group->addFile(fileName.cStr());
+                group->addFile(parts);
         }
 
         progress.setPercent(i * 100 / numFiles, QString("Unpacking ") + fileName.cStr());

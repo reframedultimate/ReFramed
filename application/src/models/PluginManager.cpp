@@ -37,11 +37,10 @@ PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::H
     : userLabels_(userLabels)
     , hash40Strings_(hash40Strings)
 {
-    auto log = rfcommon::Log::root();
-
     // On Windows, add a directory to the search path so plugins
     // that depend on additional DLLs can load those from this "deps" directory
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
+    auto log = rfcommon::Log::root();
     CHAR buf[MAX_PATH];
     strcpy(buf, APP_PLUGINDEPSDIR);
     for (CHAR* p = buf; *p; ++p)
@@ -92,7 +91,7 @@ bool PluginManager::loadInterface(const QString& fileName)
     PROFILE(PluginManager, loadPlugin);
 
     auto log = rfcommon::Log::root();
-    
+
     QByteArray fileNameBA = fileName.toUtf8();
     log->info("Loading plugin %s", fileNameBA.constData());
     LoadedPlugin& plugin = plugins_.emplace(fileNameBA.constData());

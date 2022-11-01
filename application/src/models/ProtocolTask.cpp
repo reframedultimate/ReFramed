@@ -276,12 +276,12 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
 
                 if (fighterIDValue == 255)
                 {
-                    log_->info("Base status: %d - %s", statusID, name);
+                    log_->info("Base status: %d - %s", statusID.value(), name);
                     mappingInfo->status.addBaseName(statusID, name);
                 }
                 else
                 {
-                    log_->info("Specific status %d: %d - %s", fighterID, statusID, name);
+                    log_->info("Specific status %d: %d - %s", fighterID.value(), statusID.value(), name);
                     mappingInfo->status.addSpecificName(fighterID, statusID, name);
                 }
             } break;
@@ -304,7 +304,7 @@ bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
                     goto disconnect_error;
                 }
 
-                log_->info("Stage ID: %d - %s", stageID, name);
+                log_->info("Stage ID: %d - %s", stageID.value(), name);
                 mappingInfo->stage.add(stageID, name);
             } break;
 
@@ -423,7 +423,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 });
                 rfcommon::SmallVector<rfcommon::String, 2> tags({"Player 1", "CPU"});
 
-                log_->info("stageID: %d, player 1: %d, cpu: %d", stageID, playerFighterID, cpuFighterID);
+                log_->info("stageID: %d, player 1: %d, cpu: %d", stageID.value(), playerFighterID, cpuFighterID);
 #undef stageH
 #undef stageL
 #undef playerFighterID
@@ -471,7 +471,7 @@ void ProtocolTask::handleProtocol(void* tcp_socket_handle)
                 auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeResized(playerCount);
                 auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
 
-                log_->info("stageID: %d, player count: %d", stageID, playerCount);
+                log_->info("stageID: %d, player count: %d", stageID.value(), playerCount);
 
                 fighterSlots.resize(playerCount);
                 if (tcp_socket_read_exact(&socket, fighterSlots.data(), playerCount) != playerCount)

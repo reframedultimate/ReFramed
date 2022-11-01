@@ -37,8 +37,8 @@ public:
     const char* shortDescription() const;
     const char* longDescription() const;
 
-    bool operator==(const SetFormat& rhs);
-    bool operator!=(const SetFormat& rhs);
+    bool operator==(const SetFormat& rhs) const;
+    bool operator!=(const SetFormat& rhs) const;
 
 private:
     SetFormat(Type type, const char* otherDesc);

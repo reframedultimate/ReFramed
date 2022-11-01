@@ -172,6 +172,7 @@ add_library (rfcommon SHARED
     $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler.cpp>
     $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler_exportDOT.cpp>
     "src/RefCounted.cpp"
+    "src/ReplayFileParts.cpp"
     "src/SetFormat.cpp"
     "src/SetNumber.cpp"
     "src/Serializer.cpp"

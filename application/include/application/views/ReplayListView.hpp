@@ -1,16 +1,14 @@
 #pragma once
 
-#include <QWidget>
+#include <QTreeView>
 
-class QTreeView;
 class QItemSelection;
 
 namespace rfapp {
 
 class ReplayListModel;
 
-class ReplayListView
-        : public QWidget
+class ReplayListView : public QTreeView
 {
     Q_OBJECT
 
@@ -24,8 +22,6 @@ private slots:
     void onDeleteKeyPressed();
 
 private:
-    std::unique_ptr<ReplayListModel> replayListModel_;
-    QTreeView* treeView_;
 };
 
 }

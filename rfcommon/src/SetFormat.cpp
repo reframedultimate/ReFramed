@@ -66,7 +66,7 @@ const char* SetFormat::longDescription() const
 }
 
 // ----------------------------------------------------------------------------
-bool SetFormat::operator==(const SetFormat& rhs)
+bool SetFormat::operator==(const SetFormat& rhs) const
 {
     if (type_ == OTHER)
         return type_ == rhs.type_ && otherDesc_ == rhs.otherDesc_;
@@ -74,7 +74,7 @@ bool SetFormat::operator==(const SetFormat& rhs)
 }
 
 // ----------------------------------------------------------------------------
-bool SetFormat::operator!=(const SetFormat& rhs)
+bool SetFormat::operator!=(const SetFormat& rhs) const
 {
     return !operator==(rhs);
 }

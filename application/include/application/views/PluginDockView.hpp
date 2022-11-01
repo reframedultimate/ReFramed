@@ -1,8 +1,5 @@
 #pragma once
 
-#include "application/listeners/ReplayManagerListener.hpp"
-#include "application/listeners/ReplayGroupListener.hpp"
-
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 
@@ -33,8 +30,6 @@ class ReplayManager;
 class PluginDockView
         : public ads::CDockManager
         , public rfcommon::ProtocolListener
-        , public ReplayManagerListener
-        , public ReplayGroupListener
 {
     Q_OBJECT
 
@@ -61,8 +56,6 @@ public:
      */
     void loadGameReplays(const QStringList& fileNames);
 
-    void reloadReplays();
-
     /*!
      * \brief Clears any sessions loaded from files. This does not affect
      * active sessions. This is used when the user de-selects, moves, or
@@ -80,7 +73,6 @@ public:
     void clearActiveSession();
 
 private slots:
-    void onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions);
     void onAddNewPluginRequested(ads::CDockAreaWidget* dockArea);
     void onClosePluginRequested(ads::CDockWidget* dockWidget);
     void onDockAreaCreated(ads::CDockAreaWidget* dockArea);
@@ -100,34 +92,11 @@ private:
     void onProtocolGameEnded(rfcommon::Session* game) override;
 
 private:
-    void onReplayManagerDefaultGamePathChanged(const QDir& path) override;
-
-    void onReplayManagerGroupAdded(ReplayGroup* group) override;
-    void onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) override;
-    void onReplayManagerGroupRemoved(ReplayGroup* group) override;
-
-    void onReplayManagerGamePathAdded(const QDir& path) override;
-    void onReplayManagerGamePathRemoved(const QDir& path) override;
-
-    void onReplayManagerVideoPathAdded(const QDir& path) override;
-    void onReplayManagerVideoPathRemoved(const QDir& path) override;
-
-private:
-    void onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName) override;
-    void onReplayGroupFileRemoved(ReplayGroup* group, const QString& fileName) override;
-
-private:
     struct PluginData
     {
         rfcommon::Plugin* plugin;
         QWidget* view;
         QString name;
-    };
-
-    struct ReplayData
-    {
-        QString fileName;
-        rfcommon::Reference<rfcommon::Session> session;
     };
 
     enum SessionState
@@ -155,23 +124,19 @@ private:
         TRAINING_LOADED
     };
 
-    int findInCache(const QString& fileName) const;
-
     Protocol* protocol_;
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
 
     rfcommon::Reference<rfcommon::VisualizerContext> visCtx_;
-    rfcommon::Reference<rfcommon::Session> activeSession_;
     QString ipAddress_;
     uint16_t port_;
     SessionState sessionState_;
     ActiveSessionState activeSessionState_;
 
     ReplayState replayState_;
-    QVector<rfcommon::Session*> activeReplays_;
-    QStringList pendingReplays_;
-    QVector<ReplayData> replayCache_;
+    rfcommon::Reference<rfcommon::Session> activeSession_;
+    QVector<rfcommon::Reference<rfcommon::Session>> activeReplays_;
     QVector<PluginData> plugins_;
 };
 

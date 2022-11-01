@@ -39,11 +39,6 @@ PluginDockView::PluginDockView(ReplayManager* replayManager, PluginManager* plug
     ads::CDockAreaWidget* dockArea = addDockWidget(ads::CenterDockWidgetArea, pluginHomePage);
     PluginDockView::onDockAreaCreated(dockArea);
 
-    replayManager_->dispatcher.addListener(this);
-    replayManager_->allReplayGroup()->dispatcher.addListener(this);
-    for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
-        replayManager_->replayGroup(i)->dispatcher.addListener(this);
-
     connect(this, &CDockManager::dockAreaCreated, this, &PluginDockView::onDockAreaCreated);
 }
 
@@ -76,15 +71,6 @@ PluginDockView::~PluginDockView()
     if (protocol_)
         protocol_->dispatcher.removeListener(this);
 
-    if (replayManager_)
-    {
-        for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
-            replayManager_->replayGroup(i)->dispatcher.removeListener(this);
-        replayManager_->allReplayGroup()->dispatcher.removeListener(this);
-
-        replayManager_->dispatcher.removeListener(this);
-    }
-
     clearActiveSession();
     clearReplays();
 
@@ -97,75 +83,25 @@ PluginDockView::~PluginDockView()
 }
 
 // ----------------------------------------------------------------------------
-int PluginDockView::findInCache(const QString& fileName) const
-{
-    PROFILE(PluginDockView, findInCache);
-
-    for (int i = 0; i != replayCache_.size(); ++i)
-        if (replayCache_[i].fileName == fileName)
-            return i;
-    return replayCache_.count();
-}
-
-// ----------------------------------------------------------------------------
 void PluginDockView::loadGameReplays(const QStringList& fileNames)
 {
     PROFILE(PluginDockView, loadGameReplays);
 
     clearReplays();
-    pendingReplays_ = fileNames;
 
     QStringList loadedFileNames;
-    QVector<rfcommon::Session*> loadedSessions;
-    for (auto fileName : pendingReplays_)
+    activeReplays_.clear();
+    for (auto fileName : fileNames)
     {
         assert(QDir(fileName).isAbsolute());
-        int idx = findInCache(fileName);
-        if (idx == replayCache_.size())
+        auto session = rfcommon::Session::load(replayManager_, fileName.toLocal8Bit().constData());
+        if (session == nullptr)
         {
-            if (auto session = rfcommon::Session::load(replayManager_, fileName.toLocal8Bit().constData()))
-            {
-                loadedFileNames.push_back(fileName);
-                loadedSessions.push_back(session);
-            }
+            activeReplays_.clear();
+            return;
         }
-    }
 
-    // TODO background loading
-    onGameReplaysLoaded(loadedFileNames, loadedSessions);
-}
-
-// ----------------------------------------------------------------------------
-void PluginDockView::reloadReplays()
-{
-    QStringList files = pendingReplays_;
-    clearReplays();
-    replayCache_.clear();
-    loadGameReplays(files);
-}
-
-// ----------------------------------------------------------------------------
-void PluginDockView::onGameReplaysLoaded(const QStringList& fileNames, const QVector<rfcommon::Session*>& sessions)
-{
-    PROFILE(PluginDockView, onGameReplaysLoaded);
-
-    assert(fileNames.size() == sessions.size());
-
-    // Go through cache and find the replays that were already loaded, and add
-    // them to the active list of replays
-    for (const auto& fileName : pendingReplays_)
-    {
-        int idx = findInCache(fileName);
-        if (idx != replayCache_.size())
-            activeReplays_.push_back(replayCache_[idx].session);
-    }
-
-    // Add the newly loaded replays to the active list of replays and also
-    // to the cache
-    for (int i = 0; i != fileNames.size(); ++i)
-    {
-        activeReplays_.push_back(sessions[i]);
-        replayCache_.push_back({ fileNames[i], sessions[i] });
+        activeReplays_.push_back(session);
     }
 
     if (activeReplays_.size() == 1)
@@ -176,9 +112,13 @@ void PluginDockView::onGameReplaysLoaded(const QStringList& fileNames, const QVe
     }
     else if (activeReplays_.size() > 1)
     {
+        rfcommon::SmallVector<rfcommon::Session*, 16> replayArray;
+        for (const auto& r : activeReplays_)
+            replayArray.emplace(r);
+
         for (const auto& data : plugins_)
             if (auto i = data.plugin->replayInterface())
-                i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+                i->onGameSessionSetLoaded(replayArray.data(), replayArray.count());
     }
 
     // Only switch states if we successfully loaded a replay
@@ -199,22 +139,16 @@ void PluginDockView::clearReplays()
     }
     else if (activeReplays_.size() > 1)
     {
+        rfcommon::SmallVector<rfcommon::Session*, 16> replayArray;
+        for (const auto& r : activeReplays_)
+            replayArray.emplace(r);
+
         for (const auto& data : plugins_)
             if (auto i = data.plugin->replayInterface())
-                i->onGameSessionSetUnloaded(activeReplays_.data(), activeReplays_.size());
+                i->onGameSessionSetUnloaded(replayArray.data(), replayArray.count());
     }
 
     activeReplays_.clear();
-    pendingReplays_.clear();
-
-    // Subtle bug alert: Cache holds references to replays, but the "activeReplay"
-    // vector does not. This means that when no plugins are loaded, the cache
-    // is the only thing holding a reference to each loaded session. This is
-    // why we remove old sessions from the cache *after* updating the
-    // plugins, so they can grab references to each session before we drop
-    // ours.
-    while (replayCache_.size() > 20)
-        replayCache_.pop_front();
 
     replayState_ = NONE_LOADED;
 }
@@ -484,8 +418,12 @@ void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
             }
             else
             {
+                rfcommon::SmallVector<rfcommon::Session*, 16> replayArray;
+                for (const auto& r : activeReplays_)
+                    replayArray.emplace(r);
+
                 if (auto i = data.plugin->replayInterface())
-                    i->onGameSessionSetLoaded(activeReplays_.data(), activeReplays_.size());
+                    i->onGameSessionSetLoaded(replayArray.data(), replayArray.count());
             }
             break;
 
@@ -545,8 +483,12 @@ void PluginDockView::onClosePluginRequested(ads::CDockWidget* dockWidget)
         }
         else if (activeReplays_.size() > 1)
         {
+            rfcommon::SmallVector<rfcommon::Session*, 16> replayArray;
+            for (const auto& r : activeReplays_)
+                replayArray.emplace(r);
+
             if (auto i = it->plugin->replayInterface())
-                i->onGameSessionSetUnloaded(activeReplays_.data(), activeReplays_.size());
+                i->onGameSessionSetUnloaded(replayArray.data(), replayArray.count());
         }
 
         switch (sessionState_)
@@ -739,36 +681,6 @@ void PluginDockView::onProtocolGameEnded(rfcommon::Session* game)
             if (auto i = data.plugin->realtimeInterface())
                 i->onProtocolGameEnded(game);
     }
-}
-
-// ----------------------------------------------------------------------------
-void PluginDockView::onReplayManagerDefaultGamePathChanged(const QDir& path) {}
-void PluginDockView::onReplayManagerGroupAdded(ReplayGroup* group)
-{
-    group->dispatcher.addListener(this);
-}
-void PluginDockView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) {}
-void PluginDockView::onReplayManagerGroupRemoved(ReplayGroup* group)
-{
-    group->dispatcher.removeListener(this);
-}
-void PluginDockView::onReplayManagerGamePathAdded(const QDir& path) {}
-void PluginDockView::onReplayManagerGamePathRemoved(const QDir& path) {}
-void PluginDockView::onReplayManagerVideoPathAdded(const QDir& path) {}
-void PluginDockView::onReplayManagerVideoPathRemoved(const QDir& path) {}
-
-// ----------------------------------------------------------------------------
-void PluginDockView::onReplayGroupFileAdded(ReplayGroup* group, const QString& fileName)
-{
-}
-void PluginDockView::onReplayGroupFileRemoved(ReplayGroup* group, const QString& fileName)
-{
-    for (auto it = replayCache_.begin(); it != replayCache_.end(); ++it)
-        if (fileName == QFileInfo(it->fileName).fileName())
-        {
-            replayCache_.erase(it);
-            break;
-        }
 }
 
 }

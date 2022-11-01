@@ -24,8 +24,6 @@ class UserMotionLabelsManager;
  */
 class ReplayManagerView : public QWidget
 {
-    Q_OBJECT
-
 public:
     explicit ReplayManagerView(
             ReplayManager* replayManager,

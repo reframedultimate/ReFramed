@@ -1,4 +1,5 @@
 #include "application/models/ReplayListModel.hpp"
+#include "application/models/ReplayGroup.hpp"
 
 #include "rfcommon/Profiler.hpp"
 
@@ -7,84 +8,18 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-void ReplayListModel::addReplay(const QString& fileName)
+void ReplayListModel::setReplayGroup(ReplayGroup* group)
 {
-    PROFILE(ReplayListModel, addReplay);
-
-    ReplaysOnDay day;
-    auto parts1 = fileName.splitRef(" - ");
-    if (parts1.size() > 0)
-        day.date = parts1[0].toString();
-    else
-        day.date = "No Date";
-
-    QRegExp rx("^(\\d+)-(\\d+)-(\\d+) - (.*) \\((\\d+)\\) - (.*) \\((.*)\\) vs (.*) \\((.*)\\) Game (\\d+)\\..*");
-    Replay replay;
-    if (rx.indexIn(fileName) > -1)
+    for (const auto& parts : group->files())
     {
-        auto groups = rx.capturedTexts();
-        if (groups.size() > 4)
-            replay.setFormat = groups[4];
-        if (groups.size() > 5)
-            replay.setNumber = groups[5];
-        if (groups.size() > 6)
-            replay.p1 = groups[6];
-        if (groups.size() > 7)
-            replay.p1char = groups[7];
-        if (groups.size() > 8)
-            replay.p2 = groups[8];
-        if (groups.size() > 9)
-            replay.p2char = groups[9];
-        if (groups.size() > 10)
-            replay.gameNumber = groups[10];
+        addReplay(parts);
     }
-    replay.fileName = fileName;
-
-    auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
-        return a.date < b.date;
-    });
-    if (it == days_.end() || it->date != day.date)
-        it = days_.insert(it, day);
-    it->replays.append(replay);
 }
 
 // ----------------------------------------------------------------------------
-void ReplayListModel::removeReplay(const QString& fileName)
+void ReplayListModel::clearReplayGroup(ReplayGroup* group)
 {
-    PROFILE(ReplayListModel, removeReplay);
 
-    ReplaysOnDay day;
-    day.date = "2022-08-20";
-    auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
-        return a.date < b.date;
-    });
-    if (it == days_.end() || it->date != day.date)
-        return;
-    for (auto it2 = it->replays.begin(); it2 != it->replays.end(); ++it2)
-        if (it2->fileName == fileName)
-        {
-            it->replays.erase(it2);
-            break;
-        }
-
-    if (it->replays.size() == 0)
-        days_.erase(it);
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListModel::clear()
-{
-    PROFILE(ReplayListModel, clear);
-
-    days_.clear();
-}
-
-// ----------------------------------------------------------------------------
-QString ReplayListModel::fileName(const QModelIndex& index) const
-{
-    if (index.isValid() == false || index.internalId() == quintptr(-1))
-        return "";
-    return days_[index.internalId()].replays[index.row()].fileName;
 }
 
 // ----------------------------------------------------------------------------
@@ -134,18 +69,25 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             }
             else
             {
-                const Replay& r = days_[index.internalId()].replays[index.row()];
-                switch (index.column())
+                const auto& r = days_[index.internalId()].replays[index.row()];
+                if (r.playerCount() == 2)
                 {
-                    case P1: return r.p1;
-                    case P1Char: return r.p1char;
-                    case P2: return r.p2;
-                    case P2Char: return r.p2char;
-                    case SetFormat: return r.setFormat;
-                    case SetNumber: return r.setNumber;
-                    case GameNumber: return r.gameNumber;
-                    case DateTime: return r.time;
-                    case Stage: return r.stage;
+                    switch (index.column())
+                    {
+                        case Time: return r.time().cStr();
+                        case P1: return r.playerName(0).cStr();
+                        case P1Char: return r.characterName(0).cStr();
+                        case P2: return r.playerName(1).cStr();
+                        case P2Char: return r.characterName(0).cStr();
+                        case SetFormat: return r.setFormat().shortDescription();
+                        case SetNumber: return r.setNumber().value();
+                        case GameNumber: return r.gameNumber().value();
+                        case Stage: return r.stage().cStr();
+                    }
+                }
+                else if (r.playerCount() == 4)
+                {
+
                 }
             }
         } break;
@@ -164,14 +106,14 @@ QVariant ReplayListModel::headerData(int section, Qt::Orientation orientation, i
             {
                 switch (section)
                 {
+                    case Time: return "Time";
                     case P1: return "P1";
-                    case P1Char: return "Character";
                     case P2: return "P2";
-                    case P2Char: return "Character";
+                    case P1Char: return "Char";
+                    case P2Char: return "Char";
                     case SetFormat: return "Format";
                     case SetNumber: return "Set";
                     case GameNumber: return "Game";
-                    case DateTime: return "Date";
                     case Stage: return "Stage";
                 }
             }
@@ -179,6 +121,57 @@ QVariant ReplayListModel::headerData(int section, Qt::Orientation orientation, i
     }
 
     return QVariant();
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListModel::addReplay(const rfcommon::ReplayFileParts& replay)
+{
+    PROFILE(ReplayListModel, addReplay);
+
+    ReplaysOnDay day;
+    day.date = replay.date().cStr();
+
+    auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
+        return a.date < b.date;
+    });
+    if (it == days_.end() || it->date != day.date)
+        it = days_.insert(it, day);
+    it->replays.append(replay);
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListModel::removeReplay(const rfcommon::ReplayFileParts& replay)
+{
+    PROFILE(ReplayListModel, removeReplay);
+
+    ReplaysOnDay day;
+    day.date = replay.date().cStr();
+    auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
+        return a.date < b.date;
+    });
+    if (it == days_.end() || it->date != day.date)
+        return;
+    for (auto it2 = it->replays.begin(); it2 != it->replays.end(); ++it2)
+        if (*it2 == replay)
+        {
+            it->replays.erase(it2);
+            break;
+        }
+
+    if (it->replays.size() == 0)
+        days_.erase(it);
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListModel::onReplayGroupFileAdded(ReplayGroup* group, const rfcommon::ReplayFileParts& file)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void ReplayListModel::onReplayGroupFileRemoved(ReplayGroup* group, const rfcommon::ReplayFileParts& file)
+{
+
 }
 
 }

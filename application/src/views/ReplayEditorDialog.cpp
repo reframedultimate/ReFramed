@@ -20,13 +20,13 @@ namespace rfapp {
 ReplayEditorDialog::ReplayEditorDialog(
         ReplayManager* replayManager,
         rfcommon::Session* session,
-        const QString& currentFileName,
+        const rfcommon::ReplayFileParts& currentFileNameParts,
         QWidget* parent)
     : QDialog(parent)
     , ui_(new Ui::ReplayEditorDialog)
     , replayManager_(replayManager)
     , session_(session)
-    , currentFileName_(currentFileName)
+    , currentFileNameParts_(currentFileNameParts)
 {
     ui_->setupUi(this);
 
@@ -134,7 +134,7 @@ void ReplayEditorDialog::onSaveClicked()
 {
     PROFILE(ReplayEditorDialog, onSaveClicked);
 
-    if (replayManager_->saveReplayOver(session_, currentFileName_))
+    if (replayManager_->saveReplayOver(session_, currentFileNameParts_))
         close();
     else
         QMessageBox::critical(this, "Error", "Failed to save file");

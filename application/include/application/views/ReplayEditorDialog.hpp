@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rfcommon/ReplayFileParts.hpp"
 #include "rfcommon/Reference.hpp"
 #include <QDialog>
 
@@ -22,7 +23,7 @@ public:
     explicit ReplayEditorDialog(
             ReplayManager* replayManager,
             rfcommon::Session* session,
-            const QString& currentFileName,
+            const rfcommon::ReplayFileParts& currentFileNameParts,
             QWidget* parent=nullptr);
     ~ReplayEditorDialog();
 
@@ -48,7 +49,7 @@ private:
     Ui::ReplayEditorDialog* ui_;
     ReplayManager* replayManager_;
     rfcommon::Reference<rfcommon::Session> session_;
-    const QString currentFileName_;
+    const rfcommon::ReplayFileParts currentFileNameParts_;
 };
 
 }

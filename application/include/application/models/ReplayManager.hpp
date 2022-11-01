@@ -34,7 +34,7 @@ public:
     ~ReplayManager();
 
     /*!
-     * \brief This is the location where replays of games are saved 
+     * \brief This is the location where replays of games are saved
      * automatically. Should always exist.
      *
      * The main window has some logic that forces the user to set a default
@@ -106,11 +106,10 @@ public:
     ReplayGroup* allReplayGroup() const;
 
 public:
-    QString composeFileName(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata, QString formatString);
     bool findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
-    bool saveReplayOver(rfcommon::Session* session, const QString& oldFileName);
+    bool saveReplayOver(rfcommon::Session* session, const rfcommon::ReplayFileParts& oldFileNameParts);
     bool saveReplayWithDefaultSettings(rfcommon::Session* session);
-    bool deleteReplay(const QString& fileName);
+    bool deleteReplay(const rfcommon::ReplayFileParts& fileName);
 
     rfcommon::ListenerDispatcher<ReplayManagerListener> dispatcher;
 
