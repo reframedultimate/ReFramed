@@ -9,6 +9,7 @@
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QStandardPaths>
 #include <QDir>
@@ -73,7 +74,7 @@ bool UserMotionLabelsManager::loadAllLayers()
     for (const auto& file : layers)
     {
         rfcommon::MappedFile f;
-        if (f.open(dir.absoluteFilePath(file).toLocal8Bit().constData()) == false)
+        if (f.open(dir.absoluteFilePath(file).toUtf8().constData()) == false)
         {
             success = false;
             continue;
@@ -84,7 +85,7 @@ bool UserMotionLabelsManager::loadAllLayers()
 
     QString fileName = dir.absoluteFilePath("unlabeled.json");
     rfcommon::MappedFile f;
-    if (f.open(fileName.toLocal8Bit().constData()))
+    if (f.open(fileName.toUtf8().constData()))
         userMotionLabels_->loadUnlabeled(f.address(), f.size());
 
     return success;
@@ -112,8 +113,10 @@ bool UserMotionLabelsManager::saveAllLayers()
 
     for (int layerIdx = 0; layerIdx != userMotionLabels_->layerCount(); ++layerIdx)
     {
-        QString fileName = dir.absoluteFilePath(QString::number(layerIdx + 1) + "_" + userMotionLabels_->layerName(layerIdx) + ".json");
-        FILE* fp = fopen(fileName.toLocal8Bit().constData(), "wb");
+        QString layerName = QString::fromUtf8(userMotionLabels_->layerName(layerIdx));
+        QString fileName = dir.absoluteFilePath(QString::number(layerIdx + 1) + "_" + layerName + ".json");
+        QByteArray fileNameUtf8 = fileName.toUtf8();
+        FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
         if (fp == nullptr)
         {
             success = false;
@@ -130,8 +133,8 @@ bool UserMotionLabelsManager::saveAllLayers()
     }
 
     QString fileName = dir.absoluteFilePath("unlabeled.json");
-    QByteArray ba = fileName.toUtf8();
-    FILE* fp = fopen(ba.constData(), "wb");
+    QByteArray fileNameUtf8 = fileName.toUtf8();
+    FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
     if (fp == nullptr)
         success = false;
     else

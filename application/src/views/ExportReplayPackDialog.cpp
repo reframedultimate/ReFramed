@@ -12,6 +12,7 @@
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QDir>
 #include <QFileDialog>
@@ -95,14 +96,14 @@ void ExportReplayPackDialog::onExport()
 
         SessionWithName swn;
         assert(QDir(replayFileNames_[i]).isRelative());
-        auto absFilePath = pathResolver_->resolveGameFile(replayFileNames_[i].toLocal8Bit().constData());
-        swn.session = rfcommon::Session::load(pathResolver_, absFilePath.cStr());
+        auto filePathUtf8 = pathResolver_->resolveGameFile(replayFileNames_[i].toUtf8().constData());
+        swn.session = rfcommon::Session::load(pathResolver_, filePathUtf8.cStr());
         if (swn.session == nullptr)
         {
             if (QMessageBox::question(this,
                 "Error loading file",
                 "Failed to load replay file \"" + replayFileNames_[i] + "\"\n"
-                "Absolute path was: \"" + absFilePath.cStr() + "\"\n\n"
+                "Absolute path was: \"" + filePathUtf8.cStr() + "\"\n\n"
                 "Would you like to continue without including this file?") == QMessageBox::Yes)
             {
                 continue;
@@ -115,7 +116,8 @@ void ExportReplayPackDialog::onExport()
     }
     progress.setPercent(5);
 
-    FILE* fp = fopen(ui_->lineEdit_packFileName->text().toLocal8Bit().constData(), "wb");
+    QByteArray fileNameUtf8 = ui_->lineEdit_packFileName->text().toUtf8();
+    FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
     if (fp == nullptr)
     {
         QMessageBox::critical(this, "Failed to open file", "Failed to open file \"" + ui_->lineEdit_packFileName->text() + "\" for writing\n\n" + strerror(errno));

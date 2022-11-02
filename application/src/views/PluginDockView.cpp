@@ -83,7 +83,7 @@ PluginDockView::~PluginDockView()
 }
 
 // ----------------------------------------------------------------------------
-void PluginDockView::loadGameReplays(const QStringList& fileNames)
+void PluginDockView::loadGameReplays(const QStringList& filePaths)
 {
     PROFILE(PluginDockView, loadGameReplays);
 
@@ -91,10 +91,10 @@ void PluginDockView::loadGameReplays(const QStringList& fileNames)
 
     QStringList loadedFileNames;
     activeReplays_.clear();
-    for (auto fileName : fileNames)
+    for (auto filePath : filePaths)
     {
-        assert(QDir(fileName).isAbsolute());
-        auto session = rfcommon::Session::load(replayManager_, fileName.toLocal8Bit().constData());
+        assert(QDir(filePath).isAbsolute());
+        auto session = rfcommon::Session::load(replayManager_, filePath.toUtf8().constData());
         if (session == nullptr)
         {
             activeReplays_.clear();

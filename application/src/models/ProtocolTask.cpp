@@ -67,7 +67,7 @@ void* ProtocolTask::connectAndCheckVersion()
 
     // Attempt to connect to the host
     tcp_socket socket;
-    QByteArray ba = ipAddress_.toLocal8Bit();
+    QByteArray ba = ipAddress_.toLatin1();
     log_->info("Connecting to %s:%d", ba.constData(), port_);
     if (tcp_socket_connect_to_host(&socket, ba.constData(), port_) != 0)
     {

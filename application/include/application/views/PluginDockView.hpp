@@ -54,7 +54,7 @@ public:
      * plugins to receive onGameSessionSetUnloaded() before receiving
      * onGameSessionSetLoaded().
      */
-    void loadGameReplays(const QStringList& fileNames);
+    void loadGameReplays(const QStringList& filePaths);
 
     /*!
      * \brief Clears any sessions loaded from files. This does not affect

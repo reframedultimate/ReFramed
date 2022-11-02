@@ -79,7 +79,7 @@ void ImportReplayPackDialog::onSelectReplayPack()
         return;
 
     rfcommon::MappedFile file;
-    if (file.open(packFileName.toLocal8Bit().constData()) == false)
+    if (file.open(packFileName.toUtf8().constData()) == false)
     {
         QMessageBox::critical(this,
             "File Error",
@@ -196,7 +196,7 @@ void ImportReplayPackDialog::onImport()
         group = replayManager_->replayGroup(ui_->comboBox_selectGroup->currentText());
 
     rfcommon::MappedFile file;
-    if (file.open(ui_->lineEdit_packFileName->text().toLocal8Bit().constData()) == false)
+    if (file.open(ui_->lineEdit_packFileName->text().toUtf8().constData()) == false)
     {
         QMessageBox::critical(this,
             "File Error",
