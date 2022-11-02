@@ -5,6 +5,10 @@
 #include <QAbstractItemModel>
 #include <QDate>
 
+namespace rfcommon {
+    class FilePathResolver;
+}
+
 namespace rfapp {
 
 class ReplayListModel
@@ -25,6 +29,9 @@ public:
         ColumnCount
     };
 
+    ReplayListModel(rfcommon::FilePathResolver* filePathResolver);
+    ~ReplayListModel();
+
     /*!
      * \brief Updates the view with data from the specified group. If the group
      * changes (files added/removed) the view will automatically update. If
@@ -41,12 +48,12 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override;
 
 private:
-    void addReplay(const rfcommon::ReplayFileParts& fileName);
-    void removeReplay(const rfcommon::ReplayFileParts& fileName);
+    void addReplay(const QString& fileName);
+    void removeReplay(const QString& fileName);
 
 private:
-    void onReplayGroupFileAdded(ReplayGroup* group, const rfcommon::ReplayFileParts& file) override;
-    void onReplayGroupFileRemoved(ReplayGroup* group, const rfcommon::ReplayFileParts& file) override;
+    void onReplayGroupFileAdded(ReplayGroup* group, const QString& file) override;
+    void onReplayGroupFileRemoved(ReplayGroup* group, const QString& file) override;
 
 private:
     struct ReplaysOnDay
@@ -55,6 +62,7 @@ private:
         QVector<rfcommon::ReplayFileParts> replays;
     };
 
+    rfcommon::FilePathResolver* replayPathResolver_;
     QVector<ReplaysOnDay> days_;
     ReplayGroup* currentGroup_ = nullptr;
 };

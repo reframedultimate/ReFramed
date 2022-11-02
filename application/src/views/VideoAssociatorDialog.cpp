@@ -23,7 +23,7 @@ VideoAssociatorDialog::VideoAssociatorDialog(
         PluginManager* pluginManager,
         ReplayManager* replayManager,
         rfcommon::Session* session,
-        const rfcommon::ReplayFileParts& currentFileName,
+        const QString& currentFileName,
         QWidget* parent)
     : QDialog(parent)
     , ui_(new Ui::VideoAssociatorDialog)

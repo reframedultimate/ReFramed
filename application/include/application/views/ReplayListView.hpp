@@ -16,6 +16,8 @@ public:
     explicit ReplayListView(QWidget* parent=nullptr);
     ~ReplayListView();
 
+    QSize sizeHint() const override;
+
 private slots:
     void onItemRightClicked(const QPoint& pos);
     void onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);

@@ -38,17 +38,17 @@ ReplayManager::ReplayManager(Config* config)
     if (jDefaultGamePath.is_string() == false || jDefaultGamePath.get<std::string>().length() == 0)
     {
         QDir path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/replays/games";
-        jDefaultGamePath = QDir(path).absolutePath().toLocal8Bit().constData();
+        jDefaultGamePath = QDir(path).absolutePath().toUtf8().constData();
     }
     if (jDefaultTrainingPath.is_string() == false || jDefaultTrainingPath.get<std::string>().length() == 0)
     {
         QDir path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/replays/training";
-        jDefaultTrainingPath = QDir(path).absolutePath().toLocal8Bit().constData();
+        jDefaultTrainingPath = QDir(path).absolutePath().toUtf8().constData();
     }
 
     // Populate all search paths
-    defaultGamePath_ = QString::fromLocal8Bit(jDefaultGamePath.get<std::string>().c_str());
-    defaultTrainingPath_ = QString::fromLocal8Bit(jDefaultTrainingPath.get<std::string>().c_str());
+    defaultGamePath_ = QString::fromUtf8(jDefaultGamePath.get<std::string>().c_str());
+    defaultTrainingPath_ = QString::fromUtf8(jDefaultTrainingPath.get<std::string>().c_str());
     for (const auto& jPath : jGamePaths)
     {
         if (jPath.is_string() == false)
@@ -56,7 +56,7 @@ ReplayManager::ReplayManager(Config* config)
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        gamePaths_.insert(QString::fromLocal8Bit(path.c_str()));
+        gamePaths_.insert(QString::fromUtf8(path.c_str()));
     }
     for (const auto& jPath : jTrainingPaths)
     {
@@ -65,7 +65,7 @@ ReplayManager::ReplayManager(Config* config)
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        trainingPaths_.insert(QString::fromLocal8Bit(path.c_str()));
+        trainingPaths_.insert(QString::fromUtf8(path.c_str()));
     }
     for (const auto& jPath : jVideoPaths)
     {
@@ -74,7 +74,7 @@ ReplayManager::ReplayManager(Config* config)
         const std::string path = jPath.get<std::string>();
         if (path.length() == 0)
             continue;
-        videoPaths_.insert(QString::fromLocal8Bit(path.c_str()));
+        videoPaths_.insert(QString::fromUtf8(path.c_str()));
     }
 
     // The "all" recording group can't be changed or deleted and contains all
@@ -93,8 +93,8 @@ ReplayManager::ReplayManager(Config* config)
         for (const auto& fileName : fileNames)
             if (fileName.is_string())
             {
-                std::string fn = fileName.get<std::string>();
-                it.value()->addFile(rfcommon::ReplayFileParts::fromFileName(fn.c_str()));
+                std::string fileNameUtf8 = fileName.get<std::string>();
+                it.value()->addFile(QString::fromUtf8(fileNameUtf8.c_str()));
             }
     }
 }
@@ -426,103 +426,105 @@ bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcomm
 
 // ----------------------------------------------------------------------------
 static int tmpCounter = 0;
-bool ReplayManager::saveReplayOver(rfcommon::Session* session, const rfcommon::ReplayFileParts& oldFileNameParts)
+bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& oldFileName)
 {
     PROFILE(ReplayManager, saveReplayOver);
 
     rfcommon::Log* log = rfcommon::Log::root();
-    QString oldFileName = oldFileNameParts.toFileName().cStr();
-    QString absFilePath = QString::fromLocal8Bit(resolveGameFile(oldFileName.toLocal8Bit().constData()).cStr());
-    if (absFilePath.length() == 0)
+
+    // Determine old file name
+    rfcommon::String oldFilePathUtf8 = resolveGameFile(oldFileName.toUtf8().constData());
+    if (oldFilePathUtf8.length() == 0)
     {
-        log->error("Failed to resolve file path to \"%s\"", oldFileName.toLocal8Bit().constData());
+        log->error("Failed to resolve file path to \"%s\"", oldFileName.toUtf8().constData());
         return false;
     }
+    QString oldFilePath = QString::fromUtf8(oldFilePathUtf8.cStr());
+    QDir dir(QFileInfo(oldFilePath).path());
 
-    QFileInfo oldFile(absFilePath);
-    QString tmpFile = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
-    QDir dir(oldFile.path());
+    // Determine temp file name
+    QString tmpFileName = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
 
     // Determine new file name
     auto newFileNameParts = rfcommon::ReplayFileParts::fromMetaData(session->tryGetMappingInfo(), session->tryGetMetaData());
-    QFileInfo newFile(dir, newFileNameParts.toFileName().cStr());
+    QString newFileName = QString::fromUtf8(newFileNameParts.toFileName().cStr());
 
-    if (allReplayGroup()->isInGroup(oldFileNameParts) == false)
+    if (allReplayGroup()->isInGroup(oldFileName) == false)
     {
-        log->error("Attempted to save replay over \"%s\", but file did not exist. Aborting", oldFileName.toLocal8Bit().constData());
+        log->error("Attempted to save replay over \"%s\", but file did not exist. Aborting", oldFileName.toUtf8().constData());
         return false;
     }
 
-    log->info("Renaming %s -> %s", oldFile.absoluteFilePath().toLocal8Bit().constData(), newFile.absoluteFilePath().toLocal8Bit().constData());
-    log->info("Dir: %s", dir.absolutePath().toLocal8Bit().constData());
+    log->info("Renaming %s -> %s", dir.absoluteFilePath(oldFileName).toUtf8().constData(), dir.absoluteFilePath(newFileName).toUtf8().constData());
+    log->info("Dir: %s", dir.absolutePath().toUtf8().constData());
 
     // Allow overwriting the same file, but disallow overwriting a different file
     // that already exists
-    if (oldFile != newFile)
+    if (oldFileName != newFileName)
     {
-        if (newFile.exists())
+        if (dir.exists(newFileName))
         {
-            log->warning("File %s already exists, aborting rename", newFile.absoluteFilePath().toLocal8Bit().constData());
+            log->warning("File %s already exists, aborting rename", dir.absoluteFilePath(newFileName).toUtf8().constData());
             return false;
         }
     }
 
-    if (dir.rename(oldFileName, tmpFile) == false)
+    if (dir.rename(oldFileName, tmpFileName) == false)
     {
-        log->error("Failed to rename %s -> %s", oldFileName.toLocal8Bit().constData(), tmpFile.toLocal8Bit().constData());
+        log->error("Failed to rename %s -> %s", oldFileName.toUtf8().constData(), tmpFileName.toUtf8().constData());
         return false;
     }
 
-    QByteArray ba = newFile.absoluteFilePath().toLocal8Bit();
-    if (session->save(ba.constData()) == false)
+    QByteArray newFileNameUtf8 = dir.absoluteFilePath(newFileName).toUtf8();
+    if (session->save(newFileNameUtf8.constData(), newFileNameUtf8.length()) == false)
     {
-        log->error("Failed to save session to %s", ba.constData());
-        if (dir.rename(tmpFile, oldFileName))
-            log->error("Failed to rename %s -> %s", tmpFile.toLocal8Bit().constData(), oldFileName.toLocal8Bit().constData());
+        log->error("Failed to save session to %s", newFileNameUtf8.constData());
+        if (dir.rename(tmpFileName, oldFileName))
+            log->error("Failed to rename %s -> %s", tmpFileName.toUtf8().constData(), oldFileName.toUtf8().constData());
 
         return false;
     }
 
-    if (dir.remove(tmpFile) == false)
+    if (dir.remove(tmpFileName) == false)
     {
         // On Windows, it's not possible to delete a file when it is memory mapped,
         // which is the case with session files. What we can do is set the FILE_FLAG_DELETE_ON_CLOSE
         // flag on the file, which will cause it to be deleted as soon as all references
         // to the session are dropped
-        QByteArray ba = dir.absoluteFilePath(tmpFile).toLocal8Bit();
+        QByteArray ba = dir.absoluteFilePath(tmpFileName).toUtf8();
         if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
             log->error("Failed to remove file %s");
     }
 
-    if (allGroup_->removeFile(oldFileNameParts))
-        allGroup_->addFile(newFileNameParts);
+    if (allGroup_->removeFile(oldFileName))
+        allGroup_->addFile(newFileName);
     for (auto& group : groups_)
-        if (group->removeFile(oldFileNameParts))
-            group->addFile(newFileNameParts);
+        if (group->removeFile(oldFileName))
+            group->addFile(newFileName);
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayManager::deleteReplay(const rfcommon::ReplayFileParts& fileNameParts)
+bool ReplayManager::deleteReplay(const QString& fileName)
 {
+    rfcommon::Log* log = rfcommon::Log::root();
     bool success = true;
 
-    rfcommon::Log* log = rfcommon::Log::root();
-    QString fileName = fileNameParts.toFileName().cStr();
-    QString absFilePath = QString::fromLocal8Bit(resolveGameFile(fileName.toLocal8Bit().constData()).cStr());
-    if (absFilePath.length() == 0)
+    rfcommon::String filePathUtf8 = resolveGameFile(fileName.toUtf8().constData());
+    if (filePathUtf8.length() == 0)
     {
-        log->error("Failed to resolve file path to \"%s\"", fileName.toLocal8Bit().constData());
+        log->error("Failed to resolve file path to \"%s\"", fileName.toUtf8().constData());
         return false;
     }
+    QString filePath = QString::fromUtf8(filePathUtf8.cStr());
+    QDir dir(QFileInfo(filePath).path());
 
-    QDir dir(QFileInfo(absFilePath).path());
     QString tmpFile = "." + fileName + ".tmp" + QString::number(tmpCounter++);
 
     if (dir.rename(fileName, tmpFile) == false)
     {
-        log->error("Failed to rename %s -> %s", fileName.toLocal8Bit().constData(), tmpFile.toLocal8Bit().constData());
+        log->error("Failed to rename %s -> %s", fileName.toUtf8().constData(), tmpFile.toUtf8().constData());
         return false;
     }
 
@@ -532,7 +534,7 @@ bool ReplayManager::deleteReplay(const rfcommon::ReplayFileParts& fileNameParts)
         // which is the case with session files. What we can do is set the FILE_FLAG_DELETE_ON_CLOSE
         // flag on the file, which will cause it to be deleted as soon as all references
         // to the session are dropped
-        QByteArray ba = dir.absoluteFilePath(tmpFile).toLocal8Bit();
+        QByteArray ba = dir.absoluteFilePath(tmpFile).toUtf8();
         if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
         {
             log->error("Failed to remove file %s", ba.constData());
@@ -542,8 +544,8 @@ bool ReplayManager::deleteReplay(const rfcommon::ReplayFileParts& fileNameParts)
 
     // Delete from group, regardless of whether the file was successfully deleted or not
     for (auto& group : groups_)
-        group->removeFile(fileNameParts);
-    allGroup_->removeFile(fileNameParts);
+        group->removeFile(fileName);
+    allGroup_->removeFile(fileName);
 
     return success;
 }
@@ -561,20 +563,17 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
     QDir dir = type == rfcommon::MetaData::TRAINING ?
             defaultTrainingPath() : defaultGamePath();
 
-    // Determine format string based on type
-    const char* formatStr = type == rfcommon::MetaData::GAME ?
-                "%date - %format (%set) - %p1name (%p1char) vs %p2name (%p2char) Game %game" :
-                "%date - Training - %p1name (%p1char) on %p2char Session %session";
-
     if (dir.exists() == false)
         dir.mkpath(".");
 
     auto fileNameParts = rfcommon::ReplayFileParts::fromMetaData(map, mdata);
-    QFileInfo fileInfo(dir, fileNameParts.toFileName().cStr());
-    if (session->save(fileInfo.absoluteFilePath().toLocal8Bit()))
+    auto fileNameUtf8 = fileNameParts.toFileName();
+    auto fileName = QString::fromUtf8(fileNameUtf8.cStr());
+    auto filePath = dir.absoluteFilePath(fileName);
+    if (session->save(filePath.toUtf8().constData()))
     {
         // Add the session to the "All" recording group
-        allReplayGroup()->addFile(fileNameParts);
+        allReplayGroup()->addFile(fileName);
         return true;
     }
 
@@ -590,8 +589,8 @@ void ReplayManager::scanForReplays()
     allGroup->removeAllFiles();
     for (const auto& replayDir : gamePaths_)
     {
-        for (const auto& file : replayDir.entryList({"*.rfr"}, QDir::Files))
-            allGroup->addFile(rfcommon::ReplayFileParts::fromFileName(file.toLocal8Bit().constData()));
+        for (const auto& file : replayDir.entryList({ "*.rfr" }, QDir::Files))
+            allGroup->addFile(file);
     }
 }
 
@@ -601,22 +600,22 @@ void ReplayManager::updateConfig()
     json& cfg = getConfig();
     json& jReplayManager = cfg["replaymanager"];
 
-    jReplayManager["defaultgamepath"] = defaultGamePath_.absolutePath().toLocal8Bit().constData();
-    jReplayManager["defaulttrainingpath"] = defaultTrainingPath_.absolutePath().toLocal8Bit().constData();
+    jReplayManager["defaultgamepath"] = defaultGamePath_.absolutePath().toUtf8().constData();
+    jReplayManager["defaulttrainingpath"] = defaultTrainingPath_.absolutePath().toUtf8().constData();
 
     json jGamePaths = json::array();
     for (const QDir& dir : gamePaths_)
-        jGamePaths.push_back(dir.absolutePath().toLocal8Bit().constData());
+        jGamePaths.push_back(dir.absolutePath().toUtf8().constData());
     jReplayManager["gamepaths"] = jGamePaths;
 
     json jTrainingPaths = json::array();
     for (const QDir& dir : trainingPaths_)
-        jTrainingPaths.push_back(dir.absolutePath().toLocal8Bit().constData());
+        jTrainingPaths.push_back(dir.absolutePath().toUtf8().constData());
     jReplayManager["trainingpaths"] = jTrainingPaths;
 
     json jVideoPaths = json::array();
     for (const QDir& dir : videoPaths_)
-        jVideoPaths.push_back(dir.absolutePath().toLocal8Bit().constData());
+        jVideoPaths.push_back(dir.absolutePath().toUtf8().constData());
     jReplayManager["videopaths"] = jVideoPaths;
 
     json jGroups = json::object();
@@ -624,7 +623,7 @@ void ReplayManager::updateConfig()
     {
         json jFiles = json::array();
         for (const auto& file : it.value()->files())
-            jFiles.push_back(file.toFileName().cStr());
+            jFiles.push_back(file.toUtf8().constData());
         jGroups[it.key().toUtf8().constData()] = jFiles;
     }
     jReplayManager["groups"] = jGroups;
@@ -635,9 +634,9 @@ rfcommon::String ReplayManager::resolveGameFile(const char* fileName) const
 {
     for (auto dir : gamePaths_)
     {
-        QString name = QString::fromLocal8Bit(fileName);
+        QString name = QString::fromUtf8(fileName);
         if (dir.exists(name))
-            return dir.absoluteFilePath(name).toLocal8Bit().constData();
+            return dir.absoluteFilePath(name).toUtf8().constData();
     }
 
     return "";
@@ -648,9 +647,9 @@ rfcommon::String ReplayManager::resolveVideoFile(const char* fileName) const
 {
     for (auto dir : videoPaths_)
     {
-        QString name = QString::fromLocal8Bit(fileName);
+        QString name = QString::fromUtf8(fileName);
         if (dir.exists(name))
-            return dir.absoluteFilePath(name).toLocal8Bit().constData();
+            return dir.absoluteFilePath(name).toUtf8().constData();
     }
 
     return "";

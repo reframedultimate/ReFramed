@@ -13,11 +13,18 @@ ReplayListView::ReplayListView(QWidget* parent)
 {
     setDragDropMode(QTreeView::DragOnly);
     setSelectionMode(QTreeView::ExtendedSelection);
+    setAlternatingRowColors(true);
 }
 
 // ----------------------------------------------------------------------------
 ReplayListView::~ReplayListView()
 {
+}
+
+// ----------------------------------------------------------------------------
+QSize ReplayListView::sizeHint() const
+{
+    return QSize(1200, 100);
 }
 
 // ----------------------------------------------------------------------------

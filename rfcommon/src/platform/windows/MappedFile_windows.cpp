@@ -1,5 +1,6 @@
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -20,7 +21,7 @@ MappedFile::~MappedFile()
 }
 
 // ----------------------------------------------------------------------------
-bool MappedFile::open(const char* fileName)
+bool MappedFile::open(const char* utf8_filename)
 {
     PROFILE(MappedFile, open);
 
@@ -28,10 +29,15 @@ bool MappedFile::open(const char* fileName)
     LARGE_INTEGER liFileSize;
     HANDLE mapping;
     void* address;
+    wchar_t* utf16_filename;
+
+    utf16_filename = utf8_to_utf16(utf8_filename, strlen(utf8_filename));
+    if (utf16_filename == nullptr)
+        goto utf16_conv_failed;
 
     // Try to open the file
-    hFile = CreateFile(
-        fileName,               // File name
+    hFile = CreateFileW(
+        utf16_filename,         // File name
         GENERIC_READ,           // Read only
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         NULL,                   // Default security
@@ -75,7 +81,8 @@ bool MappedFile::open(const char* fileName)
     map_view_failed            : CloseHandle(mapping);
     create_file_mapping_failed :
     get_file_size_failed       : CloseHandle(hFile);
-    open_failed                : return false;
+    open_failed                : utf16_free(utf16_filename);
+    utf16_conv_failed          : return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -93,11 +100,17 @@ void MappedFile::close()
 }
 
 // ----------------------------------------------------------------------------
-bool MappedFile::setDeleteOnClose(const char* fileName)
+bool MappedFile::setDeleteOnClose(const char* utf8_filename)
 {
-    HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    wchar_t* utf16_filename = utf8_to_utf16(utf8_filename, strlen(utf8_filename));
+    if (utf16_filename == nullptr)
+        return false;
+
+    HANDLE hFile = CreateFileW(utf16_filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    utf16_free(utf16_filename);
     if (hFile == INVALID_HANDLE_VALUE)
         return false;
+
     CloseHandle(hFile);
     return true;
 }

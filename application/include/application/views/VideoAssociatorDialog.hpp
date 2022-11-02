@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/ReplayFileParts.hpp"
 #include <QDialog>
 #include <QTimer>
 
@@ -31,7 +30,7 @@ public:
             PluginManager* pluginManager,
             ReplayManager* replayManager,
             rfcommon::Session* session,
-            const rfcommon::ReplayFileParts& currentFileNameParts,
+            const QString& currentFileNameParts,
             QWidget* parent=nullptr);
     ~VideoAssociatorDialog();
 
@@ -54,7 +53,7 @@ private:
     rfcommon::Plugin* videoPlugin_;
     QWidget* videoView_;
     rfcommon::Reference<rfcommon::Session> session_;
-    const rfcommon::ReplayFileParts currentSessionFileName_;
+    const QString currentSessionFileName_;
 
     rfcommon::Reference<rfcommon::MappedFile> currentVideoFile_;
     QString currentVideoFileName_;

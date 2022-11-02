@@ -135,7 +135,7 @@ static int parsePlayers(int pos, const char* fn, SmallVector<String, 2>* players
     // Skip " - "
     p = fn + pos;
     for (; *p; ++p)
-        if (std::isalnum(*p))
+        if (*p < 0 || std::isalnum(*p))
             break;
     if (!*p)
         return -1;
@@ -193,7 +193,7 @@ skip_fighter:
     if (*p == 'v' && *(p+1) == 's')
     {
         p += 2;
-        while (*p && std::isspace(*p))
+        while (*p >= 0 && std::isspace(*p))
             ++p;
         if (!*p)
             return -1;
@@ -358,6 +358,31 @@ String ReplayFileParts::toFileName() const
             + "Game " + String::decimal(gameNumber_.value()) + " - "
             + stage_ +
             + ".rfr";
+}
+
+// ----------------------------------------------------------------------------
+bool ReplayFileParts::hasMissingInfo() const
+{
+    if (playerNames_.count() == 0)
+        return true;
+    for (const auto& name : playerNames_)
+        if (name.length() == 0)
+            return true;
+
+    if (characterNames_.count() == 0)
+        return true;
+    for (const auto& name : characterNames_)
+        if (name.length() == 0)
+            return true;
+
+    if (date_.length() == 0 ||
+        time_.length() == 0 ||
+        stage_.length() == 0)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 }

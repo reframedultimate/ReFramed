@@ -29,6 +29,8 @@ public:
     static ReplayFileParts fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata);
     String toFileName() const;
 
+    bool hasMissingInfo() const;
+
     String date() const { return date_; }
     String time() const { return time_; }
     SetFormat setFormat() const { return format_; }

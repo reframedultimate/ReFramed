@@ -3,7 +3,7 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ReplayFileParts.hpp"
 #include <QString>
-#include <QVector>
+#include <QSet>
 
 namespace rfapp {
 
@@ -20,12 +20,12 @@ public:
      */
     const QString& name() const;
 
-    const QVector<rfcommon::ReplayFileParts>& files() const;
+    const QSet<QString>& files() const;
 
-    bool addFile(const rfcommon::ReplayFileParts& file);
-    bool removeFile(const rfcommon::ReplayFileParts& file);
+    bool addFile(const QString& file);
+    bool removeFile(const QString& file);
     void removeAllFiles();
-    bool isInGroup(const rfcommon::ReplayFileParts& file) const;
+    bool isInGroup(const QString& file) const;
 
     rfcommon::ListenerDispatcher<ReplayGroupListener> dispatcher;
 
@@ -38,7 +38,7 @@ private:
 
 private:
     QString name_;
-    QVector<rfcommon::ReplayFileParts> files_;
+    QSet<QString> files_;
 };
 
 }

@@ -20,7 +20,7 @@ namespace rfapp {
 ReplayEditorDialog::ReplayEditorDialog(
         ReplayManager* replayManager,
         rfcommon::Session* session,
-        const rfcommon::ReplayFileParts& currentFileNameParts,
+        const QString& currentFileNameParts,
         QWidget* parent)
     : QDialog(parent)
     , ui_(new Ui::ReplayEditorDialog)

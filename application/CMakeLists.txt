@@ -17,6 +17,7 @@ set (APPLICATION_SOURCES
     "src/models/ProtocolTask.cpp"
     "src/models/ReplayGroup.cpp"
     "src/models/ReplayListModel.cpp"
+    "src/models/ReplayListSortFilterModel.cpp"
     "src/models/ReplayManager.cpp"
     "src/models/UserMotionLabelsManager.cpp"
     "src/views/ActiveSessionView.cpp"
@@ -33,6 +34,7 @@ set (APPLICATION_SOURCES
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/ProgressDialog.cpp"
+    "src/widgets/ReplaySearchBox.cpp"
     "src/views/MainWindow.cpp"
     "src/Util.cpp"
     "src/main.cpp")
@@ -50,6 +52,7 @@ set (APPLICATION_HEADERS
     "include/application/models/ProtocolTask.hpp"
     "include/application/models/ReplayGroup.hpp"
     "include/application/models/ReplayListModel.hpp"
+    "include/application/models/ReplayListSortFilterModel.hpp"
     "include/application/models/ReplayManager.hpp"
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/UserMotionLabelsManager.hpp"
@@ -74,7 +77,8 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/ReplayGroupListView.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
-    "include/application/widgets/ProgressDialog.hpp")
+    "include/application/widgets/ProgressDialog.hpp"
+	"include/application/widgets/ReplaySearchBox.hpp")
 set (APPLICATION_FORMS
     "forms/ActiveSessionView.ui"
     "forms/AnalysisInputView.ui"

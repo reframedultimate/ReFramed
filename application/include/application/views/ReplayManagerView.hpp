@@ -12,6 +12,7 @@ namespace rfapp {
 class PluginDockView;
 class PluginManager;
 class ReplayListModel;
+class ReplayListSortFilterModel;
 class ReplayListView;
 class ReplayGroupListView;
 class ReplayManager;
@@ -40,6 +41,7 @@ private:
     rfcommon::Hash40Strings* hash40Strings_;
 
     std::unique_ptr<ReplayListModel> replayListModel_;
+    std::unique_ptr<ReplayListSortFilterModel> replayListSortFilterModel_;
     ReplayListView* replayListView_;
     ReplayGroupListView* replayGroupListView_;
 

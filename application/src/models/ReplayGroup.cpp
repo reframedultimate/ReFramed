@@ -16,7 +16,7 @@ ReplayGroup::ReplayGroup(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-const QVector<rfcommon::ReplayFileParts>& ReplayGroup::files() const
+const QSet<QString>& ReplayGroup::files() const
 {
     PROFILE(ReplayGroup, fileNames);
 
@@ -40,20 +40,20 @@ void ReplayGroup::setName(const QString& name)
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayGroup::addFile(const rfcommon::ReplayFileParts& file)
+bool ReplayGroup::addFile(const QString& file)
 {
     PROFILE(ReplayGroup, addFile);
 
     if (files_.contains(file))
         return false;
 
-    files_.push_back(file);
+    files_.insert(file);
     dispatcher.dispatch(&ReplayGroupListener::onReplayGroupFileAdded, this, file);
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayGroup::removeFile(const rfcommon::ReplayFileParts& file)
+bool ReplayGroup::removeFile(const QString& file)
 {
     PROFILE(ReplayGroup, removeFile);
 
@@ -79,7 +79,7 @@ void ReplayGroup::removeAllFiles()
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayGroup::isInGroup(const rfcommon::ReplayFileParts& file) const
+bool ReplayGroup::isInGroup(const QString& file) const
 {
     return files_.contains(file);
 }

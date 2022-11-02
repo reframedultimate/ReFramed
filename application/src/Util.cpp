@@ -1,5 +1,6 @@
-#include "rfcommon/Profiler.hpp"
 #include "application/Util.hpp"
+
+#include "rfcommon/Profiler.hpp"
 
 #include <QLayout>
 #include <QLayoutItem>

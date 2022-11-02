@@ -128,6 +128,8 @@ add_library (rfcommon SHARED
     "cmake/templates/Endian.hpp.in"
     "cmake/templates/BuildInfo.cpp.in"
 
+    "include/rfcommon/Utf8.hpp"
+
     "src/AnalysisResult.cpp"
     "src/crc32.c"
     "src/DataSet.cpp"
@@ -185,9 +187,10 @@ add_library (rfcommon SHARED
     "src/Vec2.cpp"
     "src/VideoEmbed.cpp"
     "src/VideoMeta.cpp"
-	"src/VisualizerContext.cpp"
-	"src/VisualizerData.cpp"
+    "src/VisualizerContext.cpp"
+    "src/VisualizerData.cpp"
     "${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Utf8_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/LastWindowsError.cpp>

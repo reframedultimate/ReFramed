@@ -6,6 +6,7 @@
 
 #include "rfcommon/Deserializer.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -234,20 +235,21 @@ void ImportReplayPackDialog::onImport()
         uint64_t offset = deserializer.readLU64();
         uint64_t size = deserializer.readLU64();
         uint8_t fileNameLen = deserializer.readU8();
-        rfcommon::String fileName(
+        rfcommon::String fileNameUtf8(
             reinterpret_cast<const char*>(deserializer.readFromPtr(fileNameLen)),
             fileNameLen);
+        QString fileName = QString::fromUtf8(fileNameUtf8.cStr());
 
-        QString absFileName;
+        QDir dir;
         if (memcmp(type, "REPL", 4) == 0)
-            absFileName = replayDir.absoluteFilePath(fileName.cStr());
+            dir = replayDir;
         else if (memcmp(type, "VIDE", 4) == 0)
         {
             // Skip if user doesn't want to extract videos
             if (ui_->radioButton_noVideos->isChecked())
                 continue;
 
-            absFileName = videoDir.absoluteFilePath(fileName.cStr());
+            dir = videoDir;
             videoWasExtracted = true;
         }
         else
@@ -265,14 +267,14 @@ void ImportReplayPackDialog::onImport()
             return;
         }
 
-        if (QFileInfo(absFileName).exists() && overwriteAll == false)
+        if (dir.exists(fileName) && overwriteAll == false)
         {
             if (skipAll)
                 continue;
 
             switch (QMessageBox::question(this,
                 "File Exists",
-                "The file \"" + absFileName + "\" already exists\n\n"
+                "The file \"" + fileName + "\" already exists\n\n"
                 "Do you want to overwrite this file?",
                 QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel | QMessageBox::YesToAll | QMessageBox::NoToAll))
             {
@@ -285,12 +287,14 @@ void ImportReplayPackDialog::onImport()
             }
         }
 
-        FILE* fp = fopen(absFileName.toLocal8Bit().constData(), "wb");
+        QString filePath = dir.absoluteFilePath(fileName);
+        QByteArray filePathUtf8 = filePath.toUtf8();
+        FILE* fp = rfcommon::utf8_fopen_write(filePathUtf8.constData(), filePathUtf8.length());
         if (fp == nullptr)
         {
             QMessageBox::critical(this,
                 "File Error",
-                "Failed to open file \"" + absFileName + "\"\n\n" + strerror(errno));
+                "Failed to open file \"" + fileName + "\"\n\n" + strerror(errno));
             return;
         }
 
@@ -298,9 +302,9 @@ void ImportReplayPackDialog::onImport()
         {
             QMessageBox::critical(this,
                 "Write Error",
-                "Failed to write data to file \"" + absFileName + "\"\n\n" + strerror(errno));
+                "Failed to write data to file \"" + fileName + "\"\n\n" + strerror(errno));
             fclose(fp);
-            remove(absFileName.toLocal8Bit().constData());
+            remove(fileName.toUtf8().constData());
             return;
         }
 
@@ -308,13 +312,12 @@ void ImportReplayPackDialog::onImport()
 
         if (memcmp(type, "REPL", 4) == 0)
         {
-            auto parts = rfcommon::ReplayFileParts::fromFileName(fileName.cStr());
-            replayManager_->allReplayGroup()->addFile(parts);
+            replayManager_->allReplayGroup()->addFile(fileName);
             if (group)
-                group->addFile(parts);
+                group->addFile(fileName);
         }
 
-        progress.setPercent(i * 100 / numFiles, QString("Unpacking ") + fileName.cStr());
+        progress.setPercent(i * 100 / numFiles, QString("Unpacking ") + fileName);
     }
 
     replayManager_->addGamePath(ui_->lineEdit_replayPath->text());

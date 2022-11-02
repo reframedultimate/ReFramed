@@ -17,6 +17,7 @@
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/FilePathResolver.hpp"
 #include "rfcommon/time.h"
+#include "rfcommon/Utf8.hpp"
 
 #include "nlohmann/json.hpp"
 #include "cpp-base64/base64.h"
@@ -905,24 +906,25 @@ Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
 }
 
 // ----------------------------------------------------------------------------
-bool Session::save(const char* fileName, uint8_t saveFlags)
+bool Session::save(const char* utf8_filename, uint8_t saveFlags)
 {
     PROFILE(Session, save_FileName);
 
     Log* log = Log::root();
-    log->beginDropdown("Saving session %s", fileName);
+    log->beginDropdown("Saving session %s", utf8_filename);
 
-    FILE* fp = fopen(fileName, "wb");
+    const int len = strlen(utf8_filename);
+    FILE* fp = utf8_fopen_write(utf8_filename, len);
     if (fp == nullptr)
     {
-        log->error("Failed to open file %s: %s", fileName, strerror(errno));
+        log->error("Failed to open file %s: %s", utf8_filename, strerror(errno));
         return false;
     }
 
     if (Session::save(fp, saveFlags) == 0)
     {
         fclose(fp);
-        remove(fileName);
+        utf8_remove(utf8_filename, len);
         return false;
     }
 
