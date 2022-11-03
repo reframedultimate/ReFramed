@@ -25,6 +25,8 @@ class UserMotionLabelsManager;
  */
 class ReplayManagerView : public QWidget
 {
+    Q_OBJECT
+
 public:
     explicit ReplayManagerView(
             ReplayManager* replayManager,
@@ -33,6 +35,9 @@ public:
             rfcommon::Hash40Strings* hash40Strings,
             QWidget* parent=nullptr);
     ~ReplayManagerView();
+
+private slots:
+    void searchTextChanged(int type, const QStringList& text);
 
 private:
     ReplayManager* replayManager_;
@@ -46,6 +51,8 @@ private:
     ReplayGroupListView* replayGroupListView_;
 
     PluginDockView* pluginDockView_;
+
+    QVector<bool> storeExpandedStates_;
 };
 
 }

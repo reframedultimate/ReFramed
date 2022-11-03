@@ -15,14 +15,6 @@ ReplayListSortFilterModel::~ReplayListSortFilterModel()
 {}
 
 // ----------------------------------------------------------------------------
-void ReplayListSortFilterModel::setFilterMinimumDate(QDate date)
-{}
-
-// ----------------------------------------------------------------------------
-void ReplayListSortFilterModel::setFilterMaximumDate(QDate date)
-{}
-
-// ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setStage(const QString& stage)
 {}
 
@@ -36,11 +28,42 @@ void ReplayListSortFilterModel::setPlayerNames(const QStringList& playerNames)
 
 // ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setGenericSearchTerms(const QStringList& terms)
-{}
+{
+    genericSearchTerms_ = terms;
+    invalidateFilter();
+}
 
 // ----------------------------------------------------------------------------
-bool ReplayListSortFilterModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
+bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& parent) const
 {
+    static int columnsToSearch[] = {
+        ReplayListModel::P1,
+        ReplayListModel::P2,
+        ReplayListModel::P1Char,
+        ReplayListModel::P2Char,
+        ReplayListModel::SetFormat,
+        ReplayListModel::Stage,
+    };
+
+    if (parent.isValid() == false)
+        return true;
+
+    auto rowContainsTerm = [this, &parent](int row, const QString& term) -> bool {
+        for (auto col : columnsToSearch)
+        {
+            const QModelIndex idx = sourceModel()->index(row, col, parent);
+            const QString data = sourceModel()->data(idx).toString();
+
+            if (data.contains(term))
+                return true;
+        }
+        return false;
+    };
+
+    for (const auto& term : genericSearchTerms_)
+        if (rowContainsTerm(row, term) == false)
+            return false;
+
     return true;
 }
 
@@ -97,9 +120,9 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayListSortFilterModel::dateInRange(QDate date) const
+bool ReplayListSortFilterModel::filtersCleared() const
 {
-    return true;
+    return stage_.isEmpty() && fighterNames_.size() == 0 && playerNames_.size() == 0 && genericSearchTerms_.size() == 0;
 }
 
 }

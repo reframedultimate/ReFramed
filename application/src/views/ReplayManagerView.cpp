@@ -31,23 +31,21 @@ ReplayManagerView::ReplayManagerView(
     , replayGroupListView_(new ReplayGroupListView)
     , pluginDockView_(new PluginDockView(replayManager, pluginManager))
 {
-    /*QSplitter* vSplitter = new QSplitter;
-    vSplitter->addWidget(replayListView_);*/
-
     replayListModel_->setReplayGroup(replayManager_->allReplayGroup());
     replayListSortFilterModel_->setSourceModel(replayListModel_.get());
     replayListSortFilterModel_->setDynamicSortFilter(true);
     replayListSortFilterModel_->sort(0);
     replayListView_->setModel(replayListSortFilterModel_.get());
-    //replayListView_->setSortingEnabled(true);
-    //replayListView_->sortByColumn(ReplayListModel::GameNumber, Qt::DescendingOrder);
+
     replayListView_->expandAll();
-
-    for (int i = 0; i != replayListModel_->columnCount(); ++i)
+    for (int i = 0; i != replayListSortFilterModel_->columnCount(); ++i)
         replayListView_->resizeColumnToContents(i);
-
     replayListView_->collapseAll();
-    replayListView_->expand(replayListModel_->index(0, 0));
+
+    if (replayListSortFilterModel_->rowCount() > 0)
+        replayListView_->expand(replayListSortFilterModel_->index(0, 0));
+    if (replayListSortFilterModel_->rowCount() > 1)
+        replayListView_->expand(replayListSortFilterModel_->index(1, 0));
 
     ReplaySearchBox* searchBox = new ReplaySearchBox;
     QLabel* searchBoxLabel = new QLabel("Filters:");
@@ -81,11 +79,45 @@ ReplayManagerView::ReplayManagerView(
     l->addWidget(hSplitter);
 
     setLayout(l);
+
+    connect(searchBox, &ReplaySearchBox::searchTextChanged, this, &ReplayManagerView::searchTextChanged);
 }
 
 // ----------------------------------------------------------------------------
 ReplayManagerView::~ReplayManagerView()
 {
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::searchTextChanged(int type, const QStringList& text)
+{
+    if (replayListSortFilterModel_->filtersCleared() && text.size() > 0)
+    {
+        storeExpandedStates_.clear();
+        for (int row = 0; row != replayListSortFilterModel_->rowCount(); ++row)
+        {
+            const QModelIndex idx = replayListSortFilterModel_->index(row, 0);
+            storeExpandedStates_.push_back(replayListView_->isExpanded(idx));
+        }
+    }
+
+    switch (type)
+    {
+        case ReplaySearchBox::GENERIC: replayListSortFilterModel_->setGenericSearchTerms(text); break;
+    }
+
+    if (replayListSortFilterModel_->filtersCleared())
+    {
+        for (int row = 0; row != replayListSortFilterModel_->rowCount(); ++row)
+        {
+            const QModelIndex idx = replayListSortFilterModel_->index(row, 0);
+            replayListView_->setExpanded(idx, storeExpandedStates_[row]);
+        }
+    }
+    else
+    {
+        replayListView_->expandAll();
+    }
 }
 
 }

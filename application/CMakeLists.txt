@@ -57,7 +57,6 @@ set (APPLICATION_HEADERS
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/UserMotionLabelsManager.hpp"
     "include/application/views/ActiveGameSessionView.hpp"
-    "include/application/views/ReplayManagerView.hpp"
     "include/application/views/RunningGameSessionView.hpp"
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
@@ -73,8 +72,9 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/PluginDockView.hpp"
     "include/application/views/ReplayEditorDialog.hpp"
     #"include/application/views/ReplayGroupView.hpp"
-    "include/application/views/ReplayListView.hpp"
     "include/application/views/ReplayGroupListView.hpp"
+    "include/application/views/ReplayListView.hpp"
+    "include/application/views/ReplayManagerView.hpp"
     "include/application/views/UserMotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
     "include/application/widgets/ProgressDialog.hpp"
