@@ -162,7 +162,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case FramesLeft: return QString::number(state.framesLeft().count());
                 case TimeLeft: return formatTimer(state.framesLeft().secondsLeft());
                 case Position: return formatPosition(state.pos());
-                case Facing: return state.flags().facingLeft() ? "Left" : "Right";
+                case Facing: return state.flags().facingLeft() ? "Right" : "Left";
                 case Damage: return QString::number(state.damage(), 'f', 1);
                 case Hitstun: return QString::number(state.hitstun(), 'f', 1);
                 case Shield: return QString::number(state.shield(), 'f', 1);
