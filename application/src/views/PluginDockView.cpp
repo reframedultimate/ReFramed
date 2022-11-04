@@ -214,8 +214,8 @@ void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
     QMenu popup;
     for (const auto& name : pluginNames)
     {
-        if (pluginLoaded(name))
-            continue;
+        //if (pluginLoaded(name))
+        //    continue;
         popup.addAction(name);
     }
 

@@ -20,13 +20,14 @@ public:
     {
         Time,
         P1, P2,
-        P1Char, P2Char,
         SetFormat,
         SetNumber,
         GameNumber,
         Stage,
 
-        ColumnCount
+        ColumnCount,
+
+        P1Char, P2Char
     };
 
     ReplayListModel(rfcommon::FilePathResolver* filePathResolver);
@@ -46,6 +47,13 @@ public:
     int columnCount(const QModelIndex& parent=QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override;
+
+    /*!
+     * \brief Returns the filename of the replay at the specified index,
+     * or returns an empty string if the index is not an item representing
+     * a filename (such as the root items that only represent a date)
+     */
+    QString indexFileName(const QModelIndex& index) const;
 
 private:
     void addReplay(const QString& fileName);

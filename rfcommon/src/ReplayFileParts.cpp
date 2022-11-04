@@ -9,6 +9,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 ReplayFileParts::ReplayFileParts(
+        String originalFileName,
         SmallVector<String, 2>&& playerNames,
         SmallVector<String, 2>&& characterNames,
         String date,
@@ -17,7 +18,8 @@ ReplayFileParts::ReplayFileParts(
         SetNumber setNumber,
         GameNumber gameNumber,
         SetFormat format)
-    : playerNames_(std::move(playerNames))
+    : originalFileName_(std::move(originalFileName))
+    , playerNames_(std::move(playerNames))
     , characterNames_(std::move(characterNames))
     , date_(date)
     , time_(time)
@@ -144,7 +146,6 @@ next_player:
     s_player = p;
     for (; *p; ++p)
         if (
-                (*p == '(') ||
                 (*p == ' ' && *(p+1) == '(') ||
                 (*p == ' ' && *(p+1) == 'v' && *(p+2) == 's'))
         {
@@ -279,6 +280,7 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
         pos = parseStage(pos, fileName, &stage);
 
     return ReplayFileParts(
+                fileName,
                 std::move(players),
                 std::move(characters),
                 date, time, stage,
@@ -289,6 +291,18 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 
 // ----------------------------------------------------------------------------
 ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
+{
+    ReplayFileParts parts("", {}, {}, "", "", "",
+            SetNumber::fromValue(1),
+            GameNumber::fromValue(1),
+            SetFormat::fromType(SetFormat::BO3));
+
+    parts.updateMetaData(map, mdata);
+    return parts;
+}
+
+// ----------------------------------------------------------------------------
+void ReplayFileParts::updateMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
 {
     const auto stampMs = mdata->timeStarted().millisSinceEpoch();
     std::time_t t = (std::time_t)(stampMs / 1000);
@@ -301,39 +315,36 @@ ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, 
     switch (mdata->type())
     {
         case MetaData::TRAINING: {
-            return ReplayFileParts(
-                        {mdata->name(0), "CPU"},
-                        {map->fighter.toName(mdata->fighterID(0)), map->fighter.toName(mdata->fighterID(1))},
-                        date,
-                        time,
-                        map->stage.toName(mdata->stageID()),
-                        SetNumber::fromValue(1),
-                        mdata->asTraining()->sessionNumber(),
-                        SetFormat::fromDescription("Training"));
+            playerNames_ = { mdata->name(0), "CPU" };
+            characterNames_ = { map->fighter.toName(mdata->fighterID(0)), map->fighter.toName(mdata->fighterID(1)) };
+            date_ = date;
+            time_ = time;
+            stage_ = map->stage.toName(mdata->stageID());
+            setNumber_ = SetNumber::fromValue(1);
+            gameNumber_ = mdata->asTraining()->sessionNumber();
+            format_ = SetFormat::fromDescription("Training");
         } break;
 
         case MetaData::GAME: {
-            SmallVector<String, 2> names, fighters;
+            playerNames_.clear();
+            characterNames_.clear();
             for (int i = 0; i != mdata->fighterCount(); ++i)
             {
-                names.emplace(mdata->name(i));
-                fighters.emplace(map->fighter.toName(mdata->fighterID(i)));
+                playerNames_.emplace(mdata->name(i));
+                characterNames_.emplace(map->fighter.toName(mdata->fighterID(i)));
             }
 
+            date_ = date;
+            time_ = time;
+            stage_ = map->stage.toName(mdata->stageID());
+
             auto gdata = mdata->asGame();
-            return ReplayFileParts(
-                        std::move(names),
-                        std::move(fighters),
-                        date,
-                        time,
-                        map->stage.toName(mdata->stageID()),
-                        gdata->setNumber(),
-                        gdata->gameNumber(),
-                        gdata->setFormat());
+
+            setNumber_ = gdata->setNumber();
+            gameNumber_ = gdata->gameNumber();
+            format_ = gdata->setFormat();
         } break;
     }
-
-    std::terminate();
 }
 
 // ----------------------------------------------------------------------------

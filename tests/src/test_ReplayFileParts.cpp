@@ -88,6 +88,7 @@ TEST(NAME, player_parsing)
     auto p3 = ReplayFileParts::fromFileName("2022-09-11 - Bo3 (1) - Dumb. Ass (Pika) vs TAEL (C. Falcon) - ");
     auto p4 = ReplayFileParts::fromFileName("2022-09-11 - Bo3 (1) - Dumb. Ass (Pika");
     auto p5 = ReplayFileParts::fromFileName("2022-09-11 - Bo3 (1) - Dumb. Ass ((unknown fighter))");
+    auto p6 = ReplayFileParts::fromFileName("2022-09-11 - Bo3 (1) - Wave(s) (Sonic)");
 
     ASSERT_THAT(p1.playerCount(), Eq(1));
     EXPECT_THAT(p1.playerName(0).cStr(), StrEq("TheComet"));
@@ -110,6 +111,10 @@ TEST(NAME, player_parsing)
     ASSERT_THAT(p5.playerCount(), Eq(1));
     EXPECT_THAT(p5.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p5.characterName(0).cStr(), StrEq("unknown fighter"));
+
+    ASSERT_THAT(p6.playerCount(), Eq(1));
+    EXPECT_THAT(p6.playerName(0).cStr(), StrEq("Wave(s)"));
+    EXPECT_THAT(p6.characterName(0).cStr(), StrEq("Sonic"));
 }
 
 TEST(NAME, parse_all)
@@ -155,6 +160,7 @@ TEST(NAME, parse_all)
 TEST(NAME, to_string)
 {
     ReplayFileParts parts(
+            "",
             {"TheComet", "TAEL"},
             {"Pikachu", "C. Falcon"},
             "2022-09-11", "19:45:22",

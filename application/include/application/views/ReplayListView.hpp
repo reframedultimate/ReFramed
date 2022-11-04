@@ -19,8 +19,6 @@ public:
     QSize sizeHint() const override;
 
 private slots:
-    void onItemRightClicked(const QPoint& pos);
-    void onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
     void onDeleteKeyPressed();
 
 private:

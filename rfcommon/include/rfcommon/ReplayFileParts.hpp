@@ -15,6 +15,7 @@ class RFCOMMON_PUBLIC_API ReplayFileParts
 {
 public:
     ReplayFileParts(
+            String originalFileName,
             SmallVector<String, 2>&& playerNames,
             SmallVector<String, 2>&& characterNames,
             String date,
@@ -27,7 +28,15 @@ public:
 
     static ReplayFileParts fromFileName(const char* fileName);
     static ReplayFileParts fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata);
+    void updateMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata);
     String toFileName() const;
+
+    /*! 
+     * \brief Returns the filename that was passed to ReplayFileParts::fromFileName()
+     * to construct this object. If the object was constructed from metadat instead,
+     * then this string will be empty.
+     */
+    const String& originalFileName() const { return originalFileName_; }
 
     bool hasMissingInfo() const;
 
@@ -67,6 +76,7 @@ public:
     }
 
 private:
+    String originalFileName_;
     SmallVector<String, 2> playerNames_;
     SmallVector<String, 2> characterNames_;
     String date_;

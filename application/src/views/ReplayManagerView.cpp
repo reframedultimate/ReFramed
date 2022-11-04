@@ -2,14 +2,22 @@
 #include "application/models/ReplayListSortFilterModel.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/widgets/ReplaySearchBox.hpp"
+#include "application/views/ExportReplayPackDialog.hpp"
 #include "application/views/PluginDockView.hpp"
+#include "application/views/ReplayEditorDialog.hpp"
 #include "application/views/ReplayGroupListView.hpp"
 #include "application/views/ReplayListView.hpp"
 #include "application/views/ReplayManagerView.hpp"
+#include "application/views/VideoAssociatorDialog.hpp"
+
+#include "rfcommon/Session.hpp"
 
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QMenu>
+#include <QAction>
+#include <QMessageBox>
 
 namespace rfapp {
 
@@ -36,6 +44,7 @@ ReplayManagerView::ReplayManagerView(
     replayListSortFilterModel_->setDynamicSortFilter(true);
     replayListSortFilterModel_->sort(0);
     replayListView_->setModel(replayListSortFilterModel_.get());
+    replayListView_->setContextMenuPolicy(Qt::CustomContextMenu);
 
     replayListView_->expandAll();
     for (int i = 0; i != replayListSortFilterModel_->columnCount(); ++i)
@@ -81,6 +90,8 @@ ReplayManagerView::ReplayManagerView(
     setLayout(l);
 
     connect(searchBox, &ReplaySearchBox::searchTextChanged, this, &ReplayManagerView::searchTextChanged);
+    connect(replayListView_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ReplayManagerView::onItemSelectionChanged);
+    connect(replayListView_, &QTreeView::customContextMenuRequested, this, &ReplayManagerView::onReplayRightClicked);
 }
 
 // ----------------------------------------------------------------------------
@@ -117,6 +128,137 @@ void ReplayManagerView::searchTextChanged(int type, const QStringList& text)
     else
     {
         replayListView_->expandAll();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+    pluginDockView_->clearReplays();
+
+    QStringList selectedFileNames;
+    auto selectedIdxs = replayListView_->selectionModel()->selectedRows();
+    for (const auto& idx : selectedIdxs)
+    {
+        // NOTE: The selection model is using proxy model indices, but we need
+        // source model indices in order to successfully retrieve the filename
+        const QModelIndex& srcIdx = replayListSortFilterModel_->mapToSource(idx);
+        QString fileName = replayListModel_->indexFileName(srcIdx);
+        if (fileName.isEmpty())
+            continue;
+        selectedFileNames.push_back(std::move(fileName));
+    }
+
+    if (selectedFileNames.size() == 1)
+    {
+        assert(QDir(selectedFileNames[0]).isRelative());
+
+        const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+        const auto filePath = QString::fromUtf8(filePathUtf8.cStr());
+        if (filePath.isEmpty())
+            return;
+        pluginDockView_->loadGameReplays({ filePath });
+    }
+    else if (selectedFileNames.size() > 1)
+    {
+        QStringList filePaths;
+        for (const auto& fileName : selectedFileNames)
+        {
+            const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+            const auto filePath = QString::fromUtf8(filePathUtf8.cStr());
+            if (filePath.isEmpty() == false)
+                filePaths.push_back(filePath);
+        }
+
+        pluginDockView_->loadGameReplays(filePaths);
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
+{
+    QStringList selectedFileNames;
+    const auto selectedIdxs = replayListView_->selectionModel()->selectedRows();
+    for (const auto& idx : selectedIdxs)
+    {
+        // NOTE: The selection model is using proxy model indices, but we need
+        // source model indices in order to successfully retrieve the filename
+        const QModelIndex& srcIdx = replayListSortFilterModel_->mapToSource(idx);
+        QString fileName = replayListModel_->indexFileName(srcIdx);
+        if (fileName.isEmpty())
+            continue;
+        selectedFileNames.push_back(std::move(fileName));
+    }
+
+    if (selectedFileNames.size() == 0)
+        return;
+
+    QMenu menu;
+    QAction* editMetaData = nullptr;
+    QAction* associateVideo = nullptr;
+    QAction* exportPack = nullptr;
+    QAction* deleteReplays = nullptr;
+    QAction* a = nullptr;
+
+    QPoint item = replayListView_->mapToGlobal(pos);
+    if (selectedFileNames.size() == 1)
+    {
+        editMetaData = menu.addAction("Edit Meta Data");
+        associateVideo = menu.addAction("Associate Video");
+        menu.addSeparator();
+        exportPack = menu.addAction("Export as replay pack");
+        menu.addSeparator();
+        deleteReplays = menu.addAction("Delete");
+        a = menu.exec(item);
+    }
+    else if (selectedFileNames.size() > 1)
+    {
+        exportPack = menu.addAction("Export as replay pack");
+        menu.addSeparator();
+        deleteReplays = menu.addAction("Delete");
+        a = menu.exec(item);
+    }
+
+    if (a == nullptr)
+        return;
+
+    if (a == editMetaData)
+    {
+        const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
+        if (session)
+        {
+            ReplayEditorDialog dialog(replayManager_, session, selectedFileNames[0]);
+            dialog.exec();
+        }
+    }
+    else if (a == associateVideo)
+    {
+        const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
+        if (session)
+        {
+            VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0]);
+            dialog.exec();
+        }
+    }
+    else if (a == exportPack)
+    {
+        ExportReplayPackDialog dialog(replayManager_, selectedFileNames, selectedFileNames);
+        dialog.exec();
+    }
+    else if (a == deleteReplays)
+    {
+        if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete these replays?") == QMessageBox::Yes)
+        {
+            bool success = true;
+            for (const auto& fileName : selectedFileNames)
+                if (replayManager_->deleteReplay(fileName) == false)
+                    success = false;
+
+            if (success == false)
+                QMessageBox::critical(this, "Error deleting file(s)", "Failed to delete some of the selected files because they don't exist. They were probably deleted by an external process.");
+        }
     }
 }
 

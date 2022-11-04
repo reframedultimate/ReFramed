@@ -3,6 +3,8 @@
 #include <QWidget>
 #include <memory>
 
+class QItemSelection;
+
 namespace rfcommon {
     class Hash40Strings;
 }
@@ -38,6 +40,8 @@ public:
 
 private slots:
     void searchTextChanged(int type, const QStringList& text);
+    void onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
+    void onReplayRightClicked(const QPoint& pos);
 
 private:
     ReplayManager* replayManager_;

@@ -54,7 +54,7 @@ bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& par
             const QModelIndex idx = sourceModel()->index(row, col, parent);
             const QString data = sourceModel()->data(idx).toString();
 
-            if (data.contains(term))
+            if (data.contains(term, Qt::CaseInsensitive))
                 return true;
         }
         return false;

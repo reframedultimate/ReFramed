@@ -3,8 +3,6 @@
 
 #include "rfcommon/Profiler.hpp"
 
-#include <QTreeView>
-
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
@@ -13,7 +11,6 @@ ReplayListView::ReplayListView(QWidget* parent)
 {
     setDragDropMode(QTreeView::DragOnly);
     setSelectionMode(QTreeView::ExtendedSelection);
-    setAlternatingRowColors(true);
 }
 
 // ----------------------------------------------------------------------------
@@ -24,19 +21,7 @@ ReplayListView::~ReplayListView()
 // ----------------------------------------------------------------------------
 QSize ReplayListView::sizeHint() const
 {
-    return QSize(1200, 100);
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListView::onItemRightClicked(const QPoint& pos)
-{
-
-}
-
-// ----------------------------------------------------------------------------
-void ReplayListView::onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
-{
-
+    return QSize(1000, 100);
 }
 
 // ----------------------------------------------------------------------------
