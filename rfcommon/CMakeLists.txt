@@ -190,19 +190,20 @@ add_library (rfcommon SHARED
     "src/VisualizerContext.cpp"
     "src/VisualizerData.cpp"
     "${PROJECT_BINARY_DIR}/src/BuildInfo.cpp"
-    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Utf8_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/SharedLibrary_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/HighresTimer_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/LastWindowsError.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/MappedFile_windows.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/tcp_socket_windows.c>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Time_windows.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},WINDOWS>:src/platform/windows/Utf8_windows.cpp>
 
     $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/SharedLibrary_linux.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/HighresTimer_linux.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/MappedFile_linux.cpp>
     $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/tcp_socket_linux.c>
-    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/Time_linux.cpp>)
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/Time_linux.cpp>
+    $<$<STREQUAL:${RFCOMMON_PLATFORM},LINUX>:src/platform/linux/Utf8_linux.cpp>)
 target_include_directories (rfcommon
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

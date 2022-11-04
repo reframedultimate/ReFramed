@@ -164,7 +164,7 @@ void ReplayManagerView::onItemSelectionChanged(const QItemSelection& selected, c
         QStringList filePaths;
         for (const auto& fileName : selectedFileNames)
         {
-            const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+            const auto filePathUtf8 = replayManager_->resolveGameFile(fileName.toUtf8().constData());
             const auto filePath = QString::fromUtf8(filePathUtf8.cStr());
             if (filePath.isEmpty() == false)
                 filePaths.push_back(filePath);
