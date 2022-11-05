@@ -75,7 +75,6 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
 
     int leftRow = left.row();
     int rightRow = right.row();
-    int numCols = sourceModel()->columnCount();
 
     static int sortOrder[] = {
         ReplayListModel::P1,

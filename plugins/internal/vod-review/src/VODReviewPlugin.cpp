@@ -98,6 +98,7 @@ void VODReviewPlugin::onVisualizerDataChanged()
     }
 }
 
+// ----------------------------------------------------------------------------
 void VODReviewPlugin::onFileOpened() {}
 void VODReviewPlugin::onFileClosed() {}
 void VODReviewPlugin::onPresentImage(const QImage& image)

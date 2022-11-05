@@ -144,6 +144,20 @@ QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
 }
 
 // ----------------------------------------------------------------------------
+QVector<QString> PluginManager::availableFactoryNamesExact(RFPluginType type) const
+{
+    PROFILE(PluginManager, availableFactoryNames);
+
+    QVector<QString> list;
+    for (const auto& plugin : plugins_)
+        for (RFPluginFactory* factory = plugin.iface->factories; factory->info.name != nullptr; ++factory)
+            if (factory->type == type)
+                list.push_back(factory->info.name);
+
+    return list;
+}
+
+// ----------------------------------------------------------------------------
 const RFPluginFactoryInfo* PluginManager::getFactoryInfo(const QString& name) const
 {
     PROFILE(PluginManager, getFactoryInfo);

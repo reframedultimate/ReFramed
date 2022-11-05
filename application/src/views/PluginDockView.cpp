@@ -208,6 +208,7 @@ void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
     auto pluginNames = protocol_ ?
             pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REALTIME) :
             pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::REPLAY);
+    pluginNames += pluginManager_->availableFactoryNamesExact(RFPluginType::UI);
     std::sort(pluginNames.begin(), pluginNames.end());
 
     // Open popup menu with all of the plugins that aren't loaded yet

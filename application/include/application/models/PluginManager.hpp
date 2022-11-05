@@ -60,6 +60,7 @@ public:
      * methods.
      */
     QVector<QString> availableFactoryNames(RFPluginType type) const;
+    QVector<QString> availableFactoryNamesExact(RFPluginType type) const;
 
     /*!
      * \brief Returns a pointer to the info structure in the loaded shared

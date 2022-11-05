@@ -476,7 +476,7 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
     }
 
     QByteArray newFileNameUtf8 = dir.absoluteFilePath(newFileName).toUtf8();
-    if (session->save(newFileNameUtf8.constData(), newFileNameUtf8.length()) == false)
+    if (session->save(newFileNameUtf8.constData()) == false)
     {
         log->error("Failed to save session to %s", newFileNameUtf8.constData());
         if (dir.rename(tmpFileName, oldFileName))
