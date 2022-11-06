@@ -4,6 +4,7 @@
 #include <memory>
 
 class QItemSelection;
+class QListWidgetItem;
 
 namespace rfcommon {
     class Hash40Strings;
@@ -39,9 +40,11 @@ public:
     ~ReplayManagerView();
 
 private slots:
+    void groupSelected(QListWidgetItem* current, QListWidgetItem* previous);
     void searchTextChanged(int type, const QStringList& text);
     void onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
     void onReplayRightClicked(const QPoint& pos);
+    void onGroupRightClicked(const QPoint& pos);
 
 private:
     ReplayManager* replayManager_;

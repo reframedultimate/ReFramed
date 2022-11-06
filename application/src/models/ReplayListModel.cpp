@@ -9,7 +9,7 @@
 #include <algorithm>
 
 namespace rfapp {
-    
+
 // ----------------------------------------------------------------------------
 ReplayListModel::ReplayListModel(rfcommon::FilePathResolver* filePathResolver)
     : replayPathResolver_(filePathResolver)
@@ -19,8 +19,7 @@ ReplayListModel::ReplayListModel(rfcommon::FilePathResolver* filePathResolver)
 // ----------------------------------------------------------------------------
 ReplayListModel::~ReplayListModel()
 {
-    if (currentGroup_)
-        clearReplayGroup(currentGroup_);
+    clearReplayGroup();
 }
 
 // ----------------------------------------------------------------------------
@@ -43,9 +42,10 @@ void ReplayListModel::setReplayGroup(ReplayGroup* group)
 }
 
 // ----------------------------------------------------------------------------
-void ReplayListModel::clearReplayGroup(ReplayGroup* group)
+void ReplayListModel::clearReplayGroup()
 {
-    assert(group == currentGroup_);
+    if (currentGroup_ == nullptr)
+        return;
 
     beginResetModel();
         days_.clear();

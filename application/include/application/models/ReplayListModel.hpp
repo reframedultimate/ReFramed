@@ -39,7 +39,7 @@ public:
      * the group is deleted the view will clear itself.
      */
     void setReplayGroup(ReplayGroup* group);
-    void clearReplayGroup(ReplayGroup* group);
+    void clearReplayGroup();
 
     QModelIndex index(int row, int column, const QModelIndex& parent=QModelIndex()) const override;
     QModelIndex parent(const QModelIndex& index) const override;
