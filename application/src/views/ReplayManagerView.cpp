@@ -90,6 +90,8 @@ ReplayManagerView::ReplayManagerView(
     hSplitter->addWidget(pluginDockView_);
     hSplitter->setStretchFactor(0, 0);
     hSplitter->setStretchFactor(1, 1);
+    hSplitter->setCollapsible(0, false);
+    hSplitter->setCollapsible(1, false);
 
     QVBoxLayout* l = new QVBoxLayout;
     l->addWidget(hSplitter);

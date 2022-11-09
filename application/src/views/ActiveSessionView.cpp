@@ -2,6 +2,11 @@
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
+#include "application/widgets/MetaDataEditWidget_Commentators.hpp"
+#include "application/widgets/MetaDataEditWidget_Event.hpp"
+#include "application/widgets/MetaDataEditWidget_Game.hpp"
+#include "application/widgets/MetaDataEditWidget_Players.hpp"
+#include "application/widgets/MetaDataEditWidget_Tournament.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
@@ -11,8 +16,22 @@
 
 #include <QVBoxLayout>
 #include <QDateTime>
+#include <QSplitter>
+#include <QScrollArea>
+#include <QSpacerItem>
 
 namespace rfapp {
+
+// ----------------------------------------------------------------------------
+namespace {
+
+class ScrollAreaWithSizeHint : public QScrollArea
+{
+public:
+    QSize sizeHint() const override { return QSize(40, 100); }
+};
+
+}
 
 // ----------------------------------------------------------------------------
 ActiveSessionView::ActiveSessionView(
@@ -20,22 +39,50 @@ ActiveSessionView::ActiveSessionView(
         PluginManager* pluginManager,
         QWidget* parent)
     : QWidget(parent)
-    , ui_(new Ui::ActiveSessionView)
+    //, ui_(new Ui::ActiveSessionView)
     , activeSessionManager_(activeSessionManager)
 {
-    ui_->setupUi(this);
+    /*ui_->setupUi(this);
     ui_->lineEdit_formatOther->setVisible(false);
-    ui_->layout_sessionViewer->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
+    ui_->layout_sessionViewer->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));*/
 
+    /*
 #define X(type, shortstr, longstr) ui_->comboBox_format->addItem(longstr);
     SET_FORMAT_LIST
-#undef X
+#undef X*/
 
-    connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveSessionView::onComboBoxFormatIndexChanged);
+    /*connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveSessionView::onComboBoxFormatIndexChanged);
     connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditFormatChanged);
     connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ActiveSessionView::onSpinBoxGameNumberChanged);
     connect(ui_->lineEdit_player1, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP1TextChanged);
-    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP2TextChanged);
+    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP2TextChanged);*/
+
+    QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament);
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators);
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Event);
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Game);
+    //metaDataEditLayout->addWidget(new MetaDataEditWidget_Players);
+    metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    QWidget* metaDataEditContents = new QWidget;
+    metaDataEditContents->setLayout(metaDataEditLayout);
+
+    QScrollArea* scrollArea = new ScrollAreaWithSizeHint;
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setWidget(metaDataEditContents);
+
+    QSplitter* splitter = new QSplitter(Qt::Horizontal);
+    splitter->addWidget(scrollArea);
+    splitter->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
+    splitter->setStretchFactor(0, 0);
+    splitter->setStretchFactor(1, 0);
+    splitter->setCollapsible(0, false);
+    splitter->setCollapsible(1, false);
+
+    QVBoxLayout* l = new QVBoxLayout;
+    l->addWidget(splitter);
+    setLayout(l);
 
     activeSessionManager_->dispatcher.addListener(this);
 }
@@ -44,7 +91,7 @@ ActiveSessionView::ActiveSessionView(
 ActiveSessionView::~ActiveSessionView()
 {
     activeSessionManager_->dispatcher.removeListener(this);
-    delete ui_;
+    //delete ui_;
 }
 
 // ----------------------------------------------------------------------------
