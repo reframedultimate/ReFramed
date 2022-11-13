@@ -55,12 +55,12 @@ add_subdirectory ("thirdparty/ads")
 add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
 add_subdirectory ("application")
-add_subdirectory ("plugins")
+#add_subdirectory ("plugins")
 
 option (REFRAMED_TESTS "Enable building unit tests" ON)
 if (REFRAMED_TESTS)
-	add_subdirectory ("thirdparty/googletest-1.12.1")
-	add_subdirectory ("tests")
+    add_subdirectory ("thirdparty/googletest-1.12.1")
+    add_subdirectory ("tests")
 endif ()
 
 # set_target_properties (gmock

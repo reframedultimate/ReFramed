@@ -236,7 +236,7 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
     }
     std::unordered_set<FighterID, FighterIDHasherStd> usedFighterIDs;
     for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
-        usedFighterIDs.insert(metaData->fighterID(fighter));
+        usedFighterIDs.insert(metaData->playerFighterID(fighter));
 
     auto statusUsedByAnyone = [&usedStatuses](FighterStatus status) -> bool {
         for (const auto& usedFighterStatuses : usedStatuses)
@@ -261,8 +261,8 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
     for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
     {
         json specificMapping = json::object();
-        const auto specificNames = status.specificNames(metaData->fighterID(fighter));
-        const auto specificStatuses = status.specificStatuses(metaData->fighterID(fighter));
+        const auto specificNames = status.specificNames(metaData->playerFighterID(fighter));
+        const auto specificStatuses = status.specificStatuses(metaData->playerFighterID(fighter));
         for (int i = 0; i != specificStatuses.count(); ++i)
         {
             // Skip saving enums that aren't actually used in the set of player states
@@ -273,7 +273,7 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[std::to_string(metaData->fighterID(fighter).value())] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(metaData->playerFighterID(fighter).value())] = specificMapping;
     }
 
     json fighterStatusMapping = {

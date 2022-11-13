@@ -56,7 +56,7 @@ bool UserMotionLabelsManager::loadAllLayers()
     QStringList shippedLayers = shipDir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
     QStringList localLayers = dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
 
-    // Only load a shipped layer if it does not exist yet 
+    // Only load a shipped layer if it does not exist yet
     QStringList layers;
     for (const auto& file : shippedLayers)
     {
@@ -105,7 +105,7 @@ bool UserMotionLabelsManager::saveAllLayers()
     if (dir.exists("motion") == false)
         dir.mkdir("motion");
     dir.cd("motion");
-    
+
     // Temporary backup of previous files
     QStringList previousFiles = dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot);
     for (const auto& f : previousFiles)
@@ -202,37 +202,37 @@ void UserMotionLabelsManager::onProtocolTrainingStarted(rfcommon::Session* train
 
     setActiveSession(training);
 }
-void UserMotionLabelsManager::onProtocolTrainingResumed(rfcommon::Session* training) 
+void UserMotionLabelsManager::onProtocolTrainingResumed(rfcommon::Session* training)
 {
     PROFILE(UserMotionLabelsManager, onProtocolTrainingResumed);
 
     setActiveSession(training);
 }
-void UserMotionLabelsManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) 
+void UserMotionLabelsManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
 {
     PROFILE(UserMotionLabelsManager, onProtocolTrainingReset);
 
     setActiveSession(newTraining);
 }
-void UserMotionLabelsManager::onProtocolTrainingEnded(rfcommon::Session* training) 
+void UserMotionLabelsManager::onProtocolTrainingEnded(rfcommon::Session* training)
 {
     PROFILE(UserMotionLabelsManager, onProtocolTrainingEnded);
 
     clearActiveSession();
 }
-void UserMotionLabelsManager::onProtocolGameStarted(rfcommon::Session* game) 
+void UserMotionLabelsManager::onProtocolGameStarted(rfcommon::Session* game)
 {
     PROFILE(UserMotionLabelsManager, onProtocolGameStarted);
 
     setActiveSession(game);
 }
-void UserMotionLabelsManager::onProtocolGameResumed(rfcommon::Session* game) 
+void UserMotionLabelsManager::onProtocolGameResumed(rfcommon::Session* game)
 {
     PROFILE(UserMotionLabelsManager, onProtocolGameResumed);
 
     setActiveSession(game);
 }
-void UserMotionLabelsManager::onProtocolGameEnded(rfcommon::Session* game) 
+void UserMotionLabelsManager::onProtocolGameEnded(rfcommon::Session* game)
 {
     PROFILE(UserMotionLabelsManager, onProtocolGameEnded);
 
@@ -240,7 +240,7 @@ void UserMotionLabelsManager::onProtocolGameEnded(rfcommon::Session* game)
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) 
+void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
     PROFILE(UserMotionLabelsManager, onFrameDataNewUniqueFrame);
 
@@ -250,7 +250,7 @@ void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfco
 
     for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
     {
-        auto fighterID = mdata->fighterID(fighterIdx);
+        auto fighterID = mdata->playerFighterID(fighterIdx);
         auto motion = frame[fighterIdx].motion();
         userMotionLabels_->addUnknownMotion(fighterID, motion);
     }

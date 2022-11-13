@@ -14,8 +14,6 @@ DamageTimeCurveData::DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::M
     , fighterIdx_(fighterIdx)
 {
     frameData_->dispatcher.addListener(this);
-    if (metaData_)
-        metaData_->dispatcher.addListener(this);
 
     for (int frameIdx = 0; frameIdx != frameData->frameCount(); ++frameIdx)
     {
@@ -28,8 +26,6 @@ DamageTimeCurveData::DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::M
 // ----------------------------------------------------------------------------
 DamageTimeCurveData::~DamageTimeCurveData()
 {
-    if (metaData_)
-        metaData_->dispatcher.removeListener(this);
     frameData_->dispatcher.removeListener(this);
 }
 
@@ -60,23 +56,6 @@ void DamageTimeCurveData::appendDataPoint(rfcommon::FramesLeft framesLeft, float
         points_.emplace(framesLeft.secondsLeft(), damage);
     }
 }
-
-// ----------------------------------------------------------------------------
-void DamageTimeCurveData::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) { (void)timeStarted; }
-void DamageTimeCurveData::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) { (void)timeEnded; }
-
-void DamageTimeCurveData::onMetaDataPlayerNameChanged(int fighterIdx, const char* name) {}
-void DamageTimeCurveData::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void DamageTimeCurveData::onMetaDataTournamentNameChanged(const char* name) {}
-void DamageTimeCurveData::onMetaDataEventNameChanged(const char* name) {}
-void DamageTimeCurveData::onMetaDataRoundNameChanged(const char* name) {}
-void DamageTimeCurveData::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-void DamageTimeCurveData::onMetaDataSetNumberChanged(rfcommon::SetNumber number) { (void)number; }
-void DamageTimeCurveData::onMetaDataGameNumberChanged(rfcommon::GameNumber number) { (void)number; }
-void DamageTimeCurveData::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) { (void)format; }
-void DamageTimeCurveData::onMetaDataWinnerChanged(int winnerPlayerIdx) { (void)winnerPlayerIdx; }
-
-void DamageTimeCurveData::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) { (void)number; }
 
 // ----------------------------------------------------------------------------
 void DamageTimeCurveData::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) { (void)frameIdx; (void)frame; }

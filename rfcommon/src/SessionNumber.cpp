@@ -1,22 +1,22 @@
-#include "rfcommon/SetNumber.hpp"
+#include "rfcommon/SessionNumber.hpp"
 #include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-SetNumber SetNumber::fromValue(Type value)
+SessionNumber SessionNumber::fromValue(Type value)
 {
     NOPROFILE();
 
-    return SetNumber(value);
+    return SessionNumber(value);
 }
 
 // ----------------------------------------------------------------------------
-SetNumber::~SetNumber()
+SessionNumber::~SessionNumber()
 {}
 
 // ----------------------------------------------------------------------------
-SetNumber::SetNumber(Type value)
+SessionNumber::SessionNumber(Type value)
     : value_(value)
 {}
 

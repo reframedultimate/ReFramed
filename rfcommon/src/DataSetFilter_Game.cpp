@@ -6,7 +6,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 DataSetFilter_Game::DataSetFilter_Game()
-    : format_(SetFormat::fromType(SetFormat::FRIENDLIES))
+    : format_(SetFormat::fromType(SetFormat::FREE))
 {
 }
 

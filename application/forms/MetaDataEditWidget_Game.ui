@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>880</width>
-    <height>470</height>
+    <width>996</width>
+    <height>519</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QDateTimeEdit" name="timeStarted">
+         <widget class="QDateTimeEdit" name="dateTimeEdit_started">
           <property name="displayFormat">
            <string>yyyy-MM-dd HH:mm:ss</string>
           </property>
@@ -56,7 +56,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QDateTimeEdit" name="timeEnded">
+         <widget class="QDateTimeEdit" name="dateTimeEdit_ended">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -80,7 +80,7 @@
       <item row="1" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
         <item>
-         <widget class="QLineEdit" name="stageID">
+         <widget class="QLineEdit" name="lineEdit_stageID">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -111,7 +111,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="stageName">
+         <widget class="QLineEdit" name="lineEdit_stageName">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -136,90 +136,19 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="3">
-         <widget class="QLineEdit" name="customSetFormat">
-          <property name="placeholderText">
-           <string>Derping Around</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="comboBox">
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QComboBox" name="comboBox_roundType">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <item>
-           <property name="text">
-            <string>Winners Round</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Winners Quarter Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Winners Semi Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Winners Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Losers Round</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Losers Quarter Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Losers Semi Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Losers Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Grand Finals</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Pools</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Single Round</string>
-           </property>
-          </item>
          </widget>
         </item>
-        <item row="0" column="3">
-         <widget class="QComboBox" name="setFormat">
-          <item>
-           <property name="text">
-            <string>Bo3</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QSpinBox" name="spinBox">
+        <item>
+         <widget class="QSpinBox" name="spinBox_roundNumber">
           <property name="minimum">
            <number>1</number>
           </property>
@@ -227,6 +156,9 @@
            <number>1000</number>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBox_setFormat"/>
         </item>
        </layout>
       </item>
@@ -242,14 +174,14 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QLabel" name="label_5">
+         <widget class="QLabel" name="label_leftName">
           <property name="text">
            <string>Player 1</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="checkBox">
+         <widget class="QCheckBox" name="checkBox_leftL">
           <property name="text">
            <string>[L]</string>
           </property>
@@ -264,9 +196,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineEdit"/>
-          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_12">
             <property name="text">
@@ -275,7 +204,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_3"/>
+           <widget class="QLineEdit" name="lineEdit_leftSocial"/>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_4">
@@ -285,18 +214,48 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_5">
+           <widget class="QLineEdit" name="lineEdit_leftPronouns">
             <property name="text">
              <string>he/him</string>
             </property>
            </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_leftSponsor">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_leftName">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
        </layout>
       </item>
       <item>
-       <widget class="QLabel" name="label_7">
+       <widget class="QLabel" name="label_leftScore">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -337,7 +296,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton">
+         <widget class="QToolButton" name="toolButton_incLeftScore">
           <property name="minimumSize">
            <size>
             <width>40</width>
@@ -356,7 +315,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_3">
+         <widget class="QToolButton" name="toolButton_decLeftScore">
           <property name="minimumSize">
            <size>
             <width>40</width>
@@ -402,7 +361,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_2">
+         <widget class="QToolButton" name="toolButton_incRightScore">
           <property name="minimumSize">
            <size>
             <width>40</width>
@@ -418,7 +377,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_4">
+         <widget class="QToolButton" name="toolButton_decRightScore">
           <property name="minimumSize">
            <size>
             <width>40</width>
@@ -449,7 +408,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QLabel" name="label_8">
+       <widget class="QLabel" name="label_rightScore">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -474,7 +433,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QLabel" name="label_6">
+         <widget class="QLabel" name="label_rightName">
           <property name="text">
            <string>Player 2</string>
           </property>
@@ -484,7 +443,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="checkBox_2">
+         <widget class="QCheckBox" name="label_rightL">
           <property name="layoutDirection">
            <enum>Qt::RightToLeft</enum>
           </property>
@@ -502,9 +461,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineEdit_2"/>
-          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_13">
             <property name="text">
@@ -513,7 +469,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_4"/>
+           <widget class="QLineEdit" name="lineEdit_rightSocial"/>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_14">
@@ -523,11 +479,41 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit_6">
+           <widget class="QLineEdit" name="lineEdit_rightPronouns">
             <property name="text">
              <string>he/him</string>
             </property>
            </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_rightSponsor">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_rightName">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>

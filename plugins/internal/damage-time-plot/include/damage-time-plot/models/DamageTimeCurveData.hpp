@@ -2,7 +2,6 @@
 
 #include "rfcommon/FrameDataListener.hpp"
 #include "rfcommon/FramesLeft.hpp"
-#include "rfcommon/MetaDataListener.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Vector.hpp"
 #include "qwt_series_data.h"
@@ -16,7 +15,6 @@ namespace rfcommon {
 
 class DamageTimeCurveData
     : public QwtSeriesData<QPointF>
-    , public rfcommon::MetaDataListener
     , public rfcommon::FrameDataListener
 {
 public:
@@ -30,25 +28,6 @@ public:
 
     bool hasThisFrameData(const rfcommon::FrameData* frameData) const;
     void appendDataPoint(rfcommon::FramesLeft framesLeft, float damage);
-
-private:
-    void onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) override;
-    void onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) override;
-
-    // Game related events
-    void onMetaDataPlayerNameChanged(int player, const char* name) override;
-    void onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) override;
-    void onMetaDataTournamentNameChanged(const char* name) override;
-    void onMetaDataEventNameChanged(const char* name) override;
-    void onMetaDataRoundNameChanged(const char* name) override;
-    void onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) override;
-    void onMetaDataSetNumberChanged(rfcommon::SetNumber number) override;
-    void onMetaDataGameNumberChanged(rfcommon::GameNumber number) override;
-    void onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) override;
-    void onMetaDataWinnerChanged(int winnerPlayerIdx) override;
-
-    // In training mode this increments every time a new training room is loaded
-    void onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) override;
 
 private:
     void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;

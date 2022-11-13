@@ -43,6 +43,18 @@ MetaDataEditWidget_Players::~MetaDataEditWidget_Players()
 {}
 
 // ----------------------------------------------------------------------------
+void MetaDataEditWidget_Players::adoptMetaData()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Players::overwriteMetaData()
+{
+
+}
+
+// ----------------------------------------------------------------------------
 void MetaDataEditWidget_Players::onAddTOReleased()
 {
     QToolButton* removeButton = new QToolButton;
@@ -117,18 +129,13 @@ void MetaDataEditWidget_Players::onAddSponsorReleased()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Players::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) {}
-void MetaDataEditWidget_Players::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Players::onMetaDataPlayerNameChanged(int fighterIdx, const char* name) {}
-void MetaDataEditWidget_Players::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void MetaDataEditWidget_Players::onMetaDataTournamentNameChanged(const char* name) {}
-void MetaDataEditWidget_Players::onMetaDataEventNameChanged(const char* name) {}
-void MetaDataEditWidget_Players::onMetaDataRoundNameChanged(const char* name) {}
-void MetaDataEditWidget_Players::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-void MetaDataEditWidget_Players::onMetaDataSetNumberChanged(rfcommon::SetNumber number) {}
-void MetaDataEditWidget_Players::onMetaDataGameNumberChanged(rfcommon::GameNumber number) {}
-void MetaDataEditWidget_Players::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) {}
+void MetaDataEditWidget_Players::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetaDataEditWidget_Players::onMetaDataTournamentDetailsChanged() {}
+void MetaDataEditWidget_Players::onMetaDataEventDetailsChanged() {}
+void MetaDataEditWidget_Players::onMetaDataCommentatorsChanged() {}
+void MetaDataEditWidget_Players::onMetaDataGameDetailsChanged() {}
+void MetaDataEditWidget_Players::onMetaDataPlayerDetailsChanged() {}
 void MetaDataEditWidget_Players::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Players::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) {}
+void MetaDataEditWidget_Players::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

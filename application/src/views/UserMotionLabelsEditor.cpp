@@ -34,7 +34,7 @@ namespace rfapp {
 
 namespace {
 
-class TableModel 
+class TableModel
     : public QAbstractTableModel
     , public rfcommon::UserMotionLabelsListener
 {
@@ -48,7 +48,7 @@ public:
     };
 
     TableModel(
-            rfcommon::FighterID fighterID, 
+            rfcommon::FighterID fighterID,
             rfcommon::UserMotionLabels* userMotionLabels,
             rfcommon::Hash40Strings* hash40Strings,
             rfcommon::UserMotionLabelsCategory category)
@@ -132,14 +132,14 @@ public:
                 {
                     case 0: return table_[index.row()].value;
                     case 1: return table_[index.row()].string;
-                    default: 
+                    default:
                         return table_[index.row()].labels[index.column() - 2];
                 }
                 break;
 
             case Qt::TextAlignmentRole:
                 return Qt::AlignHCenter + Qt::AlignVCenter;
-                
+
             case Qt::CheckStateRole:
             case Qt::DecorationRole:
             case Qt::EditRole:
@@ -246,7 +246,7 @@ private:
         endInsertColumns();
     }
 
-    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override 
+    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override
     {
         beginRemoveColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
             for (auto& row : table_)
@@ -254,7 +254,7 @@ private:
         endRemoveColumns();
     }
 
-    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override 
+    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override
     {
         if (fighterID_ != fighterID)
             return;
@@ -502,7 +502,7 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
             if (const auto map = loadedSessions[i]->tryGetMappingInfo())
                 for (int f = 0; f != mdata->fighterCount(); ++f)
                 {
-                    auto fighterID = mdata->fighterID(f);
+                    auto fighterID = mdata->playerFighterID(f);
                     if (idAlreadyAdded(fighterID))
                         continue;
                     fighterNames.push(map->fighter.toName(fighterID));
@@ -522,12 +522,12 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
                     for (int frameIdx = 0; frameIdx != fdata->frameCount(); ++frameIdx)
                     {
                         const auto motion = fdata->stateAt(fighterIdx, frameIdx).motion();
-                        manager_->userMotionLabels()->addUnknownMotion(mdata->fighterID(fighterIdx), motion);
+                        manager_->userMotionLabels()->addUnknownMotion(mdata->playerFighterID(fighterIdx), motion);
                     }
 
     auto model = static_cast<TableModel*>(tableModels_[rfcommon::UserMotionLabelsCategory::UNLABELED]);
     if (const auto mdata = loadedSessions[0]->tryGetMetaData())
-        model->setFighter(mdata->fighterID(0));
+        model->setFighter(mdata->playerFighterID(0));
 }
 
 // ----------------------------------------------------------------------------

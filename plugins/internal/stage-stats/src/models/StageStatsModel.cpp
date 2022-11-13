@@ -27,13 +27,13 @@ void StageStatsModel::addSessionData(rfcommon::MappingInfo* map, rfcommon::GameM
 
     for (int fighterIdx = 0; fighterIdx != mdata->fighterCount(); ++fighterIdx)
     {
-        const rfcommon::FighterID fighterID = mdata->fighterID(fighterIdx);
+        const rfcommon::FighterID fighterID = mdata->playerFighterID(fighterIdx);
         const rfcommon::StageID stageID = mdata->stageID();
 
         auto& fighterData = fighters_.insertOrGet(fighterID, FighterData())->value();
         auto& stageData = fighterData.stageData.insertOrGet(stageID, StageData())->value();
 
-        fighterData.name = mdata->name(fighterIdx);
+        fighterData.name = mdata->playerName(fighterIdx);
         fighterData.character = map->fighter.toName(fighterID);
 
         if (mdata->winner() == fighterIdx)

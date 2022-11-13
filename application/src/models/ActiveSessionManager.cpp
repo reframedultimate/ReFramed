@@ -9,7 +9,6 @@
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TrainingMetaData.hpp"
-#include "rfcommon/tcp_socket.h"
 #include <QDateTime>
 
 namespace rfapp {
@@ -19,9 +18,6 @@ ActiveSessionManager::ActiveSessionManager(Protocol* protocol, ReplayManager* ma
     : QObject(parent)
     , protocol_(protocol)
     , replayManager_(manager)
-    , format_(rfcommon::SetFormat::fromType(rfcommon::SetFormat::FRIENDLIES))
-    , gameNumber_(rfcommon::GameNumber::fromValue(1))
-    , setNumber_(rfcommon::SetNumber::fromValue(1))
 {
     protocol_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
@@ -32,116 +28,6 @@ ActiveSessionManager::~ActiveSessionManager()
 {
     replayManager_->dispatcher.removeListener(this);
     protocol_->dispatcher.removeListener(this);
-
-    if (activeMetaData_)
-        activeMetaData_->dispatcher.removeListener(this);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::setSetFormat(const rfcommon::SetFormat& format)
-{
-    PROFILE(ActiveSessionManager, setSetFormat);
-
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
-    {
-        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-        meta->setSetFormat(format);
-    }
-    else
-        format_ = format;
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, format);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::setP1Name(const QString& name)
-{
-    PROFILE(ActiveSessionManager, setP1Name);
-
-    if (activeMetaData_
-        && activeMetaData_->fighterCount() == 2
-        && activeMetaData_->type() == rfcommon::MetaData::GAME)
-    {
-        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-        if (name == "")
-            meta->setName(0, meta->tag(0).cStr());
-        else
-            meta->setName(0, name.toUtf8().constData());
-
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, meta->name(0).cStr());
-    }
-    else
-    {
-        p1Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, name.toUtf8().constData());
-    }
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::setP2Name(const QString& name)
-{
-    PROFILE(ActiveSessionManager, setP2Name);
-
-    if (activeMetaData_
-        && activeMetaData_->fighterCount() == 2
-        && activeMetaData_->type() == rfcommon::MetaData::GAME)
-    {
-        auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
-        if (name == "")
-            meta->setName(1, meta->tag(1).cStr());
-        else
-            meta->setName(1, name.toUtf8().constData());
-
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, meta->name(1).cStr());
-    }
-    else
-    {
-        p2Name_ = name;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, name.toUtf8().constData());
-    }
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::setGameNumber(rfcommon::GameNumber number)
-{
-    PROFILE(ActiveSessionManager, setGameNumber);
-
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::GAME)
-    {
-        auto mdata = activeMetaData_->asGame();
-        mdata->setGameNumber(number);
-
-        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, mdata);
-
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, mdata->setNumber());
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, mdata->gameNumber());
-    }
-    else
-    {
-        gameNumber_ = number;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, number);
-    }
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::setTrainingSessionNumber(rfcommon::GameNumber number)
-{
-    PROFILE(ActiveSessionManager, setTrainingSessionNumber);
-
-    if (activeMetaData_ && activeMetaData_->type() == rfcommon::MetaData::TRAINING)
-    {
-        auto mdata = activeMetaData_->asTraining();
-        mdata->setSessionNumber(number);
-
-        replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, mdata);
-
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, mdata->sessionNumber());
-    }
-    else
-    {
-        gameNumber_ = number;
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, number);
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -162,21 +48,21 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
         return true;
 
     // No past sessions? -> new set
-    if (pastGameMetaData_.size() == 0)
+    if (pastMetaData_.size() == 0)
         return true;
 
-    const auto& prev = pastGameMetaData_.back();
+    const auto& prev = pastMetaData_.back();
 
     // Player tags might have changed
-    if (prev->tag(0) != meta->tag(0) ||
-        prev->tag(1) != meta->tag(1))
+    if (prev->playerTag(0) != meta->playerTag(0) ||
+        prev->playerTag(1) != meta->playerTag(1))
     {
         return true;
     }
 
     // Player names might have changed
-    if (prev->name(0) != meta->name(0) ||
-        prev->name(1) != meta->name(1))
+    if (prev->playerName(0) != meta->playerName(0) ||
+        prev->playerName(1) != meta->playerName(1))
     {
         return true;
     }
@@ -187,7 +73,7 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 
     // tally up wins for each player
     int win[2] = {0, 0};
-    for (const auto& pastMeta : pastGameMetaData_)
+    for (const auto& pastMeta : pastMetaData_)
         if (pastMeta->winner() >= 0)  // Could be -1. Shouldn't be, but who knows
             win[pastMeta->winner()]++;
 
@@ -218,8 +104,7 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
                 return true;
         } break;
 
-        case rfcommon::SetFormat::FRIENDLIES:
-        case rfcommon::SetFormat::OTHER:
+        case rfcommon::SetFormat::FREE:
             break;
     }
 
@@ -227,108 +112,130 @@ bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
+bool ActiveSessionManager::findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
-    PROFILE(ActiveSessionManager, onProtocolConnectedToServer);
+    const QDir& dir = replayManager_->defaultGamePath();
+    while (true)
+    {
+        QString fileName = rfcommon::ReplayFileParts::fromMetaData(map, mdata).toFileName().cStr();
+        if (fileName == "")
+            return false;
+        if (QFileInfo::exists(dir.absoluteFilePath(fileName)) == false)
+            return true;
 
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerConnected, ipAddress, port);
+        switch (mdata->type())
+        {
+            case rfcommon::MetaData::GAME: {
+                auto gameMeta = mdata->asGame();
+                const auto sessionNumber = gameMeta->round().number();
+                gameMeta->setRound(rfcommon::Round::fromType(gameMeta->round().type(), sessionNumber + 1));
+            } break;
+
+            case rfcommon::MetaData::TRAINING: {
+                auto trainingMeta = mdata->asTraining();
+                trainingMeta->setSessionNumber(trainingMeta->sessionNumber() + 1);
+            } break;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolDisconnectedFromServer()
-{
-    PROFILE(ActiveSessionManager, onProtocolDisconnectedFromServer);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerDisconnected);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolTrainingStarted(rfcommon::Session* training)
-{
-    PROFILE(ActiveSessionManager, onProtocolTrainingStarted);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolTrainingResumed(rfcommon::Session* training)
-{
-    PROFILE(ActiveSessionManager, onProtocolTrainingResumed);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingStarted, training);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
-{
-    PROFILE(ActiveSessionManager, onProtocolTrainingReset);
-
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onProtocolTrainingEnded(rfcommon::Session* training)
-{
-    PROFILE(ActiveSessionManager, onProtocolTrainingEnded);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingEnded, training);
-}
+void ActiveSessionManager::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) {}
+void ActiveSessionManager::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) {}
+void ActiveSessionManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) {}
+void ActiveSessionManager::onProtocolDisconnectedFromServer() {}
+void ActiveSessionManager::onProtocolTrainingStarted(rfcommon::Session* training) {}
+void ActiveSessionManager::onProtocolTrainingResumed(rfcommon::Session* training) {}
+void ActiveSessionManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) {}
+void ActiveSessionManager::onProtocolTrainingEnded(rfcommon::Session* training) {}
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 {
     PROFILE(ActiveSessionManager, onProtocolGameStarted);
 
-    activeMappingInfo_ = game->tryGetMappingInfo();
-    activeMetaData_ = game->tryGetMetaData();
-    activeFrameData_ = game->tryGetFrameData();
-    assert(activeMappingInfo_.notNull());
-    assert(activeMetaData_.notNull());
-    assert(activeFrameData_.notNull());
-    assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
+    auto map = game->tryGetMappingInfo();
+    auto mdata = game->tryGetMetaData();
+    assert(map); assert(mdata);
 
-    auto meta = static_cast<rfcommon::GameMetaData*>(activeMetaData_.get());
+    auto allTagsMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
+        assert(a->fighterCount() == b->fighterCount());
+        for (int i = 0; i != a->fighterCount(); ++i)
+            if (a->playerTag(i) != b->playerTag(i))
+                return false;
+        return true;
+    };
 
-    // first off, copy the data we've stored from the UI into the new sessions
-    // so comparing previous sessions is consistent
-    meta->setSetFormat(format_);
-    meta->setGameNumber(gameNumber_);
-    meta->setSetNumber(setNumber_);
-    if (meta->fighterCount() == 2)
+    auto allFightersMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
+        assert(a->fighterCount() == b->fighterCount());
+        for (int i = 0; i != a->fighterCount(); ++i)
+            if (a->playerFighterID(i) != b->playerFighterID(i))
+                return false;
+        return true;
+    };
+
+    // First off, if we have data from previous sessions, determine if the new
+    // session has the same format and players. If yes, then copy the data from
+    // the previous session to the current session so we can calculate the next
+    // round/game number
+    if (pastMetaData_.size() > 0)
     {
-        if (p1Name_.length() > 0)
-            meta->setName(0, p1Name_.toUtf8().constData());
-        if (p2Name_.length() > 0)
-            meta->setName(1, p2Name_.toUtf8().constData());
+        rfcommon::MetaData* past = pastMetaData_.back();
+        if (mdata->type() == past->type() &&
+                mdata->fighterCount() == past->fighterCount() &&
+                allTagsMatch(mdata, past) &&
+                allFightersMatch(mdata, past))
+        {
+            switch (mdata->type())
+            {
+                case rfcommon::MetaData::GAME: {
+                    auto gdata = mdata->asGame();
+                    auto gpast = past->asGame();
+                    gdata->setEventType(gpast->eventType());
+                    gdata->setEventURL(gpast->eventURL().cStr());
+                    gdata->setRound(gpast->round());
+                    gdata->setScore(gpast->score());
+                    gdata->setSetFormat(gpast->setFormat());
+                    for (int i = 0; i != mdata->fighterCount(); ++i)
+                        gdata->setPlayerName(i, gpast->playerName(i).cStr());
+                    // TODO copy over all of the other fields
+                } break;
+
+                case rfcommon::MetaData::TRAINING: {
+                    mdata->asTraining()->setSessionNumber(past->asTraining()->sessionNumber());
+                } break;
+            }
+        }
     }
 
-    if (shouldStartNewSet(meta))
+    switch (mdata->type())
     {
-        meta->setGameNumber(rfcommon::GameNumber::fromValue(1));
-        meta->setSetNumber(rfcommon::SetNumber::fromValue(1));
-        pastGameMetaData_.clear();
-    }
-    else
-    {
-        // Go to the next game in the set
-        meta->setGameNumber(meta->gameNumber() + 1);
+        case rfcommon::MetaData::GAME:
+            if (shouldStartNewSet(mdata->asGame()))
+            {
+                auto gdata = mdata->asGame();
+                gdata->setScore(rfcommon::ScoreCount::fromScore(0, 0));
+                pastMetaData_.clear();
+            }
+            else if (pastMetaData_.size() > 0)
+            {
+                // Try to to the next game in the set
+                if (int winner = pastMetaData_.back()->winner(); winner > -1)
+                {
+                    auto pastScore = pastMetaData_.back()->score();
+                    mdata->asGame()->setScore(rfcommon::ScoreCount::fromScore(
+                        pastScore.left() + (winner == 0), pastScore.right() + (winner == 1)
+                    ));
+                }
+            }
+            break;
+
+        case rfcommon::MetaData::TRAINING:
+            break;
     }
 
     // Modify game/set numbers until we have a unique filename
-    replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
-
-    activeMetaData_->dispatcher.addListener(this);
-    activeFrameData_->dispatcher.addListener(this);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, meta->setFormat());
-    if (meta->fighterCount() == 2)
-    {
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
-                0, meta->name(0).cStr());
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged,
-                1, meta->name(1).cStr());
-    }
+    findFreeRoundAndGameNumbers(map, mdata);
 
     dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameStarted, game);
 }
@@ -345,7 +252,7 @@ void ActiveSessionManager::onProtocolGameResumed(rfcommon::Session* game)
 void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 {
     PROFILE(ActiveSessionManager, onProtocolGameEnded);
-
+/*
     assert(activeMappingInfo_ == game->tryGetMappingInfo());
     assert(activeMetaData_ == game->tryGetMetaData());
     assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
@@ -376,14 +283,14 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
     activeMappingInfo_.drop();
     activeMetaData_.drop();
 
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameEnded, game);
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameEnded, game);*/
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onReplayManagerDefaultGamePathChanged(const QDir& path)
 {
     PROFILE(ActiveSessionManager, onReplayManagerDefaultGamePathChanged);
-
+/*
     (void)path;
     if (activeMetaData_.isNull())
         return;
@@ -404,103 +311,17 @@ void ActiveSessionManager::onReplayManagerDefaultGamePathChanged(const QDir& pat
 
             dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
         } break;
-    }
+    }*/
 }
 
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted)
-{
-    PROFILE(ActiveSessionManager, onMetaDataTimeStartedChanged);
+void ActiveSessionManager::onReplayManagerGroupAdded(ReplayGroup* group) {}
+void ActiveSessionManager::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName) {}
+void ActiveSessionManager::onReplayManagerGroupRemoved(ReplayGroup* group) {}
 
-}
+void ActiveSessionManager::onReplayManagerGamePathAdded(const QDir& path) {}
+void ActiveSessionManager::onReplayManagerGamePathRemoved(const QDir& path) {}
 
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded)
-{
-    PROFILE(ActiveSessionManager, onMetaDataTimeEndedChanged);
-
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataPlayerNameChanged(int player, const char* name)
-{
-    PROFILE(ActiveSessionManager, onMetaDataPlayerNameChanged);
-
-    if (activeMetaData_->fighterCount() == 2)
-    {
-        if (player == 0)
-            dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 0, name);
-        else
-            dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerPlayerNameChanged, 1, name);
-    }
-}
-
-void ActiveSessionManager::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void ActiveSessionManager::onMetaDataTournamentNameChanged(const char* name) {}
-void ActiveSessionManager::onMetaDataEventNameChanged(const char* name) {}
-void ActiveSessionManager::onMetaDataRoundNameChanged(const char* name) {}
-void ActiveSessionManager::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataSetNumberChanged(rfcommon::SetNumber number)
-{
-    PROFILE(ActiveSessionManager, onMetaDataSetNumberChanged);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, number);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataGameNumberChanged(rfcommon::GameNumber number)
-{
-    PROFILE(ActiveSessionManager, onMetaDataGameNumberChanged);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, number);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format)
-{
-    PROFILE(ActiveSessionManager, onMetaDataSetFormatChanged);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetFormatChanged, format);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataWinnerChanged(int winner)
-{
-    PROFILE(ActiveSessionManager, onMetaDataWinnerChanged);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerWinnerChanged, winner);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number)
-{
-    PROFILE(ActiveSessionManager, onMetaDataTrainingSessionNumberChanged);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, number);
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
-{
-    PROFILE(ActiveSessionManager, onFrameDataNewUniqueFrame);
-
-    for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
-    {
-        const auto& state = frame[fighterIdx];
-        dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerFighterStateChanged,
-            fighterIdx, state.damage(), int(state.stocks().count()));
-    }
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTimeRemainingChanged, frame[0].framesLeft().secondsLeft());
-}
-
-// ----------------------------------------------------------------------------
-void ActiveSessionManager::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
-{
-    PROFILE(ActiveSessionManager, onFrameDataNewFrame);
-
-}
+void ActiveSessionManager::onReplayManagerVideoPathAdded(const QDir& path) {}
+void ActiveSessionManager::onReplayManagerVideoPathRemoved(const QDir& path) {}
 
 }

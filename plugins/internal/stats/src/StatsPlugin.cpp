@@ -47,7 +47,7 @@ void StatsPlugin::resetStatsIfAppropriate(rfcommon::Session* session)
             auto mdata = session->tryGetMetaData();
             if (mdata && mdata->type() == rfcommon::MetaData::GAME)
             {
-                if (mdata->asGame()->gameNumber().value() == 1)
+                if (mdata->asGame()->score().gameNumber().value() == 1)
                     statsCalculator_->resetStatistics();
             }
         } break;

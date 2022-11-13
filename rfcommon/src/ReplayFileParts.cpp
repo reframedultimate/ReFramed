@@ -15,18 +15,22 @@ ReplayFileParts::ReplayFileParts(
         String date,
         String time,
         String stage,
-        SetNumber setNumber,
-        GameNumber gameNumber,
-        SetFormat format)
+        EventType event,
+        Round round,
+        SetFormat format,
+        ScoreCount score,
+        uint8_t loserSide)
     : originalFileName_(std::move(originalFileName))
     , playerNames_(std::move(playerNames))
-    , characterNames_(std::move(characterNames))
+    , fighterNames_(std::move(characterNames))
     , date_(date)
     , time_(time)
     , stage_(stage)
-    , setNumber_(setNumber)
-    , gameNumber_(gameNumber)
+    , event_(event)
+    , score_(score)
+    , round_(round)
     , format_(format)
+    , loserSide_(loserSide)
 {}
 ReplayFileParts::~ReplayFileParts()
 {}
@@ -75,16 +79,39 @@ retry:
 }
 
 // ----------------------------------------------------------------------------
-static int parseSetFormatAndNumber(int pos, const char* fn, String* setFormat, int* setNumber)
+static int parseEvent(int pos, const char* fn, String* event)
 {
-    const char* s_format;
-    const char* s_number;
+    const char* s_event;
     const char* p;
-    int format_len;
 
     p = fn + pos;
 
-retry:
+    while (*p && (*p == ' ' || *p == '-'))
+        ++p;
+    if (!*p)
+        return -1;
+
+    s_event = p;
+    for (; *p; ++p)
+        if ((*p == ' ' && *(p+1) == '-') || *p == '-')
+        {
+            *event = String(s_event, p - s_event);
+            return p - fn;
+        }
+
+    return -1;
+}
+
+// ----------------------------------------------------------------------------
+static int parseSetFormatAndRound(int pos, const char* fn, String* setFormat, String* round)
+{
+    const char* s_format;
+    const char* s_round;
+    const char* p;
+    int format_len, round_len;
+
+    p = fn + pos;
+
     for (; *p; ++p)
         if (std::isalnum(*p))
             break;
@@ -101,33 +128,29 @@ retry:
     if (!*p)
         return -1;
 
-    for (; *p; ++p)
-        if (std::isspace(*p) == false && *p != '(')
-            break;
+    while (*p && *p != '(')
+        ++p;
     if (!*p)
         return -1;
 
-    if (std::isdigit(*p) == false)
-        goto retry;
+    s_round = p + 1;
 
-    s_number = p;
     for (; *p; ++p)
-        if (std::isdigit(*p) == false)
+        if (*p == ')')
         {
-            if (*p != ')')
-                goto retry;
+            round_len = p - s_round;
             break;
         }
     if (!*p)
         return -1;
 
     *setFormat = String(s_format, format_len);
-    *setNumber = std::atoi(String(s_number, p - s_number).cStr());
+    *round = String(s_round, round_len);
     return p - fn;
 }
 
 // ----------------------------------------------------------------------------
-static int parsePlayers(int pos, const char* fn, SmallVector<String, 2>* players, SmallVector<String, 2>* fighters)
+static int parsePlayers(int pos, const char* fn, SmallVector<String, 2>* players, SmallVector<String, 2>* fighters, uint8_t* loserSide)
 {
     const char* s_player;
     const char* s_fighter;
@@ -186,6 +209,20 @@ next_player:
         ++p;
 
 skip_fighter:
+    while (*p && *p == ' ')
+        ++p;
+
+    if (*p == '[')
+    {
+        int idx = players->count();
+        if (*(p+1) == 'L' && *(p+2) == ']')
+            (*loserSide) |= (1 << idx);
+        else
+            return -1;
+
+        p += 3;
+    }
+
     players->emplace(s_player, player_len);
     fighters->emplace(s_fighter, fighter_len);
 
@@ -205,10 +242,11 @@ skip_fighter:
 }
 
 // ----------------------------------------------------------------------------
-static int parseGame(int pos, const char* fn, int* game)
+static int parseGameAndScore(int pos, const char* fn, int* game, int* p1Score, int* p2Score)
 {
     const char* s_game;
     const char* p;
+    int game_len;
 
     p = fn + pos - 1;
 
@@ -217,7 +255,7 @@ retry:
     ++p; if (!*p) return -1; if (*p != 'a') goto retry;
     ++p; if (!*p) return -1; if (*p != 'm') goto retry;
     ++p; if (!*p) return -1; if (*p != 'e') goto retry;
-    ++p; if (!*p) return -1; if (std::isspace(*p) == false) goto retry;
+    ++p; if (!*p) return -1; if (*p != ' ') goto retry;
 
     ++p;
     if (!*p || std::isdigit(*p) == false)
@@ -228,8 +266,42 @@ retry:
         ++p;
     if (!*p)
         return -1;
+    game_len = p - s_game;
 
-    *game = atoi(String(s_game, p - s_game).cStr());
+    while (*p && *p == ' ')
+        ++p;
+    if (!*p)
+        return -1;
+
+    if (*p == '(')
+    {
+        const char* s_left;
+        const char* s_right;
+        int left_len, right_len;
+
+        if (!*++p)
+            return -1;
+
+        s_left = p;
+        while (*p && *p != '-')
+            ++p;
+        left_len = p - s_left;
+        if (*p != '-')
+            return -1;
+        ++p;
+
+        s_right = p;
+        while (*p && *p != ')')
+            ++p;
+        right_len = p - s_right;
+        if (!*p)
+            return -1;
+
+        *p1Score = atoi(String(s_left, left_len).cStr());
+        *p2Score = atoi(String(s_right, right_len).cStr());
+    }
+
+    *game = atoi(String(s_game, game_len).cStr());
     return p - fn;
 }
 
@@ -262,47 +334,58 @@ static int parseStage(int pos, const char* fn, String* stage)
 ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 {
     // Example:
-    //   2020-05-23_19-45-01 - Bo3 (2) - TheComet (Pika) vs TAEL (Falcon) - Game 3 - Kalos.rfr
+    //   2020-05-23_19-45-01 - Singles - Bo3 (WR2) - TheComet (Pika) vs TAEL (Falcon) - Game 3 (1-1) - Kalos.rfr
 
     SmallVector<String, 2> players;
     SmallVector<String, 2> characters;
-    String date, time, stage, setFormat;
-    int setNumber = 1, gameNumber = 1;
+    String date, time, event, stage, setFormat, round;
+    int gameNumber = 1, p1Score = -1, p2Score = -1;
+    uint8_t loserSide = 0;
 
     int pos = parseDateTime(fileName, &date, &time);
     if (pos >= 0)
-        pos = parseSetFormatAndNumber(pos, fileName, &setFormat, &setNumber);
+        pos = parseEvent(pos, fileName, &event);
     if (pos >= 0)
-        pos = parsePlayers(pos, fileName, &players, &characters);
+        pos = parseSetFormatAndRound(pos, fileName, &setFormat, &round);
     if (pos >= 0)
-        pos = parseGame(pos, fileName, &gameNumber);
+        pos = parsePlayers(pos, fileName, &players, &characters, &loserSide);
+    if (pos >= 0)
+        pos = parseGameAndScore(pos, fileName, &gameNumber, &p1Score, &p2Score);
     if (pos >= 0)
         pos = parseStage(pos, fileName, &stage);
+
+    auto roundObj = Round::fromDescription(round.cStr());
+    if (loserSide > 2 && roundObj.number().value() == 1)
+        roundObj = Round::fromType(roundObj.type(), SessionNumber::fromValue(2));
 
     return ReplayFileParts(
                 fileName,
                 std::move(players),
                 std::move(characters),
                 date, time, stage,
-                SetNumber::fromValue(setNumber),
-                GameNumber::fromValue(gameNumber),
-                SetFormat::fromDescription(setFormat.cStr()));
+                EventType::fromDescription(event.cStr()),
+                roundObj,
+                SetFormat::fromDescription(setFormat.cStr()),
+                p1Score == -1 ? ScoreCount::fromGameNumber(GameNumber::fromValue(gameNumber)) : ScoreCount::fromScore(p1Score, p2Score),
+                loserSide);
 }
 
 // ----------------------------------------------------------------------------
 ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
 {
     ReplayFileParts parts("", {}, {}, "", "", "",
-            SetNumber::fromValue(1),
-            GameNumber::fromValue(1),
-            SetFormat::fromType(SetFormat::BO3));
+            EventType::fromType(EventType::OTHER),
+            Round::makeFree(),
+            SetFormat::fromType(SetFormat::FREE),
+            ScoreCount::fromScore(0, 0),
+            0x00);
 
-    parts.updateMetaData(map, mdata);
+    parts.updateFromMetaData(map, mdata);
     return parts;
 }
 
 // ----------------------------------------------------------------------------
-void ReplayFileParts::updateMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
+void ReplayFileParts::updateFromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
 {
     const auto stampMs = mdata->timeStarted().millisSinceEpoch();
     std::time_t t = (std::time_t)(stampMs / 1000);
@@ -315,34 +398,40 @@ void ReplayFileParts::updateMetaData(const rfcommon::MappingInfo* map, const rfc
     switch (mdata->type())
     {
         case MetaData::TRAINING: {
-            playerNames_ = { mdata->name(0), "CPU" };
-            characterNames_ = { map->fighter.toName(mdata->fighterID(0)), map->fighter.toName(mdata->fighterID(1)) };
+            playerNames_ = { mdata->playerTag(0), "CPU" };
+            fighterNames_ = { map->fighter.toName(mdata->playerFighterID(0)), map->fighter.toName(mdata->playerFighterID(1)) };
             date_ = date;
             time_ = time;
             stage_ = map->stage.toName(mdata->stageID());
-            setNumber_ = SetNumber::fromValue(1);
-            gameNumber_ = mdata->asTraining()->sessionNumber();
+            score_ = ScoreCount::fromScore(0, 0);
+            round_ = Round::fromSessionNumber(mdata->asTraining()->sessionNumber());
             format_ = SetFormat::fromDescription("Training");
         } break;
 
         case MetaData::GAME: {
+            auto gdata = mdata->asGame();
+
             playerNames_.clear();
-            characterNames_.clear();
-            for (int i = 0; i != mdata->fighterCount(); ++i)
+            fighterNames_.clear();
+            for (int i = 0; i != gdata->fighterCount(); ++i)
             {
-                playerNames_.emplace(mdata->name(i));
-                characterNames_.emplace(map->fighter.toName(mdata->fighterID(i)));
+                playerNames_.emplace(gdata->playerName(i));
+                fighterNames_.emplace(map->fighter.toName(gdata->playerFighterID(i)));
             }
 
             date_ = date;
             time_ = time;
-            stage_ = map->stage.toName(mdata->stageID());
-
-            auto gdata = mdata->asGame();
-
-            setNumber_ = gdata->setNumber();
-            gameNumber_ = gdata->gameNumber();
+            stage_ = map->stage.toName(gdata->stageID());
+            score_ = gdata->score();
+            round_ = gdata->round();
             format_ = gdata->setFormat();
+
+            loserSide_ = 0;
+            for (int i = 0; i != gdata->fighterCount(); ++i)
+            {
+                if (gdata->playerIsLoserSide(i))
+                    loserSide_ |= (1 << i);
+            }
         } break;
     }
 }
@@ -350,23 +439,28 @@ void ReplayFileParts::updateMetaData(const rfcommon::MappingInfo* map, const rfc
 // ----------------------------------------------------------------------------
 String ReplayFileParts::toFileName() const
 {
-    // Example:
-    //   2020-05-23_19-45-01 - Bo3 (2) - TheComet (Pika) vs TAEL (Falcon) Game 3 - Kalos.rfr
+    // Examples:
+    //   2020-05-23_19-45-01 - Singles - Bo3 (WR2) - TheComet (Pika) vs TAEL (Falcon) - Game 3 (1-1) - Kalos.rfr
+    //   2020-05-23_19-45-01 - Friendlies - Free (5) - TheComet (Pika) vs TAEL (Falcon) - Game 2 (0-1) - Kalos.rfr
 
     String playerChars;
     for (int i = 0; i != playerNames_.count(); ++i)
     {
         if (i != 0)
             playerChars += " vs ";
-        playerChars += playerNames_[i] + " (" + characterNames_[i] + ")";
+        playerChars += playerNames_[i] + " (" + fighterNames_[i] + ")";
+        if (loserSide_ & (1<<i))
+            playerChars += " [L]";
     }
 
     return date_ + "_"
             + time_.copy().replaceAll(':', '-') + " - "
+            + event_.description() + " - "
             + format_.shortDescription() + " ("
-            + String::decimal(setNumber_.value()) + ") - "
+            + round_.shortDescription() + ") - "
             + playerChars + " - "
-            + "Game " + String::decimal(gameNumber_.value()) + " - "
+            + "Game " + String::decimal(score_.gameNumber().value()) + " ("
+            + String::decimal(score_.left()) + "-" + String::decimal(score_.right()) + ") - "
             + stage_ +
             + ".rfr";
 }
@@ -380,9 +474,9 @@ bool ReplayFileParts::hasMissingInfo() const
         if (name.length() == 0)
             return true;
 
-    if (characterNames_.count() == 0)
+    if (fighterNames_.count() == 0)
         return true;
-    for (const auto& name : characterNames_)
+    for (const auto& name : fighterNames_)
         if (name.length() == 0)
             return true;
 

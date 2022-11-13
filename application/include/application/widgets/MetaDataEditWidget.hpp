@@ -40,8 +40,9 @@ public:
     explicit MetaDataEditWidget(QWidget* parent=nullptr);
     ~MetaDataEditWidget();
 
-    virtual void setMetaData(rfcommon::MetaData* mdata);
-    virtual void clearMetaData();
+    void setAndAdoptMetaData(rfcommon::MetaData* mdata);
+    void setAndOverwriteMetaData(rfcommon::MetaData* mdata);
+    void clearMetaData();
 
     void setTitle(const QString& title);
     QWidget* contentWidget();
@@ -53,6 +54,9 @@ public:
      * should be ignored by the scroll wheel
      */
     virtual QVector<QWidget*> scrollIgnoreWidgets() = 0;
+
+    virtual void adoptMetaData() = 0;
+    virtual void overwriteMetaData() = 0;
 
 public slots:
     void setExpanded(bool expanded);

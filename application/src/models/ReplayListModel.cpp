@@ -111,12 +111,12 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
                         case P1: return r.playerName(0).cStr();
                         case P2: return r.playerName(1).cStr();
                         case SetFormat: return r.setFormat().shortDescription();
-                        case SetNumber: return r.setNumber().value();
-                        case GameNumber: return r.gameNumber().value();
+                        case SetNumber: return r.round().number().value();
+                        case GameNumber: return r.score().gameNumber().value();
                         case Stage: return r.stage().cStr();
 
-                        case P1Char: return r.characterName(0).cStr();
-                        case P2Char: return r.characterName(1).cStr();
+                        case P1Char: return r.fighterName(0).cStr();
+                        case P2Char: return r.fighterName(1).cStr();
                     }
                 }
                 else if (r.playerCount() == 4)
@@ -134,9 +134,9 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             if (r.playerCount() == 2)
             {
                 if (index.column() == P1)
-                    return FighterIcon::fromFighterName(r.characterName(0).cStr(), 0).scaledToHeight(20);
+                    return FighterIcon::fromFighterName(r.fighterName(0).cStr(), 0).scaledToHeight(20);
                 if (index.column() == P2)
-                    return FighterIcon::fromFighterName(r.characterName(1).cStr(), 0).scaledToHeight(20);
+                    return FighterIcon::fromFighterName(r.fighterName(1).cStr(), 0).scaledToHeight(20);
             }
         } break;
     }

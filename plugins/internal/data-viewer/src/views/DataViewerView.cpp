@@ -209,7 +209,7 @@ void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData
         for (int i = 0; i != model_->fighterStatesModelCount(); ++i)
         {
             QString playerName = meta ?
-                        QString(meta->name(i).cStr()) :
+                        QString(meta->playerTag(i).cStr()) :
                         QString("Player ") + QString::number(i+1);
             QTreeWidgetItem* player = new QTreeWidgetItem({playerName});
             playerDataItems_.push(player);

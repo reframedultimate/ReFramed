@@ -68,18 +68,13 @@ void MetaDataEditWidget_Commentators::onAddCommentatorReleased()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Commentators::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) {}
-void MetaDataEditWidget_Commentators::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Commentators::onMetaDataPlayerNameChanged(int fighterIdx, const char* name) {}
-void MetaDataEditWidget_Commentators::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void MetaDataEditWidget_Commentators::onMetaDataTournamentNameChanged(const char* name) {}
-void MetaDataEditWidget_Commentators::onMetaDataEventNameChanged(const char* name) {}
-void MetaDataEditWidget_Commentators::onMetaDataRoundNameChanged(const char* name) {}
-void MetaDataEditWidget_Commentators::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-void MetaDataEditWidget_Commentators::onMetaDataSetNumberChanged(rfcommon::SetNumber number) {}
-void MetaDataEditWidget_Commentators::onMetaDataGameNumberChanged(rfcommon::GameNumber number) {}
-void MetaDataEditWidget_Commentators::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) {}
+void MetaDataEditWidget_Commentators::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetaDataEditWidget_Commentators::onMetaDataTournamentDetailsChanged() {}
+void MetaDataEditWidget_Commentators::onMetaDataEventDetailsChanged() {}
+void MetaDataEditWidget_Commentators::onMetaDataCommentatorsChanged() {}
+void MetaDataEditWidget_Commentators::onMetaDataGameDetailsChanged() {}
+void MetaDataEditWidget_Commentators::onMetaDataPlayerDetailsChanged() {}
 void MetaDataEditWidget_Commentators::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Commentators::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) {}
+void MetaDataEditWidget_Commentators::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

@@ -82,12 +82,25 @@ MetaDataEditWidget::~MetaDataEditWidget()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget::setMetaData(rfcommon::MetaData* mdata)
+void MetaDataEditWidget::setAndAdoptMetaData(rfcommon::MetaData* mdata)
 {
     clearMetaData();
 
     mdata_ = mdata;
     mdata_->dispatcher.addListener(this);
+
+    adoptMetaData();
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget::setAndOverwriteMetaData(rfcommon::MetaData* mdata)
+{
+    clearMetaData();
+
+    mdata_ = mdata;
+    mdata_->dispatcher.addListener(this);
+
+    overwriteMetaData();
 }
 
 // ----------------------------------------------------------------------------

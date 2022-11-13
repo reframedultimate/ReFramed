@@ -70,11 +70,16 @@ bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& par
 // ----------------------------------------------------------------------------
 bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
 {
-    if (left.parent().isValid() == false || right.parent().isValid() == false)
-        return false;
-
     int leftRow = left.row();
     int rightRow = right.row();
+
+    if (left.parent().isValid() == false && right.parent().isValid() == false)
+    {
+        const QModelIndex leftIdx = sourceModel()->index(leftRow, 0, left.parent());
+        const QModelIndex rightIdx = sourceModel()->index(rightRow, 0, right.parent());
+
+        return sourceModel()->data(leftIdx).toString() > sourceModel()->data(rightIdx).toString();
+    }
 
     static int sortOrder[] = {
         ReplayListModel::P1,

@@ -1,6 +1,9 @@
 #include "application/ui_MetaDataEditWidget_Game.h"
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
 
+#include "rfcommon/Round.hpp"
+#include "rfcommon/SetFormat.hpp"
+
 #include <QFormLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -15,6 +18,14 @@ MetaDataEditWidget_Game::MetaDataEditWidget_Game(QWidget* parent)
     , ui_(new Ui::MetaDataEditWidget_Game)
 {
     ui_->setupUi(contentWidget());
+
+#define X(type, shortstr, longstr) if (strlen(shortstr) > 0) ui_->comboBox_roundType->addItem(longstr);
+    ROUND_TYPES_LIST
+#undef X
+#define X(type, shortstr, longstr) ui_->comboBox_setFormat->addItem(longstr);
+    SET_FORMAT_LIST
+#undef X
+
     updateSize();
 
     setTitle("Game");
@@ -28,18 +39,25 @@ MetaDataEditWidget_Game::~MetaDataEditWidget_Game()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) {}
-void MetaDataEditWidget_Game::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Game::onMetaDataPlayerNameChanged(int fighterIdx, const char* name) {}
-void MetaDataEditWidget_Game::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void MetaDataEditWidget_Game::onMetaDataTournamentNameChanged(const char* name) {}
-void MetaDataEditWidget_Game::onMetaDataEventNameChanged(const char* name) {}
-void MetaDataEditWidget_Game::onMetaDataRoundNameChanged(const char* name) {}
-void MetaDataEditWidget_Game::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-void MetaDataEditWidget_Game::onMetaDataSetNumberChanged(rfcommon::SetNumber number) {}
-void MetaDataEditWidget_Game::onMetaDataGameNumberChanged(rfcommon::GameNumber number) {}
-void MetaDataEditWidget_Game::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) {}
+void MetaDataEditWidget_Game::adoptMetaData()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::overwriteMetaData()
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetaDataEditWidget_Game::onMetaDataTournamentDetailsChanged() {}
+void MetaDataEditWidget_Game::onMetaDataEventDetailsChanged() {}
+void MetaDataEditWidget_Game::onMetaDataCommentatorsChanged() {}
+void MetaDataEditWidget_Game::onMetaDataGameDetailsChanged() {}
+void MetaDataEditWidget_Game::onMetaDataPlayerDetailsChanged() {}
 void MetaDataEditWidget_Game::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Game::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) {}
+void MetaDataEditWidget_Game::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

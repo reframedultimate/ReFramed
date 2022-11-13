@@ -63,7 +63,7 @@ void DataViewerModel::setSession(rfcommon::Session* session)
                     frameData_,
                     mappingInfo_,
                     i,
-                    metaData_ ? metaData_->fighterID(i) : rfcommon::FighterID::makeInvalid(),
+                    metaData_ ? metaData_->playerFighterID(i) : rfcommon::FighterID::makeInvalid(),
                     userLabels_,
                     hash40Strings_));
         frameData_->dispatcher.addListener(this);

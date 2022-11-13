@@ -24,24 +24,23 @@ MetaData* MetaData::newActiveGameSession(
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
+    auto names = SmallVector<String, 2>::makeResized(fighterIDs.count());
     auto sponsors = SmallVector<String, 2>::makeResized(fighterIDs.count());
-    auto names = tags;  // names = tags initially
+    auto pronouns = SmallVector<String, 2>::makeResized(fighterIDs.count());
 
     return new GameMetaData(
-            "",        // Tourney name
-            "",        // Event name
             now, now,  // Start, end
             stageID,
+            EventType::fromType(EventType::FRIENDLIES),
+            Round::makeFree(),
+            SetFormat::fromType(SetFormat::FREE),
+            ScoreCount::fromScore(0, 0),
             std::move(fighterIDs),
             std::move(tags),
             std::move(names),
             std::move(sponsors),
-            SmallVector<String, 2>(),  // No commentators
-            GameNumber::fromValue(1),
-            SetNumber::fromValue(1),
-            SetFormat::fromType(SetFormat::FRIENDLIES),
-            "",  // Round name
-            -1);
+            std::move(pronouns),
+            -1);  // winner
 }
 
 // ----------------------------------------------------------------------------
@@ -56,48 +55,44 @@ MetaData* MetaData::newActiveTrainingSession(
         time_milli_seconds_since_epoch());
 
     return new TrainingMetaData(
-            now, now,
+            now, now,  // start, end
             stageID,
+            SessionNumber::fromValue(1),
             std::move(fighterIDs),
-            std::move(tags),
-            GameNumber::fromValue(1));
+            std::move(tags));
 }
 
 // ----------------------------------------------------------------------------
 MetaData* MetaData::newSavedGameSession(
-        const char* tournamentName,
-        const char* eventName,
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
+        EventType eventType,
+        Round round,
+        SetFormat format,
+        ScoreCount score,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags,
         SmallVector<String, 2>&& names,
         SmallVector<String, 2>&& sponsors,
-        SmallVector<String, 2>&& commentators,
-        GameNumber gameNumber,
-        SetNumber setNumber,
-        SetFormat setFormat,
-        const char* roundName,
+        SmallVector<String, 2>&& pronouns,
         int winner)
 {
     PROFILE(MetaData, newSavedGameSession);
 
     return new GameMetaData(
-        tournamentName,
-        eventName,
         timeStarted,
         timeEnded,
         stageID,
+        eventType,
+        round,
+        format,
+        score,
         std::move(fighterIDs),
         std::move(tags),
         std::move(names),
         std::move(sponsors),
-        std::move(commentators),
-        gameNumber,
-        setNumber,
-        setFormat,
-        roundName,
+        std::move(pronouns),
         winner);
 }
 
@@ -106,9 +101,9 @@ MetaData* MetaData::newSavedTrainingSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
+        SessionNumber sessionNumber,
         SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<String, 2>&& tags,
-        GameNumber sessionNumber)
+        SmallVector<String, 2>&& tags)
 {
     PROFILE(MetaData, newSavedTrainingSession);
 
@@ -116,9 +111,9 @@ MetaData* MetaData::newSavedTrainingSession(
         timeStarted,
         timeEnded,
         stageID,
+        sessionNumber,
         std::move(fighterIDs),
-        std::move(tags),
-        sessionNumber);
+        std::move(tags));
 }
 
 // ----------------------------------------------------------------------------
@@ -235,32 +230,46 @@ static MetaData* load_1_5(json& j)
         json jWinner = jGameInfo["winner"];
         const auto gameNumber = jNumber.is_number_integer() ?
             GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
-        const auto setNumber = jSet.is_number_integer() ?
-            SetNumber::fromValue(jSet.get<SetNumber::Type>()) : SetNumber::fromValue(1);
+        const auto sessionNumber = jSet.is_number_integer() ?
+            SessionNumber::fromValue(jSet.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
         const auto format = jFormat.is_string() ?
-            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FRIENDLIES);
+            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
         int winner = jWinner.is_number_unsigned() ?
             jWinner.get<int>() : -1;
         if (winner > fighterCount)
             winner = -1;
 
+        // This data isn't available in 1.5
         auto sponsors = SmallVector<String, 2>::makeResized(fighterIDs.count());
-        auto commentators = SmallVector<String, 2>::makeResized(fighterIDs.count());
+        auto pronouns = SmallVector<String, 2>::makeResized(fighterIDs.count());
 
         return MetaData::newSavedGameSession(
-            "", "",
-            timeStarted, timeEnded, stageID, 
-            std::move(fighterIDs), std::move(tags), std::move(names), std::move(sponsors), 
-            std::move(commentators), gameNumber, setNumber, format, "", winner);
+            timeStarted, timeEnded,
+            stageID,
+            EventType::fromType(EventType::FRIENDLIES),
+            Round::fromSessionNumber(sessionNumber),
+            format,
+            ScoreCount::fromGameNumber(gameNumber),
+            std::move(fighterIDs),
+            std::move(tags),
+            std::move(names),
+            std::move(sponsors),
+            std::move(pronouns),
+            winner);
     }
     if (type == "training")
     {
         json jNumber = jGameInfo["number"];
         const auto sessionNumber = jNumber.is_number_integer() ?
-            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
+            SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
 
         return MetaData::newSavedTrainingSession(
-            timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags), sessionNumber);
+            timeStarted,
+            timeEnded,
+            stageID,
+            sessionNumber,
+            std::move(fighterIDs),
+            std::move(tags));
     }
 
     return nullptr;
@@ -286,6 +295,7 @@ static MetaData* load_1_6(json& j)
     SmallVector<String, 2> tags;
     SmallVector<String, 2> names;
     SmallVector<String, 2> sponsors;
+    SmallVector<String, 2> pronouns;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
@@ -302,6 +312,7 @@ static MetaData* load_1_6(json& j)
             jSponsor.get<std::string>().c_str() : "");
         names.emplace(jName.is_string() ?
             jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+        pronouns.emplace("");
 
         fighterCount++;
     }
@@ -333,10 +344,10 @@ static MetaData* load_1_6(json& j)
 
         const auto gameNumber = jNumber.is_number_integer() ?
             GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
-        const auto setNumber = jSet.is_number_integer() ?
-            SetNumber::fromValue(jSet.get<SetNumber::Type>()) : SetNumber::fromValue(1);
+        const auto sessionNumber = jSet.is_number_integer() ?
+            SessionNumber::fromValue(jSet.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
         const auto format = jFormat.is_string() ?
-            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FRIENDLIES);
+            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
         const auto round = jRound.is_string() ?
             jRound.get<std::string>() : std::string("");
         int winner = jWinner.is_number_unsigned() ?
@@ -345,19 +356,33 @@ static MetaData* load_1_6(json& j)
             winner = -1;
 
         return MetaData::newSavedGameSession(
-            tournamentName.c_str(), eventName.c_str(),
-            timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags),
-            std::move(names), std::move(sponsors), std::move(commentators),
-            gameNumber, setNumber, format, round.c_str(), winner);
+            timeStarted,
+            timeEnded,
+            stageID,
+            EventType::fromType(EventType::FRIENDLIES),
+            Round::fromSessionNumber(sessionNumber),
+            format,
+            ScoreCount::fromGameNumber(gameNumber),
+            std::move(fighterIDs),
+            std::move(tags),
+            std::move(names),
+            std::move(sponsors),
+            std::move(pronouns),
+            winner);
     }
     if (type == "training")
     {
         json jNumber = jGameInfo["number"];
         const auto sessionNumber = jNumber.is_number_integer() ?
-            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
+            SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
 
         return MetaData::newSavedTrainingSession(
-            timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags), sessionNumber);
+            timeStarted,
+            timeEnded,
+            stageID,
+            sessionNumber,
+            std::move(fighterIDs),
+            std::move(tags));
     }
 
     return nullptr;
@@ -372,11 +397,22 @@ uint32_t MetaData::save(FILE* fp) const
     for (int i = 0; i != fighterCount(); ++i)
     {
         jPlayerInfo += {
-            {"tag", tag(i).cStr()},
-            {"name", name(i).cStr()},
-            {"sponsor", sponsor(i).cStr()},
-            {"fighterid", fighterID(i).value()}
+            {"tag", playerTag(i).cStr()},
+            {"fighterid", playerFighterID(i).value()}
         };
+
+        switch (type())
+        {
+            case GAME: {
+                auto mdata = asGame();
+                jPlayerInfo[i]["name"] = mdata->playerName(i).cStr();
+                jPlayerInfo[i]["sponsor"] = mdata->playerSponsor(i).cStr();
+                jPlayerInfo[i]["social"] = mdata->playerSocial(i).cStr();
+                jPlayerInfo[i]["pronouns"] = mdata->playerPronouns(i).cStr();
+            } break;
+
+            case TRAINING: break;
+        }
     }
 
     json jGameInfo = {
@@ -388,22 +424,22 @@ uint32_t MetaData::save(FILE* fp) const
     {
         case GAME: {
             auto mdata = asGame();
+            jGameInfo["round"] = mdata->round().shortDescription().cStr();
             jGameInfo["format"] = mdata->setFormat().shortDescription();
-            jGameInfo["number"] = mdata->gameNumber().value();
-            jGameInfo["set"] = mdata->setNumber().value();
-            jGameInfo["round"] = mdata->roundName().cStr();
+            jGameInfo["number"] = mdata->score().gameNumber().value();
+            jGameInfo["score1"] = mdata->score().left();
+            jGameInfo["score2"] = mdata->score().right();
             jGameInfo["winner"] = mdata->winner();
         } break;
 
         case TRAINING: {
-            assert(type() == TRAINING);
             auto mdata = asTraining();
             jGameInfo["number"] = mdata->sessionNumber().value();
         } break;
     }
 
     json j = {
-        {"version", "1.6"},
+        {"version", "1.7"},
         {"type", type() == GAME ? "game" : "training"},
         {"gameinfo", jGameInfo},
         {"playerinfo", jPlayerInfo}
@@ -414,23 +450,49 @@ uint32_t MetaData::save(FILE* fp) const
         case GAME: {
             auto mdata = asGame();
 
-            j["tournamentinfo"] = {
-                {"name", mdata->tournamentName().cStr()}
-            };
+            auto jOrganizers = json::array();
+            for (int i = 0; i != mdata->tournamentOrganizerCount(); ++i)
+            {
+                jOrganizers += {
+                    {"name", mdata->tournamentOrganizerName(i).cStr()},
+                    {"social", mdata->tournamentOrganizerSocial(i).cStr()},
+                    {"pronouns", mdata->tournamentOrganizerPronouns(i).cStr()}
+                };
+            }
 
-            j["eventinfo"] = {
-                {"name", mdata->eventName().cStr()}
-            };
+            auto jSponsors = json::array();
+            for (int i = 0; i != mdata->sponsorCount(); ++i)
+            {
+                jSponsors += {
+                    {"name", mdata->sponsorName(i).cStr()},
+                    {"website", mdata->sponsorWebsite(i).cStr()}
+                };
+            }
 
             json jCommentators = json::array();
-            for (const auto& name : mdata->commentators())
-                jCommentators.push_back(name.cStr());
+            for (int i = 0; i != mdata->commentatorCount(); ++i)
+            {
+                jCommentators += {
+                    {"name", mdata->commentatorName(i).cStr()},
+                    {"social", mdata->commentatorSocial(i).cStr()},
+                    {"pronouns", mdata->commentatorPronouns(i).cStr()}
+                };
+            }
+
             j["commentators"] = jCommentators;
+            j["tournament"] = {
+                {"name", mdata->tournamentName().cStr()},
+                {"website", mdata->tournamentWebsite().cStr()},
+                {"organizers", jOrganizers},
+                {"sponsors", jSponsors}
+            };
+            j["event"] = {
+                {"type", mdata->eventType().description()},
+                {"url", mdata->eventURL().cStr()}
+            };
         } break;
 
-        case TRAINING: {
-
-        } break;
+        case TRAINING: break;
     }
 
     const std::string jsonAsString = j.dump();
@@ -441,46 +503,6 @@ uint32_t MetaData::save(FILE* fp) const
 }
 
 // ----------------------------------------------------------------------------
-int MetaData::fighterCount() const
-{
-    NOPROFILE();
-
-    return fighterIDs_.count();
-}
-
-// ----------------------------------------------------------------------------
-const String& MetaData::tag(int fighterIdx) const
-{
-    NOPROFILE();
-
-    return tags_[fighterIdx];
-}
-
-// ----------------------------------------------------------------------------
-FighterID MetaData::fighterID(int fighterIdx) const
-{
-    NOPROFILE();
-
-    return fighterIDs_[fighterIdx];
-}
-
-// ----------------------------------------------------------------------------
-StageID MetaData::stageID() const
-{
-    NOPROFILE();
-
-    return stageID_;
-}
-
-// ----------------------------------------------------------------------------
-TimeStamp MetaData::timeStarted() const
-{
-    NOPROFILE();
-
-    return timeStarted_;
-}
-
-// ----------------------------------------------------------------------------
 void MetaData::setTimeStarted(TimeStamp timeStamp)
 {
     PROFILE(MetaData, setTimeStarted);
@@ -488,15 +510,7 @@ void MetaData::setTimeStarted(TimeStamp timeStamp)
     bool notify = (timeStarted_ == timeStamp);
     timeStarted_ = timeStamp;
     if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeStartedChanged, timeStamp);
-}
-
-// ----------------------------------------------------------------------------
-TimeStamp MetaData::timeEnded() const
-{
-    NOPROFILE();
-
-    return timeEnded_;
+        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeChanged, timeStamp, timeEnded_);
 }
 
 // ----------------------------------------------------------------------------
@@ -507,7 +521,7 @@ void MetaData::setTimeEnded(TimeStamp timeStamp)
     bool notify = (timeEnded_ == timeStamp);
     timeEnded_ = timeStamp;
     if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeEndedChanged, timeStamp);
+        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeChanged, timeStarted_, timeStamp);
 }
 
 // ----------------------------------------------------------------------------

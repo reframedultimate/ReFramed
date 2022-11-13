@@ -1,16 +1,14 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/String.hpp"
 
-#define SET_FORMAT_LIST                                 \
-    X(FRIENDLIES, "Friendlies", "Friendlies")           \
-    X(BO3,        "Bo3", "Best of 3")                   \
-    X(BO5,        "Bo5", "Best of 5")                   \
-    X(BO7,        "Bo7", "Best of 7")                   \
-    X(FT5,        "FT5", "First to 5")                  \
-    X(FT10,       "FT10", "First to 10")                \
-    X(OTHER,      "Other", "Other")
+#define SET_FORMAT_LIST                  \
+    X(BO3,        "Bo3",  "Best of 3")   \
+    X(BO5,        "Bo5",  "Best of 5")   \
+    X(BO7,        "Bo7",  "Best of 7")   \
+    X(FT5,        "FT5",  "First to 5")  \
+    X(FT10,       "FT10", "First to 10") \
+    X(FREE,       "Free", "Free Play")
 
 namespace rfcommon {
 
@@ -23,7 +21,6 @@ public:
 #undef X
     };
 
-    static SetFormat makeOther(const char* description);
     static SetFormat fromDescription(const char* description);
     static SetFormat fromType(Type type);
     static SetFormat fromIndex(int index);
@@ -41,12 +38,11 @@ public:
     bool operator!=(const SetFormat& rhs) const;
 
 private:
-    SetFormat(Type type, const char* otherDesc);
-    SetFormat(const char* description);
+    SetFormat(Type type);
+    SetFormat(const char* desc);
 
 private:
     Type type_;
-    String otherDesc_;
 };
 
 }

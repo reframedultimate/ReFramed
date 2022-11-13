@@ -94,15 +94,11 @@ set (APPLICATION_HEADERS_MOC
     "include/application/widgets/ProgressDialog.hpp"
 	"include/application/widgets/ReplaySearchBox.hpp")
 set (APPLICATION_FORMS
-    "forms/ActiveSessionView.ui"
-    "forms/AnalysisInputView.ui"
     "forms/ConnectView.ui"
     "forms/ExportReplayPackDialog.ui"
     "forms/ImportReplayPackDialog.ui"
     "forms/MetaDataEditWidget_Game.ui"
     "forms/ReplayEditorDialog.ui"
-    #"forms/ReplayGroupView.ui"
-    "forms/TrainingModeView.ui"
     "forms/VideoAssociatorDialog.ui"
     "forms/MainWindow.ui")
 set (APPLICATION_RES

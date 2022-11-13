@@ -1,9 +1,7 @@
 #pragma once
 
-#include "rfcommon/GameNumber.hpp"
-#include "rfcommon/SetNumber.hpp"
 #include "rfcommon/TimeStamp.hpp"
-#include "rfcommon/String.hpp"
+#include "rfcommon/SessionNumber.hpp"
 
 namespace rfcommon {
 
@@ -12,23 +10,54 @@ class SetFormat;
 class MetaDataListener
 {
 public:
-    virtual void onMetaDataTimeStartedChanged(TimeStamp timeStarted) = 0;
-    virtual void onMetaDataTimeEndedChanged(TimeStamp timeEnded) = 0;
+    virtual void onMetaDataTimeChanged(TimeStamp timeStarted, TimeStamp timeEnded) = 0;
 
     // Game related events
-    virtual void onMetaDataPlayerNameChanged(int fighterIdx, const char* name) = 0;
-    virtual void onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) = 0;
-    virtual void onMetaDataTournamentNameChanged(const char* name) = 0;
-    virtual void onMetaDataEventNameChanged(const char* name) = 0;
-    virtual void onMetaDataRoundNameChanged(const char* name) = 0;
-    virtual void onMetaDataCommentatorsChanged(const SmallVector<String, 2>& names) = 0;
-    virtual void onMetaDataSetNumberChanged(SetNumber number) = 0;
-    virtual void onMetaDataGameNumberChanged(GameNumber number) = 0;
-    virtual void onMetaDataSetFormatChanged(const SetFormat& format) = 0;
+
+    /*!
+     * Called when any of the following things change:
+     *   - Tournament name
+     *   - Tournament website URL
+     *   - TO is added, removed or modified
+     *   - Sponsor is added, removed or modified
+     */
+    virtual void onMetaDataTournamentDetailsChanged() = 0;
+
+    /*!
+     * Called when any of the following things change:
+     *   - Event type is changed
+     *   - Event URL is changed
+     */
+    virtual void onMetaDataEventDetailsChanged() = 0;
+
+    /*!
+     * Called when any of the following things change:
+     *   - Commentator is added, removed or modified
+     */
+    virtual void onMetaDataCommentatorsChanged() = 0;
+
+    /*!
+     * Called when any of the following things change:
+     *   - Round type or number is changed
+     *   - Set format is changed
+     *   - Score (and therefore game number) is changed
+     */
+    virtual void onMetaDataGameDetailsChanged() = 0;
+
+    /*!
+     * Called when any of the following things change:
+     *   - Player name, sponsor, social, or pronouns change
+     *   - Player's isLoserSide() changes
+     */
+    virtual void onMetaDataPlayerDetailsChanged() = 0;
+
+    /*! Called whenever the winner changes. This only makes sense during a live session */
     virtual void onMetaDataWinnerChanged(int winnerPlayerIdx) = 0;
 
-    // In training mode this increments every time a new training room is loaded
-    virtual void onMetaDataTrainingSessionNumberChanged(GameNumber number) = 0;
+    // Training mode related events
+
+    /*! Whenever a new training room is loaded, the session number will increment */
+    virtual void onMetaDataTrainingSessionNumberChanged(SessionNumber number) = 0;
 };
 
 }

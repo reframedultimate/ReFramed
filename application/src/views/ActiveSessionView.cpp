@@ -1,4 +1,3 @@
-#include "application/ui_ActiveSessionView.h"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
@@ -93,7 +92,7 @@ ActiveSessionView::~ActiveSessionView()
     activeSessionManager_->dispatcher.removeListener(this);
     //delete ui_;
 }
-
+/*
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onComboBoxFormatIndexChanged(int index)
 {
@@ -160,11 +159,11 @@ void ActiveSessionView::onActiveSessionManagerDisconnected()
     PROFILE(ActiveSessionView, onActiveSessionManagerDisconnected);
 
     ui_->label_connection->setText("<html><head/><body><p><span style=\"font-weight:600; color:#ff0000;\">Disconnected</span></p></body></html>");
-}
+}*/
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* game)
-{
+{/*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameStarted);
 
     clearLayout(ui_->layout_playerInfo);
@@ -209,34 +208,34 @@ void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* gam
     const uint64_t stamp = mdata->timeStarted().millisSinceEpoch();
     ui_->label_stage->setText(map->stage.toName(mdata->stageID()));
     ui_->label_started->setText(QDateTime::fromMSecsSinceEpoch(stamp).toString());
-    ui_->label_remaining->setText("--");
+    ui_->label_remaining->setText("--");*/
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameEnded(rfcommon::Session* game)
-{
+{/*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameEnded);
 
     ui_->label_stage->setText("--");
     ui_->label_started->setText("--");
-    ui_->label_remaining->setText("--");
+    ui_->label_remaining->setText("--");*/
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTrainingStarted(rfcommon::Session* training)
-{
+{/*
     PROFILE(ActiveSessionView, onActiveSessionManagerTrainingStarted);
 
-    clearLayout(ui_->layout_playerInfo);
+    clearLayout(ui_->layout_playerInfo);*/
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTrainingEnded(rfcommon::Session* training)
-{
+{/*
     PROFILE(ActiveSessionView, onActiveSessionManagerTrainingEnded);
-
+*/
 }
-
+/*
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTimeRemainingChanged(double seconds)
 {
@@ -341,6 +340,6 @@ void ActiveSessionView::onActiveSessionManagerTrainingSessionNumberChanged(rfcom
 {
     PROFILE(ActiveSessionView, onActiveSessionManagerTrainingSessionNumberChanged);
 
-}
+}*/
 
 }

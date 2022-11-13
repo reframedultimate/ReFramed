@@ -1,12 +1,13 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
+#include "rfcommon/EventType.hpp"
 #include "rfcommon/FighterID.hpp"
-#include "rfcommon/GameNumber.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/RefCounted.hpp"
+#include "rfcommon/Round.hpp"
+#include "rfcommon/ScoreCount.hpp"
 #include "rfcommon/SetFormat.hpp"
-#include "rfcommon/SetNumber.hpp"
 #include "rfcommon/StageID.hpp"
 #include "rfcommon/TimeStamp.hpp"
 #include <cstdio>
@@ -39,9 +40,9 @@ public:
      * \brief Constructs a new GameMetaData object from the specified
      * parameters.
      *
-     * - SetNumber is set to 1
-     * - GameNumber is set to 1
-     * - SetFormat is set to "Friendlies"
+     * - RoundNumber is set to "Free Play" and 1.
+     * - ScoreCount is set to 0-0
+     * - SetFormat is set to "Freeplay"
      * - TimeStarted and TimeEnded are set to the current time
      */
     static MetaData* newActiveGameSession(
@@ -61,29 +62,27 @@ public:
             SmallVector<String, 2>&& tags);
 
     static MetaData* newSavedGameSession(
-            const char* tournamentName,
-            const char* eventName,
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
+            EventType eventType,
+            Round round,
+            SetFormat format,
+            ScoreCount score,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags,
             SmallVector<String, 2>&& names,
             SmallVector<String, 2>&& sponsors,
-            SmallVector<String, 2>&& commentators,
-            GameNumber gameNumber,
-            SetNumber setNumber,
-            SetFormat setFormat,
-            const char* roundName,
+            SmallVector<String, 2>&& pronouns,
             int winner);
 
     static MetaData* newSavedTrainingSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
+            SessionNumber sessionNumber,
             SmallVector<FighterID, 2>&& fighterIDs,
-            SmallVector<String, 2>&& tags,
-            GameNumber sessionNumber);
+            SmallVector<String, 2>&& tags);
 
     virtual ~MetaData();
 
@@ -100,26 +99,14 @@ public:
      * \brief Gets the number of fighters in this session. Usually 2, but can
      * go up to 8.
      */
-    int fighterCount() const;
+    int fighterCount() const { return fighterIDs_.count(); }
 
     /*!
      * \brief Gets the tag used by the player. This is the string that appears
      * above the player in-game and is created when the player sets their controls.
      * \param fighterIdx Which player to get
      */
-    const String& tag(int fighterIdx) const;
-
-    /*!
-     * \brief Gets the name of the player. By default this will be the same as
-     * the tag, but many players like to create tags that are shorter or a
-     * variation of their real name. This string is their real name.
-     * Unlike tags, there is also no character limit to a player's name.
-     * \note If training mode, this will always be the same as the tag.
-     * \param fighterIdx Which player to get
-     */
-    virtual const String& name(int fighterIdx) const = 0;
-
-    virtual const String& sponsor(int fighterIdx) const = 0;
+    const String& playerTag(int fighterIdx) const { return tags_[fighterIdx]; }
 
     /*!
      * \brief Gets the fighter ID being used by the specified player. The ID
@@ -127,13 +114,13 @@ public:
      * MappingInfo structure.
      * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
      */
-    FighterID fighterID(int fighterIdx) const;
+    FighterID playerFighterID(int fighterIdx) const { return fighterIDs_[fighterIdx]; }
 
     /*!
      * \brief Gets the stage ID being played on. The ID can be used to look up
      * the stage name by using the MappingInfo structure.
      */
-    StageID stageID() const;
+    StageID stageID() const { return stageID_; }
 
     /*!
      * \brief Gets the absolute time of when the session started in unix time
@@ -152,7 +139,7 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeStarted() const;
+    TimeStamp timeStarted() const { return timeStarted_; }
 
     void setTimeStarted(TimeStamp timeStamp);
 
@@ -172,7 +159,7 @@ public:
      * to register as a listener to be notified when a valid timestamp is
      * received.
      */
-    TimeStamp timeEnded() const;
+    TimeStamp timeEnded() const { return timeEnded_; }
 
     void setTimeEnded(TimeStamp timeStamp);
 

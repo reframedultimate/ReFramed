@@ -315,6 +315,7 @@ static bool loadLegacy_1_3(
     SmallVector<String, 2> playerTags;
     SmallVector<String, 2> playerNames;
     SmallVector<String, 2> playerSponsors;
+    SmallVector<String, 2> playerPronouns;
     for (const auto& info : jPlayerInfo)
     {
         json jFighterID = info["fighterid"];
@@ -325,6 +326,7 @@ static bool loadLegacy_1_3(
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
         playerSponsors.emplace("");
+        playerPronouns.emplace("");
     }
 
     // There must be at least 2 fighters, otherwise the data is invalid
@@ -341,19 +343,18 @@ static bool loadLegacy_1_3(
     json jWinner = jGameInfo["winner"];
 
     Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        "", "",
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
+        EventType::fromType(EventType::OTHER),
+        Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())),
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
+        ScoreCount::fromGameNumber(GameNumber::fromValue(jGameNumber.get<GameNumber::Type>())),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         std::move(playerSponsors),
-        SmallVector<String, 2>(),
-        GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()),
-        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()),
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
-        "",
+        std::move(playerPronouns),
         jWinner.get<int>());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
@@ -563,6 +564,7 @@ static bool loadLegacy_1_4(
     SmallVector<String, 2> playerTags;
     SmallVector<String, 2> playerNames;
     SmallVector<String, 2> playerSponsors;
+    SmallVector<String, 2> playerPronouns;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
@@ -577,6 +579,7 @@ static bool loadLegacy_1_4(
         playerNames.emplace(jName.is_string() ?
             jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
         playerSponsors.emplace("");
+        playerPronouns.emplace("");
 
         fighterCount++;
     }
@@ -607,30 +610,28 @@ static bool loadLegacy_1_4(
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
     const auto gameNumber = jGameNumber.is_number_integer() ?
         GameNumber::fromValue(jGameNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
-    const auto setNumber = jSetNumber.is_number_integer() ?
-        SetNumber::fromValue(jSetNumber.get<SetNumber::Type>()) : SetNumber::fromValue(1);
+    const auto sessionNumber = jSetNumber.is_number_integer() ?
+        SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
     const auto format = jSetFormat.is_string() ?
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FRIENDLIES);
+        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
     int winner = jWinner.is_number_unsigned() ?
         jWinner.get<int>() : -1;
     if (winner > fighterCount)
         winner = -1;
 
     Reference<MetaData> metaData = MetaData::newSavedGameSession(
-        "",
-        "",
         timeStarted,
         timeEnded,
         stageID,
+        EventType::fromType(EventType::OTHER),
+        Round::fromSessionNumber(sessionNumber),
+        format,
+        ScoreCount::fromGameNumber(gameNumber),
         std::move(playerFighterIDs),
         std::move(playerTags),
         std::move(playerNames),
         std::move(playerSponsors),
-        SmallVector<String, 2>(),
-        gameNumber,
-        setNumber,
-        format,
-        "",
+        std::move(playerPronouns),
         winner);
 
     const std::string streamDecoded = jPlayerStates.is_string() ?

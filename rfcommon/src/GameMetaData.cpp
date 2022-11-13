@@ -6,204 +6,164 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 GameMetaData::GameMetaData(
-        const char* tournamentName,
-        const char* eventName,
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
+        EventType eventType,
+        Round round,
+        SetFormat format,
+        ScoreCount score,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags,
         SmallVector<String, 2>&& names,
         SmallVector<String, 2>&& sponsors,
-        SmallVector<String, 2>&& commentators,
-        GameNumber gameNumber,
-        SetNumber setNumber,
-        SetFormat setFormat,
-        const char* roundName,
+        SmallVector<String, 2>&& pronouns,
         int winner)
     : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
-    , commentators_(std::move(commentators))
-    , tournamentName_(tournamentName)
-    , eventName_(eventName)
-    , roundName_(roundName)
-    , gameNumber_(gameNumber)
-    , setNumber_(setNumber)
-    , setFormat_(setFormat)
+    , eventType_(eventType)
+    , round_(round)
+    , setFormat_(format)
+    , score_(score)
     , winner_(winner)
 {
     assert(names.count() == sponsors.count());
     for (int i = 0; i != names.count(); ++i)
-        players_.push({ std::move(names[i]), std::move(sponsors[i]) });
+        players_.push({ std::move(names[i]), std::move(sponsors[i]), std::move(pronouns[i]) });
 }
 
 // ----------------------------------------------------------------------------
-MetaData::Type GameMetaData::type() const
-{
-    NOPROFILE();
-
-    return GAME;
-}
-
-// ----------------------------------------------------------------------------
-const String& GameMetaData::name(int playerIdx) const
-{
-    NOPROFILE();
-
-    return players_[playerIdx].name;
-}
-
-// ----------------------------------------------------------------------------
-void GameMetaData::setName(int fighterIdx, const char* name)
-{
-    PROFILE(GameMetaData, setName);
-
-    if (!players_[fighterIdx].name.replaceWith(name))
-        dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerNameChanged, fighterIdx, name);
-}
-
-// ----------------------------------------------------------------------------
-const String& GameMetaData::sponsor(int fighterIdx) const
-{
-    return players_[fighterIdx].sponsor;
-}
-
-// ----------------------------------------------------------------------------
-void GameMetaData::setSponsor(int fighterIdx, const char* sponsor)
-{
-    if (!players_[fighterIdx].sponsor.replaceWith(sponsor))
-        dispatcher.dispatch(&MetaDataListener::onMetaDataSponsorChanged, fighterIdx, sponsor);
-}
-
-// ----------------------------------------------------------------------------
-const String& GameMetaData::tournamentName() const
-{
-    return tournamentName_;
-}
+GameMetaData::~GameMetaData()
+{}
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setTournamentName(const char* name)
 {
     if (!tournamentName_.replaceWith(name))
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentNameChanged, name);
+        dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-const String& GameMetaData::eventName() const
+void GameMetaData::setTournamentWebsite(const char* name)
 {
-    return eventName_;
+    if (!tournamentURL_.replaceWith(name))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setEventName(const char* name)
+void GameMetaData::addTournamentOrganizer(const char* name, const char* social, const char* pronouns)
 {
-    if (!eventName_.replaceWith(name))
-        dispatcher.dispatch(&MetaDataListener::onMetaDataEventNameChanged, name);
+    organizers_.push({ name, social, pronouns });
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-const String& GameMetaData::roundName() const
+void GameMetaData::removeTournamentOrganizer(int idx)
 {
-    return roundName_;
+    organizers_.erase(idx);
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setRoundName(const char* name)
+void GameMetaData::addSponsor(const char* name, const char* website)
 {
-    if (!roundName_.replaceWith(name))
-        dispatcher.dispatch(&MetaDataListener::onMetaDataRoundNameChanged, name);
+    sponsors_.push({ name, website });
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-const SmallVector<String, 2>& GameMetaData::commentators() const
+void GameMetaData::removeSponsor(int idx)
 {
-    return commentators_;
+    sponsors_.erase(idx);
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setCommentators(SmallVector<String, 2>&& names)
+void GameMetaData::addCommentator(const char* name, const char* social, const char* pronouns)
 {
-    commentators_ = std::move(names);
-    dispatcher.dispatch(&MetaDataListener::onMetaDataCommentatorsChanged, commentators_);
+    commentators_.push({ name, social, pronouns });
+    dispatcher.dispatch(&MetaDataListener::onMetaDataCommentatorsChanged);
 }
 
 // ----------------------------------------------------------------------------
-GameNumber GameMetaData::gameNumber() const
+void GameMetaData::removeCommentator(int idx)
 {
-    NOPROFILE();
-
-    return gameNumber_;
+    sponsors_.erase(idx);
+    dispatcher.dispatch(&MetaDataListener::onMetaDataCommentatorsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setGameNumber(GameNumber gameNumber)
+void GameMetaData::setEventType(EventType type)
 {
-    PROFILE(GameMetaData, setGameNumber);
-
-    bool notify = (gameNumber_ != gameNumber);
-    gameNumber_ = gameNumber;
-    if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataGameNumberChanged, gameNumber);
+    eventType_ = type;
+    dispatcher.dispatch(&MetaDataListener::onMetaDataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::resetGameNumber()
+void GameMetaData::setEventURL(const char* url)
 {
-    PROFILE(GameMetaData, resetGameNumber);
-
-    setGameNumber(GameNumber::fromValue(1));
+    if (!eventURL_.replaceWith(url))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-SetNumber GameMetaData::setNumber() const
+void GameMetaData::setRound(Round round)
 {
-    NOPROFILE();
-
-    return setNumber_;
-}
-
-void GameMetaData::setSetNumber(SetNumber setNumber)
-{
-    PROFILE(GameMetaData, setSetNumber);
-
-    bool notify = (setNumber_ != setNumber);
-    setNumber_ = setNumber;
-    if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataSetNumberChanged, setNumber);
-}
-
-// ----------------------------------------------------------------------------
-void GameMetaData::resetSetNumber()
-{
-    PROFILE(GameMetaData, resetSetNumber);
-
-    setSetNumber(SetNumber::fromValue(1));
-}
-
-// ----------------------------------------------------------------------------
-SetFormat GameMetaData::setFormat() const
-{
-    NOPROFILE();
-
-    return setFormat_;
+    round_ = round;
+    dispatcher.dispatch(&MetaDataListener::onMetaDataGameDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void GameMetaData::setSetFormat(SetFormat format)
 {
-    PROFILE(GameMetaData, setSetFormat);
-
-    bool notify = (setFormat_ != format);
     setFormat_ = format;
-    if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataSetFormatChanged, format);
+    dispatcher.dispatch(&MetaDataListener::onMetaDataGameDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-int GameMetaData::winner() const
+void GameMetaData::setScore(ScoreCount score)
 {
-    NOPROFILE();
+    score_ = score;
+    dispatcher.dispatch(&MetaDataListener::onMetaDataGameDetailsChanged);
+}
 
-    return winner_;
+// ----------------------------------------------------------------------------
+void GameMetaData::setPlayerName(int fighterIdx, const char* name)
+{
+    assert(fighterIdx < fighterCount());
+    if (!players_[fighterIdx].name.replaceWith(name))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
+void GameMetaData::setPlayerSponsor(int fighterIdx, const char* sponsor)
+{
+    assert(fighterIdx < fighterCount());
+    if (!players_[fighterIdx].sponsor.replaceWith(sponsor))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
+void GameMetaData::setPlayerSocial(int fighterIdx, const char* social)
+{
+    assert(fighterIdx < fighterCount());
+    if (!players_[fighterIdx].social.replaceWith(social))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
+void GameMetaData::setPlayerPronouns(int fighterIdx, const char* pronouns)
+{
+    assert(fighterIdx < fighterCount());
+    if (!players_[fighterIdx].pronouns.replaceWith(pronouns))
+        dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
+void GameMetaData::setPlayerIsLoserSide(int fighterIdx, bool isLoser)
+{
+    assert(fighterIdx < fighterCount());
+    players_[fighterIdx].isLoser = isLoser;
+    dispatcher.dispatch(&MetaDataListener::onMetaDataPlayerDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------

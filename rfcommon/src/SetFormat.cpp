@@ -7,9 +7,8 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-SetFormat::SetFormat(Type type, const char* otherDesc)
+SetFormat::SetFormat(Type type)
     : type_(type)
-    , otherDesc_(otherDesc)
 {
 }
 
@@ -19,25 +18,20 @@ SetFormat::SetFormat(const char* desc)
 #define X(type, shortstr, longstr) if (strcmp(desc, shortstr) == 0 || strcmp(desc, longstr) == 0) return type;
         SET_FORMAT_LIST
 #undef X
-        return OTHER;
+        return FREE;
       }())
 {
-    if (type_ == OTHER)
-        otherDesc_ = desc;
 }
 
-SetFormat SetFormat::makeOther(const char* description) { return SetFormat(OTHER, description); }
+// ----------------------------------------------------------------------------
 SetFormat SetFormat::fromDescription(const char* description) { return SetFormat(description); }
-SetFormat SetFormat::fromType(Type type) { assert(type != OTHER); return SetFormat(type, ""); }
-SetFormat SetFormat::fromIndex(int index) { assert(index < OTHER); return SetFormat(static_cast<Type>(index), ""); }
+SetFormat SetFormat::fromType(Type type) { return SetFormat(type); }
+SetFormat SetFormat::fromIndex(int index) { return SetFormat(static_cast<Type>(index)); }
 
 // ----------------------------------------------------------------------------
 const char* SetFormat::shortDescription() const
 {
     PROFILE(SetFormat, shortDescription);
-
-    if (type_ == OTHER)
-        return otherDesc_.cStr();
 
     switch (type_)
     {
@@ -53,9 +47,6 @@ const char* SetFormat::longDescription() const
 {
     PROFILE(SetFormat, longDescription);
 
-    if (type_ == OTHER)
-        return otherDesc_.cStr();
-
     switch (type_)
     {
 #define X(type, shortstr, longstr) case type: return longstr;
@@ -68,8 +59,6 @@ const char* SetFormat::longDescription() const
 // ----------------------------------------------------------------------------
 bool SetFormat::operator==(const SetFormat& rhs) const
 {
-    if (type_ == OTHER)
-        return type_ == rhs.type_ && otherDesc_ == rhs.otherDesc_;
     return type_ == rhs.type_;
 }
 
@@ -80,3 +69,4 @@ bool SetFormat::operator!=(const SetFormat& rhs) const
 }
 
 }
+

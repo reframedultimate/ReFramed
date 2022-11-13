@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/Hashers.hpp"
+#include <cstdint>
 
 namespace rfcommon {
 

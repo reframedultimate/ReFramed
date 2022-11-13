@@ -2,8 +2,8 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/FighterID.hpp"
-#include "rfcommon/GameNumber.hpp"
 #include "rfcommon/MetaData.hpp"
+#include "rfcommon/SessionNumber.hpp"
 #include "rfcommon/Vector.hpp"
 
 namespace rfcommon {
@@ -11,30 +11,28 @@ namespace rfcommon {
 class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
 {
     TrainingMetaData(
-        TimeStamp timeStarted,
-        TimeStamp timeEnded,
-        StageID stageID,
-        SmallVector<FighterID, 2>&& fighterIDs,
-        SmallVector<String, 2>&& tags,
-        GameNumber sessionNumber);
+            TimeStamp timeStarted,
+            TimeStamp timeEnded,
+            StageID stageID,
+            SessionNumber sessionNumber,
+            SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<String, 2>&& tags);
 
 public:
-    Type type() const override;
+    ~TrainingMetaData();
 
-    const String& name(int playerIdx) const override;
-    const String& sponsor(int playerIdx) const override;
+    Type type() const override final { return TRAINING; }
 
-    FighterID playerFighterID() const;
-    FighterID cpuFighterID() const;
+    FighterID humanFighterID() const { return FighterID::fromValue(0); }
+    FighterID cpuFighterID() const { return FighterID::fromValue(1); }
 
-    GameNumber sessionNumber() const;
-    void setSessionNumber(GameNumber sessionNumber);
-    void resetSessionNumber();
+    SessionNumber sessionNumber() const { return sessionNumber_; }
+    void setSessionNumber(SessionNumber sessionNumber);
 
 private:
     friend class MetaData;
 
-    GameNumber sessionNumber_;
+    SessionNumber sessionNumber_;
 };
 
 }

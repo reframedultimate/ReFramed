@@ -2,7 +2,7 @@
 #include "stats/models/PlayerMeta.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
 // ----------------------------------------------------------------------------
@@ -64,7 +64,7 @@ int PlayerMeta::playerCount() const
 QString PlayerMeta::name(int fighterIdx) const
 {
     return mdata_ ?
-        mdata_->name(fighterIdx).cStr() :
+        mdata_->asGame()->playerName(fighterIdx).cStr() :
         QString("Player ") + QString::number(fighterIdx + 1);
 }
 
@@ -72,7 +72,7 @@ QString PlayerMeta::name(int fighterIdx) const
 QString PlayerMeta::tag(int fighterIdx) const
 {
     return mdata_ ?
-        mdata_->tag(fighterIdx).cStr() :
+        mdata_->playerTag(fighterIdx).cStr() :
         QString("Player ") + QString::number(fighterIdx + 1);
 }
 
@@ -80,7 +80,7 @@ QString PlayerMeta::tag(int fighterIdx) const
 QString PlayerMeta::character(int fighterIdx) const
 {
     return mdata_ ?
-        map_->fighter.toName(mdata_->fighterID(fighterIdx)) :
+        map_->fighter.toName(mdata_->playerFighterID(fighterIdx)) :
         QString("Player ") + QString::number(fighterIdx + 1);
 }
 
@@ -94,7 +94,7 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 
     if (mdata_.notNull())
     {
-        const auto fighterID = mdata_->fighterID(fighterIdx);
+        const auto fighterID = mdata_->playerFighterID(fighterIdx);
         label = userLabels_->toStringHighestLayer(fighterID, motion, nullptr);
     }
 
@@ -105,24 +105,17 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 }
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::onMetaDataTimeStartedChanged(rfcommon::TimeStamp timeStarted) {}
-void PlayerMeta::onMetaDataTimeEndedChanged(rfcommon::TimeStamp timeEnded) {}
-
-void PlayerMeta::onMetaDataPlayerNameChanged(int fighterIdx, const char* name)
+void PlayerMeta::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void PlayerMeta::onMetaDataTournamentDetailsChanged() {}
+void PlayerMeta::onMetaDataEventDetailsChanged() {}
+void PlayerMeta::onMetaDataCommentatorsChanged() {}
+void PlayerMeta::onMetaDataGameDetailsChanged() {}
+void PlayerMeta::onMetaDataPlayerDetailsChanged()
 {
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
-void PlayerMeta::onMetaDataSponsorChanged(int fighterIdx, const char* sponsor) {}
-void PlayerMeta::onMetaDataTournamentNameChanged(const char* name) {}
-void PlayerMeta::onMetaDataEventNameChanged(const char* name) {}
-void PlayerMeta::onMetaDataRoundNameChanged(const char* name) {}
-void PlayerMeta::onMetaDataCommentatorsChanged(const rfcommon::SmallVector<rfcommon::String, 2>& names) {}
-void PlayerMeta::onMetaDataSetNumberChanged(rfcommon::SetNumber number) {}
-void PlayerMeta::onMetaDataGameNumberChanged(rfcommon::GameNumber number) {}
-void PlayerMeta::onMetaDataSetFormatChanged(const rfcommon::SetFormat& format) {}
 void PlayerMeta::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-
-void PlayerMeta::onMetaDataTrainingSessionNumberChanged(rfcommon::GameNumber number) {}
+void PlayerMeta::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 // ----------------------------------------------------------------------------
 void PlayerMeta::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }

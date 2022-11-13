@@ -382,49 +382,6 @@ ReplayGroup* ReplayManager::allReplayGroup() const
 }
 
 // ----------------------------------------------------------------------------
-bool ReplayManager::findFreeSetAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
-{
-    PROFILE(ReplayManager, findFreeSetAndGameNumbers);
-
-    const QDir& dir = defaultGamePath();
-    while (true)
-    {
-        QString fileName = rfcommon::ReplayFileParts::fromMetaData(map, mdata).toFileName().cStr();
-        if (fileName == "")
-            return false;
-        if (QFileInfo::exists(dir.absoluteFilePath(fileName)) == false)
-            return true;
-
-        switch (mdata->type())
-        {
-            case rfcommon::MetaData::GAME: {
-                auto gameMeta = static_cast<rfcommon::GameMetaData*>(mdata);
-                switch (gameMeta->setFormat().type())
-                {
-                    case rfcommon::SetFormat::FRIENDLIES:
-                    case rfcommon::SetFormat::OTHER:
-                        gameMeta->setGameNumber(gameMeta->gameNumber() + 1);
-                        break;
-
-                    case rfcommon::SetFormat::BO3:
-                    case rfcommon::SetFormat::BO5:
-                    case rfcommon::SetFormat::BO7:
-                    case rfcommon::SetFormat::FT5:
-                    case rfcommon::SetFormat::FT10:
-                        gameMeta->setSetNumber(gameMeta->setNumber() + 1);
-                        break;
-                }
-            } break;
-
-            case rfcommon::MetaData::TRAINING: {
-                auto trainingMeta = static_cast<rfcommon::TrainingMetaData*>(mdata);
-                trainingMeta->setSessionNumber(trainingMeta->sessionNumber() + 1);
-            } break;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
 static int tmpCounter = 0;
 bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& oldFileName)
 {
