@@ -34,6 +34,7 @@ set (APPLICATION_SOURCES
     "src/views/ReplayManagerView.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
+    "src/widgets/ConnectionStatusWidget.cpp"
     "src/widgets/MetaDataEditWidget.cpp"
     "src/widgets/MetaDataEditWidget_Commentators.cpp"
     "src/widgets/MetaDataEditWidget_Event.cpp"
@@ -66,6 +67,7 @@ set (APPLICATION_HEADERS
     "include/application/models/UserMotionLabelsManager.hpp"
     "include/application/views/ActiveGameSessionView.hpp"
     "include/application/views/RunningGameSessionView.hpp"
+    "include/application/widgets/ConnectionStatusWidget.hpp"
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
     "include/application/models/ActiveSessionManager.hpp"

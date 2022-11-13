@@ -13,12 +13,12 @@
 #include "application/views/MainWindow.hpp"
 #include "application/views/ReplayManagerView.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
+#include "application/widgets/ConnectionStatusWidget.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/BuildInfo.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Log.hpp"
-#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Profiler.hpp"
 
 #include <QStackedWidget>
@@ -59,6 +59,8 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     categoryTabsView_->addTab(new QWidget, "Marketplace");
     categoryTabsView_->setCurrentIndex(1);
     setCentralWidget(categoryTabsView_);
+
+    statusBar()->addPermanentWidget(new ConnectionStatusWidget(protocol_.get()));
 
     /*
     QDockWidget* categoryDock = new QDockWidget(this);

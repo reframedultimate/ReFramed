@@ -187,7 +187,7 @@ void ReplayListModel::addReplay(const QString& fileName)
     PROFILE(ReplayListModel, addReplay);
 
     auto parts = rfcommon::ReplayFileParts::fromFileName(fileName.toUtf8().constData());
-    /*if (parts.hasMissingInfo())
+    if (parts.hasMissingInfo())
     {
         rfcommon::String filePathUtf8 = replayPathResolver_->resolveGameFile(fileName.toUtf8().constData());
         if (filePathUtf8.length() > 0)
@@ -196,9 +196,9 @@ void ReplayListModel::addReplay(const QString& fileName)
             if (session)
                 if (auto map = session->tryGetMappingInfo())
                     if (auto mdata = session->tryGetMetaData())
-                        parts.updateMetaData(map, mdata);
+                        parts.updateFromMetaData(map, mdata);
         }
-    }*/
+    }
 
     ReplaysOnDay day;
     day.date = parts.date().cStr();
