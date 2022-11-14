@@ -370,16 +370,14 @@ UserMotionLabelsEditor::UserMotionLabelsEditor(
         UserMotionLabelsManager* manager,
         rfcommon::Hash40Strings* hash40Strings,
         rfcommon::MappingInfo* globalMappingInfo)
-    : QWidget(nullptr)
+    : QDialog(mainWindow)
     , mainWindow_(mainWindow)
     , manager_(manager)
     , hash40Strings_(hash40Strings)
     , globalMappingInfo_(globalMappingInfo)
     , comboBox_fighters(new QComboBox)
 {
-    // Window icon and title
     setWindowTitle("User Motion Labels Editor");
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
 

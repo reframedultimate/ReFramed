@@ -4,7 +4,7 @@
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/UserMotionLabelsListener.hpp"
-#include <QWidget>
+#include <QDialog>
 
 class QAbstractTableModel;
 class QTableView;
@@ -22,8 +22,8 @@ namespace rfapp {
 class MainWindow;
 class UserMotionLabelsManager;
 
-class UserMotionLabelsEditor 
-        : public QWidget
+class UserMotionLabelsEditor
+        : public QDialog
         , public rfcommon::UserMotionLabelsListener
 {
     Q_OBJECT
@@ -32,7 +32,7 @@ public:
     explicit UserMotionLabelsEditor(
             MainWindow* mainWindow,
             UserMotionLabelsManager* manager,
-            rfcommon::Hash40Strings* hash40Strings, 
+            rfcommon::Hash40Strings* hash40Strings,
             rfcommon::MappingInfo* globalMappingInfo=nullptr);
     ~UserMotionLabelsEditor();
 

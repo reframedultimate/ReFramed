@@ -36,9 +36,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 {
     ui_->setupUi(this);
 
-    // Window icon
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
-
     // Start video plugin and add it to the UI
     const auto availableVideoPlugins = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::VIDEO_PLAYER);
     for (const auto& factoryName : availableVideoPlugins)

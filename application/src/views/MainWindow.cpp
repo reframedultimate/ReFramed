@@ -196,7 +196,7 @@ void MainWindow::onConnectActionTriggered()
 {
     PROFILE(MainWindow, onConnectActionTriggered);
 
-    ConnectView c(config_.get(), protocol_.get());
+    ConnectView c(config_.get(), protocol_.get(), this);
     c.setGeometry(calculatePopupGeometryKeepSize(this, &c, c.geometry()));
     c.exec();
 }

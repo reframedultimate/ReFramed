@@ -291,7 +291,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
         if (session)
         {
-            ReplayEditorDialog dialog(replayManager_, session, selectedFileNames[0]);
+            ReplayEditorDialog dialog(replayManager_, session, selectedFileNames[0], this);
             dialog.exec();
         }
     }
@@ -301,13 +301,13 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
         if (session)
         {
-            VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0]);
+            VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0], this);
             dialog.exec();
         }
     }
     else if (a == exportPack)
     {
-        ExportReplayPackDialog dialog(replayManager_, selectedFileNames, selectedFileNames);
+        ExportReplayPackDialog dialog(replayManager_, selectedFileNames, selectedFileNames, this);
         dialog.exec();
     }
     else if (a == addToNewGroup)

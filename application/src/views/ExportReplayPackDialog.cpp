@@ -31,9 +31,6 @@ ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathR
 {
     ui_->setupUi(this);
 
-    // Window icon
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
-
     for (const auto& name : replayNames)
         ui_->listWidget_replays->addItem(name);
     ui_->listWidget_replays->selectAll();
@@ -84,7 +81,7 @@ void ExportReplayPackDialog::onExport()
     };
     rfcommon::Vector<SessionWithName> sessions;
 
-    ProgressDialog progress("Exporting", "Exporting data to \"" + ui_->lineEdit_packFileName->text() + "\"");
+    ProgressDialog progress("Exporting", "Exporting data to \"" + ui_->lineEdit_packFileName->text() + "\"", this);
     progress.show();
     progress.raise();
 

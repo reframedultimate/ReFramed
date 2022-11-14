@@ -17,9 +17,7 @@ ConnectView::ConnectView(Config* config, Protocol* protocol, QWidget* parent)
 {
     ui_->setupUi(this);
 
-    // Window icon and title
     setWindowTitle("Connect to Nintendo Switch");
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
     json& cfg = getConfig();
     json& jConnectView = cfg["connectview"];

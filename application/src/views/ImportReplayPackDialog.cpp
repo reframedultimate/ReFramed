@@ -21,9 +21,6 @@ ImportReplayPackDialog::ImportReplayPackDialog(ReplayManager* replayManager, QWi
 {
     ui_->setupUi(this);
 
-    // Window icon
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
-
     ui_->comboBox_selectGroup->addItem("Don't add to group");
     ui_->comboBox_selectGroup->addItem("Create new group...");
     ui_->label_newGroupName->setVisible(false);
@@ -182,7 +179,7 @@ void ImportReplayPackDialog::onNewGroupNameChanged(const QString& name)
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onImport()
 {
-    ProgressDialog progress("Importing", "Importing data from \"" + ui_->lineEdit_packFileName->text() + "\"");
+    ProgressDialog progress("Importing", "Importing data from \"" + ui_->lineEdit_packFileName->text() + "\"", this);
     progress.show();
     progress.raise();
 

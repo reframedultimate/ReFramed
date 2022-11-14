@@ -7,12 +7,12 @@
 
 namespace rfapp {
 
+// ----------------------------------------------------------------------------
 ProgressDialog::ProgressDialog(const QString& title, const QString& text, QWidget* parent)
     : QWidget(parent)
     , bar_(new QProgressBar)
     , info_(new QLabel)
 {
-    setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
     setWindowTitle(title);
     //setWindowFlags(Qt::WindowStaysOnTopHint);
 
@@ -31,9 +31,11 @@ ProgressDialog::ProgressDialog(const QString& title, const QString& text, QWidge
     setLayout(layout);
 }
 
+// ----------------------------------------------------------------------------
 ProgressDialog::~ProgressDialog()
 {}
 
+// ----------------------------------------------------------------------------
 void ProgressDialog::setPercent(int percent, const QString& text)
 {
     bar_->setValue(percent);
