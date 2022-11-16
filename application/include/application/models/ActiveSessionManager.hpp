@@ -3,7 +3,6 @@
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/SetFormat.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include <QObject>
@@ -45,7 +44,6 @@ public:
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
-    bool shouldStartNewSet(const rfcommon::GameMetaData* meta);
     bool findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
 
 private:

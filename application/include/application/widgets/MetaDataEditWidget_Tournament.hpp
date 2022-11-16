@@ -11,19 +11,21 @@ class MetaDataEditWidget_Tournament : public MetaDataEditWidget
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget_Tournament(QWidget* parent=nullptr);
+    explicit MetaDataEditWidget_Tournament(MetaDataEditModel* model, QWidget* parent=nullptr);
     ~MetaDataEditWidget_Tournament();
 
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
-
-    void adoptMetaData() override;
-    void overwriteMetaData() override;
 
 private slots:
     void onAddTOReleased();
     void onAddSponsorReleased();
 
 private:
+    void onAdoptMetaData(rfcommon::MetaData* mdata) override;
+    void onOverwriteMetaData(rfcommon::MetaData* mdata) override;
+    void onMetaDataCleared(rfcommon::MetaData* mdata) override;
+    void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
+
     void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
     void onMetaDataTournamentDetailsChanged() override;
     void onMetaDataEventDetailsChanged() override;

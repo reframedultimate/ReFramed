@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/EventType.hpp"
+#include "rfcommon/BracketType.hpp"
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/RefCounted.hpp"
@@ -65,7 +65,7 @@ public:
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            EventType eventType,
+            BracketType bracketType,
             Round round,
             SetFormat format,
             ScoreCount score,

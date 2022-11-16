@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/EventType.hpp"
+#include "rfcommon/BracketType.hpp"
 #include "rfcommon/MetaData.hpp"
 #include "rfcommon/Round.hpp"
 #include "rfcommon/ScoreCount.hpp"
@@ -18,7 +18,7 @@ class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            EventType eventType,
+            BracketType bracketType,
             Round round,
             SetFormat format,
             ScoreCount score,
@@ -60,9 +60,9 @@ public:
     void addCommentator(const char* name, const char* social, const char* pronouns="he/him");
     void removeCommentator(int idx);
 
-    const EventType eventType() const { return eventType_; }
+    const BracketType bracketType() const { return bracketType_; }
     const String& eventURL() const { return eventURL_; }
-    void setEventType(EventType type);
+    void setEventType(BracketType type);
     void setEventURL(const char* url);
 
     Round round() const { return round_; }
@@ -170,7 +170,7 @@ private:
     SmallVector<Player, 2> players_;
     String tournamentName_, tournamentURL_;
     String eventURL_;
-    EventType eventType_;
+    BracketType bracketType_;
     Round round_;
     SetFormat setFormat_;
     ScoreCount score_;

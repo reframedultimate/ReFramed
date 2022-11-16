@@ -1,21 +1,21 @@
-#include "rfcommon/EventType.hpp"
+#include "rfcommon/BracketType.hpp"
 #include "rfcommon/Profiler.hpp"
 #include <cstring>
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-EventType::EventType(Type type, const char* otherDesc)
+BracketType::BracketType(Type type, const char* otherDesc)
     : type_(type)
     , otherDesc_(otherDesc)
 {
 }
 
 // ----------------------------------------------------------------------------
-EventType::EventType(const char* desc)
+BracketType::BracketType(const char* desc)
     : type_([&desc]() -> Type {
 #define X(type, str) if (strcmp(desc, str) == 0) return type;
-        EVENT_TYPE_LIST
+        BRACKET_TYPE_LIST
 #undef X
         return OTHER;
       }())
@@ -24,13 +24,13 @@ EventType::EventType(const char* desc)
         otherDesc_ = desc;
 }
 
-EventType EventType::makeOther(const char* description) { return EventType(OTHER, description); }
-EventType EventType::fromDescription(const char* description) { return EventType(description); }
-EventType EventType::fromType(Type type) { assert(type != OTHER); return EventType(type, ""); }
-EventType EventType::fromIndex(int index) { assert(index >= 0 && index < OTHER); return EventType(static_cast<Type>(index), ""); }
+BracketType BracketType::makeOther(const char* description) { return BracketType(OTHER, description); }
+BracketType BracketType::fromDescription(const char* description) { return BracketType(description); }
+BracketType BracketType::fromType(Type type) { assert(type != OTHER); return BracketType(type, ""); }
+BracketType BracketType::fromIndex(int index) { assert(index >= 0 && index < OTHER); return BracketType(static_cast<Type>(index), ""); }
 
 // ----------------------------------------------------------------------------
-const char* EventType::description() const
+const char* BracketType::description() const
 {
     PROFILE(EventType, description);
 
@@ -40,14 +40,14 @@ const char* EventType::description() const
     switch (type_)
     {
 #define X(type, str) case type: return str;
-        EVENT_TYPE_LIST
+        BRACKET_TYPE_LIST
 #undef X
         default: std::terminate();
     }
 }
 
 // ----------------------------------------------------------------------------
-bool EventType::operator==(const EventType& rhs) const
+bool BracketType::operator==(const BracketType& rhs) const
 {
     if (type_ == OTHER)
         return type_ == rhs.type_ && otherDesc_ == rhs.otherDesc_;
@@ -55,7 +55,7 @@ bool EventType::operator==(const EventType& rhs) const
 }
 
 // ----------------------------------------------------------------------------
-bool EventType::operator!=(const EventType& rhs) const
+bool BracketType::operator!=(const BracketType& rhs) const
 {
     return !operator==(rhs);
 }

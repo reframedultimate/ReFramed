@@ -1,5 +1,5 @@
+#include "application/models/MetaDataEditModel.hpp"
 #include "application/widgets/MetaDataEditWidget.hpp"
-#include "rfcommon/MetaData.hpp"
 
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
@@ -15,8 +15,9 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget::MetaDataEditWidget(QWidget* parent)
+MetaDataEditWidget::MetaDataEditWidget(MetaDataEditModel* model, QWidget* parent)
     : QWidget(parent)
+    , model_(model)
     , toggleButton_(new QToolButton)
     , title_(new QLabel)
     , toggleAnimation_(new QParallelAnimationGroup(this))
@@ -72,45 +73,14 @@ MetaDataEditWidget::MetaDataEditWidget(QWidget* parent)
     collapsedHeight_ = sizeHint().height();
 
     connect(toggleButton_, &QToolButton::clicked, this, &MetaDataEditWidget::onToggleButtonClicked);
+
+    model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 MetaDataEditWidget::~MetaDataEditWidget()
 {
-    if (mdata_.notNull())
-        mdata_->dispatcher.removeListener(this);
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget::setAndAdoptMetaData(rfcommon::MetaData* mdata)
-{
-    clearMetaData();
-
-    mdata_ = mdata;
-    mdata_->dispatcher.addListener(this);
-
-    adoptMetaData();
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget::setAndOverwriteMetaData(rfcommon::MetaData* mdata)
-{
-    clearMetaData();
-
-    mdata_ = mdata;
-    mdata_->dispatcher.addListener(this);
-
-    overwriteMetaData();
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget::clearMetaData()
-{
-    if (mdata_.isNull())
-        return;
-
-    mdata_->dispatcher.removeListener(this);
-    mdata_.drop();
+    model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------

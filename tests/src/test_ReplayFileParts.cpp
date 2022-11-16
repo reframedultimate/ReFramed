@@ -49,16 +49,16 @@ TEST(NAME, event_parsing)
     auto p3 = ReplayFileParts::fromFileName("2022-09-11 - Grind - ");
     auto p4 = ReplayFileParts::fromFileName("2022-09-11 - Bo5(42) - ");
 
-    EXPECT_THAT(p1.event().type(), Eq(EventType::SINGLES));
+    EXPECT_THAT(p1.event().type(), Eq(BracketType::SINGLES));
     EXPECT_THAT(p1.event().description(), StrEq("Singles Bracket"));
 
-    EXPECT_THAT(p2.event().type(), Eq(EventType::PRACTICE));
+    EXPECT_THAT(p2.event().type(), Eq(BracketType::PRACTICE));
     EXPECT_THAT(p2.event().description(), StrEq("Practice"));
 
-    EXPECT_THAT(p3.event().type(), Eq(EventType::OTHER));
+    EXPECT_THAT(p3.event().type(), Eq(BracketType::OTHER));
     EXPECT_THAT(p3.event().description(), StrEq("Grind"));
 
-    EXPECT_THAT(p4.event().type(), Eq(EventType::OTHER));
+    EXPECT_THAT(p4.event().type(), Eq(BracketType::OTHER));
     EXPECT_THAT(p4.event().description(), StrEq("Bo5(42)"));
 }
 
@@ -149,7 +149,7 @@ TEST(NAME, parse_all_1)
     auto p = ReplayFileParts::fromFileName("2022-09-11 - Singles Bracket - Bo3 (LR4) - Dumb. Ass (K. Rool) vs LM  AOO  AUU (C. Falcon) Game 232.rfr");
 
     ASSERT_THAT(p.playerCount(), Eq(2));
-    EXPECT_THAT(p.event().type(), Eq(EventType::SINGLES));
+    EXPECT_THAT(p.event().type(), Eq(BracketType::SINGLES));
     EXPECT_THAT(p.event().description(), StrEq("Singles Bracket"));
     EXPECT_THAT(p.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p.fighterName(0).cStr(), StrEq("K. Rool"));
@@ -173,7 +173,7 @@ TEST(NAME, parse_all_2)
     auto p = ReplayFileParts::fromFileName("2022-09-11 - Singles Bracket - Bo3 (78) - Dumb. Ass (K. Rool) vs LM  AOO  AUU (C. Falcon) - Game 323 - Kalos.rfr");
 
     ASSERT_THAT(p.playerCount(), Eq(2));
-    EXPECT_THAT(p.event().type(), Eq(EventType::SINGLES));
+    EXPECT_THAT(p.event().type(), Eq(BracketType::SINGLES));
     EXPECT_THAT(p.event().description(), StrEq("Singles Bracket"));
     EXPECT_THAT(p.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p.fighterName(0).cStr(), StrEq("K. Rool"));
@@ -196,7 +196,7 @@ TEST(NAME, parse_all_3)
     auto p = ReplayFileParts::fromFileName("2022-09-11 - Grind - Free (GF) - Dumb. Ass (K. Rool) [L] vs LM  AOO  AUU (C. Falcon) - Game 420 - Town. City.rfr");
 
     ASSERT_THAT(p.playerCount(), Eq(2));
-    EXPECT_THAT(p.event().type(), Eq(EventType::OTHER));
+    EXPECT_THAT(p.event().type(), Eq(BracketType::OTHER));
     EXPECT_THAT(p.event().description(), StrEq("Grind"));
     EXPECT_THAT(p.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p.fighterName(0).cStr(), StrEq("K. Rool"));
@@ -219,7 +219,7 @@ TEST(NAME, parse_all_4)
 {
     auto p = ReplayFileParts::fromFileName("2022-09-11 - Practice - FT10 (GF) - Dumb. Ass (K. Rool) [L] vs LM  AOO  AUU (C. Falcon) [L] - Game 69 (5-8) - Town. City.rfr");
     ASSERT_THAT(p.playerCount(), Eq(2));
-    EXPECT_THAT(p.event().type(), Eq(EventType::PRACTICE));
+    EXPECT_THAT(p.event().type(), Eq(BracketType::PRACTICE));
     EXPECT_THAT(p.event().description(), StrEq("Practice"));
     EXPECT_THAT(p.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p.fighterName(0).cStr(), StrEq("K. Rool"));
@@ -243,7 +243,7 @@ TEST(NAME, parse_all_5)
     auto p = ReplayFileParts::fromFileName("2022-09-11 - Friendlies - Free (3) - Dumb. Ass (K. Rool) vs LM  AOO  AUU (C. Falcon) - Game 80 (35-44) - Town. City.rfr");
 
     ASSERT_THAT(p.playerCount(), Eq(2));
-    EXPECT_THAT(p.event().type(), Eq(EventType::FRIENDLIES));
+    EXPECT_THAT(p.event().type(), Eq(BracketType::FRIENDLIES));
     EXPECT_THAT(p.event().description(), StrEq("Friendlies"));
     EXPECT_THAT(p.playerName(0).cStr(), StrEq("Dumb. Ass"));
     EXPECT_THAT(p.fighterName(0).cStr(), StrEq("K. Rool"));
@@ -270,7 +270,7 @@ TEST(NAME, to_string_1)
             {"Pikachu", "C. Falcon"},
             "2022-09-11", "19:45:22",
             "Town & City",
-            EventType::fromType(EventType::SINGLES),
+            BracketType::fromType(BracketType::SINGLES),
             Round::fromType(Round::WINNERS_ROUND, SessionNumber::fromValue(6)),
             SetFormat::fromType(SetFormat::BO3),
             ScoreCount::fromScore(2, 1),
@@ -287,7 +287,7 @@ TEST(NAME, to_string_2)
             {"Pikachu", "C. Falcon"},
             "2022-09-11", "19:45:22",
             "Town & City",
-            EventType::fromType(EventType::FRIENDLIES),
+            BracketType::fromType(BracketType::FRIENDLIES),
             Round::fromType(Round::FREE, SessionNumber::fromValue(6)),
             SetFormat::fromType(SetFormat::FREE),
             ScoreCount::fromScore(2, 1),

@@ -31,7 +31,7 @@ MetaData* MetaData::newActiveGameSession(
     return new GameMetaData(
             now, now,  // Start, end
             stageID,
-            EventType::fromType(EventType::FRIENDLIES),
+            BracketType::fromType(BracketType::FRIENDLIES),
             Round::makeFree(),
             SetFormat::fromType(SetFormat::FREE),
             ScoreCount::fromScore(0, 0),
@@ -67,7 +67,7 @@ MetaData* MetaData::newSavedGameSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
-        EventType eventType,
+        BracketType bracketType,
         Round round,
         SetFormat format,
         ScoreCount score,
@@ -84,7 +84,7 @@ MetaData* MetaData::newSavedGameSession(
         timeStarted,
         timeEnded,
         stageID,
-        eventType,
+        bracketType,
         round,
         format,
         score,
@@ -246,7 +246,7 @@ static MetaData* load_1_5(json& j)
         return MetaData::newSavedGameSession(
             timeStarted, timeEnded,
             stageID,
-            EventType::fromType(EventType::FRIENDLIES),
+            BracketType::fromType(BracketType::FRIENDLIES),
             Round::fromSessionNumber(sessionNumber),
             format,
             ScoreCount::fromGameNumber(gameNumber),
@@ -359,7 +359,7 @@ static MetaData* load_1_6(json& j)
             timeStarted,
             timeEnded,
             stageID,
-            EventType::fromType(EventType::FRIENDLIES),
+            BracketType::fromType(BracketType::FRIENDLIES),
             Round::fromSessionNumber(sessionNumber),
             format,
             ScoreCount::fromGameNumber(gameNumber),
@@ -487,7 +487,7 @@ uint32_t MetaData::save(FILE* fp) const
                 {"sponsors", jSponsors}
             };
             j["event"] = {
-                {"type", mdata->eventType().description()},
+                {"type", mdata->bracketType().description()},
                 {"url", mdata->eventURL().cStr()}
             };
         } break;

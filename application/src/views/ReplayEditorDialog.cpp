@@ -48,7 +48,7 @@ ReplayEditorDialog::ReplayEditorDialog(
             auto game = mdata->asGame();
 
             ui_->tournamentName->setText(game->tournamentName().cStr());
-            ui_->eventName->setText(game->eventType().description());
+            ui_->eventName->setText(game->bracketType().description());
 
             ui_->setNumber->setValue(game->round().number().value());
             ui_->setFormat->setCurrentIndex(game->setFormat().index());

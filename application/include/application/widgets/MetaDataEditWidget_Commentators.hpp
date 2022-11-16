@@ -11,18 +11,20 @@ class MetaDataEditWidget_Commentators : public MetaDataEditWidget
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget_Commentators(QWidget* parent=nullptr);
+    explicit MetaDataEditWidget_Commentators(MetaDataEditModel* model, QWidget* parent=nullptr);
     ~MetaDataEditWidget_Commentators();
 
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
-
-    void adoptMetaData() override {}
-    void overwriteMetaData() override {}
 
 private slots:
     void onAddCommentatorReleased();
 
 private:
+    void onAdoptMetaData(rfcommon::MetaData* mdata) override;
+    void onOverwriteMetaData(rfcommon::MetaData* mdata) override;
+    void onMetaDataCleared(rfcommon::MetaData* mdata) override;
+    void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
+
     void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
     void onMetaDataTournamentDetailsChanged() override;
     void onMetaDataEventDetailsChanged() override;

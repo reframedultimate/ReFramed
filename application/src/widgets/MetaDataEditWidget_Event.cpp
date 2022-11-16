@@ -1,6 +1,8 @@
+#include "application/models/MetaDataEditModel.hpp"
 #include "application/widgets/MetaDataEditWidget_Event.hpp"
 
-#include "rfcommon/EventType.hpp"
+#include "rfcommon/BracketType.hpp"
+#include "rfcommon/GameMetaData.hpp"
 
 #include <QFormLayout>
 #include <QLabel>
@@ -12,24 +14,34 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Event::MetaDataEditWidget_Event(QWidget* parent)
-    : MetaDataEditWidget(parent)
+MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWidget* parent)
+    : MetaDataEditWidget(model, parent)
+    , label_bracketURL_(new QLabel("Bracket Type:"))
+    , lineEdit_bracketURL_(new QLineEdit)
+    , lineEdit_otherBracketType_(new QLineEdit)
 {
     setTitle("Event");
 
     QComboBox* bracketType = new QComboBox;
 #define X(type, name) bracketType->addItem(name);
-    EVENT_TYPE_LIST
+    BRACKET_TYPE_LIST
 #undef X
+    bracketType->setCurrentIndex(rfcommon::BracketType::FRIENDLIES);
+
+    label_bracketURL_->setVisible(false);
+    lineEdit_bracketURL_->setVisible(false);
+    lineEdit_otherBracketType_->setVisible(false);
 
     QFormLayout* layout = new QFormLayout;
     layout->addRow("Bracket Type:", bracketType);
-    layout->addWidget(new QLineEdit);
-    layout->addRow("Bracket URL:", new QLineEdit);
+    layout->addWidget(lineEdit_otherBracketType_);
+    layout->addRow(label_bracketURL_, lineEdit_bracketURL_);
 
     contentWidget()->setLayout(layout);
     updateSize();
     setExpanded(true);
+
+    connect(bracketType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Event::onComboBoxBracketTypeChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -37,18 +49,61 @@ MetaDataEditWidget_Event::~MetaDataEditWidget_Event()
 {}
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::adoptMetaData()
+void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
+{
+    rfcommon::BracketType type = index == rfcommon::BracketType::OTHER ?
+                rfcommon::BracketType::makeOther(lineEdit_otherBracketType_->text().toUtf8().constData()) :
+                rfcommon::BracketType::fromIndex(index);
+
+    switch (type.type())
+    {
+        case rfcommon::BracketType::SINGLES:
+        case rfcommon::BracketType::DOUBLES:
+        case rfcommon::BracketType::AMATEURS:
+        case rfcommon::BracketType::SIDE:
+            label_bracketURL_->setVisible(true);
+            lineEdit_bracketURL_->setVisible(true);
+            break;
+
+        case rfcommon::BracketType::MONEYMATCH:
+        case rfcommon::BracketType::PRACTICE:
+        case rfcommon::BracketType::FRIENDLIES:
+        case rfcommon::BracketType::OTHER:
+            label_bracketURL_->setVisible(false);
+            lineEdit_bracketURL_->setVisible(false);
+            break;
+    }
+
+    lineEdit_otherBracketType_->setVisible(index == rfcommon::BracketType::OTHER);
+    updateSize();
+
+    model_->dispatcher.dispatch(&MetaDataEditListener::onBracketTypeChangedUI, type);
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Event::onAdoptMetaData(rfcommon::MetaData* mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::overwriteMetaData()
+void MetaDataEditWidget_Event::onOverwriteMetaData(rfcommon::MetaData* mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
+void MetaDataEditWidget_Event::onMetaDataCleared(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
+{
+
+}
+
 void MetaDataEditWidget_Event::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Event::onMetaDataTournamentDetailsChanged() {}
 void MetaDataEditWidget_Event::onMetaDataEventDetailsChanged() {}

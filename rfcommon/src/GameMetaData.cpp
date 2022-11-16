@@ -9,7 +9,7 @@ GameMetaData::GameMetaData(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
-        EventType eventType,
+        BracketType bracketType,
         Round round,
         SetFormat format,
         ScoreCount score,
@@ -20,7 +20,7 @@ GameMetaData::GameMetaData(
         SmallVector<String, 2>&& pronouns,
         int winner)
     : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
-    , eventType_(eventType)
+    , bracketType_(bracketType)
     , round_(round)
     , setFormat_(format)
     , score_(score)
@@ -92,9 +92,9 @@ void GameMetaData::removeCommentator(int idx)
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setEventType(EventType type)
+void GameMetaData::setEventType(BracketType type)
 {
-    eventType_ = type;
+    bracketType_ = type;
     dispatcher.dispatch(&MetaDataListener::onMetaDataEventDetailsChanged);
 }
 

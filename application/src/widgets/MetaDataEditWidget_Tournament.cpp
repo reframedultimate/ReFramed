@@ -9,8 +9,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(QWidget* parent)
-    : MetaDataEditWidget(parent)
+MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(MetaDataEditModel* model, QWidget* parent)
+    : MetaDataEditWidget(model, parent)
     , TOLayout_(new QVBoxLayout)
     , sponsorsLayout_(new QVBoxLayout)
 {
@@ -40,18 +40,6 @@ MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(QWidget* parent)
 // ----------------------------------------------------------------------------
 MetaDataEditWidget_Tournament::~MetaDataEditWidget_Tournament()
 {}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::adoptMetaData()
-{
-
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::overwriteMetaData()
-{
-
-}
 
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Tournament::onAddTOReleased()
@@ -129,6 +117,29 @@ void MetaDataEditWidget_Tournament::onAddSponsorReleased()
 }
 
 // ----------------------------------------------------------------------------
+void MetaDataEditWidget_Tournament::onAdoptMetaData(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Tournament::onOverwriteMetaData(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Tournament::onMetaDataCleared(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Tournament::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
+{
+
+}
+
 void MetaDataEditWidget_Tournament::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Tournament::onMetaDataTournamentDetailsChanged() {}
 void MetaDataEditWidget_Tournament::onMetaDataEventDetailsChanged() {}

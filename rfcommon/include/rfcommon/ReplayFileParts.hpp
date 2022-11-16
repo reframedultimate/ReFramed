@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rfcommon/config.hpp"
-#include "rfcommon/EventType.hpp"
+#include "rfcommon/BracketType.hpp"
 #include "rfcommon/Round.hpp"
 #include "rfcommon/ScoreCount.hpp"
 #include "rfcommon/SetFormat.hpp"
@@ -22,7 +22,7 @@ public:
             String date,
             String time,
             String stage,
-            EventType event,
+            BracketType event,
             Round round,
             SetFormat format,
             ScoreCount score,
@@ -45,7 +45,7 @@ public:
 
     String date() const { return date_; }
     String time() const { return time_; }
-    EventType event() const { return event_; }
+    BracketType event() const { return event_; }
     Round round() const { return round_; }
     SetFormat setFormat() const { return format_; }
     ScoreCount score() const { return score_; }
@@ -62,7 +62,7 @@ private:
     String date_;
     String time_;
     String stage_;
-    EventType event_;
+    BracketType event_;
     ScoreCount score_;
     Round round_;
     SetFormat format_;

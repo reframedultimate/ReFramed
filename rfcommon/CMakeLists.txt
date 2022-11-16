@@ -131,6 +131,7 @@ add_library (rfcommon SHARED
     "include/rfcommon/Utf8.hpp"
 
     "src/AnalysisResult.cpp"
+    "src/BracketType.cpp"
     "src/crc32.c"
     "src/DataSet.cpp"
     "src/DataSetFilter.cpp"
@@ -144,7 +145,6 @@ add_library (rfcommon SHARED
     "src/DataSetProcessor.cpp"
     "src/DeltaTime.cpp"
     "src/Deserializer.cpp"
-    "src/EventType.cpp"
     "src/FighterFlags.cpp"
     "src/FighterHitStatus.cpp"
     "src/FighterID.cpp"

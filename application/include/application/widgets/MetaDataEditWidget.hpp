@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rfcommon/MetaDataListener.hpp"
-#include "rfcommon/Reference.hpp"
+#include "application/listeners/MetaDataEditListener.hpp"
+
 #include <QWidget>
 #include <QVector>
 
@@ -10,11 +10,9 @@ class QParallelAnimationGroup;
 class QScrollArea;
 class QLabel;
 
-namespace rfcommon {
-    class MetaData;
-}
-
 namespace rfapp {
+
+class MetaDataEditModel;
 
 /*!
  * @brief Collapsible widget. Code was copied from here and adapted:
@@ -32,31 +30,22 @@ namespace rfapp {
  */
 class MetaDataEditWidget
         : public QWidget
-        , public rfcommon::MetaDataListener
+        , public MetaDataEditListener
 {
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget(QWidget* parent=nullptr);
+    explicit MetaDataEditWidget(MetaDataEditModel* model, QWidget* parent=nullptr);
     ~MetaDataEditWidget();
-
-    void setAndAdoptMetaData(rfcommon::MetaData* mdata);
-    void setAndOverwriteMetaData(rfcommon::MetaData* mdata);
-    void clearMetaData();
 
     void setTitle(const QString& title);
     QWidget* contentWidget();
-
-    rfcommon::MetaData* metaData() { return mdata_; }
 
     /*!
      * \brief Derived classes should return a list of widgets that
      * should be ignored by the scroll wheel
      */
     virtual QVector<QWidget*> scrollIgnoreWidgets() = 0;
-
-    virtual void adoptMetaData() = 0;
-    virtual void overwriteMetaData() = 0;
 
 public slots:
     void setExpanded(bool expanded);
@@ -65,8 +54,9 @@ public slots:
 protected:
     void updateSize();
 
+    MetaDataEditModel* model_;
+
 private:
-    rfcommon::Reference<rfcommon::MetaData> mdata_;
     QToolButton* toggleButton_;
     QLabel* title_;
     QParallelAnimationGroup* toggleAnimation_;

@@ -1,12 +1,11 @@
 #include "application/models/ActiveSessionManager.hpp"
+#include "application/models/MetaDataEditModel.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
 #include "application/widgets/MetaDataEditWidget_Commentators.hpp"
 #include "application/widgets/MetaDataEditWidget_Event.hpp"
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
-#include "application/widgets/MetaDataEditWidget_Players.hpp"
 #include "application/widgets/MetaDataEditWidget_Tournament.hpp"
-#include "application/Util.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
@@ -40,6 +39,7 @@ ActiveSessionView::ActiveSessionView(
     : QWidget(parent)
     //, ui_(new Ui::ActiveSessionView)
     , activeSessionManager_(activeSessionManager)
+    , metaDataEditModel_(new MetaDataEditModel)
 {
     /*ui_->setupUi(this);
     ui_->lineEdit_formatOther->setVisible(false);
@@ -57,11 +57,10 @@ ActiveSessionView::ActiveSessionView(
     connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP2TextChanged);*/
 
     QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament);
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators);
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Event);
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Game);
-    //metaDataEditLayout->addWidget(new MetaDataEditWidget_Players);
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament(metaDataEditModel_.get()));
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators(metaDataEditModel_.get()));
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Event(metaDataEditModel_.get()));
+    metaDataEditLayout->addWidget(new MetaDataEditWidget_Game(metaDataEditModel_.get()));
     metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metaDataEditContents = new QWidget;
@@ -163,7 +162,15 @@ void ActiveSessionView::onActiveSessionManagerDisconnected()
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* game)
-{/*
+{
+    auto* map = game->tryGetMappingInfo();
+    auto* mdata = game->tryGetMetaData();
+    assert(map);
+    assert(mdata);
+
+    metaDataEditModel_->setAndOverwrite(mdata);
+
+    /*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameStarted);
 
     clearLayout(ui_->layout_playerInfo);
@@ -213,7 +220,10 @@ void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* gam
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameEnded(rfcommon::Session* game)
-{/*
+{
+    metaDataEditModel_->clear();
+
+    /*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameEnded);
 
     ui_->label_stage->setText("--");

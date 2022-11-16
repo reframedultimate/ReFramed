@@ -15,7 +15,7 @@ ReplayFileParts::ReplayFileParts(
         String date,
         String time,
         String stage,
-        EventType event,
+        BracketType event,
         Round round,
         SetFormat format,
         ScoreCount score,
@@ -363,7 +363,7 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
                 std::move(players),
                 std::move(characters),
                 date, time, stage,
-                EventType::fromDescription(event.cStr()),
+                BracketType::fromDescription(event.cStr()),
                 roundObj,
                 SetFormat::fromDescription(setFormat.cStr()),
                 p1Score == -1 ? ScoreCount::fromGameNumber(GameNumber::fromValue(gameNumber)) : ScoreCount::fromScore(p1Score, p2Score),
@@ -374,7 +374,7 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
 {
     ReplayFileParts parts("", {}, {}, "", "", "",
-            EventType::fromType(EventType::OTHER),
+            BracketType::fromType(BracketType::OTHER),
             Round::makeFree(),
             SetFormat::fromType(SetFormat::FREE),
             ScoreCount::fromScore(0, 0),

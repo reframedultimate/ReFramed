@@ -13,6 +13,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class ActiveSessionManager;
+class MetaDataEditModel;
 class PluginManager;
 class Protocol;
 
@@ -36,6 +37,7 @@ private:
 
 private:
     ActiveSessionManager* activeSessionManager_;
+    std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
 };
 
 }

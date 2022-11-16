@@ -99,11 +99,11 @@ public:
      * listeners. These must map the function signature of the function declared
      * in the listener interface.
      */
-    template <class RET_TYPE, class... ARGS, class... PARAMS>
-    void dispatch(RET_TYPE (Listener::*func)(ARGS...), PARAMS&&... params) const;
+    template <typename L, typename Ret, typename... Args, typename... Params>
+    void dispatch(Ret (L::*func)(Args...), Params&&... params) const;
 
-    template <class RET_TYPE, class... ARGS, class... PARAMS>
-    void dispatchIgnore(Listener* ignore, RET_TYPE (Listener::*func)(ARGS...), PARAMS&&... params) const;
+    template <typename L, typename Ret, typename... Args, typename... Params>
+    void dispatchIgnore(Listener* ignore, Ret (L::*func)(Args...), Params&&... params) const;
 
     /*!
      * @brief Dispatches a message to all listeners
@@ -118,8 +118,8 @@ public:
      * listeners. These must map the function signature of the function declared
      * in the listener interface.
      */
-    template <class... ARGS, class... PARAMS>
-    bool dispatchAndFindFalse(bool (Listener::*func)(ARGS...), PARAMS&&... params) const;
+    template <typename L, typename... Args, typename... Params>
+    bool dispatchAndFindFalse(bool (L::*func)(Args...), Params&&... params) const;
 
 private:
     ContainerType listeners_;
@@ -159,7 +159,7 @@ void ListenerDispatcher<Listener>::addListener(Listener* listener)
 }
 
 // ----------------------------------------------------------------------------
-template <class Listener>
+template <typename Listener>
 void ListenerDispatcher<Listener>::removeListener(Listener* listener)
 {
 #ifndef NDEBUG
@@ -176,17 +176,16 @@ void ListenerDispatcher<Listener>::removeListener(Listener* listener)
 }
 
 // ----------------------------------------------------------------------------
-template <class Listener>
-template <class RET_TYPE, typename... ARGS, typename... PARAMS>
-void ListenerDispatcher<Listener>::
-    dispatch(RET_TYPE(Listener::*func)(ARGS...), PARAMS&&... params) const
+template <typename Listener>
+template <typename L, typename Ret, typename... Args, typename... Params>
+void ListenerDispatcher<Listener>::dispatch(Ret(L::*func)(Args...), Params&&... params) const
 {
 #ifndef NDEBUG
     isDispatching_ = true;
 #endif
 
     for(auto listener : listeners_)
-        (listener->*func)(std::forward<ARGS>(params)...);
+        (listener->*func)(std::forward<Args>(params)...);
 
 #ifndef NDEBUG
     isDispatching_ = false;
@@ -194,10 +193,9 @@ void ListenerDispatcher<Listener>::
 }
 
 // ----------------------------------------------------------------------------
-template <class Listener>
-template <class RET_TYPE, typename... ARGS, typename... PARAMS>
-void ListenerDispatcher<Listener>::
-    dispatchIgnore(Listener* ignore, RET_TYPE(Listener::*func)(ARGS...), PARAMS&&... params) const
+template <typename Listener>
+template <typename L, typename Ret, typename... Args, typename... Params>
+void ListenerDispatcher<Listener>::dispatchIgnore(Listener* ignore, Ret(L::*func)(Args...), Params&&... params) const
 {
 #ifndef NDEBUG
     isDispatching_ = true;
@@ -205,7 +203,7 @@ void ListenerDispatcher<Listener>::
 
     for(auto listener : listeners_)
         if (listener != ignore)
-            (listener->*func)(std::forward<ARGS>(params)...);
+            (listener->*func)(std::forward<Args>(params)...);
 
 #ifndef NDEBUG
     isDispatching_ = false;
@@ -213,17 +211,16 @@ void ListenerDispatcher<Listener>::
 }
 
 // ----------------------------------------------------------------------------
-template <class Listener>
-template <class... ARGS, class... PARAMS>
-bool ListenerDispatcher<Listener>::
-    dispatchAndFindFalse(bool (Listener::*func)(ARGS...), PARAMS&&... params) const
+template <typename Listener>
+template <typename L, typename... Args, typename... Params>
+bool ListenerDispatcher<Listener>::dispatchAndFindFalse(bool (L::*func)(Args...), Params&&... params) const
 {
 #ifndef NDEBUG
     isDispatching_ = true;
 #endif
 
     for(auto listener : listeners_)
-        if ((listener->*func)(std::forward<ARGS>(params)...) == false)
+        if ((listener->*func)(std::forward<Args>(params)...) == false)
             return false;
     return true;
 

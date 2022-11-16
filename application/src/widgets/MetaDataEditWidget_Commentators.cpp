@@ -9,8 +9,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Commentators::MetaDataEditWidget_Commentators(QWidget* parent)
-    : MetaDataEditWidget(parent)
+MetaDataEditWidget_Commentators::MetaDataEditWidget_Commentators(MetaDataEditModel* model, QWidget* parent)
+    : MetaDataEditWidget(model, parent)
     , commentatorsLayout_(new QVBoxLayout)
 {
     setTitle("Commentators");
@@ -68,6 +68,29 @@ void MetaDataEditWidget_Commentators::onAddCommentatorReleased()
 }
 
 // ----------------------------------------------------------------------------
+void MetaDataEditWidget_Commentators::onAdoptMetaData(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Commentators::onOverwriteMetaData(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Commentators::onMetaDataCleared(rfcommon::MetaData* mdata)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Commentators::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
+{
+
+}
+
 void MetaDataEditWidget_Commentators::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Commentators::onMetaDataTournamentDetailsChanged() {}
 void MetaDataEditWidget_Commentators::onMetaDataEventDetailsChanged() {}

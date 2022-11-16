@@ -39,79 +39,6 @@ Protocol* ActiveSessionManager::protocol() const
 }
 
 // ----------------------------------------------------------------------------
-bool ActiveSessionManager::shouldStartNewSet(const rfcommon::GameMetaData* meta)
-{
-    PROFILE(ActiveSessionManager, shouldStartNewSet);
-
-    // For any game that doesn't have exactly 2 players we don't care about sets
-    if (meta->fighterCount() != 2)
-        return true;
-
-    // No past sessions? -> new set
-    if (pastMetaData_.size() == 0)
-        return true;
-
-    const auto& prev = pastMetaData_.back();
-
-    // Player tags might have changed
-    if (prev->playerTag(0) != meta->playerTag(0) ||
-        prev->playerTag(1) != meta->playerTag(1))
-    {
-        return true;
-    }
-
-    // Player names might have changed
-    if (prev->playerName(0) != meta->playerName(0) ||
-        prev->playerName(1) != meta->playerName(1))
-    {
-        return true;
-    }
-
-    // Format might have changed
-    if (prev->setFormat().type() != meta->setFormat().type())
-        return true;
-
-    // tally up wins for each player
-    int win[2] = {0, 0};
-    for (const auto& pastMeta : pastMetaData_)
-        if (pastMeta->winner() >= 0)  // Could be -1. Shouldn't be, but who knows
-            win[pastMeta->winner()]++;
-
-    switch (meta->setFormat().type())
-    {
-        case rfcommon::SetFormat::BO3: {
-            if (win[0] >= 2 || win[1] >= 2)
-                return true;
-        } break;
-
-        case rfcommon::SetFormat::BO5: {
-            if (win[0] >= 3 || win[1] >= 3)
-                return true;
-        } break;
-
-        case rfcommon::SetFormat::BO7: {
-            if (win[0] >= 4 || win[1] >= 4)
-                return true;
-        } break;
-
-        case rfcommon::SetFormat::FT5: {
-            if (win[0] >= 5 || win[1] >= 5)
-                return true;
-        } break;
-
-        case rfcommon::SetFormat::FT10: {
-            if (win[0] >= 10 || win[1] >= 10)
-                return true;
-        } break;
-
-        case rfcommon::SetFormat::FREE:
-            break;
-    }
-
-    return false;
-}
-
-// ----------------------------------------------------------------------------
 bool ActiveSessionManager::findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
     const QDir& dir = replayManager_->defaultGamePath();
@@ -154,90 +81,10 @@ void ActiveSessionManager::onProtocolGameStarted(rfcommon::Session* game)
 {
     PROFILE(ActiveSessionManager, onProtocolGameStarted);
 
-    auto map = game->tryGetMappingInfo();
-    auto mdata = game->tryGetMetaData();
-    assert(map); assert(mdata);
-
-    auto allTagsMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
-        assert(a->fighterCount() == b->fighterCount());
-        for (int i = 0; i != a->fighterCount(); ++i)
-            if (a->playerTag(i) != b->playerTag(i))
-                return false;
-        return true;
-    };
-
-    auto allFightersMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
-        assert(a->fighterCount() == b->fighterCount());
-        for (int i = 0; i != a->fighterCount(); ++i)
-            if (a->playerFighterID(i) != b->playerFighterID(i))
-                return false;
-        return true;
-    };
-
-    // First off, if we have data from previous sessions, determine if the new
-    // session has the same format and players. If yes, then copy the data from
-    // the previous session to the current session so we can calculate the next
-    // round/game number
-    if (pastMetaData_.size() > 0)
-    {
-        rfcommon::MetaData* past = pastMetaData_.back();
-        if (mdata->type() == past->type() &&
-                mdata->fighterCount() == past->fighterCount() &&
-                allTagsMatch(mdata, past) &&
-                allFightersMatch(mdata, past))
-        {
-            switch (mdata->type())
-            {
-                case rfcommon::MetaData::GAME: {
-                    auto gdata = mdata->asGame();
-                    auto gpast = past->asGame();
-                    gdata->setEventType(gpast->eventType());
-                    gdata->setEventURL(gpast->eventURL().cStr());
-                    gdata->setRound(gpast->round());
-                    gdata->setScore(gpast->score());
-                    gdata->setSetFormat(gpast->setFormat());
-                    for (int i = 0; i != mdata->fighterCount(); ++i)
-                        gdata->setPlayerName(i, gpast->playerName(i).cStr());
-                    // TODO copy over all of the other fields
-                } break;
-
-                case rfcommon::MetaData::TRAINING: {
-                    mdata->asTraining()->setSessionNumber(past->asTraining()->sessionNumber());
-                } break;
-            }
-        }
-    }
-
-    switch (mdata->type())
-    {
-        case rfcommon::MetaData::GAME:
-            if (shouldStartNewSet(mdata->asGame()))
-            {
-                auto gdata = mdata->asGame();
-                gdata->setScore(rfcommon::ScoreCount::fromScore(0, 0));
-                pastMetaData_.clear();
-            }
-            else if (pastMetaData_.size() > 0)
-            {
-                // Try to to the next game in the set
-                if (int winner = pastMetaData_.back()->winner(); winner > -1)
-                {
-                    auto pastScore = pastMetaData_.back()->score();
-                    mdata->asGame()->setScore(rfcommon::ScoreCount::fromScore(
-                        pastScore.left() + (winner == 0), pastScore.right() + (winner == 1)
-                    ));
-                }
-            }
-            break;
-
-        case rfcommon::MetaData::TRAINING:
-            break;
-    }
+    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameStarted, game);
 
     // Modify game/set numbers until we have a unique filename
-    findFreeRoundAndGameNumbers(map, mdata);
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameStarted, game);
+    findFreeRoundAndGameNumbers(game->tryGetMappingInfo(), game->tryGetMetaData());
 }
 
 // ----------------------------------------------------------------------------

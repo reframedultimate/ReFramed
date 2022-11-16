@@ -13,6 +13,7 @@ set (APPLICATION_SOURCES
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
     "src/models/FighterIcon.cpp"
+    "src/models/MetaDataEditModel.cpp"
     "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
     "src/models/ProtocolTask.cpp"
@@ -39,7 +40,6 @@ set (APPLICATION_SOURCES
     "src/widgets/MetaDataEditWidget_Commentators.cpp"
     "src/widgets/MetaDataEditWidget_Event.cpp"
     "src/widgets/MetaDataEditWidget_Game.cpp"
-    "src/widgets/MetaDataEditWidget_Players.cpp"
     "src/widgets/MetaDataEditWidget_Tournament.cpp"
     "src/widgets/ProgressDialog.cpp"
     "src/widgets/ReplaySearchBox.cpp"
@@ -49,6 +49,7 @@ set (APPLICATION_SOURCES
 set (APPLICATION_HEADERS
     "include/application/listeners/ActiveSessionManagerListener.hpp"
     "include/application/listeners/DataSetBackgroundLoaderListener.hpp"
+    "include/application/listeners/MetaDataEditListener.hpp"
     "include/application/listeners/ReplayGroupListener.hpp"
     "include/application/listeners/ReplayManagerListener.hpp"
     "include/application/listeners/RunningGameSessionManagerListener.hpp"
@@ -56,6 +57,7 @@ set (APPLICATION_HEADERS
     "include/application/models/ConfigAccessor.hpp"
     "include/application/models/Config.hpp"
     "include/application/models/FighterIcon.hpp"
+    "include/application/models/MetaDataEditModel.hpp"
     "include/application/models/PluginManager.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
@@ -65,7 +67,6 @@ set (APPLICATION_HEADERS
     "include/application/models/ReplayManager.hpp"
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/UserMotionLabelsManager.hpp"
-    "include/application/views/ActiveGameSessionView.hpp"
     "include/application/views/RunningGameSessionView.hpp"
     "include/application/widgets/ConnectionStatusWidget.hpp"
     "include/application/Util.hpp")
@@ -91,7 +92,6 @@ set (APPLICATION_HEADERS_MOC
     "include/application/widgets/MetaDataEditWidget_Commentators.hpp"
     "include/application/widgets/MetaDataEditWidget_Event.hpp"
     "include/application/widgets/MetaDataEditWidget_Game.hpp"
-    "include/application/widgets/MetaDataEditWidget_Players.hpp"
     "include/application/widgets/MetaDataEditWidget_Tournament.hpp"
     "include/application/widgets/ProgressDialog.hpp"
 	"include/application/widgets/ReplaySearchBox.hpp")
