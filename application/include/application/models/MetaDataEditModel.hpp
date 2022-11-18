@@ -5,6 +5,7 @@
 #include "rfcommon/Reference.hpp"
 
 namespace rfcommon {
+    class MappingInfo;
     class MetaData;
 }
 
@@ -18,12 +19,13 @@ public:
     MetaDataEditModel();
     ~MetaDataEditModel();
 
-    void setAndAdopt(rfcommon::MetaData* mdata);
-    void setAndOverwrite(rfcommon::MetaData* mdata);
+    void setAndAdopt(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
+    void setAndOverwrite(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
     void clear();
 
     void notifyBracketTypeChanged();
 
+    rfcommon::MappingInfo* mappingInfo() { return map_; }
     rfcommon::MetaData* metaData() { return mdata_; }
 
     rfcommon::ListenerDispatcher<MetaDataEditListener> dispatcher;
@@ -39,6 +41,7 @@ private:
     void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
 
 private:
+    rfcommon::Reference<rfcommon::MappingInfo> map_;
     rfcommon::Reference<rfcommon::MetaData> mdata_;
 };
 

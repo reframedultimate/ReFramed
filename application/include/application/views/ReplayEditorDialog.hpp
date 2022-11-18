@@ -3,16 +3,13 @@
 #include "rfcommon/Reference.hpp"
 #include <QDialog>
 
-namespace Ui {
-    class ReplayEditorDialog;
-}
-
 namespace rfcommon {
     class Session;
 }
 
 namespace rfapp {
 
+class MetaDataEditModel;
 class ReplayManager;
 
 class ReplayEditorDialog : public QDialog
@@ -23,29 +20,14 @@ public:
             ReplayManager* replayManager,
             rfcommon::Session* session,
             const QString& currentFileNameParts,
-            QWidget* parent=nullptr);
+            QWidget* parent);
     ~ReplayEditorDialog();
 
 private slots:
     void onSaveClicked();
 
-    void onTournamentNameChanged(const QString& name);
-    void onEventNameChanged(const QString& name);
-
-    void onTimeStartedChanged(const QDateTime& started);
-    void onSetNumberChanged(int value);
-    void onSetFormatChanged(int index);
-    void customFormatTextChanged(const QString& text);
-    void onGameNumberChanged(int value);
-    void onRoundChanged(const QString& name);
-
-    void onPlayerSponsorChanged(int fighterIdx, const QString& name);
-    void onPlayerNameChanged(int fighterIdx, const QString& name);
-
-    void onCommentatorChanged(const QString& name);
-
 private:
-    Ui::ReplayEditorDialog* ui_;
+    std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
     ReplayManager* replayManager_;
     rfcommon::Reference<rfcommon::Session> session_;
     const QString currentFileNameParts_;

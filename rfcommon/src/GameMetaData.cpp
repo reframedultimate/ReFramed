@@ -1,6 +1,7 @@
 #include "rfcommon/GameMetaData.hpp"
 #include "rfcommon/MetaDataListener.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Log.hpp"
 
 namespace rfcommon {
 
@@ -57,6 +58,17 @@ void GameMetaData::addTournamentOrganizer(const char* name, const char* social, 
 }
 
 // ----------------------------------------------------------------------------
+void GameMetaData::setTournamentOrganizer(int toIdx, const char* name, const char* social, const char* pronouns)
+{
+    Log::root()->debug("TO #%d set to %s, %s, %s", toIdx, name, social, pronouns);
+    organizers_[toIdx].name = name;
+    organizers_[toIdx].social = social;
+    organizers_[toIdx].pronouns = pronouns;
+
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
 void GameMetaData::removeTournamentOrganizer(int idx)
 {
     organizers_.erase(idx);
@@ -71,6 +83,16 @@ void GameMetaData::addSponsor(const char* name, const char* website)
 }
 
 // ----------------------------------------------------------------------------
+void GameMetaData::setSponsor(int idx, const char* name, const char* website)
+{
+    Log::root()->debug("Sponsor #%d set to %s, %s", idx, name, website);
+    sponsors_[idx].name = name;
+    sponsors_[idx].website = website;
+
+    dispatcher.dispatch(&MetaDataListener::onMetaDataTournamentDetailsChanged);
+}
+
+// ----------------------------------------------------------------------------
 void GameMetaData::removeSponsor(int idx)
 {
     sponsors_.erase(idx);
@@ -81,6 +103,15 @@ void GameMetaData::removeSponsor(int idx)
 void GameMetaData::addCommentator(const char* name, const char* social, const char* pronouns)
 {
     commentators_.push({ name, social, pronouns });
+    dispatcher.dispatch(&MetaDataListener::onMetaDataCommentatorsChanged);
+}
+
+// ----------------------------------------------------------------------------
+void GameMetaData::setCommentator(int idx, const char* name, const char* social, const char* pronouns)
+{
+    commentators_[idx].name = name;
+    commentators_[idx].social = social;
+    commentators_[idx].pronouns = pronouns;
     dispatcher.dispatch(&MetaDataListener::onMetaDataCommentatorsChanged);
 }
 

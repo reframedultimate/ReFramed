@@ -13,6 +13,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class ActiveSessionManager;
+class CollapsibleSplitter;
 class MetaDataEditModel;
 class PluginManager;
 class Protocol;
@@ -29,6 +30,8 @@ public:
             QWidget* parent=nullptr);
     ~ActiveSessionView();
 
+    void toggleSideBar();
+
 private:
     void onActiveSessionManagerGameStarted(rfcommon::Session* game) override;
     void onActiveSessionManagerGameEnded(rfcommon::Session* game) override;
@@ -38,6 +41,8 @@ private:
 private:
     ActiveSessionManager* activeSessionManager_;
     std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
+    CollapsibleSplitter* splitter_;
+    int size0_, size1_;
 };
 
 }

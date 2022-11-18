@@ -374,7 +374,7 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
 {
     ReplayFileParts parts("", {}, {}, "", "", "",
-            BracketType::fromType(BracketType::OTHER),
+            BracketType::makeOther(""),
             Round::makeFree(),
             SetFormat::fromType(SetFormat::FREE),
             ScoreCount::fromScore(0, 0),

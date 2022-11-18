@@ -18,9 +18,9 @@ public:
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
 
 private:
-    void onAdoptMetaData(rfcommon::MetaData* mdata) override;
-    void onOverwriteMetaData(rfcommon::MetaData* mdata) override;
-    void onMetaDataCleared(rfcommon::MetaData* mdata) override;
+    void onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
+    void onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
+    void onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
     void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
 
     void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;

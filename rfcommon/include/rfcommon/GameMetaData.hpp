@@ -45,12 +45,14 @@ public:
     const String& tournamentOrganizerSocial(int toIdx) const { return organizers_[toIdx].social; }
     const String& tournamentOrganizerPronouns(int toIdx) const { return organizers_[toIdx].pronouns; }
     void addTournamentOrganizer(const char* name, const char* social, const char* pronouns="he/him");
+    void setTournamentOrganizer(int toIdx, const char* name, const char* social, const char* pronouns);
     void removeTournamentOrganizer(int toIdx);
 
     int sponsorCount() const { return sponsors_.count(); }
     const String& sponsorName(int idx) const { return sponsors_[idx].name; }
     const String& sponsorWebsite(int idx) const { return sponsors_[idx].website; }
     void addSponsor(const char* name, const char* website);
+    void setSponsor(int idx, const char* name, const char* website);
     void removeSponsor(int idx);
 
     int commentatorCount() const { return commentators_.count(); }
@@ -58,6 +60,7 @@ public:
     const String& commentatorSocial(int idx) const { return commentators_[idx].social; }
     const String& commentatorPronouns(int idx) const { return commentators_[idx].pronouns; }
     void addCommentator(const char* name, const char* social, const char* pronouns="he/him");
+    void setCommentator(int idx, const char* name, const char* social, const char* pronouns);
     void removeCommentator(int idx);
 
     const BracketType bracketType() const { return bracketType_; }

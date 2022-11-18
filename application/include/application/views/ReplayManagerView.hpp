@@ -12,6 +12,7 @@ namespace rfcommon {
 
 namespace rfapp {
 
+class CollapsibleSplitter;
 class PluginDockView;
 class PluginManager;
 class ReplayListModel;
@@ -39,6 +40,8 @@ public:
             QWidget* parent=nullptr);
     ~ReplayManagerView();
 
+    void toggleSideBar();
+
 private slots:
     void groupSelected(QListWidgetItem* current, QListWidgetItem* previous);
     void searchTextChanged(int type, const QStringList& text);
@@ -56,8 +59,10 @@ private:
     std::unique_ptr<ReplayListSortFilterModel> replayListSortFilterModel_;
     ReplayListView* replayListView_;
     ReplayGroupListView* replayGroupListView_;
-
     PluginDockView* pluginDockView_;
+
+    CollapsibleSplitter* hSplitter_;
+    int size0_, size1_;
 
     QVector<bool> storeExpandedStates_;
 };

@@ -38,6 +38,7 @@ public:
     ~Round();
 
     Type type() const { return type_; }
+    int index() const { return static_cast<int>(type_); }
     SessionNumber number() const { return number_; }
     String shortDescription() const;
     String longDescription() const;

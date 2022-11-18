@@ -23,8 +23,6 @@ class Config;
 class PluginManager;
 class Protocol;
 class ActiveSessionManager;
-class ActiveSessionView;
-class ReplayManagerView;
 class ReplayManager;
 class UserMotionLabelsManager;
 class UserMotionLabelsEditor;
@@ -85,8 +83,6 @@ private:
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<ActiveSessionManager> activeSessionManager_;
     CategoryTabsView* categoryTabsView_;
-    ReplayManagerView* replayManagerView_;
-    ActiveSessionView* activeSessionView_;
     Ui::MainWindow* ui_;
 
     // Non-modal views that appear in a separate window

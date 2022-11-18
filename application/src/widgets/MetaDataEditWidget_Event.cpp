@@ -16,7 +16,7 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWidget* parent)
     : MetaDataEditWidget(model, parent)
-    , label_bracketURL_(new QLabel("Bracket Type:"))
+    , label_bracketURL_(new QLabel("Bracket URL:"))
     , lineEdit_bracketURL_(new QLineEdit)
     , lineEdit_otherBracketType_(new QLineEdit)
 {
@@ -81,29 +81,20 @@ void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onAdoptMetaData(rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Event::onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onOverwriteMetaData(rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Event::onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onMetaDataCleared(rfcommon::MetaData* mdata)
-{
-
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
-{
-
-}
-
+void MetaDataEditWidget_Event::onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) {}
+void MetaDataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
 void MetaDataEditWidget_Event::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Event::onMetaDataTournamentDetailsChanged() {}
 void MetaDataEditWidget_Event::onMetaDataEventDetailsChanged() {}

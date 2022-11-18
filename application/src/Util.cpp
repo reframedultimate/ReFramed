@@ -87,4 +87,21 @@ QRect calculatePopupGeometryActiveScreen()
     return QRect(x, y, width, height);
 }
 
+// ----------------------------------------------------------------------------
+QRect calculatePopupGeometryActiveScreen(int fixedWidth)
+{
+    PROFILE(UtilGlobal, calculatePopupGeometryActiveScreen);
+
+    QScreen* screen = QApplication::screenAt(QCursor::pos());
+    if (screen == nullptr)
+        screen = QApplication::primaryScreen();
+
+    QRect screenRect = screen->geometry();
+    int height = screenRect.height() * 3 / 4;
+    int x = (screenRect.width() - fixedWidth) / 2 + screenRect.x();
+    int y = (screenRect.height() - height) / 2 + screenRect.y();
+
+    return QRect(x, y, fixedWidth, height);
+}
+
 }

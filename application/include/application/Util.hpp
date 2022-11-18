@@ -43,5 +43,6 @@ void clearStackedWidget(QStackedWidget* sw);
 QRect calculatePopupGeometryKeepSize(const QWidget* main, const QWidget* popup, QRect popupRect);
 
 QRect calculatePopupGeometryActiveScreen();
+QRect calculatePopupGeometryActiveScreen(int fixedWidth);
 
 }

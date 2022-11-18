@@ -31,7 +31,7 @@ public:
             ReplayManager* replayManager,
             rfcommon::Session* session,
             const QString& currentFileNameParts,
-            QWidget* parent=nullptr);
+            QWidget* parent);
     ~VideoAssociatorDialog();
 
 private slots:

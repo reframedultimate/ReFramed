@@ -2,6 +2,7 @@
 #include "application/models/MetaDataEditModel.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
+#include "application/widgets/CollapsibleSplitter.hpp"
 #include "application/widgets/MetaDataEditWidget_Commentators.hpp"
 #include "application/widgets/MetaDataEditWidget_Event.hpp"
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
@@ -26,7 +27,7 @@ namespace {
 class ScrollAreaWithSizeHint : public QScrollArea
 {
 public:
-    QSize sizeHint() const override { return QSize(40, 100); }
+    QSize sizeHint() const override { return QSize(900, 100); }
 };
 
 }
@@ -37,25 +38,9 @@ ActiveSessionView::ActiveSessionView(
         PluginManager* pluginManager,
         QWidget* parent)
     : QWidget(parent)
-    //, ui_(new Ui::ActiveSessionView)
     , activeSessionManager_(activeSessionManager)
     , metaDataEditModel_(new MetaDataEditModel)
 {
-    /*ui_->setupUi(this);
-    ui_->lineEdit_formatOther->setVisible(false);
-    ui_->layout_sessionViewer->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));*/
-
-    /*
-#define X(type, shortstr, longstr) ui_->comboBox_format->addItem(longstr);
-    SET_FORMAT_LIST
-#undef X*/
-
-    /*connect(ui_->comboBox_format, qOverload<int>(&QComboBox::currentIndexChanged), this, &ActiveSessionView::onComboBoxFormatIndexChanged);
-    connect(ui_->lineEdit_formatOther, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditFormatChanged);
-    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &ActiveSessionView::onSpinBoxGameNumberChanged);
-    connect(ui_->lineEdit_player1, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP1TextChanged);
-    connect(ui_->lineEdit_player2, &QLineEdit::textChanged, this, &ActiveSessionView::onLineEditP2TextChanged);*/
-
     QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
     metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament(metaDataEditModel_.get()));
     metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators(metaDataEditModel_.get()));
@@ -70,16 +55,14 @@ ActiveSessionView::ActiveSessionView(
     scrollArea->setWidgetResizable(true);
     scrollArea->setWidget(metaDataEditContents);
 
-    QSplitter* splitter = new QSplitter(Qt::Horizontal);
-    splitter->addWidget(scrollArea);
-    splitter->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
-    splitter->setStretchFactor(0, 0);
-    splitter->setStretchFactor(1, 0);
-    splitter->setCollapsible(0, false);
-    splitter->setCollapsible(1, false);
+    splitter_ = new CollapsibleSplitter(Qt::Horizontal);
+    splitter_->addWidget(scrollArea);
+    splitter_->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
+    splitter_->setStretchFactor(0, 0);
+    splitter_->setStretchFactor(1, 1);
 
     QVBoxLayout* l = new QVBoxLayout;
-    l->addWidget(splitter);
+    l->addWidget(splitter_);
     setLayout(l);
 
     activeSessionManager_->dispatcher.addListener(this);
@@ -89,8 +72,14 @@ ActiveSessionView::ActiveSessionView(
 ActiveSessionView::~ActiveSessionView()
 {
     activeSessionManager_->dispatcher.removeListener(this);
-    //delete ui_;
 }
+
+// ----------------------------------------------------------------------------
+void ActiveSessionView::toggleSideBar()
+{
+    splitter_->toggleCollapse();
+}
+
 /*
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onComboBoxFormatIndexChanged(int index)
@@ -168,7 +157,7 @@ void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* gam
     assert(map);
     assert(mdata);
 
-    metaDataEditModel_->setAndOverwrite(mdata);
+    metaDataEditModel_->setAndOverwrite(map, mdata);
 
     /*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameStarted);

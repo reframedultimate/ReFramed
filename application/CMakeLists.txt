@@ -35,6 +35,7 @@ set (APPLICATION_SOURCES
     "src/views/ReplayManagerView.cpp"
     "src/views/UserMotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
+    "src/widgets/CollapsibleSplitter.cpp"
     "src/widgets/ConnectionStatusWidget.cpp"
     "src/widgets/MetaDataEditWidget.cpp"
     "src/widgets/MetaDataEditWidget_Commentators.cpp"
@@ -68,6 +69,7 @@ set (APPLICATION_HEADERS
     "include/application/models/RunningGameSessionManager.hpp"
     "include/application/models/UserMotionLabelsManager.hpp"
     "include/application/views/RunningGameSessionView.hpp"
+    "include/application/widgets/CollapsibleSplitter.hpp"
     "include/application/widgets/ConnectionStatusWidget.hpp"
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
@@ -100,7 +102,6 @@ set (APPLICATION_FORMS
     "forms/ExportReplayPackDialog.ui"
     "forms/ImportReplayPackDialog.ui"
     "forms/MetaDataEditWidget_Game.ui"
-    "forms/ReplayEditorDialog.ui"
     "forms/VideoAssociatorDialog.ui"
     "forms/MainWindow.ui")
 set (APPLICATION_RES

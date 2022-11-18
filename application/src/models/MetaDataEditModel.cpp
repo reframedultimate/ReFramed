@@ -1,6 +1,7 @@
 #include "application/models/MetaDataEditModel.hpp"
 #include "application/listeners/MetaDataEditListener.hpp"
 
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MetaData.hpp"
 
 namespace rfapp {
@@ -17,25 +18,27 @@ MetaDataEditModel::~MetaDataEditModel()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndAdopt(rfcommon::MetaData* mdata)
+void MetaDataEditModel::setAndAdopt(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
     clear();
 
+    map_ = map;
     mdata_ = mdata;
     mdata_->dispatcher.addListener(this);
 
-    dispatcher.dispatch(&MetaDataEditListener::onAdoptMetaData, mdata);
+    dispatcher.dispatch(&MetaDataEditListener::onAdoptMetaData, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndOverwrite(rfcommon::MetaData* mdata)
+void MetaDataEditModel::setAndOverwrite(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
     clear();
 
+    map_ = map;
     mdata_ = mdata;
     mdata_->dispatcher.addListener(this);
 
-    dispatcher.dispatch(&MetaDataEditListener::onOverwriteMetaData, mdata);
+    dispatcher.dispatch(&MetaDataEditListener::onOverwriteMetaData, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
@@ -43,9 +46,10 @@ void MetaDataEditModel::clear()
 {
     if (mdata_)
     {
-        dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, mdata_);
+        dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, map_, mdata_);
         mdata_->dispatcher.removeListener(this);
         mdata_.drop();
+        map_.drop();
     }
 }
 

@@ -99,10 +99,6 @@ void ActiveSessionManager::onProtocolGameResumed(rfcommon::Session* game)
 void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 {
     PROFILE(ActiveSessionManager, onProtocolGameEnded);
-/*
-    assert(activeMappingInfo_ == game->tryGetMappingInfo());
-    assert(activeMetaData_ == game->tryGetMetaData());
-    assert(activeMetaData_->type() == rfcommon::MetaData::GAME);
 
     // Save as replay. This will also add the session to the "All" replay group
     if (replayManager_->saveReplayWithDefaultSettings(game) == false)
@@ -110,6 +106,7 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
         // TODO need to handle this somehow
     }
 
+    /*
     // In between sessions (when players are in the menu) there is no active
     // session, but it's still possible to edit the names/format/game number/etc
     // so copy the data out of the session here so it can be edited, and when

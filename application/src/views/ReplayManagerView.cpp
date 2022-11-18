@@ -9,6 +9,7 @@
 #include "application/views/ReplayListView.hpp"
 #include "application/views/ReplayManagerView.hpp"
 #include "application/views/VideoAssociatorDialog.hpp"
+#include "application/widgets/CollapsibleSplitter.hpp"
 
 #include "rfcommon/Session.hpp"
 
@@ -85,16 +86,15 @@ ReplayManagerView::ReplayManagerView(
 
     searchBoxContainer->setFixedHeight(searchBoxContainer->sizeHint().height());
 
-    QSplitter* hSplitter = new QSplitter(Qt::Horizontal);
-    hSplitter->addWidget(vSplitter);
-    hSplitter->addWidget(pluginDockView_);
-    hSplitter->setStretchFactor(0, 0);
-    hSplitter->setStretchFactor(1, 1);
-    hSplitter->setCollapsible(0, false);
-    hSplitter->setCollapsible(1, false);
+    hSplitter_ = new CollapsibleSplitter(Qt::Horizontal);
+    hSplitter_->addWidget(vSplitter);
+    hSplitter_->addWidget(pluginDockView_);
+    hSplitter_->setStretchFactor(0, 0);
+    hSplitter_->setStretchFactor(1, 1);
+    //hSplitter_->setCollapsible(1, false);
 
     QVBoxLayout* l = new QVBoxLayout;
-    l->addWidget(hSplitter);
+    l->addWidget(hSplitter_);
 
     setLayout(l);
 
@@ -108,6 +108,12 @@ ReplayManagerView::ReplayManagerView(
 // ----------------------------------------------------------------------------
 ReplayManagerView::~ReplayManagerView()
 {
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::toggleSideBar()
+{
+    hSplitter_->toggleCollapse();
 }
 
 // ----------------------------------------------------------------------------
@@ -292,6 +298,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         if (session)
         {
             ReplayEditorDialog dialog(replayManager_, session, selectedFileNames[0], this);
+            dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
             dialog.exec();
         }
     }
@@ -302,6 +309,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         if (session)
         {
             VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0], this);
+            dialog.setGeometry(calculatePopupGeometryActiveScreen());
             dialog.exec();
         }
     }

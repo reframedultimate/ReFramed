@@ -1,4 +1,6 @@
+#include "application/views/ActiveSessionView.hpp"
 #include "application/views/CategoryTabsView.hpp"
+#include "application/views/ReplayManagerView.hpp"
 
 #include <QProxyStyle>
 #include <QStyleOptionTab>
@@ -33,13 +35,26 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-CategoryTabsView::CategoryTabsView(QWidget* parent)
+CategoryTabsView::CategoryTabsView(
+        ReplayManager* replayManager,
+        PluginManager* pluginManager,
+        ActiveSessionManager* activeSessionManager,
+        UserMotionLabelsManager* userMotionLabelsManager,
+        rfcommon::Hash40Strings* hash40Strings,
+        QWidget* parent)
     : QTabWidget(parent)
+    , replayManagerView_(new ReplayManagerView(replayManager, pluginManager, userMotionLabelsManager, hash40Strings))
+    , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager))
 {
-
     setTabPosition(QTabWidget::West);
     //tabBar()->setStyle(new CustomTabStyle);
     tabBar()->setObjectName("categoryTab");
+
+    addTab(activeSessionView_, "Session");
+    addTab(replayManagerView_, "Replays");
+    addTab(new QWidget, "Compare");
+    addTab(new QWidget, "Marketplace");
+    setCurrentIndex(1);
 
     setStyleSheet(
                 /*
@@ -58,10 +73,24 @@ CategoryTabsView::CategoryTabsView(QWidget* parent)
         "   font-size: 12pt;\n"
         "}\n"
     );
+
+    connect(this, &QTabWidget::tabBarClicked, this, &CategoryTabsView::onTabBarClicked);
 }
 
 // ----------------------------------------------------------------------------
 CategoryTabsView::~CategoryTabsView()
 {}
+
+// ----------------------------------------------------------------------------
+void CategoryTabsView::onTabBarClicked(int index)
+{
+    if (index != currentIndex())
+        return;
+
+    if (index == 0)
+        activeSessionView_->toggleSideBar();
+    else if (index == 1)
+        replayManagerView_->toggleSideBar();
+}
 
 }

@@ -3,7 +3,7 @@
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
 
 #include "rfcommon/GameMetaData.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Round.hpp"
 #include "rfcommon/SetFormat.hpp"
 
@@ -96,36 +96,68 @@ void MetaDataEditWidget_Game::enableGrandFinalOptions(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onAdoptMetaData(rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Game::onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
+    switch (mdata->type())
+    {
+        case rfcommon::MetaData::GAME: {
+            rfcommon::GameMetaData* g = mdata->asGame();
+            ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(g->timeStarted().millisSinceEpoch()));
+            ui_->dateTimeEdit_ended->setDateTime(QDateTime::fromMSecsSinceEpoch(g->timeEnded().millisSinceEpoch()));
+            ui_->lineEdit_stageID->setText(QString::number(g->stageID().value()));
+            ui_->lineEdit_stageName->setText(QString::fromUtf8(map->stage.toName(g->stageID())));
+            ui_->comboBox_roundType->setCurrentIndex(g->round().index());
+            ui_->spinBox_roundNumber->setValue(g->round().number().value());
+            ui_->comboBox_setFormat->setCurrentIndex(g->setFormat().index());
 
+            if (g->fighterCount() == 2)  // 1v1
+            {
+                ui_->lineEdit_leftName->setText(QString::fromUtf8(g->playerName(0).cStr()));
+                ui_->lineEdit_leftSponsor->setText(QString::fromUtf8(g->playerSponsor(0).cStr()));
+                ui_->lineEdit_leftSocial->setText(QString::fromUtf8(g->playerSocial(0).cStr()));
+                ui_->lineEdit_leftPronouns->setText(QString::fromUtf8(g->playerPronouns(0).cStr()));
+
+                ui_->lineEdit_rightName->setText(QString::fromUtf8(g->playerName(1).cStr()));
+                ui_->lineEdit_rightSponsor->setText(QString::fromUtf8(g->playerSponsor(1).cStr()));
+                ui_->lineEdit_rightSocial->setText(QString::fromUtf8(g->playerSocial(1).cStr()));
+                ui_->lineEdit_rightPronouns->setText(QString::fromUtf8(g->playerPronouns(1).cStr()));
+
+                if (g->round().type() == rfcommon::Round::GRAND_FINALS)
+                {
+                    ui_->checkBox_leftL->setChecked(g->playerIsLoserSide(0));
+                    ui_->checkBox_rightL->setChecked(g->playerIsLoserSide(1));
+                }
+            }
+        } break;
+
+        case rfcommon::MetaData::TRAINING:
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onOverwriteMetaData(rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Game::onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
-    rfcommon::MetaData* m = model_->metaData();
-
-    switch (m->type())
+    switch (mdata->type())
     {
         case rfcommon::MetaData::GAME: {
-            rfcommon::GameMetaData* game = m->asGame();
-            if (game->fighterCount() == 2)  // 1v1
+            rfcommon::GameMetaData* g = mdata->asGame();
+            if (g->fighterCount() == 2)  // 1v1
             {
-                game->setPlayerName(0, ui_->lineEdit_leftName->text().toUtf8().constData());
-                game->setPlayerSponsor(0, ui_->lineEdit_leftSponsor->text().toUtf8().constData());
-                game->setPlayerSocial(0, ui_->lineEdit_leftSocial->text().toUtf8().constData());
-                game->setPlayerPronouns(0, ui_->lineEdit_leftPronouns->text().toUtf8().constData());
+                g->setPlayerName(0, ui_->lineEdit_leftName->text().toUtf8().constData());
+                g->setPlayerSponsor(0, ui_->lineEdit_leftSponsor->text().toUtf8().constData());
+                g->setPlayerSocial(0, ui_->lineEdit_leftSocial->text().toUtf8().constData());
+                g->setPlayerPronouns(0, ui_->lineEdit_leftPronouns->text().toUtf8().constData());
 
-                game->setPlayerName(1, ui_->lineEdit_rightName->text().toUtf8().constData());
-                game->setPlayerSponsor(1, ui_->lineEdit_rightSponsor->text().toUtf8().constData());
-                game->setPlayerSocial(1, ui_->lineEdit_rightSocial->text().toUtf8().constData());
-                game->setPlayerPronouns(1, ui_->lineEdit_rightPronouns->text().toUtf8().constData());
+                g->setPlayerName(1, ui_->lineEdit_rightName->text().toUtf8().constData());
+                g->setPlayerSponsor(1, ui_->lineEdit_rightSponsor->text().toUtf8().constData());
+                g->setPlayerSocial(1, ui_->lineEdit_rightSocial->text().toUtf8().constData());
+                g->setPlayerPronouns(1, ui_->lineEdit_rightPronouns->text().toUtf8().constData());
 
                 if (ui_->comboBox_roundType->currentIndex() == rfcommon::Round::GRAND_FINALS)
                 {
-                    game->setPlayerIsLoserSide(0, ui_->checkBox_leftL->isChecked());
-                    game->setPlayerIsLoserSide(1, ui_->checkBox_rightL->isChecked());
+                    g->setPlayerIsLoserSide(0, ui_->checkBox_leftL->isChecked());
+                    g->setPlayerIsLoserSide(1, ui_->checkBox_rightL->isChecked());
                 }
             }
         } break;
@@ -151,16 +183,16 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(rfcommon::MetaData* mdata)
     };
 
     if (prevMetaData_.notNull() &&
-            m->type() == prevMetaData_->type() &&
-            allTagsMatch(m, prevMetaData_) &&
-            allFightersMatch(m, prevMetaData_))
+            mdata->type() == prevMetaData_->type() &&
+            allTagsMatch(mdata, prevMetaData_) &&
+            allFightersMatch(mdata, prevMetaData_))
     {
 
     }
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onMetaDataCleared(rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Game::onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
 {
 
 }
