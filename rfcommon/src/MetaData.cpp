@@ -12,6 +12,7 @@ using nlohmann::json;
 
 static MetaData* load_1_5(json& j);
 static MetaData* load_1_6(json& j);
+static MetaData* load_1_7(json& j);
 
 // ----------------------------------------------------------------------------
 MetaData* MetaData::newActiveGameSession(
@@ -24,22 +25,11 @@ MetaData* MetaData::newActiveGameSession(
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
-    auto names = SmallVector<String, 2>::makeResized(fighterIDs.count());
-    auto sponsors = SmallVector<String, 2>::makeResized(fighterIDs.count());
-    auto pronouns = SmallVector<String, 2>::makeResized(fighterIDs.count());
-
     return new GameMetaData(
             now, now,  // Start, end
             stageID,
-            BracketType::fromType(BracketType::FRIENDLIES),
-            Round::makeFree(),
-            SetFormat::fromType(SetFormat::FREE),
-            ScoreCount::fromScore(0, 0),
             std::move(fighterIDs),
             std::move(tags),
-            std::move(names),
-            std::move(sponsors),
-            std::move(pronouns),
             -1);  // winner
 }
 
@@ -57,7 +47,6 @@ MetaData* MetaData::newActiveTrainingSession(
     return new TrainingMetaData(
             now, now,  // start, end
             stageID,
-            SessionNumber::fromValue(1),
             std::move(fighterIDs),
             std::move(tags));
 }
@@ -67,15 +56,8 @@ MetaData* MetaData::newSavedGameSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
-        BracketType bracketType,
-        Round round,
-        SetFormat format,
-        ScoreCount score,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags,
-        SmallVector<String, 2>&& names,
-        SmallVector<String, 2>&& sponsors,
-        SmallVector<String, 2>&& pronouns,
         int winner)
 {
     PROFILE(MetaData, newSavedGameSession);
@@ -84,15 +66,8 @@ MetaData* MetaData::newSavedGameSession(
         timeStarted,
         timeEnded,
         stageID,
-        bracketType,
-        round,
-        format,
-        score,
         std::move(fighterIDs),
         std::move(tags),
-        std::move(names),
-        std::move(sponsors),
-        std::move(pronouns),
         winner);
 }
 
@@ -101,7 +76,6 @@ MetaData* MetaData::newSavedTrainingSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
-        SessionNumber sessionNumber,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags)
 {
@@ -111,7 +85,6 @@ MetaData* MetaData::newSavedTrainingSession(
         timeStarted,
         timeEnded,
         stageID,
-        sessionNumber,
         std::move(fighterIDs),
         std::move(tags));
 }
@@ -179,6 +152,8 @@ MetaData* MetaData::load(const void* data, uint32_t size)
         return load_1_5(j);
     if (j["version"] == "1.6")
         return load_1_6(j);
+    if (j["version"] == "1.7")
+        return load_1_7(j);
 
     // unsupported version
     return nullptr;
@@ -202,20 +177,16 @@ static MetaData* load_1_5(json& j)
 
     SmallVector<FighterID, 2> fighterIDs;
     SmallVector<String, 2> tags;
-    SmallVector<String, 2> names;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
         json jTag = info["tag"];
-        json jName = info["name"];
         json jFighterID = info["fighterid"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
         tags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
-        names.emplace(jName.is_string() ?
-            jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
 
         fighterCount++;
     }
@@ -224,52 +195,60 @@ static MetaData* load_1_5(json& j)
     const std::string type = jType.is_string() ? jType.get<std::string>() : "";
     if (type == "game")
     {
-        json jNumber = jGameInfo["number"];
-        json jSet = jGameInfo["set"];
-        json jFormat = jGameInfo["format"];
         json jWinner = jGameInfo["winner"];
-        const auto gameNumber = jNumber.is_number_integer() ?
-            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
-        const auto sessionNumber = jSet.is_number_integer() ?
-            SessionNumber::fromValue(jSet.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
-        const auto format = jFormat.is_string() ?
-            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
         int winner = jWinner.is_number_unsigned() ?
             jWinner.get<int>() : -1;
         if (winner > fighterCount)
             winner = -1;
 
-        // This data isn't available in 1.5
-        auto sponsors = SmallVector<String, 2>::makeResized(fighterIDs.count());
-        auto pronouns = SmallVector<String, 2>::makeResized(fighterIDs.count());
-
-        return MetaData::newSavedGameSession(
+        GameMetaData* g = MetaData::newSavedGameSession(
             timeStarted, timeEnded,
             stageID,
-            BracketType::fromType(BracketType::FRIENDLIES),
-            Round::fromSessionNumber(sessionNumber),
-            format,
-            ScoreCount::fromGameNumber(gameNumber),
             std::move(fighterIDs),
             std::move(tags),
-            std::move(names),
-            std::move(sponsors),
-            std::move(pronouns),
-            winner);
+            winner)->asGame();
+
+        json jSet = jGameInfo["set"];
+        if (jSet.is_number_integer())
+        {
+            const auto sessionNumber = SessionNumber::fromValue(jSet.get<SessionNumber::Type>());
+            g->setRound(Round::fromSessionNumber(sessionNumber));
+        }
+
+        json jFormat = jGameInfo["format"];
+        if (jFormat.is_string())
+            g->setSetFormat(SetFormat::fromDescription(jFormat.get<std::string>().c_str()));
+
+        json jNumber = jGameInfo["number"];
+        if (jNumber.is_number_integer())
+        {
+            const auto gameNumber = GameNumber::fromValue(jNumber.get<GameNumber::Type>());
+            g->setScore(ScoreCount::fromGameNumber(gameNumber));
+        }
+
+        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        {
+            json jName = jPlayerInfo[i]["name"];
+            if (jName.is_string())
+                g->setPlayerName(i, jName.get<std::string>().c_str());
+        }
+
+        return g;
     }
     if (type == "training")
     {
-        json jNumber = jGameInfo["number"];
-        const auto sessionNumber = jNumber.is_number_integer() ?
-            SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
-
-        return MetaData::newSavedTrainingSession(
+        TrainingMetaData* t = MetaData::newSavedTrainingSession(
             timeStarted,
             timeEnded,
             stageID,
-            sessionNumber,
             std::move(fighterIDs),
-            std::move(tags));
+            std::move(tags))->asTraining();
+
+        json jNumber = jGameInfo["number"];
+        if (jNumber.is_number_integer())
+            t->setSessionNumber(SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()));
+
+        return t;
     }
 
     return nullptr;
@@ -293,26 +272,16 @@ static MetaData* load_1_6(json& j)
 
     SmallVector<FighterID, 2> fighterIDs;
     SmallVector<String, 2> tags;
-    SmallVector<String, 2> names;
-    SmallVector<String, 2> sponsors;
-    SmallVector<String, 2> pronouns;
     int fighterCount = 0;
     for (const auto& info : jPlayerInfo)
     {
         json jTag = info["tag"];
-        json jName = info["name"];
-        json jSponsor = info["sponsor"];
         json jFighterID = info["fighterid"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
         tags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
-        sponsors.emplace(jSponsor.is_string() ?
-            jSponsor.get<std::string>().c_str() : "");
-        names.emplace(jName.is_string() ?
-            jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
-        pronouns.emplace("");
 
         fighterCount++;
     }
@@ -321,68 +290,265 @@ static MetaData* load_1_6(json& j)
     const std::string type = jType.is_string() ? jType.get<std::string>() : "";
     if (type == "game")
     {
-        json jTournamentInfo = j["tournamentinfo"];
-        json jEventInfo = j["eventinfo"];
-        json jCommentators = j["commentators"];
-
-        json jTournamentName = jTournamentInfo["name"];
-        const auto tournamentName = jTournamentName.is_string() ? jTournamentName.get<std::string>() : "";
-
-        json jEventName = jEventInfo["name"];
-        const auto eventName = jEventName.is_string() ? jEventName.get<std::string>() : "";
-
-        rfcommon::SmallVector<rfcommon::String, 2> commentators;
-        for (const auto& commentator : jCommentators)
-            if (commentator.is_string())
-                commentators.push(commentator.get<std::string>().c_str());
-
-        json jNumber = jGameInfo["number"];
-        json jSet = jGameInfo["set"];
-        json jFormat = jGameInfo["format"];
-        json jRound = jGameInfo["round"];
         json jWinner = jGameInfo["winner"];
-
-        const auto gameNumber = jNumber.is_number_integer() ?
-            GameNumber::fromValue(jNumber.get<GameNumber::Type>()) : GameNumber::fromValue(1);
-        const auto sessionNumber = jSet.is_number_integer() ?
-            SessionNumber::fromValue(jSet.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
-        const auto format = jFormat.is_string() ?
-            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
-        const auto round = jRound.is_string() ?
-            jRound.get<std::string>() : std::string("");
         int winner = jWinner.is_number_unsigned() ?
             jWinner.get<int>() : -1;
         if (winner > fighterCount)
             winner = -1;
 
-        return MetaData::newSavedGameSession(
+        GameMetaData* g = MetaData::newSavedGameSession(
             timeStarted,
             timeEnded,
             stageID,
-            BracketType::fromType(BracketType::FRIENDLIES),
-            Round::fromSessionNumber(sessionNumber),
-            format,
-            ScoreCount::fromGameNumber(gameNumber),
             std::move(fighterIDs),
             std::move(tags),
-            std::move(names),
-            std::move(sponsors),
-            std::move(pronouns),
-            winner);
+            winner)->asGame();
+
+        json jTournamentInfo = j["tournamentinfo"];
+        json jTournamentName = jTournamentInfo["name"];
+        if (jTournamentName.is_string())
+            g->setTournamentName(jTournamentName.get<std::string>().c_str());
+
+        json jCommentators = j["commentators"];
+        for (const auto& commentator : jCommentators)
+            if (commentator.is_string())
+                g->addCommentator(commentator.get<std::string>().c_str(), "");
+
+        // In this version of the file, the user was able to type in the bracket
+        // type by hand. Try to fuzzy match "singles" or "1v1", since that's the
+        // most used type
+        json jEventInfo = j["eventinfo"];
+        json jEventName = jEventInfo["name"];
+        const auto eventName = jEventName.is_string() ? jEventName.get<std::string>() : "";
+        BracketType bracketType = [&eventName]() {
+            auto eventNameLower = eventName;
+            std::transform(eventNameLower.begin(), eventNameLower.end(), eventNameLower.begin(), [](unsigned char c){ return std::tolower(c); });
+            if (eventNameLower.find("singles") != std::string::npos || eventNameLower.find("1v1") != std::string::npos)
+                return BracketType::fromType(BracketType::SINGLES);
+            else if (eventNameLower.find("amateur") != std::string::npos)
+                 return BracketType::fromType(BracketType::AMATEURS);
+            else if (eventName.empty() == false)
+                return BracketType::fromDescription(eventName.c_str());
+            else
+                return BracketType::fromType(BracketType::FRIENDLIES);   // Default to friendlies
+        }();
+        g->setBracketType(bracketType);
+
+        // In this version of the file, the user was able to type in the round
+        // type, e.g. "WR1". Try to convert this string to our enum
+        json jRound = jGameInfo["round"];
+        json jSet = jGameInfo["set"];
+        const auto sessionNumber = jSet.is_number_integer() ?
+            SessionNumber::fromValue(jSet.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
+        const auto roundName = jRound.is_string() ?
+            jRound.get<std::string>() : std::string("");
+        Round round = [&roundName, &sessionNumber]() {
+            Round round = Round::fromDescription(roundName.c_str());
+            if (round.type() == Round::FREE)
+                round = Round::fromSessionNumber(sessionNumber);
+            return round;
+        }();
+        g->setRound(round);
+
+        json jNumber = jGameInfo["number"];
+        if (jNumber.is_number_integer())
+        {
+            auto gameNumber = GameNumber::fromValue(jNumber.get<GameNumber::Type>());
+            g->setScore(ScoreCount::fromGameNumber(gameNumber));
+        }
+
+        json jFormat = jGameInfo["format"];
+        if (jFormat.is_string())
+            g->setSetFormat(SetFormat::fromDescription(jFormat.get<std::string>().c_str()));
+
+        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        {
+            json jName = jPlayerInfo[i]["name"];
+            if (jName.is_string())
+                g->setPlayerName(i, jName.get<std::string>().c_str());
+
+            json jSponsor = jPlayerInfo[i]["sponsor"];
+            if (jSponsor.is_string())
+                g->setPlayerSponsor(i, jSponsor.get<std::string>().c_str());
+        }
+
+        return g;
     }
     if (type == "training")
     {
-        json jNumber = jGameInfo["number"];
-        const auto sessionNumber = jNumber.is_number_integer() ?
-            SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()) : SessionNumber::fromValue(1);
-
-        return MetaData::newSavedTrainingSession(
+        TrainingMetaData* t = MetaData::newSavedTrainingSession(
             timeStarted,
             timeEnded,
             stageID,
-            sessionNumber,
             std::move(fighterIDs),
-            std::move(tags));
+            std::move(tags))->asTraining();
+
+        json jNumber = jGameInfo["number"];
+        if (jNumber.is_number_integer())
+            t->setSessionNumber(SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()));
+
+        return t;
+    }
+
+    return nullptr;
+}
+static MetaData* load_1_7(json& j)
+{
+    PROFILE(MetaDataGlobal, load_1_7);
+
+    json jType = j["type"];
+    json jPlayerInfo = j["playerinfo"];
+    json jGameInfo = j["gameinfo"];
+
+    const std::string type = jType.is_string() ? jType.get<std::string>() : "";
+
+    json jTimeStarted = jGameInfo["timestampstart"];
+    json jTimeEnded = jGameInfo["timestampend"];
+    json jStageID = jGameInfo["stageid"];
+    const auto timeStarted = jTimeStarted.is_number_integer() ?
+        TimeStamp::fromMillisSinceEpoch(jTimeStarted.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
+    const auto timeEnded = jTimeEnded.is_number_integer() ?
+        TimeStamp::fromMillisSinceEpoch(jTimeEnded.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
+    const auto stageID = jStageID.is_number_integer() ?
+        StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
+
+    SmallVector<FighterID, 2> fighterIDs;
+    SmallVector<String, 2> tags;
+    int fighterCount = 0;
+    for (const auto& info : jPlayerInfo)
+    {
+        json jTag = info["tag"];
+        json jFighterID = info["fighterid"];
+
+        fighterIDs.push(jFighterID.is_number_integer() ?
+            FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        tags.emplace(jTag.is_string() ?
+            jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+
+        fighterCount++;
+    }
+
+    if (type == "game")
+    {
+        json jEvent = j["event"];
+        json jBracketType = jEvent["type"];
+        const auto bracketType = jBracketType.is_string() ?
+                    BracketType::fromDescription(jBracketType.get<std::string>().c_str()) :
+                    BracketType::fromType(BracketType::FRIENDLIES);
+
+        json jRound = jGameInfo["round"];
+        json jFormat = jGameInfo["format"];
+        json jScore1 = jGameInfo["score1"];
+        json jScore2 = jGameInfo["score2"];
+        json jWinner = jGameInfo["winner"];
+
+        const auto round = jRound.is_string() ?
+                    Round::fromDescription(jRound.get<std::string>().c_str()) :
+                    Round::makeFree();
+        const auto format = jFormat.is_string() ?
+                    SetFormat::fromDescription(jFormat.get<std::string>().c_str()) :
+                    SetFormat::fromType(SetFormat::FREE);
+        const auto score = jScore1.is_number_unsigned() && jScore2.is_number_unsigned() ?
+                    ScoreCount::fromScore(jScore1.get<int>(), jScore2.get<int>()) :
+                    ScoreCount::fromGameNumber(GameNumber::fromValue(1));
+        int winner = jWinner.is_number_unsigned() ?
+                    jWinner.get<int>() : -1;
+        if (winner > fighterCount)
+            winner = -1;
+
+        SmallVector<String, 2> names;
+        SmallVector<String, 2> sponsors;
+        SmallVector<String, 2> socials;
+        SmallVector<String, 2> pronouns;
+        for (const auto& info : jPlayerInfo)
+        {
+            json jName = info["name"];
+            json jSponsor = info["sponsor"];
+
+            sponsors.emplace(jSponsor.is_string() ?
+                jSponsor.get<std::string>().c_str() : "");
+            names.emplace(jName.is_string() ?
+                jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
+            pronouns.emplace("");
+        }
+
+        GameMetaData* g = MetaData::newSavedGameSession(
+            timeStarted,
+            timeEnded,
+            stageID,
+            std::move(fighterIDs),
+            std::move(tags),
+            winner)->asGame();
+
+        json jTournament = j["tournament"];
+        json jTournamentName = jTournament["name"];
+        json jTournamentWebsite = jTournament["website"];
+        if (jTournamentName.is_string())
+            g->setTournamentName(jTournamentName.get<std::string>().c_str());
+        if (jTournamentWebsite.is_string())
+            g->setTournamentWebsite(jTournamentWebsite.get<std::string>().c_str());
+        for (const auto& jOrganizer : jTournament)
+        {
+            json jName = jOrganizer["name"];
+            json jSocial = jOrganizer["social"];
+            json jPronouns = jOrganizer["pronouns"];
+
+            const auto name = jName.is_string() ? jName.get<std::string>() : "";
+            const auto social = jSocial.is_string() ? jSocial.get<std::string>() : "";
+            const auto pronouns = jPronouns.is_string() ? jPronouns.get<std::string>() : "";
+
+            g->addTournamentOrganizer(name.c_str(), social.c_str(), pronouns.c_str());
+        }
+        for (const auto& jSponsor : jTournament["sponsors"])
+        {
+            json jName = jSponsor["name"];
+            json jWebsite = jSponsor["website"];
+
+            const auto name = jName.is_string() ? jName.get<std::string>() : "";
+            const auto website = jWebsite.is_string() ? jWebsite.get<std::string>() : "";
+
+            g->addSponsor(name.c_str(), website.c_str());
+        }
+
+        rfcommon::SmallVector<rfcommon::String, 2> commentators;
+        for (const auto& commentator : j["commentators"])
+            if (commentator.is_string())
+                commentators.push(commentator.get<std::string>().c_str());
+
+        switch (bracketType.type())
+        {
+            case BracketType::SINGLES:
+            case BracketType::DOUBLES:
+            case BracketType::AMATEURS:
+            case BracketType::SIDE: {
+                json jBracketURL = jEvent["url"];
+                if (jBracketURL.is_string())
+                    g->setBracketURL(jBracketURL.get<std::string>().c_str());
+            } break;
+
+            case BracketType::PRACTICE:
+            case BracketType::FRIENDLIES:
+            case BracketType::MONEYMATCH:
+            case BracketType::OTHER:
+                break;
+        }
+
+        return g;
+    }
+    if (type == "training")
+    {
+        TrainingMetaData* t = MetaData::newSavedTrainingSession(
+            timeStarted,
+            timeEnded,
+            stageID,
+            std::move(fighterIDs),
+            std::move(tags))->asTraining();
+
+        json jNumber = jGameInfo["number"];
+        if (jNumber.is_number_integer())
+            t->setSessionNumber(SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()));
+
+        return t;
     }
 
     return nullptr;
@@ -426,7 +592,6 @@ uint32_t MetaData::save(FILE* fp) const
             auto mdata = asGame();
             jGameInfo["round"] = mdata->round().shortDescription().cStr();
             jGameInfo["format"] = mdata->setFormat().shortDescription();
-            jGameInfo["number"] = mdata->score().gameNumber().value();
             jGameInfo["score1"] = mdata->score().left();
             jGameInfo["score2"] = mdata->score().right();
             jGameInfo["winner"] = mdata->winner();
@@ -434,15 +599,15 @@ uint32_t MetaData::save(FILE* fp) const
 
         case TRAINING: {
             auto mdata = asTraining();
-            jGameInfo["number"] = mdata->sessionNumber().value();
+            jGameInfo["session"] = mdata->sessionNumber().value();
         } break;
     }
 
     json j = {
         {"version", "1.7"},
         {"type", type() == GAME ? "game" : "training"},
-        {"gameinfo", jGameInfo},
-        {"playerinfo", jPlayerInfo}
+        {"playerinfo", jPlayerInfo},
+        {"gameinfo", jGameInfo}
     };
 
     switch (type())
@@ -479,6 +644,25 @@ uint32_t MetaData::save(FILE* fp) const
                 };
             }
 
+            json jEvent = {
+                {"type", mdata->bracketType().description()}
+            };
+            switch (mdata->bracketType().type())
+            {
+                case BracketType::SINGLES:
+                case BracketType::DOUBLES:
+                case BracketType::AMATEURS:
+                case BracketType::SIDE:
+                    jEvent["url"] = mdata->bracketURL().cStr();
+                    break;
+
+                case BracketType::PRACTICE:
+                case BracketType::FRIENDLIES:
+                case BracketType::MONEYMATCH:
+                case BracketType::OTHER:
+                    break;
+            };
+
             j["commentators"] = jCommentators;
             j["tournament"] = {
                 {"name", mdata->tournamentName().cStr()},
@@ -486,10 +670,7 @@ uint32_t MetaData::save(FILE* fp) const
                 {"organizers", jOrganizers},
                 {"sponsors", jSponsors}
             };
-            j["event"] = {
-                {"type", mdata->bracketType().description()},
-                {"url", mdata->eventURL().cStr()}
-            };
+            j["event"] = jEvent;
         } break;
 
         case TRAINING: break;

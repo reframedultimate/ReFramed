@@ -10,26 +10,17 @@ GameMetaData::GameMetaData(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
-        BracketType bracketType,
-        Round round,
-        SetFormat format,
-        ScoreCount score,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<String, 2>&& tags,
-        SmallVector<String, 2>&& names,
-        SmallVector<String, 2>&& sponsors,
-        SmallVector<String, 2>&& pronouns,
         int winner)
     : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
-    , bracketType_(bracketType)
-    , round_(round)
-    , setFormat_(format)
-    , score_(score)
+    , players_(SmallVector<Player, 2>::makeResized(MetaData::fighterCount()))
+    , bracketType_(BracketType::fromType(BracketType::FRIENDLIES))
+    , round_(Round::makeFree())
+    , setFormat_(SetFormat::fromType(SetFormat::FREE))
+    , score_(ScoreCount::fromScore(0, 0))
     , winner_(winner)
 {
-    assert(names.count() == sponsors.count());
-    for (int i = 0; i != names.count(); ++i)
-        players_.push({ std::move(names[i]), std::move(sponsors[i]), std::move(pronouns[i]) });
 }
 
 // ----------------------------------------------------------------------------
@@ -123,14 +114,14 @@ void GameMetaData::removeCommentator(int idx)
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setEventType(BracketType type)
+void GameMetaData::setBracketType(BracketType type)
 {
     bracketType_ = type;
     dispatcher.dispatch(&MetaDataListener::onMetaDataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void GameMetaData::setEventURL(const char* url)
+void GameMetaData::setBracketURL(const char* url)
 {
     if (!eventURL_.replaceWith(url))
         dispatcher.dispatch(&MetaDataListener::onMetaDataEventDetailsChanged);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rfcommon/Reference.hpp"
+#include "rfcommon/Vector.hpp"
 #include <QDialog>
 
 namespace rfcommon {
@@ -18,8 +19,7 @@ class ReplayEditorDialog : public QDialog
 public:
     explicit ReplayEditorDialog(
             ReplayManager* replayManager,
-            rfcommon::Session* session,
-            const QString& currentFileNameParts,
+            const QStringList& replayFileNames,
             QWidget* parent);
     ~ReplayEditorDialog();
 
@@ -29,8 +29,8 @@ private slots:
 private:
     std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
     ReplayManager* replayManager_;
-    rfcommon::Reference<rfcommon::Session> session_;
-    const QString currentFileNameParts_;
+    rfcommon::SmallVector<rfcommon::Reference<rfcommon::Session>, 1> loadedSessions_;
+    QStringList loadedSessionFileNames_;
 };
 
 }

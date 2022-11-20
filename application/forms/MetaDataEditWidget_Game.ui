@@ -21,7 +21,7 @@
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label_time">
         <property name="text">
          <string>Time:</string>
         </property>
@@ -31,6 +31,9 @@
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QDateTimeEdit" name="dateTimeEdit_started">
+          <property name="specialValueText">
+           <string/>
+          </property>
           <property name="displayFormat">
            <string>yyyy-MM-dd HH:mm:ss</string>
           </property>
@@ -40,7 +43,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="label_to">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -78,7 +81,7 @@
        </layout>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_stage">
         <property name="text">
          <string>Stage:</string>
         </property>
@@ -171,7 +174,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="comboBox_setFormat"/>
+         <widget class="QComboBox" name="comboBox_setFormat">
+          <property name="currentText">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string/>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

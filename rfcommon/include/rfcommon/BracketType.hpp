@@ -3,7 +3,7 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/String.hpp"
 
-#define BRACKET_TYPE_LIST                  \
+#define BRACKET_TYPE_LIST                \
     X(SINGLES,    "Singles Bracket")     \
     X(DOUBLES,    "Doubles Bracket")     \
     X(SIDE,       "Side Bracket")        \

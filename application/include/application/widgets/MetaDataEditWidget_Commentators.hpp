@@ -18,15 +18,15 @@ public:
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
 
 private:
-    void addCommentatorUI(const char* name, const char* social, const char* pronouns);
+    void addCommentatorUI(const QString& name, const QString& social, const QString& pronouns);
 
 private slots:
     void onAddCommentatorReleased();
 
 private:
-    void onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
-    void onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
-    void onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) override;
+    void onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
+    void onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
+    void onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) override;
     void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
 
     void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;

@@ -19,7 +19,7 @@ class ExportReplayPackDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportReplayPackDialog(rfcommon::FilePathResolver* pathResolver, const QStringList& replayNames, const QStringList& replayFileNames, QWidget* parent=nullptr);
+    explicit ExportReplayPackDialog(rfcommon::FilePathResolver* pathResolver, const QStringList& replayNames, const QStringList& replayFileNames, QWidget* parent);
     ~ExportReplayPackDialog();
 
 private slots:

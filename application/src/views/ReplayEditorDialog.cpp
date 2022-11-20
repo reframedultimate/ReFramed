@@ -6,8 +6,10 @@
 #include "application/widgets/MetaDataEditWidget_Tournament.hpp"
 #include "application/views/ReplayEditorDialog.hpp"
 
-#include "rfcommon/Session.hpp"
+#include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/MetaData.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Session.hpp"
 
 #include <QGridLayout>
 #include <QLineEdit>
@@ -23,22 +25,29 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 ReplayEditorDialog::ReplayEditorDialog(
         ReplayManager* replayManager,
-        rfcommon::Session* session,
-        const QString& currentFileNameParts,
+        const QStringList& replayFileNames,
         QWidget* parent)
     : QDialog(parent)
     , metaDataEditModel_(new MetaDataEditModel)
     , replayManager_(replayManager)
-    , session_(session)
-    , currentFileNameParts_(currentFileNameParts)
 {
     setWindowTitle("Edit Replay Meta Data");
 
+    MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
+    MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
+    MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
+    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get());
+
+    tournament->setExpanded(true);
+    commentators->setExpanded(true);
+    event->setExpanded(true);
+    game->setExpanded(true);
+
     QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Event(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Game(metaDataEditModel_.get()));
+    metaDataEditLayout->addWidget(tournament);
+    metaDataEditLayout->addWidget(commentators);
+    metaDataEditLayout->addWidget(event);
+    metaDataEditLayout->addWidget(game);
     metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metaDataEditContents = new QWidget;
@@ -61,11 +70,60 @@ ReplayEditorDialog::ReplayEditorDialog(
     l->addLayout(saveCancelLayout);
     setLayout(l);
 
-    if (auto map = session_->tryGetMappingInfo())
-        if (auto mdata = session_->tryGetMetaData())
-            metaDataEditModel_->setAndAdopt(map, mdata);
-
     connect(cancelButton, &QPushButton::released, this, &ReplayEditorDialog::close);
+
+    MetaDataEditModel::MappingInfoList mappingInfo;
+    MetaDataEditModel::MetaDataList metaData;
+    for (const auto& fileName : replayFileNames)
+    {
+        auto filePathUtf8 = replayManager_->resolveGameFile(fileName.toUtf8().constData());
+        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
+        if (session == nullptr)
+        {
+            if (QMessageBox::question(this,
+                "Error loading file",
+                "Failed to load replay file \"" + fileName + "\"\n"
+                "Absolute path was: \"" + filePathUtf8.cStr() + "\"\n\n"
+                "Would you like to continue without including this file?") == QMessageBox::Yes)
+            {
+                continue;
+            }
+            QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
+            return;
+        }
+
+        auto map = session->tryGetMappingInfo();
+        auto mdata = session->tryGetMetaData();
+        if (map == nullptr || mdata == nullptr)
+        {
+            if (QMessageBox::question(this,
+                "Missing meta data",
+                "Replay has missing meta data \"" + fileName + "\"\n"
+                "Absolute path was: \"" + filePathUtf8.cStr() + "\"\n\n"
+                "Would you like to continue without including this file?") == QMessageBox::Yes)
+            {
+                continue;
+            }
+            QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
+            return;
+        }
+
+        mappingInfo.push(map);
+        metaData.push(mdata);
+        loadedSessions_.push(session);
+        loadedSessionFileNames_.push_back(fileName);
+    }
+
+    if (mappingInfo.count() == 0)
+    {
+        QMessageBox::critical(this,
+                "No meta data loaded",
+                "The selected replays contain no meta data. Can't do anything");
+        QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
+        return;
+    }
+
+    metaDataEditModel_->setAndAdopt(std::move(mappingInfo), std::move(metaData));
 }
 
 // ----------------------------------------------------------------------------
@@ -81,10 +139,26 @@ void ReplayEditorDialog::onSaveClicked()
 {
     PROFILE(ReplayEditorDialog, onSaveClicked);
 
-    if (replayManager_->saveReplayOver(session_, currentFileNameParts_))
+    bool success = true;
+    for (int i = 0; i != loadedSessions_.count(); ++i)
+    {
+        rfcommon::Session* session = loadedSessions_[i];
+        auto fileName = loadedSessionFileNames_[i];
+        if (replayManager_->saveReplayOver(session, fileName) == false)
+        {
+            success = false;
+            if (QMessageBox::question(this,
+                "Error saving file",
+                "Failed to save replay file \"" + fileName + "\"\n"
+                "Continue?") != QMessageBox::Yes)
+            {
+                return;
+            }
+        }
+    }
+
+    if (success)
         close();
-    else
-        QMessageBox::critical(this, "Error", "Failed to save file");
 }
 
 }

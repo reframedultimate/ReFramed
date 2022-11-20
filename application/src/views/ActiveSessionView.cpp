@@ -157,7 +157,7 @@ void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* gam
     assert(map);
     assert(mdata);
 
-    metaDataEditModel_->setAndOverwrite(map, mdata);
+    metaDataEditModel_->setAndOverwrite({map}, {mdata});
 
     /*
     PROFILE(ActiveSessionView, onActiveSessionManagerGameStarted);

@@ -13,30 +13,33 @@ MetaDataEditModel::MetaDataEditModel()
 // ----------------------------------------------------------------------------
 MetaDataEditModel::~MetaDataEditModel()
 {
-    if (mdata_)
-        mdata_->dispatcher.removeListener(this);
+    if (mdata_.count())
+        for (auto& m : mdata_)
+            m->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndAdopt(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditModel::setAndAdopt(MappingInfoList&& map, MetaDataList&& mdata)
 {
     clear();
 
     map_ = map;
     mdata_ = mdata;
-    mdata_->dispatcher.addListener(this);
+    for (auto& m : mdata_)
+        m->dispatcher.addListener(this);
 
     dispatcher.dispatch(&MetaDataEditListener::onAdoptMetaData, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndOverwrite(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditModel::setAndOverwrite(MappingInfoList&& map, MetaDataList&& mdata)
 {
     clear();
 
     map_ = map;
     mdata_ = mdata;
-    mdata_->dispatcher.addListener(this);
+    for (auto& m : mdata_)
+        m->dispatcher.addListener(this);
 
     dispatcher.dispatch(&MetaDataEditListener::onOverwriteMetaData, map, mdata);
 }
@@ -44,19 +47,14 @@ void MetaDataEditModel::setAndOverwrite(rfcommon::MappingInfo* map, rfcommon::Me
 // ----------------------------------------------------------------------------
 void MetaDataEditModel::clear()
 {
-    if (mdata_)
+    if (mdata_.count())
     {
         dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, map_, mdata_);
-        mdata_->dispatcher.removeListener(this);
-        mdata_.drop();
-        map_.drop();
+        for (auto& m : mdata_)
+            m->dispatcher.removeListener(this);
+        mdata_.clear();
+        map_.clear();
     }
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditModel::notifyBracketTypeChanged()
-{
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------

@@ -18,15 +18,8 @@ class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            BracketType bracketType,
-            Round round,
-            SetFormat format,
-            ScoreCount score,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags,
-            SmallVector<String, 2>&& names,
-            SmallVector<String, 2>&& sponsors,
-            SmallVector<String, 2>&& pronouns,
             int winner);
 
 public:
@@ -64,9 +57,9 @@ public:
     void removeCommentator(int idx);
 
     const BracketType bracketType() const { return bracketType_; }
-    const String& eventURL() const { return eventURL_; }
-    void setEventType(BracketType type);
-    void setEventURL(const char* url);
+    const String& bracketURL() const { return eventURL_; }
+    void setBracketType(BracketType type);
+    void setBracketURL(const char* url);
 
     Round round() const { return round_; }
 
@@ -164,7 +157,7 @@ private:
         String sponsor;
         String social;
         String pronouns;
-        bool isLoser;
+        bool isLoser = false;
     };
 
     SmallVector<Person, 2> organizers_;

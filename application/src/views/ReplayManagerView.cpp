@@ -293,14 +293,9 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
 
     if (a == editMetaData)
     {
-        const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
-        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
-        if (session)
-        {
-            ReplayEditorDialog dialog(replayManager_, session, selectedFileNames[0], this);
-            dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
-            dialog.exec();
-        }
+        ReplayEditorDialog dialog(replayManager_, selectedFileNames, this);
+        dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
+        dialog.exec();
     }
     else if (a == associateVideo)
     {

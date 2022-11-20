@@ -65,22 +65,14 @@ public:
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            BracketType bracketType,
-            Round round,
-            SetFormat format,
-            ScoreCount score,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags,
-            SmallVector<String, 2>&& names,
-            SmallVector<String, 2>&& sponsors,
-            SmallVector<String, 2>&& pronouns,
             int winner);
 
     static MetaData* newSavedTrainingSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            SessionNumber sessionNumber,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags);
 

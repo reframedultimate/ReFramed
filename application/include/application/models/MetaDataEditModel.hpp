@@ -2,6 +2,7 @@
 
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/Vector.hpp"
 #include "rfcommon/Reference.hpp"
 
 namespace rfcommon {
@@ -16,17 +17,18 @@ class MetaDataEditListener;
 class MetaDataEditModel : public rfcommon::MetaDataListener
 {
 public:
+    typedef rfcommon::SmallVector<rfcommon::Reference<rfcommon::MappingInfo>, 1> MappingInfoList;
+    typedef rfcommon::SmallVector<rfcommon::Reference<rfcommon::MetaData>, 1> MetaDataList;
+
     MetaDataEditModel();
     ~MetaDataEditModel();
 
-    void setAndAdopt(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
-    void setAndOverwrite(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
+    void setAndAdopt(MappingInfoList&& map, MetaDataList&& mdata);
+    void setAndOverwrite(MappingInfoList&& map, MetaDataList&& mdata);
     void clear();
 
-    void notifyBracketTypeChanged();
-
-    rfcommon::MappingInfo* mappingInfo() { return map_; }
-    rfcommon::MetaData* metaData() { return mdata_; }
+    const MappingInfoList& mappingInfo() const { return map_; }
+    const MetaDataList& metaData() const { return mdata_; }
 
     rfcommon::ListenerDispatcher<MetaDataEditListener> dispatcher;
 
@@ -41,8 +43,8 @@ private:
     void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
 
 private:
-    rfcommon::Reference<rfcommon::MappingInfo> map_;
-    rfcommon::Reference<rfcommon::MetaData> mdata_;
+    MappingInfoList map_;
+    MetaDataList mdata_;
 };
 
 }

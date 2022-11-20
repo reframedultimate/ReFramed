@@ -33,16 +33,16 @@ MetaDataEditWidget_Commentators::~MetaDataEditWidget_Commentators()
 {}
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const char* social, const char* pronouns)
+void MetaDataEditWidget_Commentators::addCommentatorUI(const QString& name, const QString& social, const QString& pronouns)
 {
     QToolButton* removeButton = new QToolButton;
     removeButton->setText("-");
 
     commentatorWidgets_.push_back({});
     auto& widgets = commentatorWidgets_.back();
-    widgets.name = new QLineEdit(QString::fromUtf8(name));
-    widgets.social = new QLineEdit(QString::fromUtf8(social));
-    widgets.pronouns = new QLineEdit(QString::fromUtf8(pronouns));
+    widgets.name = new QLineEdit(name);
+    widgets.social = new QLineEdit(social);
+    widgets.pronouns = new QLineEdit(pronouns);
 
     QFormLayout* layout = new QFormLayout;
     layout->addRow("Name:", widgets.name);
@@ -51,7 +51,7 @@ void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const c
     layout->addRow(removeButton);
 
     QGroupBox* g = new QGroupBox;
-    g->setTitle(strlen(name) > 0 ? QString::fromUtf8(name) : "Commentator #" + QString::number(commentatorsLayout_->count()));
+    g->setTitle(name.isEmpty() ? "Commentator #" + QString::number(commentatorsLayout_->count()) : name);
     g->setLayout(layout);
 
     QLayoutItem* addButtonItem = commentatorsLayout_->takeAt(commentatorsLayout_->count() - 1);
@@ -59,11 +59,6 @@ void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const c
     commentatorsLayout_->addItem(addButtonItem);
 
     updateSize();
-
-    ignoreSelf_ = true;
-    if (model_->metaData() && model_->metaData()->type() == rfcommon::MetaData::GAME)
-        model_->metaData()->asGame()->addCommentator(name, social, pronouns);
-    ignoreSelf_ = false;
 
     auto indexInLayout = [this](QGroupBox* g) -> int {
         for (int i = 0; i != commentatorsLayout_->count(); ++i)
@@ -80,8 +75,9 @@ void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const c
         int i = indexInLayout(g);
 
         ignoreSelf_ = true;
-        if (model_->metaData() && model_->metaData()->type() == rfcommon::MetaData::GAME)
-            model_->metaData()->asGame()->removeCommentator(i);
+        for (auto& mdata : model_->metaData())
+            if (mdata == rfcommon::MetaData::GAME)
+                mdata->asGame()->removeCommentator(i);
         ignoreSelf_ = false;
 
         commentatorWidgets_.erase(commentatorWidgets_.begin() + i);
@@ -101,45 +97,48 @@ void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const c
         else
             g->setTitle(text);
 
-        if (model_->metaData() == nullptr || model_->metaData()->type() != rfcommon::MetaData::GAME)
-            return;
-
-        rfcommon::GameMetaData* m = model_->metaData()->asGame();
         ignoreSelf_ = true;
-        m->setCommentator(i,
-                text.toUtf8().constData(),
-                m->commentatorSocial(i).cStr(),
-                m->commentatorPronouns(i).cStr());
+        for (auto& mdata : model_->metaData())
+            if (mdata == rfcommon::MetaData::GAME)
+            {
+                rfcommon::GameMetaData* g = mdata->asGame();
+                g->setCommentator(i,
+                        text.toUtf8().constData(),
+                        g->commentatorSocial(i).cStr(),
+                        g->commentatorPronouns(i).cStr());
+            }
         ignoreSelf_ = false;
     });
 
     // Change social
     connect(widgets.social, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        if (model_->metaData() == nullptr || model_->metaData()->type() != rfcommon::MetaData::GAME)
-            return;
-
         int i = indexInLayout(g);
-        rfcommon::GameMetaData* m = model_->metaData()->asGame();
         ignoreSelf_ = true;
-        m->setCommentator(i,
-                m->commentatorName(i).cStr(),
-                text.toUtf8().constData(),
-                m->commentatorPronouns(i).cStr());
+        for (auto& mdata : model_->metaData())
+            if (mdata == rfcommon::MetaData::GAME)
+            {
+                rfcommon::GameMetaData* g = mdata->asGame();
+                g->setCommentator(i,
+                        g->commentatorName(i).cStr(),
+                        text.toUtf8().constData(),
+                        g->commentatorPronouns(i).cStr());
+            }
         ignoreSelf_ = false;
     });
 
     // Change pronouns
     connect(widgets.pronouns, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        if (model_->metaData() == nullptr || model_->metaData()->type() != rfcommon::MetaData::GAME)
-            return;
-
         int i = indexInLayout(g);
-        rfcommon::GameMetaData* m = model_->metaData()->asGame();
         ignoreSelf_ = true;
-        m->setCommentator(i,
-                m->commentatorName(i).cStr(),
-                m->commentatorSocial(i).cStr(),
-                text.toUtf8().constData());
+        for (auto& mdata : model_->metaData())
+            if (mdata == rfcommon::MetaData::GAME)
+            {
+                rfcommon::GameMetaData* g = mdata->asGame();
+                g->setCommentator(i,
+                        g->commentatorName(i).cStr(),
+                        g->commentatorSocial(i).cStr(),
+                        text.toUtf8().constData());
+            }
         ignoreSelf_ = false;
     });
 }
@@ -147,64 +146,76 @@ void MetaDataEditWidget_Commentators::addCommentatorUI(const char* name, const c
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Commentators::onAddCommentatorReleased()
 {
-    addCommentatorUI("", "", "he/him");
+    ignoreSelf_ = true;
+    for (auto& mdata : model_->metaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->addCommentator("", "");
+    ignoreSelf_ = false;
+
+    onMetaDataCommentatorsChanged();
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Commentators::onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Commentators::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
-    switch (mdata->type())
+    for (auto& m : mdata)
     {
-        case rfcommon::MetaData::GAME: {
-            rfcommon::GameMetaData* g = mdata->asGame();
+        switch (m->type())
+        {
+            case rfcommon::MetaData::GAME: {
+                rfcommon::GameMetaData* g = m->asGame();
+/*
+                while (commentatorsLayout_->count() > 1)
+                {
+                    QLayoutItem* item = commentatorsLayout_->takeAt(0);
+                    delete item->widget();
+                    delete item;
+                }
 
-            while (commentatorsLayout_->count() > 1)
-            {
-                QLayoutItem* item = commentatorsLayout_->takeAt(0);
-                delete item->widget();
-                delete item;
-            }
+                for (int i = 0; i != g->commentatorCount(); ++i)
+                    addCommentatorUI(
+                            g->commentatorName(i).cStr(),
+                            g->commentatorSocial(i).cStr(),
+                            g->commentatorPronouns(i).cStr());*/
+            } break;
 
-            for (int i = 0; i != g->commentatorCount(); ++i)
-                addCommentatorUI(
-                        g->commentatorName(i).cStr(),
-                        g->commentatorSocial(i).cStr(),
-                        g->commentatorPronouns(i).cStr());
-        } break;
-
-        case rfcommon::MetaData::TRAINING:
-            break;
+            case rfcommon::MetaData::TRAINING:
+                break;
+        }
     }
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Commentators::onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Commentators::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
     ignoreSelf_ = true;
 
-    switch (mdata->type())
+    for (auto& m : mdata)
     {
-        case rfcommon::MetaData::GAME: {
-            rfcommon::GameMetaData* g = mdata->asGame();
+        switch (m->type())
+        {
+            case rfcommon::MetaData::GAME: {
+                rfcommon::GameMetaData* g = m->asGame();
+    /*
+                while (g->commentatorCount())
+                    g->removeCommentator(0);
+                for (int i = 0; i != commentatorWidgets_.size(); ++i)
+                    g->addCommentator(
+                            commentatorWidgets_[i].name->text().toUtf8().constData(),
+                            commentatorWidgets_[i].social->text().toUtf8().constData(),
+                            commentatorWidgets_[i].pronouns->text().toUtf8().constData());*/
+            } break;
 
-            while (g->commentatorCount())
-                g->removeCommentator(0);
-            for (int i = 0; i != commentatorWidgets_.size(); ++i)
-                g->addCommentator(
-                        commentatorWidgets_[i].name->text().toUtf8().constData(),
-                        commentatorWidgets_[i].social->text().toUtf8().constData(),
-                        commentatorWidgets_[i].pronouns->text().toUtf8().constData());
-        } break;
-
-        case rfcommon::MetaData::TRAINING:
-            break;
+            case rfcommon::MetaData::TRAINING:
+                break;
+        }
     }
 
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Commentators::onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Commentators::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
 {
 
 }

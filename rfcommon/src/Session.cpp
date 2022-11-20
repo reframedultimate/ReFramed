@@ -346,16 +346,16 @@ static bool loadLegacy_1_3(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
-        BracketType::fromType(BracketType::OTHER),
-        Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())),
-        SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()),
-        ScoreCount::fromGameNumber(GameNumber::fromValue(jGameNumber.get<GameNumber::Type>())),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        std::move(playerNames),
-        std::move(playerSponsors),
-        std::move(playerPronouns),
         jWinner.get<int>());
+
+    metaData->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
+    metaData->asGame()->setRound(Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())));
+    metaData->asGame()->setSetFormat(SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()));
+    metaData->asGame()->setScore(ScoreCount::fromGameNumber(GameNumber::fromValue(jGameNumber.get<GameNumber::Type>())));
+    for (int i = 0; i != playerNames.count(); ++i)
+        metaData->asGame()->setPlayerName(i, playerNames[i].cStr());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
@@ -623,16 +623,16 @@ static bool loadLegacy_1_4(
         timeStarted,
         timeEnded,
         stageID,
-        BracketType::fromType(BracketType::OTHER),
-        Round::fromSessionNumber(sessionNumber),
-        format,
-        ScoreCount::fromGameNumber(gameNumber),
         std::move(playerFighterIDs),
         std::move(playerTags),
-        std::move(playerNames),
-        std::move(playerSponsors),
-        std::move(playerPronouns),
         winner);
+
+    metaData->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
+    metaData->asGame()->setRound(Round::fromSessionNumber(sessionNumber));
+    metaData->asGame()->setSetFormat(format);
+    metaData->asGame()->setScore(ScoreCount::fromGameNumber(gameNumber));
+    for (int i = 0; i != playerNames.count(); ++i)
+        metaData->asGame()->setPlayerName(i, playerNames[i].cStr());
 
     const std::string streamDecoded = jPlayerStates.is_string() ?
         base64_decode(jPlayerStates.get<std::string>()) : "";

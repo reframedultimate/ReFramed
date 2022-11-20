@@ -14,7 +14,6 @@ class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
-            SessionNumber sessionNumber,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<String, 2>&& tags);
 

@@ -39,7 +39,6 @@ MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWi
 
     contentWidget()->setLayout(layout);
     updateSize();
-    setExpanded(true);
 
     connect(bracketType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Event::onComboBoxBracketTypeChanged);
 }
@@ -81,19 +80,19 @@ void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onAdoptMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Event::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onOverwriteMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void MetaDataEditWidget_Event::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onMetaDataCleared(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata) {}
+void MetaDataEditWidget_Event::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) {}
 void MetaDataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
 void MetaDataEditWidget_Event::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Event::onMetaDataTournamentDetailsChanged() {}
