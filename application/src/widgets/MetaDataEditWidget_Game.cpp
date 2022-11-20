@@ -30,6 +30,7 @@ MetaDataEditWidget_Game::MetaDataEditWidget_Game(MetaDataEditModel* model, QWidg
 #undef X
     ui_->comboBox_setFormat->setCurrentIndex(rfcommon::SetFormat::FREE);
 
+    ui_->pushButton_resetTimeStarted->setVisible(false);
     ui_->comboBox_roundType->setVisible(false);
     ui_->checkBox_leftL->setVisible(false);
     ui_->checkBox_rightL->setVisible(false);
@@ -39,7 +40,25 @@ MetaDataEditWidget_Game::MetaDataEditWidget_Game(MetaDataEditModel* model, QWidg
     setTitle("Game");
     setExpanded(true);
 
+    connect(ui_->dateTimeEdit_started, &QDateTimeEdit::dateTimeChanged, this, &MetaDataEditWidget_Game::onDateTimeStartedChanged);
+    connect(ui_->pushButton_resetTimeStarted, &QPushButton::released, this, &MetaDataEditWidget_Game::onPushButtonResetTimeStartedReleased);
     connect(ui_->comboBox_roundType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Game::onComboBoxRoundTypeChanged);
+    connect(ui_->comboBox_setFormat, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Game::onComboBoxSetFormatChanged);
+    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &MetaDataEditWidget_Game::onSpinBoxGameNumberChanged);
+    connect(ui_->checkBox_leftL, &QCheckBox::stateChanged, this, &MetaDataEditWidget_Game::onCheckBoxLeftLoserSideChanged);
+    connect(ui_->checkBox_rightL, &QCheckBox::stateChanged, this, &MetaDataEditWidget_Game::onCheckBoxRightLoserSideChanged);
+    connect(ui_->lineEdit_leftName, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftNameChanged);
+    connect(ui_->lineEdit_rightName, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightNameChanged);
+    connect(ui_->lineEdit_leftSponsor, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftSponsorChanged);
+    connect(ui_->lineEdit_rightSponsor, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightSponsorChanged);
+    connect(ui_->lineEdit_leftSocial, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftSocialChanged);
+    connect(ui_->lineEdit_rightSocial, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightSocialChanged);
+    connect(ui_->lineEdit_leftPronouns, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftPronounsChanged);
+    connect(ui_->lineEdit_rightPronouns, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightPronounsChanged);
+    connect(ui_->toolButton_incLeftScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonIncLeftScoreReleased);
+    connect(ui_->toolButton_decLeftScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonDecLeftScoreReleased);
+    connect(ui_->toolButton_incRightScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonIncRightScoreReleased);
+    connect(ui_->toolButton_decRightScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonDecRightScoreReleased);
 }
 
 // ----------------------------------------------------------------------------
@@ -49,10 +68,116 @@ MetaDataEditWidget_Game::~MetaDataEditWidget_Game()
 }
 
 // ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onDateTimeStartedChanged(const QDateTime& dateTime)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onPushButtonResetTimeStartedReleased()
+{
+
+}
+
+// ----------------------------------------------------------------------------
 void MetaDataEditWidget_Game::onComboBoxRoundTypeChanged(int index)
 {
-    enableGrandFinalOptions(ui_->comboBox_roundType->currentIndex() == rfcommon::Round::GRAND_FINALS);
+    enableGrandFinalOptions(index == rfcommon::Round::GRAND_FINALS);
+    enableRoundCounter(
+                index == rfcommon::Round::WINNERS_ROUND ||
+                index == rfcommon::Round::LOSERS_ROUND ||
+                index == rfcommon::Round::POOLS);
+
     updateSize();
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onComboBoxSetFormatChanged(int index)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onSpinBoxGameNumberChanged(int value)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onCheckBoxLeftLoserSideChanged(bool enable)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onCheckBoxRightLoserSideChanged(bool enable)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditLeftNameChanged(const QString& text)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditRightNameChanged(const QString& text)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditLeftSponsorChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditRightSponsorChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditLeftSocialChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditRightSocialChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditLeftPronounsChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onLineEditRightPronounsChanged(const QString& text)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onPushButtonIncLeftScoreReleased()
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onPushButtonDecLeftScoreReleased()
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onPushButtonIncRightScoreReleased()
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onPushButtonDecRightScoreReleased()
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::enableRoundCounter(bool enable)
+{
+    ui_->spinBox_roundNumber->setVisible(enable);
 }
 
 // ----------------------------------------------------------------------------
@@ -209,6 +334,10 @@ void MetaDataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType brack
             enableFreePlayOption(false);
             enableRoundTypeSelection(true);
             enableGrandFinalOptions(ui_->comboBox_roundType->currentIndex() == rfcommon::Round::GRAND_FINALS);
+            enableRoundCounter(
+                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::WINNERS_ROUND ||
+                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::LOSERS_ROUND ||
+                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::POOLS);
             break;
 
         case rfcommon::BracketType::MONEYMATCH:
@@ -218,6 +347,7 @@ void MetaDataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType brack
             enableFreePlayOption(true);
             enableRoundTypeSelection(false);
             enableGrandFinalOptions(false);
+            enableRoundCounter(true);
             break;
     }
 
@@ -262,8 +392,14 @@ void MetaDataEditWidget_Game::onMetaDataEventDetailsChanged()
     }
 }
 void MetaDataEditWidget_Game::onMetaDataCommentatorsChanged() {}
-void MetaDataEditWidget_Game::onMetaDataGameDetailsChanged() {}
-void MetaDataEditWidget_Game::onMetaDataPlayerDetailsChanged() {}
+void MetaDataEditWidget_Game::onMetaDataGameDetailsChanged()
+{
+
+}
+void MetaDataEditWidget_Game::onMetaDataPlayerDetailsChanged()
+{
+
+}
 void MetaDataEditWidget_Game::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
 void MetaDataEditWidget_Game::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 

@@ -26,9 +26,28 @@ public:
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
 
 private slots:
+    void onDateTimeStartedChanged(const QDateTime& dateTime);
+    void onPushButtonResetTimeStartedReleased();
     void onComboBoxRoundTypeChanged(int index);
+    void onComboBoxSetFormatChanged(int index);
+    void onSpinBoxGameNumberChanged(int value);
+    void onCheckBoxLeftLoserSideChanged(bool enable);
+    void onCheckBoxRightLoserSideChanged(bool enable);
+    void onLineEditLeftNameChanged(const QString& text);
+    void onLineEditRightNameChanged(const QString& text);
+    void onLineEditLeftSponsorChanged(const QString& text);
+    void onLineEditRightSponsorChanged(const QString& text);
+    void onLineEditLeftSocialChanged(const QString& text);
+    void onLineEditRightSocialChanged(const QString& text);
+    void onLineEditLeftPronounsChanged(const QString& text);
+    void onLineEditRightPronounsChanged(const QString& text);
+    void onPushButtonIncLeftScoreReleased();
+    void onPushButtonDecLeftScoreReleased();
+    void onPushButtonIncRightScoreReleased();
+    void onPushButtonDecRightScoreReleased();
 
 private:
+    void enableRoundCounter(bool enable);
     void enableFreePlayOption(bool enable);
     void enableRoundTypeSelection(bool enable);
     void enableGrandFinalOptions(bool enable);

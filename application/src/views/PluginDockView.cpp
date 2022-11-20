@@ -39,6 +39,7 @@ PluginDockView::PluginDockView(ReplayManager* replayManager, PluginManager* plug
     ads::CDockAreaWidget* dockArea = addDockWidget(ads::CenterDockWidgetArea, pluginHomePage);
     PluginDockView::onDockAreaCreated(dockArea);
 
+    setConfigFlag(MiddleMouseButtonClosesTab);
     connect(this, &CDockManager::dockAreaCreated, this, &PluginDockView::onDockAreaCreated);
 }
 
@@ -60,8 +61,8 @@ PluginDockView::PluginDockView(Protocol* protocol, PluginManager* pluginManager,
     ads::CDockAreaWidget* dockArea = addDockWidget(ads::CenterDockWidgetArea, pluginHomePage);
     PluginDockView::onDockAreaCreated(dockArea);
 
+    setConfigFlag(MiddleMouseButtonClosesTab);
     protocol_->dispatcher.addListener(this);
-
     connect(this, &CDockManager::dockAreaCreated, this, &PluginDockView::onDockAreaCreated);
 }
 
