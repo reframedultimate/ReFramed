@@ -69,6 +69,7 @@ void VODReviewPlugin::onGameSessionLoaded(rfcommon::Session* game)
 
     if (auto vmeta = game->tryGetVideoMeta())
         videoPlayer_->seekVideoToGameFrame(vmeta->frameOffset());
+    VODReviewPlugin::onVisualizerDataChanged();
 
     videoPlayer_->playVideo();
 }
@@ -103,4 +104,19 @@ void VODReviewPlugin::onFileOpened() {}
 void VODReviewPlugin::onFileClosed() {}
 void VODReviewPlugin::onPresentImage(const QImage& image)
 {
+    if (visualizerSourceCount() == 0)
+        return;
+
+    const auto& timeIntervals = visualizerData(0).timeIntervals;
+    for (int i = 1; i < timeIntervals.count(); ++i)
+    {
+        const auto& a = timeIntervals[i - 1];
+        const auto& b = timeIntervals[i];
+        const auto current = videoPlayer_->currentVideoGameFrame();
+        if (current > rfcommon::FrameIndex::fromValue(a.end.index() + 60) && current < b.start)
+        {
+            videoPlayer_->seekVideoToGameFrame(b.start);
+            break;
+        }
+    }
 }

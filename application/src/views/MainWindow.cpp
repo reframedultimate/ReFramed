@@ -86,6 +86,7 @@ MainWindow::~MainWindow()
     // would ordinarily be deleted in the base class of this class, after we've deleted the
     // RunningGameSessionManager which gets deleted in this destructor.
     delete takeCentralWidget();
+    delete statusBar();
 
     delete ui_;
 }

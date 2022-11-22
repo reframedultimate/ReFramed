@@ -4,7 +4,7 @@
 #include "rfcommon/BracketType.hpp"
 #include "rfcommon/GameMetaData.hpp"
 
-#include <QFormLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QToolButton>
@@ -27,15 +27,19 @@ MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWi
     BRACKET_TYPE_LIST
 #undef X
     bracketType->setCurrentIndex(rfcommon::BracketType::FRIENDLIES);
+    bracketType->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
     label_bracketURL_->setVisible(false);
     lineEdit_bracketURL_->setVisible(false);
     lineEdit_otherBracketType_->setVisible(false);
+    lineEdit_otherBracketType_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
-    QFormLayout* layout = new QFormLayout;
-    layout->addRow("Bracket Type:", bracketType);
-    layout->addWidget(lineEdit_otherBracketType_);
-    layout->addRow(label_bracketURL_, lineEdit_bracketURL_);
+    QGridLayout* layout = new QGridLayout;
+    layout->addWidget(new QLabel("Bracket Type:"), 0, 0);
+    layout->addWidget(bracketType, 0, 1);
+    layout->addWidget(lineEdit_otherBracketType_, 0, 2);
+    layout->addWidget(label_bracketURL_, 1, 0);
+    layout->addWidget(lineEdit_bracketURL_, 1, 1);
 
     contentWidget()->setLayout(layout);
     updateSize();

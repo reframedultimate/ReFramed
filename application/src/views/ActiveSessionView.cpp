@@ -41,22 +41,30 @@ ActiveSessionView::ActiveSessionView(
     , activeSessionManager_(activeSessionManager)
     , metaDataEditModel_(new MetaDataEditModel)
 {
+    MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
+    MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
+    MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
+    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get());
+
+    event->setExpanded(true);
+    game->setExpanded(true);
+
     QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Tournament(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Commentators(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Event(metaDataEditModel_.get()));
-    metaDataEditLayout->addWidget(new MetaDataEditWidget_Game(metaDataEditModel_.get()));
+    metaDataEditLayout->addWidget(tournament);
+    metaDataEditLayout->addWidget(commentators);
+    metaDataEditLayout->addWidget(event);
+    metaDataEditLayout->addWidget(game);
     metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metaDataEditContents = new QWidget;
     metaDataEditContents->setLayout(metaDataEditLayout);
 
-    QScrollArea* scrollArea = new ScrollAreaWithSizeHint;
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setWidget(metaDataEditContents);
+    scrollArea_ = new ScrollAreaWithSizeHint;
+    scrollArea_->setWidgetResizable(true);
+    scrollArea_->setWidget(metaDataEditContents);
 
     splitter_ = new CollapsibleSplitter(Qt::Horizontal);
-    splitter_->addWidget(scrollArea);
+    splitter_->addWidget(scrollArea_);
     splitter_->addWidget(new PluginDockView(activeSessionManager_->protocol(), pluginManager));
     splitter_->setStretchFactor(0, 0);
     splitter_->setStretchFactor(1, 1);
@@ -71,6 +79,11 @@ ActiveSessionView::ActiveSessionView(
 // ----------------------------------------------------------------------------
 ActiveSessionView::~ActiveSessionView()
 {
+    // Scroll area contains widgets that are registered as listeners to 
+    // metaDataEditModel_. Have to delete them explicitly, otherwise the model
+    // is deleted before the widgets are deleted.
+    delete scrollArea_;
+
     activeSessionManager_->dispatcher.removeListener(this);
 }
 

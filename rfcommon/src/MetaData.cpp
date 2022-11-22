@@ -148,12 +148,12 @@ MetaData* MetaData::load(const void* data, uint32_t size)
     if (j.is_discarded())
         return nullptr;
 
-    if (j["version"] == "1.5")
-        return load_1_5(j);
-    if (j["version"] == "1.6")
-        return load_1_6(j);
     if (j["version"] == "1.7")
         return load_1_7(j);
+    if (j["version"] == "1.6")
+        return load_1_6(j);
+    if (j["version"] == "1.5")
+        return load_1_5(j);
 
     // unsupported version
     return nullptr;
@@ -430,47 +430,11 @@ static MetaData* load_1_7(json& j)
 
     if (type == "game")
     {
-        json jEvent = j["event"];
-        json jBracketType = jEvent["type"];
-        const auto bracketType = jBracketType.is_string() ?
-                    BracketType::fromDescription(jBracketType.get<std::string>().c_str()) :
-                    BracketType::fromType(BracketType::FRIENDLIES);
-
-        json jRound = jGameInfo["round"];
-        json jFormat = jGameInfo["format"];
-        json jScore1 = jGameInfo["score1"];
-        json jScore2 = jGameInfo["score2"];
         json jWinner = jGameInfo["winner"];
-
-        const auto round = jRound.is_string() ?
-                    Round::fromDescription(jRound.get<std::string>().c_str()) :
-                    Round::makeFree();
-        const auto format = jFormat.is_string() ?
-                    SetFormat::fromDescription(jFormat.get<std::string>().c_str()) :
-                    SetFormat::fromType(SetFormat::FREE);
-        const auto score = jScore1.is_number_unsigned() && jScore2.is_number_unsigned() ?
-                    ScoreCount::fromScore(jScore1.get<int>(), jScore2.get<int>()) :
-                    ScoreCount::fromGameNumber(GameNumber::fromValue(1));
         int winner = jWinner.is_number_unsigned() ?
                     jWinner.get<int>() : -1;
         if (winner > fighterCount)
             winner = -1;
-
-        SmallVector<String, 2> names;
-        SmallVector<String, 2> sponsors;
-        SmallVector<String, 2> socials;
-        SmallVector<String, 2> pronouns;
-        for (const auto& info : jPlayerInfo)
-        {
-            json jName = info["name"];
-            json jSponsor = info["sponsor"];
-
-            sponsors.emplace(jSponsor.is_string() ?
-                jSponsor.get<std::string>().c_str() : "");
-            names.emplace(jName.is_string() ?
-                jName.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
-            pronouns.emplace("");
-        }
 
         GameMetaData* g = MetaData::newSavedGameSession(
             timeStarted,
@@ -481,13 +445,16 @@ static MetaData* load_1_7(json& j)
             winner)->asGame();
 
         json jTournament = j["tournament"];
+
         json jTournamentName = jTournament["name"];
-        json jTournamentWebsite = jTournament["website"];
         if (jTournamentName.is_string())
             g->setTournamentName(jTournamentName.get<std::string>().c_str());
+
+        json jTournamentWebsite = jTournament["website"];
         if (jTournamentWebsite.is_string())
             g->setTournamentWebsite(jTournamentWebsite.get<std::string>().c_str());
-        for (const auto& jOrganizer : jTournament)
+
+        for (const auto& jOrganizer : jTournament["organizers"])
         {
             json jName = jOrganizer["name"];
             json jSocial = jOrganizer["social"];
@@ -499,6 +466,7 @@ static MetaData* load_1_7(json& j)
 
             g->addTournamentOrganizer(name.c_str(), social.c_str(), pronouns.c_str());
         }
+
         for (const auto& jSponsor : jTournament["sponsors"])
         {
             json jName = jSponsor["name"];
@@ -510,11 +478,26 @@ static MetaData* load_1_7(json& j)
             g->addSponsor(name.c_str(), website.c_str());
         }
 
-        rfcommon::SmallVector<rfcommon::String, 2> commentators;
-        for (const auto& commentator : j["commentators"])
-            if (commentator.is_string())
-                commentators.push(commentator.get<std::string>().c_str());
+        for (const auto& jCommentator : j["commentators"])
+        {
+            json jName = jCommentator["name"];
+            json jSocial = jCommentator["social"];
+            json jPronouns = jCommentator["pronouns"];
 
+            const auto name = jName.is_string() ? jName.get<std::string>() : "";
+            const auto social = jSocial.is_string() ? jSocial.get<std::string>() : "";
+            const auto pronouns = jPronouns.is_string() ? jPronouns.get<std::string>() : "";
+
+            g->addCommentator(name.c_str(), social.c_str(), pronouns.c_str());
+        }
+
+        json jEvent = j["event"];
+
+        json jBracketType = jEvent["type"];
+        const auto bracketType = jBracketType.is_string() ?
+            BracketType::fromDescription(jBracketType.get<std::string>().c_str()) :
+            BracketType::fromType(BracketType::FRIENDLIES);
+        g->setBracketType(bracketType);
         switch (bracketType.type())
         {
             case BracketType::SINGLES:
@@ -531,6 +514,48 @@ static MetaData* load_1_7(json& j)
             case BracketType::MONEYMATCH:
             case BracketType::OTHER:
                 break;
+        }
+
+        json jRound = jGameInfo["round"];
+        const auto round = jRound.is_string() ?
+            Round::fromDescription(jRound.get<std::string>().c_str()) :
+            Round::makeFree();
+        g->setRound(round);
+
+        json jFormat = jGameInfo["format"];
+        const auto format = jFormat.is_string() ?
+            SetFormat::fromDescription(jFormat.get<std::string>().c_str()) :
+            SetFormat::fromType(SetFormat::FREE);
+        g->setSetFormat(format);
+
+        json jScore1 = jGameInfo["score1"];
+        json jScore2 = jGameInfo["score2"];
+        const auto score = jScore1.is_number_unsigned() && jScore2.is_number_unsigned() ?
+            ScoreCount::fromScore(jScore1.get<int>(), jScore2.get<int>()) :
+            ScoreCount::fromGameNumber(GameNumber::fromValue(1));
+        g->setScore(score);
+
+        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        {
+            json jName = jPlayerInfo[i]["name"];
+            if (jName.is_string())
+                g->setPlayerName(i, jName.get<std::string>().c_str());
+
+            json jSponsor = jPlayerInfo[i]["sponsor"];
+            if (jSponsor.is_string())
+                g->setPlayerSponsor(i, jSponsor.get<std::string>().c_str());
+
+            json jSocial = jPlayerInfo[i]["social"];
+            if (jSocial.is_string())
+                g->setPlayerSocial(i, jSocial.get<std::string>().c_str());
+
+            json jPronouns = jPlayerInfo[i]["pronouns"];
+            if (jPronouns.is_string())
+                g->setPlayerPronouns(i, jPronouns.get<std::string>().c_str());
+
+            json jLoserSide = jPlayerInfo[i]["loserside"];
+            if (jLoserSide.is_boolean())
+                g->setPlayerIsLoserSide(i, jLoserSide.get<bool>());
         }
 
         return g;
@@ -575,6 +600,7 @@ uint32_t MetaData::save(FILE* fp) const
                 jPlayerInfo[i]["sponsor"] = mdata->playerSponsor(i).cStr();
                 jPlayerInfo[i]["social"] = mdata->playerSocial(i).cStr();
                 jPlayerInfo[i]["pronouns"] = mdata->playerPronouns(i).cStr();
+                jPlayerInfo[i]["loserside"] = mdata->playerIsLoserSide(i);
             } break;
 
             case TRAINING: break;
@@ -586,6 +612,7 @@ uint32_t MetaData::save(FILE* fp) const
         {"timestampstart", timeStarted_.millisSinceEpoch()},
         {"timestampend", timeEnded_.millisSinceEpoch()},
     };
+
     switch (type())
     {
         case GAME: {
@@ -603,9 +630,18 @@ uint32_t MetaData::save(FILE* fp) const
         } break;
     }
 
+    auto sessionTypeToString = [](rfcommon::MetaData::Type type) -> const char* {
+        switch (type)
+        {
+            case rfcommon::MetaData::GAME: return "game";
+            case rfcommon::MetaData::TRAINING: return "training";
+        }
+        return "";
+    };
+
     json j = {
         {"version", "1.7"},
-        {"type", type() == GAME ? "game" : "training"},
+        {"type", sessionTypeToString(type())},
         {"playerinfo", jPlayerInfo},
         {"gameinfo", jGameInfo}
     };
@@ -613,47 +649,47 @@ uint32_t MetaData::save(FILE* fp) const
     switch (type())
     {
         case GAME: {
-            auto mdata = asGame();
+            auto g = asGame();
 
             auto jOrganizers = json::array();
-            for (int i = 0; i != mdata->tournamentOrganizerCount(); ++i)
+            for (int i = 0; i != g->tournamentOrganizerCount(); ++i)
             {
                 jOrganizers += {
-                    {"name", mdata->tournamentOrganizerName(i).cStr()},
-                    {"social", mdata->tournamentOrganizerSocial(i).cStr()},
-                    {"pronouns", mdata->tournamentOrganizerPronouns(i).cStr()}
+                    {"name", g->tournamentOrganizerName(i).cStr()},
+                    {"social", g->tournamentOrganizerSocial(i).cStr()},
+                    {"pronouns", g->tournamentOrganizerPronouns(i).cStr()}
                 };
             }
 
             auto jSponsors = json::array();
-            for (int i = 0; i != mdata->sponsorCount(); ++i)
+            for (int i = 0; i != g->sponsorCount(); ++i)
             {
                 jSponsors += {
-                    {"name", mdata->sponsorName(i).cStr()},
-                    {"website", mdata->sponsorWebsite(i).cStr()}
+                    {"name", g->sponsorName(i).cStr()},
+                    {"website", g->sponsorWebsite(i).cStr()}
                 };
             }
 
             json jCommentators = json::array();
-            for (int i = 0; i != mdata->commentatorCount(); ++i)
+            for (int i = 0; i != g->commentatorCount(); ++i)
             {
                 jCommentators += {
-                    {"name", mdata->commentatorName(i).cStr()},
-                    {"social", mdata->commentatorSocial(i).cStr()},
-                    {"pronouns", mdata->commentatorPronouns(i).cStr()}
+                    {"name", g->commentatorName(i).cStr()},
+                    {"social", g->commentatorSocial(i).cStr()},
+                    {"pronouns", g->commentatorPronouns(i).cStr()}
                 };
             }
 
             json jEvent = {
-                {"type", mdata->bracketType().description()}
+                {"type", g->bracketType().description()}
             };
-            switch (mdata->bracketType().type())
+            switch (g->bracketType().type())
             {
                 case BracketType::SINGLES:
                 case BracketType::DOUBLES:
                 case BracketType::AMATEURS:
                 case BracketType::SIDE:
-                    jEvent["url"] = mdata->bracketURL().cStr();
+                    jEvent["url"] = g->bracketURL().cStr();
                     break;
 
                 case BracketType::PRACTICE:
@@ -665,8 +701,8 @@ uint32_t MetaData::save(FILE* fp) const
 
             j["commentators"] = jCommentators;
             j["tournament"] = {
-                {"name", mdata->tournamentName().cStr()},
-                {"website", mdata->tournamentWebsite().cStr()},
+                {"name", g->tournamentName().cStr()},
+                {"website", g->tournamentWebsite().cStr()},
                 {"organizers", jOrganizers},
                 {"sponsors", jSponsors}
             };

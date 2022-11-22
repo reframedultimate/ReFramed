@@ -5,6 +5,7 @@
 
 class QGroupBox;
 class QLabel;
+class QScrollArea;
 
 namespace rfcommon {
     class Session;
@@ -41,6 +42,7 @@ private:
 private:
     ActiveSessionManager* activeSessionManager_;
     std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
+    QScrollArea* scrollArea_;
     CollapsibleSplitter* splitter_;
     int size0_, size1_;
 };

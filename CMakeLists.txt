@@ -55,7 +55,7 @@ add_subdirectory ("thirdparty/ads")
 add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
 add_subdirectory ("application")
-#add_subdirectory ("plugins")
+add_subdirectory ("plugins")
 
 option (REFRAMED_TESTS "Enable building unit tests" ON)
 if (REFRAMED_TESTS)

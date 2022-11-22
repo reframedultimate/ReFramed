@@ -30,7 +30,7 @@ MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(MetaDataEditModel* 
     layout_sponsors_->addWidget(addSponsor);
 
     QGridLayout* layout = new QGridLayout;
-    layout->addWidget(new QLabel("Tournlament name:"), 0, 0);
+    layout->addWidget(new QLabel("Tournament name:"), 0, 0);
     layout->addWidget(lineEdit_name_, 0, 1);
     layout->addWidget(new QLabel("Website:"), 1, 0);
     layout->addWidget(lineEdit_website_, 1, 1);
@@ -43,14 +43,18 @@ MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(MetaDataEditModel* 
     updateSize();
 
     connect(lineEdit_name_, &QLineEdit::textChanged, [this](const QString& text) {
+        ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
             if (mdata->type() == rfcommon::MetaData::GAME)
                 mdata->asGame()->setTournamentName(text.toUtf8().constData());
+        ignoreSelf_ = false;
     });
     connect(lineEdit_website_, &QLineEdit::textChanged, [this](const QString& text){
+        ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
             if (mdata->type() == rfcommon::MetaData::GAME)
                 mdata->asGame()->setTournamentWebsite(text.toUtf8().constData());
+        ignoreSelf_ = false;
     });
     connect(addTO, &QToolButton::released, this, &MetaDataEditWidget_Tournament::onAddTOReleased);
     connect(addSponsor, &QToolButton::released, this, &MetaDataEditWidget_Tournament::onAddSponsorReleased);
@@ -78,29 +82,29 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     layout->addRow("Pronouns:", widgets.pronouns);
     layout->addRow(removeButton);
 
-    QGroupBox* g = new QGroupBox;
-    g->setTitle(name.isEmpty() ? "TO #" + QString::number(layout_TOs_->count()) : name);
-    g->setLayout(layout);
+    QGroupBox* gb = new QGroupBox;
+    gb->setTitle(name.isEmpty() ? "TO #" + QString::number(layout_TOs_->count()) : name);
+    gb->setLayout(layout);
 
     QLayoutItem* addButtonItem = layout_TOs_->takeAt(layout_TOs_->count() - 1);
-    layout_TOs_->addWidget(g);
+    layout_TOs_->addWidget(gb);
     layout_TOs_->addItem(addButtonItem);
 
     updateSize();
 
-    auto indexInLayout = [this](QGroupBox* g) -> int {
+    auto indexInLayout = [this](QGroupBox* gb) -> int {
         for (int i = 0; i != layout_TOs_->count(); ++i)
         {
             QLayoutItem* item = layout_TOs_->itemAt(i);
-            if (item->widget() == g)
+            if (item->widget() == gb)
                 return i;
         }
         return -1;
     };
 
     // Remove TO
-    connect(removeButton, &QToolButton::released, [this, g, indexInLayout] {
-        int i = indexInLayout(g);
+    connect(removeButton, &QToolButton::released, [this, gb, indexInLayout] {
+        int i = indexInLayout(gb);
 
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
@@ -117,13 +121,13 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     });
 
     // Change TO name
-    connect(widgets.name, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        int i = indexInLayout(g);
+    connect(widgets.name, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
+        int i = indexInLayout(gb);
 
         if (text.isEmpty())
-            g->setTitle("TO #" + QString::number(i+1));
+            gb->setTitle("TO #" + QString::number(i+1));
         else
-            g->setTitle(text);
+            gb->setTitle(text);
 
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
@@ -139,8 +143,8 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     });
 
     // Change TO social
-    connect(widgets.social, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        int i = indexInLayout(g);
+    connect(widgets.social, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
+        int i = indexInLayout(gb);
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
             if (mdata->type() == rfcommon::MetaData::GAME)
@@ -155,8 +159,8 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     });
 
     // Change TO pronouns
-    connect(widgets.pronouns, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        int i = indexInLayout(g);
+    connect(widgets.pronouns, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
+        int i = indexInLayout(gb);
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
             if (mdata->type() == rfcommon::MetaData::GAME)
@@ -187,29 +191,29 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     layout->addRow("Website:", widgets.website);
     layout->addRow(removeButton);
 
-    QGroupBox* g = new QGroupBox;
-    g->setTitle(name.isEmpty() ? "Sponsor #" + QString::number(layout_sponsors_->count()) : name);
-    g->setLayout(layout);
+    QGroupBox* gb = new QGroupBox;
+    gb->setTitle(name.isEmpty() ? "Sponsor #" + QString::number(layout_sponsors_->count()) : name);
+    gb->setLayout(layout);
 
     QLayoutItem* addButtonItem = layout_sponsors_->takeAt(layout_sponsors_->count() - 1);
-    layout_sponsors_->addWidget(g);
+    layout_sponsors_->addWidget(gb);
     layout_sponsors_->addItem(addButtonItem);
 
     updateSize();
 
-    auto indexInLayout = [this](QGroupBox* g) -> int {
+    auto indexInLayout = [this](QGroupBox* gb) -> int {
         for (int i = 0; i != layout_sponsors_->count(); ++i)
         {
             QLayoutItem* item = layout_sponsors_->itemAt(i);
-            if (item->widget() == g)
+            if (item->widget() == gb)
                 return i;
         }
         return -1;
     };
 
     // Remove sponsor
-    connect(removeButton, &QToolButton::released, [this, g, indexInLayout] {
-        int i = indexInLayout(g);
+    connect(removeButton, &QToolButton::released, [this, gb, indexInLayout] {
+        int i = indexInLayout(gb);
 
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
@@ -226,13 +230,13 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     });
 
     // Change sponsor name
-    connect(widgets.name, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        int i = indexInLayout(g);
+    connect(widgets.name, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
+        int i = indexInLayout(gb);
 
         if (text.isEmpty())
-            g->setTitle("Sponsor #" + QString::number(i+1));
+            gb->setTitle("Sponsor #" + QString::number(i+1));
         else
-            g->setTitle(text);
+            gb->setTitle(text);
 
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
@@ -247,8 +251,8 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     });
 
     // Change sponsor website
-    connect(widgets.website, &QLineEdit::textChanged, [this, g, indexInLayout](const QString& text) {
-        int i = indexInLayout(g);
+    connect(widgets.website, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
+        int i = indexInLayout(gb);
         ignoreSelf_ = true;
         for (auto& mdata : model_->metaData())
             if (mdata->type() == rfcommon::MetaData::GAME)

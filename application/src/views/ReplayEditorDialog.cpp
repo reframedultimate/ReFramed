@@ -70,8 +70,6 @@ ReplayEditorDialog::ReplayEditorDialog(
     l->addLayout(saveCancelLayout);
     setLayout(l);
 
-    connect(cancelButton, &QPushButton::released, this, &ReplayEditorDialog::close);
-
     MetaDataEditModel::MappingInfoList mappingInfo;
     MetaDataEditModel::MetaDataList metaData;
     for (const auto& fileName : replayFileNames)
@@ -124,6 +122,9 @@ ReplayEditorDialog::ReplayEditorDialog(
     }
 
     metaDataEditModel_->setAndAdopt(std::move(mappingInfo), std::move(metaData));
+
+    connect(saveButton, &QPushButton::released, this, &ReplayEditorDialog::onSaveClicked);
+    connect(cancelButton, &QPushButton::released, this, &ReplayEditorDialog::close);
 }
 
 // ----------------------------------------------------------------------------

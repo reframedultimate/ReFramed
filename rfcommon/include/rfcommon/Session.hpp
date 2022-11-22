@@ -53,7 +53,7 @@ public:
     static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
     static Session* load(FilePathResolver* pathResolver, const char* fileName, uint8_t loadFlags=Flags::None);
     bool save(const char* utf8_filename, uint8_t saveFlags=Flags::All);
-    uint64_t save(FILE* fp, uint8_t saveFlags = Flags::All);
+    uint64_t save(FILE* fp, uint8_t saveFlags=Flags::All);
 
     bool existsInContentTable(Flags::Flag flag) const;
 
