@@ -19,7 +19,7 @@ public:
     ComponentType y() const { return y_; }
 
     bool operator==(const Vec2& other) const { return x_ == other.x_ && y_ == other.y_; }
-    bool operator!=(const Vec2& other) const { return x_ != other.x_ && y_ != other.y_; }
+    bool operator!=(const Vec2& other) const { return x_ != other.x_ || y_ != other.y_; }
 
 private:
     ComponentType x_, y_;

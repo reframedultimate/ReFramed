@@ -42,6 +42,7 @@ private slots:
     void populateCategories();
 
     void onConnectActionTriggered();
+    void onAttachToN64EmuTriggered();
     void onDisconnectActionTriggered();
     void onImportReplayPackTriggered();
     void onUserLabelsEditorActionTriggered();

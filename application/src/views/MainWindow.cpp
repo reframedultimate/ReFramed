@@ -64,6 +64,8 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
 
     connect(ui_->action_connect, &QAction::triggered,
             this, &MainWindow::onConnectActionTriggered);
+    connect(ui_->action_attachToN64Emu, &QAction::triggered,
+            this, &MainWindow::onAttachToN64EmuTriggered);
     connect(ui_->action_disconnect, &QAction::triggered,
             this, &MainWindow::onDisconnectActionTriggered);
     connect(ui_->action_importReplayPack, &QAction::triggered,
@@ -194,6 +196,12 @@ void MainWindow::onConnectActionTriggered()
 }
 
 // ----------------------------------------------------------------------------
+void MainWindow::onAttachToN64EmuTriggered()
+{
+    protocol_->connectToSSB64Process();
+}
+
+// ----------------------------------------------------------------------------
 void MainWindow::onDisconnectActionTriggered()
 {
     PROFILE(MainWindow, onDisconnectActionTriggered);
@@ -283,6 +291,10 @@ void MainWindow::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_
 {
     PROFILE(MainWindow, onProtocolAttemptConnectToServer);
 
+    // Replace the "connect" action in the dropdown menu with "disconnect"
+    ui_->action_connect->setVisible(false);
+    ui_->action_attachToN64Emu->setVisible(false);
+    ui_->action_disconnect->setVisible(true);
 }
 
 // ----------------------------------------------------------------------------
@@ -290,16 +302,16 @@ void MainWindow::onProtocolFailedToConnectToServer(const char* errorMsg, const c
 {
     PROFILE(MainWindow, onProtocolFailedToConnectToServer);
 
+    // Replace the "disconnect" action in the dropdown menu with "connect"
+    ui_->action_connect->setVisible(true);
+    ui_->action_attachToN64Emu->setVisible(true);
+    ui_->action_disconnect->setVisible(false);
 }
 
 // ----------------------------------------------------------------------------
 void MainWindow::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
     PROFILE(MainWindow, onProtocolConnectedToServer);
-
-    // Replace the "connect" action in the dropdown menu with "disconnect"
-    ui_->action_connect->setVisible(false);
-    ui_->action_disconnect->setVisible(true);
 }
 
 // ----------------------------------------------------------------------------
@@ -309,6 +321,7 @@ void MainWindow::onProtocolDisconnectedFromServer()
 
     // Replace the "disconnect" action in the dropdown menu with "connect"
     ui_->action_connect->setVisible(true);
+    ui_->action_attachToN64Emu->setVisible(true);
     ui_->action_disconnect->setVisible(false);
 }
 

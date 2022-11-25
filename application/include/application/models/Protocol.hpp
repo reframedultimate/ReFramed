@@ -18,6 +18,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class ProtocolTask;
+class ProtocolTaskSSB64;
 
 /*!
  * \brief Decodes the incoming stream from the Nintendo switch into structures.
@@ -51,6 +52,7 @@ public:
     ~Protocol();
 
     void connectToServer(const QString& ipAddress, uint16_t port);
+    void connectToSSB64Process();
     void disconnectFromServer();
 
     rfcommon::MappingInfo* globalMappingInfo() const;
@@ -97,6 +99,7 @@ private:
 private:
     rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
     std::unique_ptr<ProtocolTask> task_;
+    std::unique_ptr<ProtocolTaskSSB64> ssb64Task_;
     rfcommon::SmallVector<rfcommon::SmallVector<rfcommon::FighterState, 2>, 2> stateBuffer_;
     rfcommon::Reference<rfcommon::Session> activeSession_;
     bool trainingEndedProxyWasCalled_;

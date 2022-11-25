@@ -31,6 +31,7 @@
     </property>
     <addaction name="action_connect"/>
     <addaction name="action_disconnect"/>
+    <addaction name="action_attachToN64Emu"/>
     <addaction name="action_importReplayPack"/>
     <addaction name="separator"/>
     <addaction name="action_quit"/>
@@ -74,6 +75,11 @@
   <action name="action_importReplayPack">
    <property name="text">
     <string>Import Reply Pack...</string>
+   </property>
+  </action>
+  <action name="action_attachToN64Emu">
+   <property name="text">
+    <string>Attach to N64 Emulator...</string>
    </property>
   </action>
  </widget>

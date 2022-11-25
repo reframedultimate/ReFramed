@@ -1,5 +1,6 @@
 #include "application/models/Protocol.hpp"
 #include "application/models/ProtocolTask.hpp"
+#include "application/models/ProtocolTaskSSB64.hpp"
 
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
@@ -74,11 +75,47 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 }
 
 // ----------------------------------------------------------------------------
+void Protocol::connectToSSB64Process()
+{
+    disconnectFromServer();
+
+    uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
+    ssb64Task_.reset(new ProtocolTaskSSB64(rfcommon::Log::root()->child("protocol")));
+
+    dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolAttemptConnectToServer, "N64 Emulator", 0);
+
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::connectionSuccess,
+        this, &Protocol::onConnectionSuccess);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::connectionFailure,
+        this, &Protocol::onConnectionFailure);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::connectionClosed,
+        this, &Protocol::onConnectionClosed);
+
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::trainingStarted,
+        this, &Protocol::onTrainingStartedProxy);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::trainingResumed,
+        this, &Protocol::onTrainingResumed);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::trainingEnded,
+        this, &Protocol::onTrainingEndedProxy);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::gameStarted,
+        this, &Protocol::onGameStarted);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::gameResumed,
+        this, &Protocol::onGameResumed);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::gameEnded,
+        this, &Protocol::onGameEnded);
+    connect(ssb64Task_.get(), &ProtocolTaskSSB64::fighterState,
+        this, &Protocol::onFighterState);
+
+    ssb64Task_->start();
+}
+
+// ----------------------------------------------------------------------------
 void Protocol::disconnectFromServer()
 {
     PROFILE(Protocol, disconnectFromServer);
 
     task_.reset();
+    ssb64Task_.reset();
 }
 
 // ----------------------------------------------------------------------------

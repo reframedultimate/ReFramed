@@ -17,6 +17,7 @@ set (APPLICATION_SOURCES
     "src/models/PluginManager.cpp"
     "src/models/Protocol.cpp"
     "src/models/ProtocolTask.cpp"
+    "src/models/ProtocolTaskSSB64.cpp"
     "src/models/ReplayGroup.cpp"
     "src/models/ReplayListModel.cpp"
     "src/models/ReplayListSortFilterModel.cpp"
@@ -76,6 +77,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/models/ActiveSessionManager.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
+    "include/application/models/ProtocolTaskSSB64.hpp"
     "include/application/views/ActiveSessionView.hpp"
     "include/application/views/CategoryTabsView.hpp"
     "include/application/views/ConnectView.hpp"
@@ -119,7 +121,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     set (APPLICATION_WIN32_EXE "")
 endif ()
 
-add_executable (application ${APPLICATION_WIN32_EXE}
+add_executable (application #${APPLICATION_WIN32_EXE}
     ${APPLICATION_SOURCES}
     ${APPLICATION_SOURCES_MOC}
     ${APPLICATION_HEADERS}
