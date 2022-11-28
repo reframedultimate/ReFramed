@@ -44,8 +44,6 @@ bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
         timer_.setInterval(den * 1000 / num);
         dispatcher.dispatch(&VideoPlayerListener::onFileOpened);
 
-        stepVideo(1);
-
         return true;
     }
     return false;
@@ -162,11 +160,20 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 }
 
 // ----------------------------------------------------------------------------
-rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame()
+rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame() const
 {
     if (isOpen_ == false || currentFrame_ == nullptr)
         return rfcommon::FrameIndex::fromValue(0);
 
     return rfcommon::FrameIndex::fromValue(
                 decoder_->fromCodecTimeStamp(currentFrame_->pts, 1, 60));
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::FrameIndex VideoPlayerModel::videoGameFrameCount() const
+{
+    if (isOpen_ == false || currentFrame_ == nullptr)
+        return rfcommon::FrameIndex::fromValue(0);
+
+    return rfcommon::FrameIndex::fromValue(0);
 }

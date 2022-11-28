@@ -18,6 +18,7 @@ namespace rfcommon {
 
 namespace rfapp {
 
+class PluginManager;
 class Protocol;
 class Settings;
 class ActiveSessionManagerListener;
@@ -36,10 +37,13 @@ class ActiveSessionManager
     Q_OBJECT
 
 public:
-    ActiveSessionManager(Protocol* protocol, rfapp::ReplayManager* manager, QObject* parent=nullptr);
+    ActiveSessionManager(Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent=nullptr);
     ~ActiveSessionManager();
 
     Protocol* protocol() const;
+
+    void setAutoAssociateVideoDirectory(const QString& dir);
+    const QString& autoAssociateVideoDirectory() const;
 
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
@@ -76,6 +80,8 @@ private:
 private:
     Protocol* protocol_;
     ReplayManager* replayManager_;
+    PluginManager* pluginManager_;
+    QString autoAssociateVideoDir_;
     QVector<rfcommon::Reference<rfcommon::GameMetaData>> pastMetaData_;
 };
 

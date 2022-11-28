@@ -380,10 +380,10 @@ void ProtocolTaskSSB64::run()
             rfcommon::StageID stageID = rfcommon::StageID::makeInvalid();
             if (getMatchSettings(processHandle, gameBaseAddr, &slotMap, &tags, &fighterIDs, &stageID, log_) == false)
                 continue;
-
+/*
             HANDLE hProcess = (HANDLE)processHandle;
             if (ReadProcessMemory(hProcess, (void*)(gameBaseAddr + (ELAPSED_TIMER & 0x1FFFFFFF)), (void*)&lastFrame, 4, NULL) == 0)
-                continue;
+                continue;*/
 
             log_->beginDropdown("Game Session");
             log_->info("Stage: %d", stageID.value());
@@ -404,7 +404,7 @@ void ProtocolTaskSSB64::run()
         }
 
         if (currentScreen == SCREEN_GAME)
-        {
+        {/*
             uint32_t frame;
             HANDLE hProcess = (HANDLE)processHandle;
             if (ReadProcessMemory(hProcess, (void*)(gameBaseAddr + (ELAPSED_TIMER & 0x1FFFFFFF)), (void*)&frame, 4, NULL) == 0)
@@ -460,7 +460,7 @@ void ProtocolTaskSSB64::run()
                     false,
                     false,
                     false);
-            }
+            }*/
         }
     }
 

@@ -1,23 +1,26 @@
 #include "application/Util.hpp"
 #include "application/listeners/ActiveSessionManagerListener.hpp"
 #include "application/models/ActiveSessionManager.hpp"
+#include "application/models/AutoAssociateVideosTask.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "rfcommon/Frame.hpp"
-#include "rfcommon/FrameData.hpp"
+
 #include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/Log.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TrainingMetaData.hpp"
+
 #include <QDateTime>
 
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ActiveSessionManager::ActiveSessionManager(Protocol* protocol, ReplayManager* manager, QObject* parent)
+ActiveSessionManager::ActiveSessionManager(Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent)
     : QObject(parent)
     , protocol_(protocol)
-    , replayManager_(manager)
+    , replayManager_(replayManager)
+    , pluginManager_(pluginManager)
 {
     protocol_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
@@ -36,6 +39,18 @@ Protocol* ActiveSessionManager::protocol() const
     PROFILE(ActiveSessionManager, protocol);
 
     return protocol_;
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::setAutoAssociateVideoDirectory(const QString& dir)
+{
+    autoAssociateVideoDir_ = dir;
+}
+
+// ----------------------------------------------------------------------------
+const QString& ActiveSessionManager::autoAssociateVideoDirectory() const
+{
+    return autoAssociateVideoDir_;
 }
 
 // ----------------------------------------------------------------------------
@@ -100,10 +115,33 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 {
     PROFILE(ActiveSessionManager, onProtocolGameEnded);
 
-    // Save as replay. This will also add the session to the "All" replay group
-    if (replayManager_->saveReplayWithDefaultSettings(game) == false)
+    auto saveGame = [this, game] {
+        // Save as replay. This will also add the session to the "All" replay group
+        if (replayManager_->saveReplayWithDefaultSettings(game) == false)
+        {
+            // TODO need to handle this somehow
+        }
+    };
+
+    if (autoAssociateVideoDir_.isEmpty())
     {
-        // TODO need to handle this somehow
+        saveGame();
+    }
+    else
+    {
+        AutoAssociateVideoTask* task = new AutoAssociateVideoTask(
+                    game, autoAssociateVideoDir_,
+                    pluginManager_,
+                    rfcommon::Log::root()->child("AutoAssociateVideoTask"));
+
+        // Delete task object when thread is done
+        connect(task, &QThread::finished, task, &QObject::deleteLater);
+
+        // Save game as replay once task completes, regardless of success
+        connect(task, &AutoAssociateVideoTask::success, saveGame);
+        connect(task, &AutoAssociateVideoTask::failure, saveGame);
+
+        task->start();
     }
 
     /*

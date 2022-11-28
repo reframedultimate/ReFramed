@@ -125,7 +125,9 @@ public:
          */
         virtual void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) = 0;
 
-        virtual rfcommon::FrameIndex currentVideoGameFrame() = 0;
+        virtual rfcommon::FrameIndex currentVideoGameFrame() const = 0;
+
+        virtual rfcommon::FrameIndex videoGameFrameCount() const = 0;
     };
 
     Plugin(const RFPluginFactory* factory);

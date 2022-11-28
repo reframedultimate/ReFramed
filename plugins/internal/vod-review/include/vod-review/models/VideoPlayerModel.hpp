@@ -40,7 +40,8 @@ public:
     void setVideoVolume(int percent) override final;
     void stepVideo(int videoFrames) override final;
     void seekVideoToGameFrame(rfcommon::FrameIndex frameNumber) override final;
-    rfcommon::FrameIndex currentVideoGameFrame() override final;
+    rfcommon::FrameIndex currentVideoGameFrame() const override final;
+    rfcommon::FrameIndex videoGameFrameCount() const override final;
 
 private:
     QTimer timer_;

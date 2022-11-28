@@ -3,6 +3,7 @@
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
 #include "application/widgets/CollapsibleSplitter.hpp"
+#include "application/widgets/MetaDataEditWidget_AutoAssociateVideo.hpp"
 #include "application/widgets/MetaDataEditWidget_Commentators.hpp"
 #include "application/widgets/MetaDataEditWidget_Event.hpp"
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
@@ -41,6 +42,7 @@ ActiveSessionView::ActiveSessionView(
     , activeSessionManager_(activeSessionManager)
     , metaDataEditModel_(new MetaDataEditModel)
 {
+    MetaDataEditWidget_AutoAssociateVideo* assocVideo = new MetaDataEditWidget_AutoAssociateVideo(metaDataEditModel_.get(), activeSessionManager_);
     MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
     MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
     MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
@@ -50,6 +52,7 @@ ActiveSessionView::ActiveSessionView(
     game->setExpanded(true);
 
     QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
+    metaDataEditLayout->addWidget(assocVideo);
     metaDataEditLayout->addWidget(tournament);
     metaDataEditLayout->addWidget(commentators);
     metaDataEditLayout->addWidget(event);
@@ -79,7 +82,7 @@ ActiveSessionView::ActiveSessionView(
 // ----------------------------------------------------------------------------
 ActiveSessionView::~ActiveSessionView()
 {
-    // Scroll area contains widgets that are registered as listeners to 
+    // Scroll area contains widgets that are registered as listeners to
     // metaDataEditModel_. Have to delete them explicitly, otherwise the model
     // is deleted before the widgets are deleted.
     delete scrollArea_;

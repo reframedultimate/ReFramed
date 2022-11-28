@@ -121,7 +121,7 @@ static int parseSetFormatAndRound(int pos, const char* fn, String* setFormat, St
     s_format = p;
     for (; *p; ++p)
     {
-        if (*p < 0 || *p > 127)
+        if (*p < 0)
             return -1;
         if (std::isalnum(*p) == false)
         {

@@ -10,6 +10,7 @@ find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
 
 set (APPLICATION_SOURCES
     "src/models/ActiveSessionManager.cpp"
+    "src/models/AutoAssociateVideosTask.cpp"
     "src/models/Config.cpp"
     "src/models/ConfigAccessor.cpp"
     "src/models/FighterIcon.cpp"
@@ -39,6 +40,7 @@ set (APPLICATION_SOURCES
     "src/widgets/CollapsibleSplitter.cpp"
     "src/widgets/ConnectionStatusWidget.cpp"
     "src/widgets/MetaDataEditWidget.cpp"
+    "src/widgets/MetaDataEditWidget_AutoAssociateVideo.cpp"
     "src/widgets/MetaDataEditWidget_Commentators.cpp"
     "src/widgets/MetaDataEditWidget_Event.cpp"
     "src/widgets/MetaDataEditWidget_Game.cpp"
@@ -75,6 +77,7 @@ set (APPLICATION_HEADERS
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
     "include/application/models/ActiveSessionManager.hpp"
+    "include/application/models/AutoAssociateVideosTask.hpp"
     "include/application/models/Protocol.hpp"
     "include/application/models/ProtocolTask.hpp"
     "include/application/models/ProtocolTaskSSB64.hpp"
@@ -93,6 +96,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/UserMotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
     "include/application/widgets/MetaDataEditWidget.hpp"
+    "include/application/widgets/MetaDataEditWidget_AutoAssociateVideo.hpp"
     "include/application/widgets/MetaDataEditWidget_Commentators.hpp"
     "include/application/widgets/MetaDataEditWidget_Event.hpp"
     "include/application/widgets/MetaDataEditWidget_Game.hpp"
