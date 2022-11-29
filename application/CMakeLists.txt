@@ -52,7 +52,6 @@ set (APPLICATION_SOURCES
     "src/main.cpp")
 set (APPLICATION_HEADERS
     "include/application/listeners/ActiveSessionManagerListener.hpp"
-    "include/application/listeners/DataSetBackgroundLoaderListener.hpp"
     "include/application/listeners/MetaDataEditListener.hpp"
     "include/application/listeners/ReplayGroupListener.hpp"
     "include/application/listeners/ReplayManagerListener.hpp"
