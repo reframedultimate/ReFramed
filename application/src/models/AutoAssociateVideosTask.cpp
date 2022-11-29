@@ -18,8 +18,15 @@
 
 #include <QDebug>
 
-#include <sys/stat.h>
-#include <time.h>
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+#   define WIN32_LEAN_AND_MEAN
+#   include <Windows.h>
+#   include "rfcommon/LastWindowsError.hpp"
+#   include "rfcommon/time.h"
+#elif defined(RFCOMMON_PLATFORM_LINUX)
+#   include <sys/stat.h>
+#   include <time.h>
+#endif
 
 namespace rfapp {
 
@@ -80,47 +87,76 @@ void AutoAssociateVideoTask::run()
         const char* utf8FileName = fileNameBA.constData();
         const char* utf8FilePath = filePathBA.constData();
 
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+        wchar_t* utf16FileName = utf8_to_utf16(utf8FileName, strlen(utf8FileName));
+        if (utf16FileName == nullptr)
+        {
+            emit failure();
+            return;
+        }
+
+        WIN32_FILE_ATTRIBUTE_DATA fileAttributes;
+        if (GetFileAttributesExW(utf16FileName, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
+        {
+            log_->error("Failed to get file attributes: %s", LastWindowsError().cStr());
+            emit failure();
+            utf16_free(utf16FileName);
+            return;
+        }
+
+        auto videoStarted = rfcommon::TimeStamp::fromMillisSinceEpoch(
+                    time_win32_filetime_to_milli_seconds_since_epoch(
+                        ((uint64_t)fileAttributes.ftCreationTime.dwHighDateTime <<32) +
+                        (uint64_t)fileAttributes.ftCreationTime.dwLowDateTime)));
+        auto videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch(
+                    time_win32_filetime_to_milli_seconds_since_epoch(
+                        ((uint64_t)fileAttributes.ftLastWriteTime.dwHighDateTime <<32) +
+                        (uint64_t)fileAttributes.ftLastWriteTime.dwLowDateTime)));
+
+        utf16_free(utf16FileName);
+#elif defined(RFCOMMON_PLATFORM_LINUX)
         struct stat st;
         stat(utf8FilePath, &st);
-        auto videoStarted = rfcommon::TimeStamp::fromMillisSinceEpoch((uint64_t)st.st_atime * 1000);
+        auto videoStarted = rfcommon::TimeStamp::fromSecondsSinceEpoch((uint64_t)st.st_atime);
+        auto videoEnd     = rfcommon::TimeStamp::fromSecondsSinceEpoch((uint64_t)st.st_ctime);
+#endif
 
         // If file is newer than when the game started, ignore
         if (timeStarted < videoStarted)
             continue;
 
         // If file is older than 48h, ignore as well
-        auto diff = timeStarted - videoStarted;
-        if (diff.millis() > 48 * 60 * 60 * 1000)
+        auto offset = timeStarted - videoStarted;
+        if (offset.seconds() > 48 * 60 * 60)
             continue;
 
-        /*
-        qDebug() << fileName;
-
-        if (file->open(utf8FilePath) == false)
+        // If for whatever reason the file metadata isn't right, we have to fall
+        // back to decoding the video to determine its length. Here we make the
+        // assumption that a game lasts longer than 10 seconds
+        if ((videoEnd - videoStarted).seconds() < 10)
         {
-            log_->error("Failed to open file \"%s\"", utf8FileName);
-            continue;
+            if (file->open(utf8FilePath) == false)
+            {
+                log_->error("Failed to open file \"%s\"", utf8FileName);
+                continue;
+            }
+            if (videoInterface->openVideoFromMemory(file->address(), file->size()) == false)
+            {
+                log_->error("Failed to load file as video: \"%s\"", utf8FileName);
+                file->close();
+                continue;
+            }
+
+            rfcommon::FrameIndex endFrame = videoInterface->videoGameFrameCount();
+            videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch(
+                        videoStarted.millisSinceEpoch() + endFrame.millisPassed());
+
+            videoInterface->closeVideo();
         }
-        if (videoInterface->openVideoFromMemory(file->address(), file->size()) == false)
-        {
-            log_->error("Failed to load file as video: \"%s\"", utf8FileName);
-            file->close();
-            continue;
-        }
-
-        rfcommon::FrameIndex endFrame = videoInterface->videoGameFrameCount();
-        videoInterface->closeVideo();
-
-        auto videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch(
-                    videoStarted.millisSinceEpoch() + endFrame.millisPassed());*/
-
-        auto videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch((uint64_t)st.st_ctime * 1000);
-
-        qDebug() << "started: " << timeStarted.millisSinceEpoch() << ", video start: " << videoStarted.millisSinceEpoch() << ", video end: " << videoEnd.millisSinceEpoch();
 
         if (timeStarted < videoEnd)
         {
-            auto frameOffset = rfcommon::FrameIndex::fromSeconds(diff.millis() / 1000);
+            auto frameOffset = rfcommon::FrameIndex::fromSeconds(offset.seconds());
             log_->info("Associating file \"%s\" with replay, offset=%d frames", utf8FileName, frameOffset.index());
             rfcommon::VideoMeta* vmeta = new rfcommon::VideoMeta(utf8FileName, frameOffset, false);
             session_->setNewVideo(vmeta, nullptr);

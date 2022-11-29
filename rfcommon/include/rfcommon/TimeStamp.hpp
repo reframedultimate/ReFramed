@@ -12,6 +12,7 @@ public:
     typedef uint64_t Type;
 
     static TimeStamp fromMillisSinceEpoch(Type value);
+    static TimeStamp fromSecondsSinceEpoch(Type value);
     static TimeStamp makeInvalid();
 
     ~TimeStamp();

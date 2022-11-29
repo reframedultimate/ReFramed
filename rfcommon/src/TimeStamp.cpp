@@ -13,6 +13,14 @@ TimeStamp TimeStamp::fromMillisSinceEpoch(Type value)
 }
 
 // ----------------------------------------------------------------------------
+TimeStamp TimeStamp::fromSecondsSinceEpoch(Type value)
+{
+    NOPROFILE();
+
+    return TimeStamp(value * 1000);
+}
+
+// ----------------------------------------------------------------------------
 TimeStamp TimeStamp::makeInvalid()
 {
     NOPROFILE();

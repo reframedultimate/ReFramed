@@ -15,6 +15,7 @@ public:
     ~DeltaTime();
 
     Type millis() const { return value_; }
+    Type seconds() const { return value_ / 1000; }
 
 private:
     DeltaTime();
