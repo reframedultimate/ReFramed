@@ -19,6 +19,9 @@ public:
 
     virtual void giveNextVideoFrame(AVFrame* frame) = 0;
 
+    virtual AVFrame* takePrevVideoFrame() = 0;
+    virtual void givePrevVideoFrame(AVFrame* frame) = 0;
+
     /*!
      * \brief Decodes the next chunk of audio.
      */

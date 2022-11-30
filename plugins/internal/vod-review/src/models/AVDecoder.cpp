@@ -271,6 +271,30 @@ void AVDecoder::giveNextVideoFrame(AVFrame* frame)
 }
 
 // ----------------------------------------------------------------------------
+AVFrame* AVDecoder::takePrevVideoFrame()
+{
+    return nullptr;
+}
+
+// ----------------------------------------------------------------------------
+void AVDecoder::givePrevVideoFrame(AVFrame* frame)
+{
+    FrameEntry* e = freeFrameEntries_.take();
+    if (e == nullptr)
+    {
+        // Should never happen but just in case if it does, clean up
+        log_->error("AVDecoder::giveNextVideoFrame(): Used up all free frame entries!");
+        av_free(frame->data[0]);
+        av_frame_free(&frame);
+    }
+    else
+    {
+        e->frame = frame;
+        picturePool_.put(e);
+    }
+}
+
+// ----------------------------------------------------------------------------
 AVFrame* AVDecoder::takeNextAudioFrame()
 {
     while (audioQueue_.count() == 0)

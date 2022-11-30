@@ -17,7 +17,7 @@ VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerC
     , log_(log)
     , decoder_(new AVDecoder(log))
     , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
-    , videoPlayer_(new VideoPlayerModel(seekableDecoder_.get(), log))
+    , videoPlayer_(new VideoPlayerModel(decoder_.get(), log))
 {
     videoPlayer_->dispatcher.addListener(this);
 }

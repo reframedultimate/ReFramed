@@ -77,7 +77,7 @@ void AutoAssociateVideoTask::run()
     auto videoInterface = videoPlugin_->videoPlayerInterface();
 
     rfcommon::Reference<rfcommon::MappedFile> file = new rfcommon::MappedFile;
-    auto timeStarted = session_->tryGetMetaData()->timeStarted();
+    auto gameStarted = session_->tryGetMetaData()->timeStarted();
 
     QDir dir(vidDir_);
     for (const auto& fileName : dir.entryList(QDir::Files))
@@ -106,11 +106,11 @@ void AutoAssociateVideoTask::run()
 
         auto videoStarted = rfcommon::TimeStamp::fromMillisSinceEpoch(
                     time_win32_filetime_to_milli_seconds_since_epoch(
-                        ((uint64_t)fileAttributes.ftCreationTime.dwHighDateTime <<32) +
+                        ((uint64_t)fileAttributes.ftCreationTime.dwHighDateTime << 32) +
                         (uint64_t)fileAttributes.ftCreationTime.dwLowDateTime)));
         auto videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch(
                     time_win32_filetime_to_milli_seconds_since_epoch(
-                        ((uint64_t)fileAttributes.ftLastWriteTime.dwHighDateTime <<32) +
+                        ((uint64_t)fileAttributes.ftLastWriteTime.dwHighDateTime << 32) +
                         (uint64_t)fileAttributes.ftLastWriteTime.dwLowDateTime)));
 
         utf16_free(utf16FileName);
@@ -122,11 +122,11 @@ void AutoAssociateVideoTask::run()
 #endif
 
         // If file is newer than when the game started, ignore
-        if (timeStarted < videoStarted)
+        if (gameStarted < videoStarted)
             continue;
 
         // If file is older than 48h, ignore as well
-        auto offset = timeStarted - videoStarted;
+        auto offset = gameStarted - videoStarted;
         if (offset.seconds() > 48 * 60 * 60)
             continue;
 
@@ -154,7 +154,7 @@ void AutoAssociateVideoTask::run()
             videoInterface->closeVideo();
         }
 
-        if (timeStarted < videoEnd)
+        if (gameStarted < videoEnd)
         {
             auto frameOffset = rfcommon::FrameIndex::fromSeconds(offset.seconds());
             log_->info("Associating file \"%s\" with replay, offset=%d frames", utf8FileName, frameOffset.index());

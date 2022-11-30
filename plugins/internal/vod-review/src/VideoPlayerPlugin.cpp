@@ -3,10 +3,8 @@
 #include "vod-review/models/BufferedSeekableDecoder.hpp"
 #include "vod-review/models/VideoPlayerModel.hpp"
 #include "vod-review/views/VideoPlayerView.hpp"
-#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/String.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
 
@@ -16,7 +14,7 @@ VideoPlayerPlugin::VideoPlayerPlugin(RFPluginFactory* factory, rfcommon::Log* lo
     , log_(log)
     , decoder_(new AVDecoder(log))
     , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
-    , videoPlayer_(new VideoPlayerModel(seekableDecoder_.get(), log))
+    , videoPlayer_(new VideoPlayerModel(decoder_.get(), log))
 {}
 
 // ----------------------------------------------------------------------------

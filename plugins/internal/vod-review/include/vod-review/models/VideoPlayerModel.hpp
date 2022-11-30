@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QTimer>
 
-class BufferedSeekableDecoder;
+class AVDecoderInterface;
 class VideoPlayerListener;
 
 extern "C" {
@@ -23,7 +23,7 @@ class VideoPlayerModel
     Q_OBJECT
 
 public:
-    VideoPlayerModel(BufferedSeekableDecoder* decoder, rfcommon::Log* log);
+    VideoPlayerModel(AVDecoderInterface* decoder, rfcommon::Log* log);
     ~VideoPlayerModel();
 
     rfcommon::ListenerDispatcher<VideoPlayerListener> dispatcher;
@@ -45,7 +45,7 @@ public:
 
 private:
     QTimer timer_;
-    BufferedSeekableDecoder* decoder_;
+    AVDecoderInterface* decoder_;
     AVFrame* currentFrame_;
     bool isOpen_;
 };

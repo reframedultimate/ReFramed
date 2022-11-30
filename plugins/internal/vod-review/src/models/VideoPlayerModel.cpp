@@ -1,5 +1,5 @@
 #include "vod-review/listeners/VideoPlayerListener.hpp"
-#include "vod-review/models/BufferedSeekableDecoder.hpp"
+#include "vod-review/models/AVDecoder.hpp"
 #include "vod-review/models/VideoPlayerModel.hpp"
 
 #include "rfcommon/Profiler.hpp"
@@ -11,7 +11,7 @@ extern "C" {
 }
 
 // ----------------------------------------------------------------------------
-VideoPlayerModel::VideoPlayerModel(BufferedSeekableDecoder* decoder, rfcommon::Log* log)
+VideoPlayerModel::VideoPlayerModel(AVDecoderInterface* decoder, rfcommon::Log* log)
     : decoder_(decoder)
     , currentFrame_(nullptr)
     , isOpen_(false)
@@ -107,14 +107,39 @@ void VideoPlayerModel::stepVideo(int videoFrames)
 
     while (videoFrames < 0)
     {
+        int64_t targetPTS = 0;
         if (currentFrame_)
+        {
+            int num, den;
+            decoder_->frameRate(&den, &num);  // time base is 1/framerate
+            targetPTS = currentFrame_->pts - decoder_->toCodecTimeStamp(-videoFrames, num, den);
+            if (targetPTS < 0)
+                targetPTS = 0;
+
             decoder_->givePrevVideoFrame(currentFrame_);
+        }
+
         currentFrame_ = decoder_->takePrevVideoFrame();
+        if (currentFrame_ == nullptr)
+        {
+            if (decoder_->seekNearKeyframe(targetPTS))
+            {
+                while (1)
+                {
+                    currentFrame_ = decoder_->takeNextVideoFrame();
+                    if (currentFrame_ == nullptr || currentFrame_->pts >= targetPTS)
+                        break;
+                    decoder_->giveNextVideoFrame(currentFrame_);
+                }
+            }
+            break;
+        }
+
         videoFrames++;
     }
 
     if (currentFrame_ == nullptr)
-        return;
+        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
 
     QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
     dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);
@@ -140,15 +165,20 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 
     if (currentFrame_)
         decoder_->giveNextVideoFrame(currentFrame_);
+    currentFrame_ = nullptr;
 
     int64_t targetPTS = decoder_->toCodecTimeStamp(frameNumber.index(), 1, 60);
-    if (decoder_->seekNearKeyframe(targetPTS) == false)
+    if (decoder_->seekNearKeyframe(targetPTS))
     {
-        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
-        return;
+        while (1)
+        {
+            currentFrame_ = decoder_->takeNextVideoFrame();
+            if (currentFrame_ == nullptr || currentFrame_->pts >= targetPTS)
+                break;
+            decoder_->giveNextVideoFrame(currentFrame_);
+        }
     }
 
-    currentFrame_ = decoder_->takeNextVideoFrame();
     if (currentFrame_ == nullptr)
     {
         dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());

@@ -43,6 +43,9 @@ public:
 
     void giveNextVideoFrame(AVFrame* frame) override;
 
+    AVFrame* takePrevVideoFrame() override;
+    void givePrevVideoFrame(AVFrame* frame) override;
+
     /*!
      * \brief Decodes the next chunk of audio.
      */
