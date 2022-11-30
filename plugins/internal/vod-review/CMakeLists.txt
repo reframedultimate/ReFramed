@@ -18,6 +18,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "src/views/VideoPlayerView.cpp"
         "src/views/VODReviewView.cpp"
         "src/VideoPlayerPlugin.cpp"
+        "src/widgets/TimestampBar.cpp"
         "src/VODReviewPlugin.cpp"
         "src/Plugin.cpp"
     HEADERS
@@ -28,6 +29,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "include/${PLUGIN_NAME}/models/VideoPlayerModel.hpp"
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"
         "include/${PLUGIN_NAME}/views/VODReviewView.hpp"
+        "include/${PLUGIN_NAME}/widgets/TimestampBar.hpp"
         "include/${PLUGIN_NAME}/VideoPlayerPlugin.hpp"
     MOC_HEADERS
         "include/${PLUGIN_NAME}/views/VideoPlayerView.hpp"

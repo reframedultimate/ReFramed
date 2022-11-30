@@ -389,6 +389,12 @@ void AVDecoder::frameRate(int* num, int* den) const
 }
 
 // ----------------------------------------------------------------------------
+int64_t AVDecoder::duration() const
+{
+    return inputCtx_->streams[videoStreamIdx_]->duration;
+}
+
+// ----------------------------------------------------------------------------
 bool AVDecoder::decodeNextPacket()
 {
     PROFILE(VideoDecoder, decodeNextFrame);

@@ -21,6 +21,8 @@ public:
 private:
     void onFileOpened() override final;
     void onFileClosed() override final;
+    void onPlayerPaused() override final;
+    void onPlayerResumed() override final;
     void onPresentImage(const QImage& image) override final;
 
 private:

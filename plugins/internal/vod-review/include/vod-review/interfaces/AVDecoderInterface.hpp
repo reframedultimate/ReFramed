@@ -34,4 +34,5 @@ public:
     virtual int64_t toCodecTimeStamp(int64_t ts, int num, int den) const = 0;
     virtual int64_t fromCodecTimeStamp(int64_t codec_ts, int num, int den) const = 0;
     virtual void frameRate(int* num, int* den) const = 0;
+    virtual int64_t duration() const = 0;
 };

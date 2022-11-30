@@ -48,6 +48,7 @@ public:
     int64_t toCodecTimeStamp(int64_t ts, int num, int den) const override;
     int64_t fromCodecTimeStamp(int64_t codec_ts, int num, int den) const override;
     void frameRate(int* num, int* den) const override;
+    int64_t duration() const override;
 
     int step(int deltaFrames);
 

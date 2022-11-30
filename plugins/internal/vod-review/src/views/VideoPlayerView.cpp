@@ -83,6 +83,16 @@ void VideoPlayerView::onFileClosed()
 }
 
 // ----------------------------------------------------------------------------
+void VideoPlayerView::onPlayerPaused()
+{
+}
+
+// ----------------------------------------------------------------------------
+void VideoPlayerView::onPlayerResumed()
+{
+}
+
+// ----------------------------------------------------------------------------
 void VideoPlayerView::onPresentImage(const QImage& image)
 {
     PROFILE(VideoPlayerView, onPresentCurrentFrame);

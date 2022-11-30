@@ -72,12 +72,14 @@ void VideoPlayerModel::closeVideo()
 void VideoPlayerModel::playVideo()
 {
     timer_.start();
+    dispatcher.dispatch(&VideoPlayerListener::onPlayerResumed);
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::pauseVideo()
 {
     timer_.stop();
+    dispatcher.dispatch(&VideoPlayerListener::onPlayerPaused);
 }
 
 // ----------------------------------------------------------------------------
@@ -196,14 +198,12 @@ rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame() const
         return rfcommon::FrameIndex::fromValue(0);
 
     return rfcommon::FrameIndex::fromValue(
-                decoder_->fromCodecTimeStamp(currentFrame_->pts, 1, 60));
+            decoder_->fromCodecTimeStamp(currentFrame_->pts, 1, 60));
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::FrameIndex VideoPlayerModel::videoGameFrameCount() const
 {
-    if (isOpen_ == false || currentFrame_ == nullptr)
-        return rfcommon::FrameIndex::fromValue(0);
-
-    return rfcommon::FrameIndex::fromValue(0);
+    return rfcommon::FrameIndex::fromValue(
+            decoder_->fromCodecTimeStamp(decoder_->duration(), 1, 60));
 }

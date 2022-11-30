@@ -241,6 +241,12 @@ void BufferedSeekableDecoder::frameRate(int* num, int* den) const
 }
 
 // ----------------------------------------------------------------------------
+int64_t BufferedSeekableDecoder::duration() const
+{
+    return decoder_->duration();
+}
+
+// ----------------------------------------------------------------------------
 int BufferedSeekableDecoder::step(int deltaFrames)
 {
     return 0;

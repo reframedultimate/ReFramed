@@ -102,6 +102,8 @@ void VODReviewPlugin::onVisualizerDataChanged()
 // ----------------------------------------------------------------------------
 void VODReviewPlugin::onFileOpened() {}
 void VODReviewPlugin::onFileClosed() {}
+void VODReviewPlugin::onPlayerPaused() {}
+void VODReviewPlugin::onPlayerResumed() {}
 void VODReviewPlugin::onPresentImage(const QImage& image)
 {
     if (visualizerSourceCount() == 0)

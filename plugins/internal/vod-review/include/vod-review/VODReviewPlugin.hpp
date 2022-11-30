@@ -50,6 +50,8 @@ private:
 private:
     void onFileOpened() override;
     void onFileClosed() override;
+    void onPlayerPaused() override;
+    void onPlayerResumed() override;
     void onPresentImage(const QImage& image) override;
 
 private:
