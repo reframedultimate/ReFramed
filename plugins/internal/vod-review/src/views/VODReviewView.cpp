@@ -35,8 +35,8 @@ VODReviewView::VODReviewView(VideoPlayerModel* videoPlayer, QWidget* parent)
     QShortcut* nextFrameShortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
     QShortcut* prevFrameShortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
 
-    QwtScaleWidget* scaleWidget = new QwtScaleWidget(QwtScaleDraw::BottomScale);
-    ui_->horizontalLayout->addWidget(scaleWidget);
+    /*QwtScaleWidget* scaleWidget = new QwtScaleWidget(QwtScaleDraw::BottomScale);
+    ui_->horizontalLayout->addWidget(scaleWidget);*/
 
     updateUITimer_.setInterval(200);
 

@@ -73,11 +73,12 @@ signals:
 
 private:
     void run() override;
-    void* connectAndCheckVersion();
-    bool negotiateMappingInfo(void* tcp_socket_handle);
-    void handleProtocol(void* tcp_socket_handle);
+    bool connectAndCheckVersion();
+    bool negotiateMappingInfo();
+    void handleProtocol();
 
 private:
+    void* tcpSocketHandle_;
     rfcommon::Log* log_;
     QString ipAddress_;
     QMutex mutex_;

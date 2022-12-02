@@ -17,6 +17,7 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 ProtocolTask::ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mappingInfoChecksum, rfcommon::Log* log, QObject* parent)
     : QThread(parent)
+    , tcpSocketHandle_(nullptr)
     , log_(log)
     , ipAddress_(ipAddress)
     , mappingInfoChecksum_(mappingInfoChecksum)
@@ -29,6 +30,11 @@ ProtocolTask::ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mapp
 ProtocolTask::~ProtocolTask()
 {
     mutex_.lock();
+        if (tcpSocketHandle_)
+        {
+            tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
+            tcp_socket_shutdown(&socket);
+        }
         requestShutdown_ = true;
     mutex_.unlock();
     wait();
@@ -44,16 +50,15 @@ void ProtocolTask::run()
     // means we're successfully connected and compatible, and from this
     // point on we are responsible for closing the socket and emitting
     // connectionClosed() once we're done
-    void* tcp_socket_handle = connectAndCheckVersion();
-    if (tcp_socket_handle)
+    if (connectAndCheckVersion())
     {
         // Try to update our copy of mapping info if necessary. If successful,
         // enter normal protocol handling
-        if (negotiateMappingInfo(tcp_socket_handle))
-            handleProtocol(tcp_socket_handle);
+        if (negotiateMappingInfo())
+            handleProtocol();
 
         // Socket was shutdown, have to close it
-        tcp_socket socket = tcp_socket_from_handle(tcp_socket_handle);
+        tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
         tcp_socket_close(&socket);
 
         emit connectionClosed();
@@ -61,7 +66,7 @@ void ProtocolTask::run()
 }
 
 // ----------------------------------------------------------------------------
-void* ProtocolTask::connectAndCheckVersion()
+bool ProtocolTask::connectAndCheckVersion()
 {
     PROFILE(ProtocolTask, connectAndCheckVersion);
 
@@ -75,7 +80,7 @@ void* ProtocolTask::connectAndCheckVersion()
         emit connectionFailure(
                     tcp_socket_get_connect_error(&socket),
                     ipAddress_, port_);
-        return nullptr;
+        return false;
     }
 
     // Request protocol version from switch so we can verify we're compatible
@@ -87,6 +92,10 @@ void* ProtocolTask::connectAndCheckVersion()
         emit connectionFailure("Failed to write to socket", ipAddress_, port_);
         goto socket_error;
     }
+
+    mutex_.lock();
+        tcpSocketHandle_ = tcp_socket_to_handle(&socket);
+    mutex_.unlock();
 
     // Wait until we receive protocol version (or an error)
     while (true)
@@ -126,7 +135,7 @@ void* ProtocolTask::connectAndCheckVersion()
                 {
                     log_->info("Protocol version is %d.%d, we support %d.%d. Accepting", buf[0], buf[1], major, minor);
                     emit connectionSuccess(ipAddress_, port_);
-                    return tcp_socket_to_handle(&socket);
+                    return true;
                 }
 
                 // Protocol version does not match
@@ -155,16 +164,19 @@ void* ProtocolTask::connectAndCheckVersion()
     }
 
 socket_error:
+    mutex_.lock();
+        tcpSocketHandle_ = nullptr;
+    mutex_.unlock();
     tcp_socket_close(&socket);
-    return nullptr;
+    return false;
 }
 
 // ----------------------------------------------------------------------------
-bool ProtocolTask::negotiateMappingInfo(void* tcp_socket_handle)
+bool ProtocolTask::negotiateMappingInfo()
 {
     PROFILE(ProtocolTask, negotiateMappingInfo);
 
-    tcp_socket socket = tcp_socket_from_handle(tcp_socket_handle);
+    tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
     rfcommon::Reference<rfcommon::MappingInfo> mappingInfo;
 
     // Request a checksum for mapping info to see if we need to update our
@@ -363,11 +375,11 @@ disconnect_error:
 }
 
 // ----------------------------------------------------------------------------
-void ProtocolTask::handleProtocol(void* tcp_socket_handle)
+void ProtocolTask::handleProtocol()
 {
     PROFILE(ProtocolTask, handleProtocol);
 
-    tcp_socket socket = tcp_socket_from_handle(tcp_socket_handle);
+    tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
 
     // Each fighter is assigned to a "slot" in the game, which means in a 1v1
     // it's possible that the fighters are referred to by slot 2 and slot 5.
