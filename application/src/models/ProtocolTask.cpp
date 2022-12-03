@@ -30,11 +30,13 @@ ProtocolTask::ProtocolTask(const QString& ipAddress, quint16 port, uint32_t mapp
 ProtocolTask::~ProtocolTask()
 {
     mutex_.lock();
+        // If the socket is blocking on a read, this will cause it to unblock
         if (tcpSocketHandle_)
         {
             tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
             tcp_socket_shutdown(&socket);
         }
+
         requestShutdown_ = true;
     mutex_.unlock();
     wait();
@@ -93,6 +95,8 @@ bool ProtocolTask::connectAndCheckVersion()
         goto socket_error;
     }
 
+    // In case app wants to disconnect while checking version, assign socket to
+    // member variable
     mutex_.lock();
         tcpSocketHandle_ = tcp_socket_to_handle(&socket);
     mutex_.unlock();

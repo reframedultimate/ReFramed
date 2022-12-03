@@ -78,7 +78,10 @@ private:
     void handleProtocol();
 
 private:
+    // Needs to be a member so that we can call shutdown() in destructor to
+    // disconnect
     void* tcpSocketHandle_;
+
     rfcommon::Log* log_;
     QString ipAddress_;
     QMutex mutex_;
