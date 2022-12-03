@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/BracketType.hpp"
+#include "rfcommon/Costume.hpp"
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/RefCounted.hpp"
@@ -33,6 +34,7 @@ protected:
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
 public:
@@ -48,6 +50,7 @@ public:
     static MetaData* newActiveGameSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
     /*!
@@ -59,6 +62,7 @@ public:
     static MetaData* newActiveTrainingSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
     static MetaData* newSavedGameSession(
@@ -66,6 +70,7 @@ public:
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags,
             int winner);
 
@@ -74,6 +79,7 @@ public:
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
     virtual ~MetaData();
@@ -107,6 +113,12 @@ public:
      * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
      */
     FighterID playerFighterID(int fighterIdx) const { return fighterIDs_[fighterIdx]; }
+
+    /*!
+     * \brief Gets the fighter costume being used by the specified player.
+     * \param fighterIdx The fighter index, from 0 to fighterCount() - 1.
+     */
+    Costume playerCostume(int fighterIdx) const { return costumes_[fighterIdx]; }
 
     /*!
      * \brief Gets the stage ID being played on. The ID can be used to look up
@@ -167,6 +179,7 @@ protected:
     TimeStamp timeStarted_;
     TimeStamp timeEnded_;
     SmallVector<FighterID, 2> fighterIDs_;
+    SmallVector<Costume, 2> costumes_;
     SmallVector<String, 2> tags_;
     StageID stageID_;
 };

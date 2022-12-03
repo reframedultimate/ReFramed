@@ -312,6 +312,7 @@ static bool loadLegacy_1_3(
     }
 
     SmallVector<FighterID, 2> playerFighterIDs;
+    SmallVector<Costume, 2> playerCostumes;
     SmallVector<String, 2> playerTags;
     SmallVector<String, 2> playerNames;
     SmallVector<String, 2> playerSponsors;
@@ -323,6 +324,7 @@ static bool loadLegacy_1_3(
         json jName = info["name"];
 
         playerFighterIDs.push(FighterID::fromValue(jFighterID.get<FighterID::Type>()));
+        playerCostumes.push(Costume::makeDefault());
         playerTags.emplace(jTag.get<std::string>().c_str());
         playerNames.emplace(jName.get<std::string>().c_str());
         playerSponsors.emplace("");
@@ -347,6 +349,7 @@ static bool loadLegacy_1_3(
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
         std::move(playerFighterIDs),
+        std::move(playerCostumes),
         std::move(playerTags),
         jWinner.get<int>());
 
@@ -562,6 +565,7 @@ static bool loadLegacy_1_4(
 
     SmallVector<FighterID, 2> playerFighterIDs;
     SmallVector<String, 2> playerTags;
+    SmallVector<Costume, 2> playerCostumes;
     SmallVector<String, 2> playerNames;
     SmallVector<String, 2> playerSponsors;
     SmallVector<String, 2> playerPronouns;
@@ -574,6 +578,7 @@ static bool loadLegacy_1_4(
 
         playerFighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        playerCostumes.push(Costume::makeDefault());
         playerTags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
         playerNames.emplace(jName.is_string() ?
@@ -624,6 +629,7 @@ static bool loadLegacy_1_4(
         timeEnded,
         stageID,
         std::move(playerFighterIDs),
+        std::move(playerCostumes),
         std::move(playerTags),
         winner);
 

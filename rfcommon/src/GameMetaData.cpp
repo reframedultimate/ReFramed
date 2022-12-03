@@ -11,9 +11,10 @@ GameMetaData::GameMetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags,
         int winner)
-    : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
+    : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(costumes), std::move(tags))
     , players_(SmallVector<Player, 2>::makeResized(MetaData::fighterCount()))
     , bracketType_(BracketType::fromType(BracketType::FRIENDLIES))
     , round_(Round::makeFree())

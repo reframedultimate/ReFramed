@@ -11,6 +11,7 @@
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QDir>
 #include <QFileInfo>
@@ -88,7 +89,7 @@ void AutoAssociateVideoTask::run()
         const char* utf8FilePath = filePathBA.constData();
 
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
-        wchar_t* utf16FileName = utf8_to_utf16(utf8FileName, strlen(utf8FileName));
+        wchar_t* utf16FileName = rfcommon::utf8_to_utf16(utf8FileName, strlen(utf8FileName));
         if (utf16FileName == nullptr)
         {
             emit failure();
@@ -98,22 +99,22 @@ void AutoAssociateVideoTask::run()
         WIN32_FILE_ATTRIBUTE_DATA fileAttributes;
         if (GetFileAttributesExW(utf16FileName, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
         {
-            log_->error("Failed to get file attributes: %s", LastWindowsError().cStr());
+            log_->error("Failed to get file attributes: %s", rfcommon::LastWindowsError().cStr());
             emit failure();
-            utf16_free(utf16FileName);
+            rfcommon::utf16_free(utf16FileName);
             return;
         }
 
         auto videoStarted = rfcommon::TimeStamp::fromMillisSinceEpoch(
                     time_win32_filetime_to_milli_seconds_since_epoch(
                         ((uint64_t)fileAttributes.ftCreationTime.dwHighDateTime << 32) +
-                        (uint64_t)fileAttributes.ftCreationTime.dwLowDateTime)));
+                        (uint64_t)fileAttributes.ftCreationTime.dwLowDateTime));
         auto videoEnd = rfcommon::TimeStamp::fromMillisSinceEpoch(
                     time_win32_filetime_to_milli_seconds_since_epoch(
                         ((uint64_t)fileAttributes.ftLastWriteTime.dwHighDateTime << 32) +
-                        (uint64_t)fileAttributes.ftLastWriteTime.dwLowDateTime)));
+                        (uint64_t)fileAttributes.ftLastWriteTime.dwLowDateTime));
 
-        utf16_free(utf16FileName);
+        rfcommon::utf16_free(utf16FileName);
 #elif defined(RFCOMMON_PLATFORM_LINUX)
         struct stat st;
         stat(utf8FilePath, &st);

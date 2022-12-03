@@ -19,6 +19,7 @@ class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
             TimeStamp timeEnded,
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
+            SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags,
             int winner);
 

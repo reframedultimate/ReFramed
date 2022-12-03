@@ -18,6 +18,7 @@ static MetaData* load_1_7(json& j);
 MetaData* MetaData::newActiveGameSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
     PROFILE(MetaData, newActiveGameSession);
@@ -29,6 +30,7 @@ MetaData* MetaData::newActiveGameSession(
             now, now,  // Start, end
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags),
             -1);  // winner
 }
@@ -37,6 +39,7 @@ MetaData* MetaData::newActiveGameSession(
 MetaData* MetaData::newActiveTrainingSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
     PROFILE(MetaData, newActiveTrainingSession);
@@ -48,6 +51,7 @@ MetaData* MetaData::newActiveTrainingSession(
             now, now,  // start, end
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags));
 }
 
@@ -57,6 +61,7 @@ MetaData* MetaData::newSavedGameSession(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags,
         int winner)
 {
@@ -67,6 +72,7 @@ MetaData* MetaData::newSavedGameSession(
         timeEnded,
         stageID,
         std::move(fighterIDs),
+        std::move(costumes),
         std::move(tags),
         winner);
 }
@@ -77,6 +83,7 @@ MetaData* MetaData::newSavedTrainingSession(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
     PROFILE(MetaData, newSavedTrainingSession);
@@ -86,6 +93,7 @@ MetaData* MetaData::newSavedTrainingSession(
         timeEnded,
         stageID,
         std::move(fighterIDs),
+        std::move(costumes),
         std::move(tags));
 }
 
@@ -95,10 +103,12 @@ MetaData::MetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
     : timeStarted_(timeStarted)
     , timeEnded_(timeEnded)
     , fighterIDs_(std::move(fighterIDs))
+    , costumes_(std::move(costumes))
     , tags_(std::move(tags))
     , stageID_(stageID)
 {
@@ -176,15 +186,17 @@ static MetaData* load_1_5(json& j)
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
     SmallVector<FighterID, 2> fighterIDs;
+    SmallVector<Costume, 2> costumes;
     SmallVector<String, 2> tags;
     int fighterCount = 0;
-    for (const auto& info : jPlayerInfo)
+    for (auto& info : jPlayerInfo)
     {
         json jTag = info["tag"];
         json jFighterID = info["fighterid"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        costumes.push(Costume::makeDefault());
         tags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
 
@@ -205,6 +217,7 @@ static MetaData* load_1_5(json& j)
             timeStarted, timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags),
             winner)->asGame();
 
@@ -242,6 +255,7 @@ static MetaData* load_1_5(json& j)
             timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags))->asTraining();
 
         json jNumber = jGameInfo["number"];
@@ -271,15 +285,17 @@ static MetaData* load_1_6(json& j)
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
     SmallVector<FighterID, 2> fighterIDs;
+    SmallVector<Costume, 2> costumes;
     SmallVector<String, 2> tags;
     int fighterCount = 0;
-    for (const auto& info : jPlayerInfo)
+    for (auto& info : jPlayerInfo)
     {
         json jTag = info["tag"];
         json jFighterID = info["fighterid"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        costumes.push(Costume::makeDefault());
         tags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
 
@@ -301,6 +317,7 @@ static MetaData* load_1_6(json& j)
             timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags),
             winner)->asGame();
 
@@ -310,7 +327,7 @@ static MetaData* load_1_6(json& j)
             g->setTournamentName(jTournamentName.get<std::string>().c_str());
 
         json jCommentators = j["commentators"];
-        for (const auto& commentator : jCommentators)
+        for (auto& commentator : jCommentators)
             if (commentator.is_string())
                 g->addCommentator(commentator.get<std::string>().c_str(), "");
 
@@ -381,6 +398,7 @@ static MetaData* load_1_6(json& j)
             timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags))->asTraining();
 
         json jNumber = jGameInfo["number"];
@@ -413,15 +431,19 @@ static MetaData* load_1_7(json& j)
         StageID::fromValue(jStageID.get<StageID::Type>()) : StageID::makeInvalid();
 
     SmallVector<FighterID, 2> fighterIDs;
+    SmallVector<Costume, 2> costumes;
     SmallVector<String, 2> tags;
     int fighterCount = 0;
-    for (const auto& info : jPlayerInfo)
+    for (auto& info : jPlayerInfo)
     {
         json jTag = info["tag"];
         json jFighterID = info["fighterid"];
+        json jCostume = info["costume"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
+        costumes.push(jCostume.is_number_integer() ?
+            Costume::fromValue(jCostume.get<Costume::Type>()) : Costume::makeDefault());
         tags.emplace(jTag.is_string() ?
             jTag.get<std::string>().c_str() : (std::string("Player ") + std::to_string(fighterCount)).c_str());
 
@@ -441,6 +463,7 @@ static MetaData* load_1_7(json& j)
             timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags),
             winner)->asGame();
 
@@ -454,7 +477,7 @@ static MetaData* load_1_7(json& j)
         if (jTournamentWebsite.is_string())
             g->setTournamentWebsite(jTournamentWebsite.get<std::string>().c_str());
 
-        for (const auto& jOrganizer : jTournament["organizers"])
+        for (auto& jOrganizer : jTournament["organizers"])
         {
             json jName = jOrganizer["name"];
             json jSocial = jOrganizer["social"];
@@ -467,7 +490,7 @@ static MetaData* load_1_7(json& j)
             g->addTournamentOrganizer(name.c_str(), social.c_str(), pronouns.c_str());
         }
 
-        for (const auto& jSponsor : jTournament["sponsors"])
+        for (auto& jSponsor : jTournament["sponsors"])
         {
             json jName = jSponsor["name"];
             json jWebsite = jSponsor["website"];
@@ -478,7 +501,7 @@ static MetaData* load_1_7(json& j)
             g->addSponsor(name.c_str(), website.c_str());
         }
 
-        for (const auto& jCommentator : j["commentators"])
+        for (auto& jCommentator : j["commentators"])
         {
             json jName = jCommentator["name"];
             json jSocial = jCommentator["social"];
@@ -567,6 +590,7 @@ static MetaData* load_1_7(json& j)
             timeEnded,
             stageID,
             std::move(fighterIDs),
+            std::move(costumes),
             std::move(tags))->asTraining();
 
         json jNumber = jGameInfo["number"];
@@ -589,7 +613,8 @@ uint32_t MetaData::save(FILE* fp) const
     {
         jPlayerInfo += {
             {"tag", playerTag(i).cStr()},
-            {"fighterid", playerFighterID(i).value()}
+            {"fighterid", playerFighterID(i).value()},
+            {"costume", playerCostume(i).slot()}
         };
 
         switch (type())

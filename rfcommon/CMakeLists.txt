@@ -132,6 +132,7 @@ add_library (rfcommon SHARED
 
     "src/AnalysisResult.cpp"
     "src/BracketType.cpp"
+    "src/Costume.cpp"
     "src/crc32.c"
     "src/DeltaTime.cpp"
     "src/Deserializer.cpp"

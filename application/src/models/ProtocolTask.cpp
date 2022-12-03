@@ -437,6 +437,10 @@ void ProtocolTask::handleProtocol()
                     rfcommon::FighterID::fromValue(playerFighterID),
                     rfcommon::FighterID::fromValue(cpuFighterID)
                 });
+                rfcommon::SmallVector<rfcommon::Costume, 2> costumes({
+                    rfcommon::Costume::makeDefault(),
+                    rfcommon::Costume::makeDefault()
+                });
                 rfcommon::SmallVector<rfcommon::String, 2> tags({"Player 1", "CPU"});
 
                 log_->info("stageID: %d, player 1: %d, cpu: %d", stageID.value(), playerFighterID, cpuFighterID);
@@ -453,6 +457,7 @@ void ProtocolTask::handleProtocol()
                 rfcommon::MetaData* meta = rfcommon::MetaData::newActiveTrainingSession(
                         stageID,
                         std::move(fighterIDs),
+                        std::move(costumes),
                         std::move(tags));
 
                 if (msg == TrainingStart)
@@ -505,10 +510,12 @@ void ProtocolTask::handleProtocol()
                 }
 
                 auto fighterIDs = rfcommon::SmallVector<rfcommon::FighterID, 2>::makeReserved(playerCount);
+                auto costumes = rfcommon::SmallVector<rfcommon::Costume, 2>::makeReserved(playerCount);
                 for (int i = 0; i != fighterIDValues.count(); ++i)
                 {
                     log_->info("idx %d: FighterID: %d", i, fighterIDValues[i]);
                     fighterIDs.push(rfcommon::FighterID::fromValue(fighterIDValues[i]));
+                    costumes.push(rfcommon::Costume::makeDefault());
                 }
 
                 for (int i = 0; i < playerCount; ++i)
@@ -530,6 +537,7 @@ void ProtocolTask::handleProtocol()
                 rfcommon::MetaData* meta = rfcommon::MetaData::newActiveGameSession(
                         stageID,
                         std::move(fighterIDs),
+                        std::move(costumes),
                         std::move(tags));
 
                 if (msg == GameStart)

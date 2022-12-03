@@ -10,8 +10,9 @@ TrainingMetaData::TrainingMetaData(
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
+        SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
-    : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(tags))
+    : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(costumes), std::move(tags))
     , sessionNumber_(SessionNumber::fromValue(1))
 {}
 
