@@ -12,7 +12,7 @@ class ProgressDialog : public QWidget
     Q_OBJECT
 
 public:
-    ProgressDialog(const QString& title, const QString& text, QWidget* parent=nullptr);
+    ProgressDialog(const QString& title, const QString& text);
     ~ProgressDialog();
 
 public slots:

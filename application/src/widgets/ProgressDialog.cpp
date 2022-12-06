@@ -8,8 +8,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ProgressDialog::ProgressDialog(const QString& title, const QString& text, QWidget* parent)
-    : QWidget(parent)
+ProgressDialog::ProgressDialog(const QString& title, const QString& text)
+    : QWidget(nullptr)
     , bar_(new QProgressBar)
     , info_(new QLabel)
 {

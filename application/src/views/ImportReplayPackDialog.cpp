@@ -179,7 +179,7 @@ void ImportReplayPackDialog::onNewGroupNameChanged(const QString& name)
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onImport()
 {
-    ProgressDialog progress("Importing", "Importing data from \"" + ui_->lineEdit_packFileName->text() + "\"", this);
+    ProgressDialog progress("Importing", "Importing data from \"" + ui_->lineEdit_packFileName->text() + "\"");
     progress.show();
     progress.raise();
 

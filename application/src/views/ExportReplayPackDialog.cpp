@@ -85,7 +85,7 @@ void ExportReplayPackDialog::onExport()
     };
     rfcommon::Vector<SessionWithName> sessions;
 
-    ProgressDialog progress("Exporting", "Exporting data to \"" + ui_->lineEdit_packFileName->text() + "\"", this);
+    ProgressDialog progress("Exporting", "Exporting data to \"" + ui_->lineEdit_packFileName->text() + "\"");
     progress.show();
     progress.raise();
 
