@@ -5,6 +5,7 @@
 #include "rfcommon/Endian.hpp"
 #include "rfcommon/FilePathResolver.hpp"
 #include "rfcommon/HashMap.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Serializer.hpp"
 #include "rfcommon/Session.hpp"
@@ -35,6 +36,8 @@ ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathR
         ui_->listWidget_replays->addItem(name);
     ui_->listWidget_replays->selectAll();
 
+    estimateFileSize();
+
     connect(ui_->pushButton_next, &QPushButton::released, [this] {
         ui_->stackedWidget->setCurrentIndex(1);
         if (ui_->lineEdit_packFileName->text().length() == 0)
@@ -43,6 +46,7 @@ ExportReplayPackDialog::ExportReplayPackDialog(rfcommon::FilePathResolver* pathR
     connect(ui_->pushButton_back, &QPushButton::released, [this] { ui_->stackedWidget->setCurrentIndex(0); });
     connect(ui_->listWidget_replays, &QListWidget::itemSelectionChanged, this, &ExportReplayPackDialog::onSelectionChanged);
     connect(ui_->toolButton_packFileName, &QToolButton::released, this, &ExportReplayPackDialog::onChoosePackFile);
+    connect(ui_->checkBox_includeVideos, &QCheckBox::stateChanged, [this] { estimateFileSize(); });
     connect(ui_->pushButton_export, &QPushButton::released, this, &ExportReplayPackDialog::onExport);
 }
 
@@ -333,6 +337,66 @@ fail_with_error:
 out:
     fclose(fp);
     close();
+}
+
+// ----------------------------------------------------------------------------
+void ExportReplayPackDialog::estimateFileSize()
+{
+    rfcommon::Vector<rfcommon::Reference<rfcommon::Session>> sessions;
+
+    for (int i = 0; i != ui_->listWidget_replays->count(); ++i)
+    {
+        QListWidgetItem* item = ui_->listWidget_replays->item(i);
+        if (ui_->listWidget_replays->isItemSelected(item) == false)
+            continue;
+
+        assert(QDir(replayFileNames_[i]).isRelative());
+        auto filePathUtf8 = pathResolver_->resolveGameFile(replayFileNames_[i].toUtf8().constData());
+        rfcommon::Session* session = rfcommon::Session::load(pathResolver_, filePathUtf8.cStr());
+        if (session == nullptr)
+            continue;
+
+        sessions.push(session);
+    }
+
+    // Create a list of all video files. Multiple replay files can reference
+    // the same video file, so we need to make sure to only include each
+    // file once
+    rfcommon::HashMap<rfcommon::String, rfcommon::VideoEmbed*> videoFiles;
+    if (ui_->checkBox_includeVideos->isChecked())
+    {
+        for (const auto& session : sessions)
+        {
+            if (session->existsInContentTable(rfcommon::Session::Flags::VideoMeta) == false)
+                continue;
+            rfcommon::VideoMeta* vmeta = session->tryGetVideoMeta();
+            if (vmeta == nullptr)
+                continue;
+
+            rfcommon::VideoEmbed* video = session->tryGetVideo();
+            if (video == nullptr)
+                continue;
+
+            videoFiles.insertIfNew(vmeta->fileName(), video);
+        }
+    }
+
+    int64_t size = 0;
+    for (const auto& session : sessions)
+        size += session->file()->size();
+    for (auto it : videoFiles)
+        size += it->value()->size();
+    
+    const char* units[] = { "B", "KiB", "MiB", "GiB", "TiB" };
+    int unitIdx = 0;
+    size *= 10;
+    while (size > 10240 && unitIdx < 5)
+    {
+        size /= 1024;
+        unitIdx++;
+    }
+
+    ui_->label_estimatedFileSize->setText("Estimated File Size: " + QString::number(static_cast<float>(size) / 10, 'f', 1) + " " + units[unitIdx]);
 }
 
 }

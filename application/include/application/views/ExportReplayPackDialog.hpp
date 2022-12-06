@@ -28,6 +28,9 @@ private slots:
     void onExport();
 
 private:
+    void estimateFileSize();
+
+private:
     Ui::ExportReplayPackDialog* ui_;
     rfcommon::FilePathResolver* pathResolver_;
     const QStringList& replayNames_;

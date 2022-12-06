@@ -57,6 +57,8 @@ public:
 
     bool existsInContentTable(Flags::Flag flag) const;
 
+    MappedFile* file() const { return file_; }
+
     /*!
      * \brief Returns information on how to map fighter/stage/state IDs to
      * strings.
