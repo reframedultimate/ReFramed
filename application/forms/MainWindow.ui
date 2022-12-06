@@ -40,7 +40,22 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <widget class="QMenu" name="menuTheme">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="action_defaultTheme"/>
+     <addaction name="action_darkTheme"/>
+    </widget>
+    <widget class="QMenu" name="menuType_Here">
+     <property name="title">
+      <string>Type Here</string>
+     </property>
+    </widget>
+    <addaction name="menuTheme"/>
+    <addaction name="separator"/>
     <addaction name="action_userLabelsEditor"/>
+    <addaction name="menuType_Here"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuSettings"/>
@@ -80,6 +95,25 @@
   <action name="action_attachToN64Emu">
    <property name="text">
     <string>Attach to N64 Emulator...</string>
+   </property>
+  </action>
+  <action name="action_darkTheme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dark Theme</string>
+   </property>
+  </action>
+  <action name="action_defaultTheme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Default Theme</string>
    </property>
   </action>
  </widget>

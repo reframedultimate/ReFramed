@@ -34,7 +34,7 @@ class MainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
+    explicit MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
     ~MainWindow();
 
 private slots:
@@ -45,6 +45,8 @@ private slots:
     void onAttachToN64EmuTriggered();
     void onDisconnectActionTriggered();
     void onImportReplayPackTriggered();
+    void onDefaultThemeTriggered();
+    void onDarkThemeTriggered();
     void onUserLabelsEditorActionTriggered();
 
     void onAboutActionTriggered();

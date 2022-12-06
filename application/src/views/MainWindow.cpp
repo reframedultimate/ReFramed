@@ -27,14 +27,17 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QDesktopServices>
+#include <QTextStream>
 
 namespace rfapp {
 
+using namespace nlohmann;
+
 // ----------------------------------------------------------------------------
-MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
+MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     : QMainWindow(parent)
     , hash40Strings_(hash40Strings)
-    , config_(new Config)
+    , config_(std::move(config))
     , protocol_(new Protocol)
     , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
     , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
@@ -44,6 +47,12 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
+
+    json& cfgTheme = config_->root["theme"];
+    if (cfgTheme == "darkstyle")
+        ui_->action_darkTheme->setChecked(true);
+    else
+        ui_->action_defaultTheme->setChecked(true);
 
     // Window icon and title
     setWindowTitle("ReFramed - " APP_VERSION_STR);
@@ -72,6 +81,10 @@ MainWindow::MainWindow(rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
             this, &MainWindow::onImportReplayPackTriggered);
     connect(ui_->action_userLabelsEditor, &QAction::triggered,
             this, &MainWindow::onUserLabelsEditorActionTriggered);
+    connect(ui_->action_defaultTheme, &QAction::triggered,
+            this, &MainWindow::onDefaultThemeTriggered);
+    connect(ui_->action_darkTheme, &QAction::triggered,
+            this, &MainWindow::onDarkThemeTriggered);
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
@@ -215,6 +228,36 @@ void MainWindow::onImportReplayPackTriggered()
 {
     ImportReplayPackDialog dialog(replayManager_.get(), this);
     dialog.exec();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onDefaultThemeTriggered()
+{
+    qApp->setStyleSheet("");
+
+    ui_->action_defaultTheme->setChecked(true);
+    ui_->action_darkTheme->setChecked(false);
+
+    config_->root["theme"] = "default";
+    config_->save();
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onDarkThemeTriggered()
+{
+    QFile f(":/qdarkstyle/dark/darkstyle.qss");
+    f.open(QIODevice::ReadOnly);
+    if (!f.isOpen())
+        return;
+
+    QTextStream ts(&f);
+    qApp->setStyleSheet(ts.readAll());
+
+    ui_->action_defaultTheme->setChecked(false);
+    ui_->action_darkTheme->setChecked(true);
+
+    config_->root["theme"] = "darkstyle";
+    config_->save();
 }
 
 // ----------------------------------------------------------------------------

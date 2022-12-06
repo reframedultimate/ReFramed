@@ -1,7 +1,9 @@
-#include "rfcommon/Profiler.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/ui_ConnectView.h"
 #include "application/models/Protocol.hpp"
+
+#include "rfcommon/Profiler.hpp"
+
 #include <QJsonObject>
 
 namespace rfapp {

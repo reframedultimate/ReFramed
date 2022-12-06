@@ -1,4 +1,5 @@
 #include "application/views/MainWindow.hpp"
+#include "application/models/Config.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/init.h"
@@ -15,59 +16,6 @@
 
 #include <iostream>
 
-static bool enableDarkStyle = false;
-
-static int processOptions(int argc, char** argv)
-{
-    NOPROFILE();
-
-    for (int i = 1; i < argc; ++i)
-    {
-        if (strcmp(argv[i], "--styles") == 0)
-        {
-            std::cout << "Available styles:" << std::endl;
-            for (const auto& name : QStyleFactory::keys())
-                std::cout << "  " << name.toStdString() << std::endl;
-            return -1;
-        }
-
-        if (strcmp(argv[i], "--style") == 0)
-        {
-            if (++i >= argc)
-                return -1;
-            if (QApplication::setStyle(argv[i]) == nullptr)
-            {
-                std::cout << "Failed to set style \"" << argv[i] << "\"" << std::endl;
-                return -1;
-            }
-        }
-
-        if (strcmp(argv[i], "--dark") == 0)
-        {
-            enableDarkStyle = true;
-        }
-    }
-
-    return 0;
-}
-
-static bool applyStyle(int idx, QApplication* app)
-{
-    static const char* table[] = {
-        ":/qdarkstyle/light/lightstyle.qss",
-        ":/qdarkstyle/dark/darkstyle.qss"
-    };
-
-    QFile f(table[idx]);
-    f.open(QIODevice::ReadOnly);
-    if (!f.isOpen())
-        return false;
-
-    QTextStream ts(&f);
-    app->setStyleSheet(ts.readAll());
-    return true;
-}
-
 struct RFCommonLib
 {
     RFCommonLib(const char* logPath) { result = rfcommon_init(logPath); }
@@ -80,18 +28,11 @@ int main(int argc, char** argv)
 {
     NOPROFILE();
 
-    if (processOptions(argc, argv) != 0)
-        return -1;
-
 #ifdef _WIN32
     QApplication::setStyle("fusion");
 #endif
-    //applyStyle(1, qApp);
 
     QApplication app(argc, argv);
-
-    if (enableDarkStyle)
-        applyStyle(1, &app);
 
 #if defined(RFCOMMON_LOGGING)
     QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
@@ -108,6 +49,21 @@ int main(int argc, char** argv)
     {
         QMessageBox::critical(nullptr, "Error", "Failed to initialize rfcommon library");
         return -1;
+    }
+
+    // We have to load the config here in order to set the theme on the whole
+    // application. Doing it in the MainWindow increases startup time by about 1
+    // second
+    std::unique_ptr<rfapp::Config> config(new rfapp::Config);
+    if (config->root["theme"] == "darkstyle")
+    {
+        QFile f(":/qdarkstyle/dark/darkstyle.qss");
+        f.open(QIODevice::ReadOnly);
+        if (f.isOpen())
+        {
+            QTextStream ts(&f);
+            qApp->setStyleSheet(ts.readAll());
+        }
     }
 
     // Load hash40 strings. These are pretty much required for the
@@ -130,7 +86,7 @@ int main(int argc, char** argv)
         }
     }
 
-    rfapp::MainWindow mainWindow(hash40Strings);
+    rfapp::MainWindow mainWindow(std::move(config), hash40Strings);
 
     // Make the main window as large as possible when not maximized
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());

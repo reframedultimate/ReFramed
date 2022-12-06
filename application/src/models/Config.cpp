@@ -1,4 +1,5 @@
 #include "application/models/Config.hpp"
+
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Log.hpp"
 
