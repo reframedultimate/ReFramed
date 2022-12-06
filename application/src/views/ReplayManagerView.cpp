@@ -64,8 +64,9 @@ ReplayManagerView::ReplayManagerView(
     if (replayListSortFilterModel_->rowCount() > 1)
         replayListView_->expand(replayListSortFilterModel_->index(1, 0));
 
-    ReplaySearchBox* searchBox = new ReplaySearchBox;
     QLabel* searchBoxLabel = new QLabel("Filters:");
+    ReplaySearchBox* searchBox = new ReplaySearchBox;
+    searchBox->setClearButtonEnabled(true);
     QHBoxLayout* searchBoxLayout = new QHBoxLayout;
     searchBoxLayout->addWidget(searchBoxLabel);
     searchBoxLayout->addWidget(searchBox);
