@@ -21,6 +21,7 @@ public:
     virtual void onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata) = 0;
     virtual void onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata) = 0;
     virtual void onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) = 0;
+    virtual void onNextGameStarted() = 0;
     virtual void onBracketTypeChangedUI(rfcommon::BracketType bracketType) = 0;
 };
 

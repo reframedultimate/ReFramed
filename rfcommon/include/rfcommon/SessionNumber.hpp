@@ -15,8 +15,8 @@ public:
     ~SessionNumber();
 
     Type value() const { return value_; }
-    bool operator==(SessionNumber rhs) { return value_ == rhs.value_; }
-    bool operator!=(SessionNumber rhs) { return value_ != rhs.value_; }
+    bool operator==(SessionNumber rhs) const { return value_ == rhs.value_; }
+    bool operator!=(SessionNumber rhs) const { return value_ != rhs.value_; }
     SessionNumber& operator+=(int value) { value_ += value; return *this; }
     SessionNumber& operator-=(int value) { value_ -= value; return *this; }
 

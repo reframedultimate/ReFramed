@@ -217,7 +217,11 @@ void MetaDataEditWidget_Commentators::onOverwriteMetaData(const MappingInfoList&
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Commentators::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
 {
+}
 
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Commentators::onNextGameStarted()
+{
 }
 
 void MetaDataEditWidget_Commentators::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}

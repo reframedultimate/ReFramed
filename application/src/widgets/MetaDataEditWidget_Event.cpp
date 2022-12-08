@@ -86,13 +86,16 @@ void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Event::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
-
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Event::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
 {
+}
 
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Event::onNextGameStarted()
+{
 }
 
 // ----------------------------------------------------------------------------

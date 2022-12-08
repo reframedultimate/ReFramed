@@ -43,6 +43,9 @@ public:
     String shortDescription() const;
     String longDescription() const;
 
+    bool operator==(const Round& rhs) const;
+    bool operator!=(const Round& rhs) const;
+
 private:
     Round(Type type, SessionNumber number);
     Round(const char* desc);

@@ -429,6 +429,8 @@ void MetaDataEditWidget_Tournament::onOverwriteMetaData(const MappingInfoList& m
 
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Tournament::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) {}
+void MetaDataEditWidget_Tournament::onNextGameStarted(){}
+
 void MetaDataEditWidget_Tournament::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
 void MetaDataEditWidget_Tournament::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_Tournament::onMetaDataTournamentDetailsChanged()

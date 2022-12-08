@@ -27,6 +27,7 @@ private:
     void onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
     void onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
     void onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) override;
+    void onNextGameStarted() override;
     void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
 
     void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;

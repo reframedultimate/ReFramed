@@ -143,4 +143,16 @@ String Round::longDescription() const
     return "";
 }
 
+// ----------------------------------------------------------------------------
+bool Round::operator==(const Round& rhs) const
+{
+    return type_ == rhs.type_ && number_ == rhs.number_;
+}
+
+// ----------------------------------------------------------------------------
+bool Round::operator!=(const Round& rhs) const
+{
+    return !operator==(rhs);
+}
+
 }

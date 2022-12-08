@@ -47,14 +47,29 @@ void MetaDataEditModel::setAndOverwrite(MappingInfoList&& map, MetaDataList&& md
 // ----------------------------------------------------------------------------
 void MetaDataEditModel::clear()
 {
-    if (mdata_.count())
-    {
-        dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, map_, mdata_);
-        for (auto& m : mdata_)
-            m->dispatcher.removeListener(this);
-        mdata_.clear();
-        map_.clear();
-    }
+    if (mdata_.count() == 0)
+        return;
+
+    dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, map_, mdata_);
+
+    if (mdata_.count() == 1)
+        prevMdata_ = mdata_[0];
+
+    for (auto& m : mdata_)
+        m->dispatcher.removeListener(this);
+    mdata_.clear();
+    map_.clear();
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditModel::startNextGame()
+{
+    if (prevMdata_.isNull())
+        return;
+    if (mdata_.count() != 1)
+        return;
+
+    dispatcher.dispatch(&MetaDataEditListener::onNextGameStarted);
 }
 
 // ----------------------------------------------------------------------------

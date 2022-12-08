@@ -218,6 +218,7 @@ ProtocolTaskSSB64::~ProtocolTaskSSB64()
 }
 
 // ----------------------------------------------------------------------------
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
 struct WindowTitleData
 {
     DWORD procId;
@@ -242,6 +243,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
             return FALSE;
         }
 }
+#endif
 
 // ----------------------------------------------------------------------------
 static int scanForEmulators(uint32_t* pid, void** processHandle, uintptr_t* moduleBaseAddr, rfcommon::Log* log)
@@ -522,6 +524,7 @@ void ProtocolTaskSSB64::run()
         }
         prevScreen = currentScreen;
 
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
         // If a game is loaded (or training mode), start reading out fighter information
         if (currentScreen == SCREEN_VS_GAME)
         {
@@ -621,9 +624,12 @@ void ProtocolTaskSSB64::run()
 
             read_fighter_failed:;
         }
+#endif
     }
 
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
     CloseHandle((HANDLE)processHandle);
+#endif
     emit connectionClosed();
 }
 

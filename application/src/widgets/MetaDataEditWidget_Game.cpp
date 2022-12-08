@@ -3,6 +3,7 @@
 #include "application/widgets/MetaDataEditWidget_Game.hpp"
 
 #include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/TrainingMetaData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/SessionNumber.hpp"
 #include "rfcommon/Round.hpp"
@@ -545,7 +546,16 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, co
             } break;
         }
     }
+}
 
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
+{
+}
+
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_Game::onNextGameStarted()
+{
     auto allTagsMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
         assert(a->fighterCount() == b->fighterCount());
         for (int i = 0; i != a->fighterCount(); ++i)
@@ -562,20 +572,43 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, co
         return true;
     };
 
-    /*
-    if (prevMetaData_.notNull() &&
-            mdata->type() == prevMetaData_->type() &&
-            allTagsMatch(mdata, prevMetaData_) &&
-            allFightersMatch(mdata, prevMetaData_))
+    auto advanceScores = [](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
+        // Update score based on who won the previous game
+        int p1 = prev->score().left();
+        int p2 = prev->score().right();
+        if (prev->winner() == 0)
+            p1++;
+        else
+            p2++;
+
+        // Check if this game starts a new set
+        //switch (prev->)
+
+        mdata->setScore(rfcommon::ScoreCount::fromScore(p1, p2));
+    };
+
+    rfcommon::MetaData* mdata = model_->metaData()[0];
+    rfcommon::MetaData* prev = model_->prevMetaData();
+
+    switch (model_->prevMetaData()->type())
     {
+        case rfcommon::MetaData::GAME: {
+            if (mdata->type() == prev->type() &&
+                allTagsMatch(mdata, prev) &&
+                allFightersMatch(mdata, prev) &&
+                mdata->asGame()->setFormat() == prev->asGame()->setFormat() &&
+                mdata->asGame()->bracketType() == prev->asGame()->bracketType() &&
+                mdata->asGame()->round() == prev->asGame()->round())
+            {
+                advanceScores(mdata->asGame(), prev->asGame());
+            }
+        } break;
 
-    }*/
-}
-
-// ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
-{
-
+        case rfcommon::MetaData::TRAINING: {
+            if (mdata->type() == prev->type())
+                mdata->asTraining()->setSessionNumber(prev->asTraining()->sessionNumber() + 1);
+        } break;
+    }
 }
 
 // ----------------------------------------------------------------------------

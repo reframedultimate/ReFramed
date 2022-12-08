@@ -89,6 +89,11 @@ void MetaDataEditWidget_AutoAssociateVideo::onMetaDataCleared(const MappingInfoL
 {
 }
 
+// ----------------------------------------------------------------------------
+void MetaDataEditWidget_AutoAssociateVideo::onNextGameStarted()
+{
+}
+
 void MetaDataEditWidget_AutoAssociateVideo::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
 void MetaDataEditWidget_AutoAssociateVideo::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetaDataEditWidget_AutoAssociateVideo::onMetaDataTournamentDetailsChanged() {}
