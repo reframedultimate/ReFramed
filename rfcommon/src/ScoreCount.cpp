@@ -26,6 +26,12 @@ ScoreCount ScoreCount::fromScore(int p1, int p2)
 }
 
 // ----------------------------------------------------------------------------
+ScoreCount ScoreCount::fromScoreAndGameNumber(int p1, int p2, GameNumber gameNumber)
+{
+    return ScoreCount(p1, p2, gameNumber.value());
+}
+
+// ----------------------------------------------------------------------------
 bool ScoreCount::operator==(const ScoreCount& rhs) const
 {
     return p1_ == rhs.p1_ && p2_ == rhs.p2_;

@@ -12,6 +12,7 @@ public:
 
     static ScoreCount fromGameNumber(GameNumber gameNumber);
     static ScoreCount fromScore(int p1, int p2);
+    static ScoreCount fromScoreAndGameNumber(int p1, int p2, GameNumber gameNumber);
 
     int left() const { return p1_; }
     int right() const { return p2_; }
