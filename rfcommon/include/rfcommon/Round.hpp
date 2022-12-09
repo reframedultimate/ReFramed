@@ -31,7 +31,8 @@ public:
     };
 
     static Round makeFree();
-    static Round fromType(Type type, SessionNumber number);
+    static Round fromType(Type type, SessionNumber number=rfcommon::SessionNumber::fromValue(1));
+    static Round fromIndex(int index, SessionNumber number=rfcommon::SessionNumber::fromValue(1));
     static Round fromSessionNumber(SessionNumber sessionNumber);
     static Round fromDescription(const char* desc);
 

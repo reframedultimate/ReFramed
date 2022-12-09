@@ -1,5 +1,5 @@
-#include "rfcommon/Round.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Round.hpp"
 
 namespace rfcommon {
 
@@ -64,7 +64,31 @@ Round Round::makeFree()
 // ----------------------------------------------------------------------------
 Round Round::fromType(Type type, SessionNumber number)
 {
-    return Round(type, number);
+    switch (type)
+    {
+        case WINNERS_ROUND:
+        case LOSERS_ROUND:
+        case POOLS:
+        case FREE:
+            return Round(type, number);
+
+        case WINNERS_QUARTER:
+        case WINNERS_SEMI:
+        case WINNERS_FINALS:
+        case LOSERS_QUARTER:
+        case LOSERS_SEMI:
+        case LOSERS_FINALS:
+        case GRAND_FINALS:
+            break;
+    }
+
+    return Round(type, rfcommon::SessionNumber::fromValue(1));
+}
+
+// ----------------------------------------------------------------------------
+Round Round::fromIndex(int index, SessionNumber number)
+{
+    return Round(static_cast<Type>(index), number);
 }
 
 // ----------------------------------------------------------------------------

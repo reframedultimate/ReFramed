@@ -71,7 +71,10 @@ MetaDataEditWidget_Game::~MetaDataEditWidget_Game()
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Game::onDateTimeStartedChanged(const QDateTime& dateTime)
 {
-
+    ignoreSelf_ = true;
+    for (auto& mdata : model_->metaData())
+        mdata->setTimeStarted(rfcommon::TimeStamp::fromMillisSinceEpoch(dateTime.toMSecsSinceEpoch()));
+    ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -91,12 +94,25 @@ void MetaDataEditWidget_Game::onComboBoxRoundTypeChanged(int index)
             index == rfcommon::Round::POOLS);
 
     updateSize();
+
+    ignoreSelf_ = true;
+    for (auto& mdata : model_->metaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+        {
+            rfcommon::GameMetaData* g = mdata->asGame();
+            g->setRound(rfcommon::Round::fromIndex(index, g->round().number()));
+        }
+    ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
 void MetaDataEditWidget_Game::onComboBoxSetFormatChanged(int index)
 {
-
+    ignoreSelf_ = true;
+    for (auto& mdata : model_->metaData())
+        if (mdata->type() == rfcommon::MetaData::GAME)
+            mdata->asGame()->setSetFormat(rfcommon::SetFormat::fromIndex(index));
+    ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -572,7 +588,49 @@ void MetaDataEditWidget_Game::onNextGameStarted()
         return true;
     };
 
-    auto advanceScores = [](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
+    auto advanceRound = [](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
+        switch (prev->round().type())
+        {
+            using namespace rfcommon;
+
+            case Round::WINNERS_ROUND:
+            case Round::LOSERS_ROUND:
+            case Round::POOLS:
+            case Round::FREE:
+                mdata->setRound(Round::fromType(
+                        prev->round().type(),
+                        prev->round().number() + 1));
+                break;
+            case Round::WINNERS_QUARTER:
+                mdata->setRound(Round::fromType(Round::WINNERS_SEMI));
+                break;
+            case Round::WINNERS_SEMI:
+                mdata->setRound(Round::fromType(Round::WINNERS_FINALS));
+                break;
+            case Round::WINNERS_FINALS:
+                mdata->setRound(Round::fromType(Round::GRAND_FINALS));
+                mdata->setPlayerIsLoserSide(prev->winner(), false);
+                mdata->setPlayerIsLoserSide(1 - prev->winner(), true);
+                break;
+            case Round::LOSERS_QUARTER:
+                mdata->setRound(Round::fromType(Round::LOSERS_SEMI));
+                break;
+            case Round::LOSERS_SEMI:
+                mdata->setRound(Round::fromType(Round::LOSERS_FINALS));
+                break;
+            case Round::LOSERS_FINALS:
+                mdata->setRound(Round::fromType(Round::GRAND_FINALS));
+                mdata->setPlayerIsLoserSide(prev->winner(), true);
+                mdata->setPlayerIsLoserSide(1 - prev->winner(), false);
+                break;
+            case Round::GRAND_FINALS:
+                mdata->setPlayerIsLoserSide(0, true);
+                mdata->setPlayerIsLoserSide(1, true);
+                break;
+        }
+    };
+
+    auto advanceScores = [&advanceRound](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
         // Update score based on who won the previous game
         int p1 = prev->score().left();
         int p2 = prev->score().right();
@@ -581,10 +639,21 @@ void MetaDataEditWidget_Game::onNextGameStarted()
         else
             p2++;
 
-        // Check if this game starts a new set
-        //switch (prev->)
-
-        mdata->setScore(rfcommon::ScoreCount::fromScore(p1, p2));
+        // Check if this game starts a new round
+        int maxScore = -1;
+        switch (prev->setFormat().type())
+        {
+            case rfcommon::SetFormat::BO3  : maxScore = 2;  break;
+            case rfcommon::SetFormat::BO5  : maxScore = 3;  break;
+            case rfcommon::SetFormat::BO7  : maxScore = 4;  break;
+            case rfcommon::SetFormat::FT5  : maxScore = 5;  break;
+            case rfcommon::SetFormat::FT10 : maxScore = 10; break;
+            case rfcommon::SetFormat::FREE : break;
+        }
+        if (maxScore > -1 && (p1 >= maxScore || p2 >= maxScore))
+            advanceRound(mdata, prev);
+        else
+            mdata->setScore(rfcommon::ScoreCount::fromScore(p1, p2));
     };
 
     rfcommon::MetaData* mdata = model_->metaData()[0];
@@ -601,6 +670,10 @@ void MetaDataEditWidget_Game::onNextGameStarted()
                 mdata->asGame()->round() == prev->asGame()->round())
             {
                 advanceScores(mdata->asGame(), prev->asGame());
+            }
+            else
+            {
+                advanceRound(mdata->asGame(), prev->asGame());
             }
         } break;
 
