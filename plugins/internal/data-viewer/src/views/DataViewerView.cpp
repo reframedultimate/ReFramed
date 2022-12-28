@@ -29,13 +29,13 @@ DataViewerView::DataViewerView(DataViewerModel* model, QWidget* parent)
     ui_->splitter->setStretchFactor(1, 1);
 
     ui_->tableView_baseStatusIDs->setModel(model_->baseStatusIDModel());
-    ui_->tableView_metaData->setModel(model_->metaDataModel());
+    ui_->treeView_metadata->setModel(model_->metaDataModel());
     ui_->tableView_hitStatusIDs->setModel(model_->hitStatusIDModel());
     ui_->tableView_stageIDs->setModel(model_->stageIDModel());
     ui_->tableView_specificStatusIDs->setModel(model_->specificStatusIDModel());
     ui_->tableView_fighterIDs->setModel(model_->fighterIDModel());
 
-    DataViewerView::onNewData(model_->mappingInfo(), model_->metaData(), model_->frameData());
+    DataViewerView::onNewData(model_->mappingInfo(), model_->metadata(), model_->videoMetadata(), model_->frameData());
 
     connect(ui_->treeWidget, &QTreeWidget::currentItemChanged,
             this, &DataViewerView::onCurrentItemChanged);
@@ -52,19 +52,22 @@ DataViewerView::~DataViewerView()
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
 {
     PROFILE(DataViewerView, onNewData);
 
     populatePlayerDataTables();
-    populateTree(map, meta, frames);
+    populateTree(map, meta, vmeta, frames);
 
     ui_->tableView_baseStatusIDs->resizeColumnsToContents();
-    ui_->tableView_metaData->resizeColumnsToContents();
     ui_->tableView_hitStatusIDs->resizeColumnsToContents();
     ui_->tableView_stageIDs->resizeColumnsToContents();
     ui_->tableView_specificStatusIDs->resizeColumnsToContents();
     ui_->tableView_fighterIDs->resizeColumnsToContents();
+
+    ui_->treeView_metadata->expandAll();
+    for (int i = 0; i != ui_->treeView_metadata->model()->columnCount(); ++i)
+        ui_->treeView_metadata->resizeColumnToContents(i);
 }
 
 // ----------------------------------------------------------------------------
@@ -77,7 +80,7 @@ void DataViewerView::onClear()
         const auto item = ui_->treeWidget->currentItem();
         if (item == nullptr)
             return -1;
-        if (item == metaDataItem_) return 0;
+        if (item == metadataItem_) return 0;
         else if (item == stageIDMappingsItem_) return 1;
         else if (item == fighterIDMappingsItem_) return 2;
         else if (item == baseStatusIDMappingsItem_) return 3;
@@ -95,7 +98,7 @@ void DataViewerView::onClear()
     ui_->treeWidget->clear();
     playerDataItems_.clear();
 
-    metaDataItem_ = nullptr;
+    metadataItem_ = nullptr;
     stageIDMappingsItem_ = nullptr;
     fighterIDMappingsItem_ = nullptr;
     baseStatusIDMappingsItem_ = nullptr;
@@ -135,8 +138,10 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
             break;
         }
 
-    if (current == metaDataItem_)
-        ui_->stackedWidget->setCurrentWidget(ui_->page_metaData);
+    if (current == metadataItem_)
+        ui_->stackedWidget->setCurrentWidget(ui_->page_metadata);
+    else if (current == videoMetadataItem_)
+        ui_->stackedWidget->setCurrentWidget(ui_->page_videoMetadata);
     else if (current == stageIDMappingsItem_)
         ui_->stackedWidget->setCurrentWidget(ui_->page_stageIDs);
     else if (current == fighterIDMappingsItem_)
@@ -170,15 +175,22 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
 {
     PROFILE(DataViewerView, populateTree);
 
-    // Meta Data
+    // Metadata
     if (meta)
     {
-        metaDataItem_ = new QTreeWidgetItem({"Meta Data"});
-        ui_->treeWidget->addTopLevelItem(metaDataItem_);
+        metadataItem_ = new QTreeWidgetItem({"Metadata"});
+        ui_->treeWidget->addTopLevelItem(metadataItem_);
+    }
+
+    // Video
+    if (vmeta)
+    {
+        videoMetadataItem_ = new QTreeWidgetItem({"Video Metadata"});
+        ui_->treeWidget->addTopLevelItem(videoMetadataItem_);
     }
 
     // Mapping info
@@ -205,7 +217,7 @@ void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData
     // Player states
     if (model_->fighterStatesModelCount() > 0)
     {
-        QTreeWidgetItem* playerStates = new QTreeWidgetItem({"Player States"});
+        QTreeWidgetItem* playerStates = new QTreeWidgetItem({"Frame Data"});
         for (int i = 0; i != model_->fighterStatesModelCount(); ++i)
         {
             QString playerName = meta ?
@@ -224,7 +236,7 @@ void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData
     switch (selectedTreeItemOnClear_)
     {
 #define SELECT(item) { ui_->treeWidget->setCurrentItem(item); }
-        case 0: SELECT(metaDataItem_) break;
+        case 0: SELECT(metadataItem_) break;
         case 1: SELECT(stageIDMappingsItem_) break;
         case 2: SELECT(fighterIDMappingsItem_) break;
         case 3: SELECT(baseStatusIDMappingsItem_) break;

@@ -57,6 +57,12 @@ public:
      */
     void startNextGame();
 
+    /*!
+     * If the user edits values in the UI in between games, then the widgets
+     * should call this to prevent the effects of startNextGame().
+     */
+    void setPendingChanges() { pendingChanges_ = true; }
+
     rfcommon::MetaData* prevMetaData() const { return prevMdata_; }
     const MappingInfoList& mappingInfo() const { return map_; }
     const MetaDataList& metaData() const { return mdata_; }
@@ -77,6 +83,7 @@ private:
     rfcommon::Reference<rfcommon::MetaData> prevMdata_;
     MappingInfoList map_;
     MetaDataList mdata_;
+    bool pendingChanges_ = false;
 };
 
 }

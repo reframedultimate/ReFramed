@@ -16,6 +16,7 @@ namespace rfapp {
 class ActiveSessionManager;
 class CollapsibleSplitter;
 class MetaDataEditModel;
+class PlayerDetails;
 class PluginManager;
 class Protocol;
 
@@ -28,6 +29,7 @@ public:
     ActiveSessionView(
             ActiveSessionManager* activeSessionManager,
             PluginManager* pluginManager,
+            PlayerDetails* playerDetails,
             QWidget* parent=nullptr);
     ~ActiveSessionView();
 

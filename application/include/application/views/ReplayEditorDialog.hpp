@@ -11,6 +11,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class MetaDataEditModel;
+class PlayerDetails;
 class ReplayManager;
 
 class ReplayEditorDialog : public QDialog
@@ -19,6 +20,7 @@ class ReplayEditorDialog : public QDialog
 public:
     explicit ReplayEditorDialog(
             ReplayManager* replayManager,
+            PlayerDetails* playerDetails,
             const QStringList& replayFileNames,
             QWidget* parent);
     ~ReplayEditorDialog();

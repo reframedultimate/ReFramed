@@ -39,12 +39,13 @@ CategoryTabsView::CategoryTabsView(
         ReplayManager* replayManager,
         PluginManager* pluginManager,
         ActiveSessionManager* activeSessionManager,
+        PlayerDetails* playerDetails,
         UserMotionLabelsManager* userMotionLabelsManager,
         rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QTabWidget(parent)
-    , replayManagerView_(new ReplayManagerView(replayManager, pluginManager, userMotionLabelsManager, hash40Strings))
-    , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager))
+    , replayManagerView_(new ReplayManagerView(replayManager, pluginManager, playerDetails, userMotionLabelsManager, hash40Strings))
+    , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager, playerDetails))
 {
     setTabPosition(QTabWidget::West);
     //tabBar()->setStyle(new CustomTabStyle);

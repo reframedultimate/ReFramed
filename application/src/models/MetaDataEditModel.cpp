@@ -54,6 +54,8 @@ void MetaDataEditModel::clear()
 
     if (mdata_.count() == 1)
         prevMdata_ = mdata_[0];
+    else
+        prevMdata_.drop();
 
     for (auto& m : mdata_)
         m->dispatcher.removeListener(this);
@@ -68,6 +70,12 @@ void MetaDataEditModel::startNextGame()
         return;
     if (mdata_.count() != 1)
         return;
+
+    if (pendingChanges_)
+    {
+        pendingChanges_ = false;
+        return;
+    }
 
     dispatcher.dispatch(&MetaDataEditListener::onNextGameStarted);
 }

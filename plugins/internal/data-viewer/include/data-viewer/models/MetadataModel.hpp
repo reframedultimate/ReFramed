@@ -2,7 +2,7 @@
 
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/MetaDataListener.hpp"
-#include <QAbstractTableModel>
+#include <QAbstractItemModel>
 
 namespace rfcommon {
     class MetaData;
@@ -11,21 +11,25 @@ namespace rfcommon {
     class MappingInfo;
 }
 
-class MetaDataModel
-        : public QAbstractTableModel
+class MetadataModel
+        : public QAbstractItemModel
         , public rfcommon::MetaDataListener
 {
 public:
-    ~MetaDataModel();
+    ~MetadataModel();
 
     void setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::MetaData* metaData);
 
+    QModelIndex index(int row, int column, const QModelIndex& parent=QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& index) const override;
     int rowCount(const QModelIndex& parent=QModelIndex()) const override;
     int columnCount(const QModelIndex& parent=QModelIndex()) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override;
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
 
 private:
+    int gameRowCount(const rfcommon::GameMetaData* meta, const QModelIndex& parent) const;
+    int trainingRowCount(const rfcommon::TrainingMetaData* meta, const QModelIndex& parent) const;
     QVariant gameData(const rfcommon::GameMetaData* meta, const QModelIndex& index, int role) const;
     QVariant trainingData(const rfcommon::TrainingMetaData* meta, const QModelIndex& index, int role) const;
 

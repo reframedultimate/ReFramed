@@ -16,7 +16,7 @@ namespace rfcommon {
     class FighterState;
 }
 
-class DataViewerView 
+class DataViewerView
     : public QWidget
     , public DataViewerListener
 {
@@ -30,18 +30,19 @@ private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-    void populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames);
+    void populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames);
     void populatePlayerDataTables();
 
 private:
-    void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
+    void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames) override;
     void onClear() override;
     void onNewFrame() override;
 
 private:
     DataViewerModel* model_;
     Ui::DataViewerView* ui_;
-    QTreeWidgetItem* metaDataItem_ = nullptr;
+    QTreeWidgetItem* metadataItem_ = nullptr;
+    QTreeWidgetItem* videoMetadataItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;
     QTreeWidgetItem* baseStatusIDMappingsItem_ = nullptr;

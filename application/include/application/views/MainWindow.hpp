@@ -20,6 +20,7 @@ namespace rfapp {
 
 class CategoryTabsView;
 class Config;
+class PlayerDetails;
 class PluginManager;
 class Protocol;
 class ActiveSessionManager;
@@ -80,6 +81,7 @@ private:
 private:
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     std::unique_ptr<Config> config_;
+    std::unique_ptr<PlayerDetails> playerDetails_;
     std::unique_ptr<Protocol> protocol_;
     std::unique_ptr<UserMotionLabelsManager> userMotionLabelsManager_;
     std::unique_ptr<PluginManager> pluginManager_;

@@ -13,18 +13,21 @@ namespace rfcommon {
     class MetaData;
     class Session;
     class UserMotionLabels;
+    class VideoMeta;
 }
 
 class QAbstractTableModel;
+class QAbstractItemModel;
 
 class BaseStatusIDModel;
+class DataViewerListener;
 class FighterIDModel;
 class FighterStatesModel;
-class DataViewerListener;
 class HitStatusIDModel;
-class MetaDataModel;
+class MetadataModel;
 class SpecificStatusIDModel;
 class StageIDModel;
+class VideoMetadataModel;
 
 class DataViewerModel : public rfcommon::FrameDataListener
 {
@@ -36,13 +39,15 @@ public:
     void clearSession();
 
     rfcommon::MappingInfo* mappingInfo() const;
-    rfcommon::MetaData* metaData() const;
+    rfcommon::MetaData* metadata() const;
+    rfcommon::VideoMeta* videoMetadata() const;
     rfcommon::FrameData* frameData() const;
 
     QAbstractTableModel* baseStatusIDModel() const;
     QAbstractTableModel* fighterIDModel() const;
     QAbstractTableModel* hitStatusIDModel() const;
-    QAbstractTableModel* metaDataModel() const;
+    QAbstractItemModel* metaDataModel() const;
+    QAbstractTableModel* videoMetadataModel() const;
     QAbstractTableModel* specificStatusIDModel() const;
     QAbstractTableModel* stageIDModel() const;
 
@@ -62,13 +67,15 @@ private:
     std::unique_ptr<BaseStatusIDModel> baseStatusIDModel_;
     std::unique_ptr<FighterIDModel> fighterIDModel_;
     std::unique_ptr<HitStatusIDModel> hitStatusIDModel_;
-    std::unique_ptr<MetaDataModel> metaDataModel_;
+    std::unique_ptr<MetadataModel> metadataModel_;
+    std::unique_ptr<VideoMetadataModel> videoMetadataModel_;
     std::unique_ptr<SpecificStatusIDModel> specificStatusIDModel_;
     std::unique_ptr<StageIDModel> stageIDModel_;
 
     std::vector<std::unique_ptr<FighterStatesModel>> fighterStatesModels_;
 
     rfcommon::Reference<rfcommon::MappingInfo> mappingInfo_;
-    rfcommon::Reference<rfcommon::MetaData> metaData_;
+    rfcommon::Reference<rfcommon::MetaData> metadata_;
+    rfcommon::Reference<rfcommon::VideoMeta> videoMetadata_;
     rfcommon::Reference<rfcommon::FrameData> frameData_;
 };

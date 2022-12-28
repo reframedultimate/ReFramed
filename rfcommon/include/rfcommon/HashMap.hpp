@@ -113,11 +113,15 @@ public:
 
         Iterator& operator++()
         {
-            while (pos_ != table_.count())
+            if (pos_ < table_.count())
             {
                 ++pos_;
-                if (table_[pos_] != UNUSED && table_[pos_] != RIP)
-                    break;
+                while (pos_ < table_.count())
+                {
+                    if (table_[pos_] != UNUSED && table_[pos_] != RIP)
+                        break;
+                    ++pos_;
+                }
             }
 
             return *this;
@@ -178,11 +182,15 @@ public:
 
         ConstIterator& operator++()
         {
-            while (pos_ != table_.count())
+            if (pos_ < table_.count())
             {
                 ++pos_;
-                if (table_[pos_] != UNUSED && table_[pos_] != RIP)
-                    break;
+                while (pos_ < table_.count())
+                {
+                    if (table_[pos_] != UNUSED && table_[pos_] != RIP)
+                        break;
+                    ++pos_;
+                }
             }
 
             return *this;

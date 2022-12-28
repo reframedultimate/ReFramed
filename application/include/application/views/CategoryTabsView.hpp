@@ -10,6 +10,7 @@ namespace rfapp {
 
 class ActiveSessionManager;
 class ActiveSessionView;
+class PlayerDetails;
 class PluginManager;
 class ReplayManager;
 class ReplayManagerView;
@@ -23,6 +24,7 @@ public:
             ReplayManager* replayManager,
             PluginManager* pluginManager,
             ActiveSessionManager* activeSessionManager,
+            PlayerDetails* playerDetails,
             UserMotionLabelsManager* userMotionLabelsManager,
             rfcommon::Hash40Strings* hash40Strings,
             QWidget* parent=nullptr);

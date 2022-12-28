@@ -25,6 +25,7 @@ namespace rfapp {
 // ----------------------------------------------------------------------------
 ReplayEditorDialog::ReplayEditorDialog(
         ReplayManager* replayManager,
+        PlayerDetails* playerDetails,
         const QStringList& replayFileNames,
         QWidget* parent)
     : QDialog(parent)
@@ -36,7 +37,7 @@ ReplayEditorDialog::ReplayEditorDialog(
     MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
     MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
     MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
-    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get());
+    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get(), playerDetails);
 
     tournament->setExpanded(true);
     commentators->setExpanded(true);

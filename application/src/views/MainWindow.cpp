@@ -2,6 +2,7 @@
 #include "application/config.hpp"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/models/Config.hpp"
+#include "application/models/PlayerDetails.hpp"
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
@@ -38,12 +39,13 @@ MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings
     : QMainWindow(parent)
     , hash40Strings_(hash40Strings)
     , config_(std::move(config))
+    , playerDetails_(new PlayerDetails)
     , protocol_(new Protocol)
     , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
     , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get(), pluginManager_.get()))
-    , categoryTabsView_(new CategoryTabsView(replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
+    , categoryTabsView_(new CategoryTabsView(replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), playerDetails_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);

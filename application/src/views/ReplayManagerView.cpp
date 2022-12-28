@@ -27,12 +27,14 @@ namespace rfapp {
 ReplayManagerView::ReplayManagerView(
         ReplayManager* replayManager,
         PluginManager* pluginManager,
+        PlayerDetails* playerDetails,
         UserMotionLabelsManager* userMotionLabelsManager,
         rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QWidget(parent)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
+    , playerDetails_(playerDetails)
     , userMotionLabelsManager_(userMotionLabelsManager)
     , hash40Strings_(hash40Strings)
     , replayListModel_(new ReplayListModel(replayManager))
@@ -294,7 +296,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
 
     if (a == editMetaData)
     {
-        ReplayEditorDialog dialog(replayManager_, selectedFileNames, this);
+        ReplayEditorDialog dialog(replayManager_, playerDetails_, selectedFileNames, this);
         dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
         dialog.exec();
     }

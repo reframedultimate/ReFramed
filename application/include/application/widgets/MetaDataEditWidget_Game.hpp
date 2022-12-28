@@ -1,7 +1,6 @@
 #pragma once
 
 #include "application/widgets/MetaDataEditWidget.hpp"
-#include "rfcommon/Reference.hpp"
 
 class QVBoxLayout;
 
@@ -15,12 +14,14 @@ namespace rfcommon {
 
 namespace rfapp {
 
+class PlayerDetails;
+
 class MetaDataEditWidget_Game : public MetaDataEditWidget
 {
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget_Game(MetaDataEditModel* model, QWidget* parent=nullptr);
+    explicit MetaDataEditWidget_Game(MetaDataEditModel* model, PlayerDetails* playerDetails, QWidget* parent=nullptr);
     ~MetaDataEditWidget_Game();
 
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
@@ -29,6 +30,7 @@ private slots:
     void onDateTimeStartedChanged(const QDateTime& dateTime);
     void onPushButtonResetTimeStartedReleased();
     void onComboBoxRoundTypeChanged(int index);
+    void onSpinBoxRoundNumberChanged(int value);
     void onComboBoxSetFormatChanged(int index);
     void onSpinBoxGameNumberChanged(int value);
     void onCheckBoxLeftLoserSideChanged(bool enable);
@@ -47,6 +49,7 @@ private slots:
     void onPushButtonDecRightScoreReleased();
 
 private:
+    void updateRoundTypeUI(int roundTypeIndex);
     void enableRoundCounter(bool enable);
     void enableFreePlayOption(bool enable);
     void enableRoundTypeSelection(bool enable);
@@ -69,6 +72,7 @@ private:
     void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
 
 private:
+    PlayerDetails* playerDetails_;
     Ui::MetaDataEditWidget_Game* ui_;
     bool ignoreSelf_ = false;
 };

@@ -13,6 +13,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class CollapsibleSplitter;
+class PlayerDetails;
 class PluginDockView;
 class PluginManager;
 class ReplayListModel;
@@ -35,6 +36,7 @@ public:
     explicit ReplayManagerView(
             ReplayManager* replayManager,
             PluginManager* pluginManager,
+            PlayerDetails* playerDetails,
             UserMotionLabelsManager* userMotionLabelsManager,
             rfcommon::Hash40Strings* hash40Strings,
             QWidget* parent=nullptr);
@@ -52,6 +54,7 @@ private slots:
 private:
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
+    PlayerDetails* playerDetails_;
     UserMotionLabelsManager* userMotionLabelsManager_;
     rfcommon::Hash40Strings* hash40Strings_;
 
