@@ -10,7 +10,7 @@ class StageStatsListener;
 
 namespace rfcommon {
     class MappingInfo;
-    class GameMetaData;
+    class GameMetadata;
 }
 
 class FighterPair
@@ -38,7 +38,7 @@ public:
     ~StageStatsModel();
 
     void clearStats();
-    void addSessionData(rfcommon::MappingInfo* map, rfcommon::GameMetaData* mdata);
+    void addSessionData(rfcommon::MappingInfo* map, rfcommon::GameMetadata* mdata);
     void notifyUpdated();
 
     int fighterCount() const;

@@ -10,7 +10,7 @@ class DamageTimePlotModel;
 
 namespace rfcommon {
     class FrameData;
-    class MetaData;
+    class Metadata;
 }
 
 class DamageTimeCurveData
@@ -18,7 +18,7 @@ class DamageTimeCurveData
     , public rfcommon::FrameDataListener
 {
 public:
-    DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::MetaData* metaData, rfcommon::FrameData* frameData, int fighterIdx);
+    DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::Metadata* metadata, rfcommon::FrameData* frameData, int fighterIdx);
     ~DamageTimeCurveData();
 
     size_t size() const override { return points_.count(); }
@@ -35,7 +35,7 @@ private:
 
 private:
     DamageTimePlotModel* model_;
-    rfcommon::Reference<rfcommon::MetaData> metaData_;
+    rfcommon::Reference<rfcommon::Metadata> metadata_;
     rfcommon::Reference<rfcommon::FrameData> frameData_;
     rfcommon::Vector<QPointF> points_;
     const int fighterIdx_;

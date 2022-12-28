@@ -6,13 +6,13 @@
 #include "rfcommon/FramesLeft.hpp"
 #include "rfcommon/FighterFlags.hpp"
 #include "rfcommon/FighterStocks.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/FilePathResolver.hpp"
@@ -30,18 +30,18 @@ using nlohmann::json;
 
 static bool loadLegacy_1_3(
         json& jptr,
-        Reference<MetaData>* metaData,
+        Reference<Metadata>* metadata,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static bool loadLegacy_1_4(
         json& jptr,
-        Reference<MetaData>* metaData,
+        Reference<Metadata>* metadata,
         Reference<MappingInfo>* mappingInfo,
         Reference<FrameData>* frameData);
 static int findWinner(const Frame<4>& frame);
 
 static const char* magic               = "RFR1";
-static const char* blobTypeMetaData    = "META";
+static const char* blobTypeMetadata    = "META";
 static const char* blobTypeMappingInfo = "MAPI";
 static const char* blobTypeFrameData   = "FDAT";
 static const char* blobTypeVideoMeta   = "VIDM";
@@ -206,7 +206,7 @@ static std::string readUncompressedFile(const char* fileName)
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_3(
         json& j,
-        Reference<MetaData>* metaDataOut,
+        Reference<Metadata>* metadataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -344,7 +344,7 @@ static bool loadLegacy_1_3(
     json jSetNumber = jGameInfo["set"];
     json jWinner = jGameInfo["winner"];
 
-    Reference<MetaData> metaData = MetaData::newSavedGameSession(
+    Reference<Metadata> metadata = Metadata::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
         StageID::fromValue(jStageID.get<StageID::Type>()),
@@ -353,20 +353,20 @@ static bool loadLegacy_1_3(
         std::move(playerTags),
         jWinner.get<int>());
 
-    metaData->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
-    metaData->asGame()->setRound(Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())));
-    metaData->asGame()->setSetFormat(SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()));
-    metaData->asGame()->setScore(ScoreCount::fromGameNumber(GameNumber::fromValue(jGameNumber.get<GameNumber::Type>())));
+    metadata->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
+    metadata->asGame()->setRound(Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())));
+    metadata->asGame()->setSetFormat(SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()));
+    metadata->asGame()->setScore(ScoreCount::fromGameNumber(GameNumber::fromValue(jGameNumber.get<GameNumber::Type>())));
     for (int i = 0; i != playerNames.count(); ++i)
-        metaData->asGame()->setPlayerName(i, playerNames[i].cStr());
+        metadata->asGame()->setPlayerName(i, playerNames[i].cStr());
 
     const auto firstFrameTimeStamp = TimeStamp::fromMillisSinceEpoch(
         time_qt_to_milli_seconds_since_epoch(jDate.get<std::string>().c_str()));
 
     const std::string streamDecoded = base64_decode(j["playerstates"].get<std::string>());
     Deserializer stream(streamDecoded.data(), streamDecoded.length());
-    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metaData->fighterCount());
-    for (int i = 0; i < metaData->fighterCount(); ++i)
+    auto frameData = SmallVector<Vector<FighterState>, 2>::makeResized(metadata->fighterCount());
+    for (int i = 0; i < metadata->fighterCount(); ++i)
     {
         const FramesLeft::Type stateCount = stream.readLU32();
 
@@ -433,8 +433,8 @@ static bool loadLegacy_1_3(
     // Calculate start and end times
     const TimeStamp lastFrameTimeStamp = frameData[0].count() ?
             frameData[0].back().timeStamp() : firstFrameTimeStamp;
-    metaData->setTimeStarted(firstFrameTimeStamp);
-    metaData->setTimeEnded(lastFrameTimeStamp);
+    metadata->setTimeStarted(firstFrameTimeStamp);
+    metadata->setTimeEnded(lastFrameTimeStamp);
 
     // Winner sanity check
 #ifndef NDEBUG
@@ -444,11 +444,11 @@ static bool loadLegacy_1_3(
         for (const auto& state : frameData.back())
             frame.push(state);
         const int winner = findWinner(frame);
-        assert(winner == metaData->asGame()->winner());
+        assert(winner == metadata->asGame()->winner());
     }
 #endif
 
-    *metaDataOut = metaData;
+    *metadataOut = metadata;
     *mappingInfoOut = mappingInfo;
     *frameDataOut = new FrameData(std::move(frameData));
 
@@ -458,7 +458,7 @@ static bool loadLegacy_1_3(
 // ----------------------------------------------------------------------------
 static bool loadLegacy_1_4(
         json& j,
-        Reference<MetaData>* metaDataOut,
+        Reference<Metadata>* metadataOut,
         Reference<MappingInfo>* mappingInfoOut,
         Reference<FrameData>* frameDataOut)
 {
@@ -624,7 +624,7 @@ static bool loadLegacy_1_4(
     if (winner > fighterCount)
         winner = -1;
 
-    Reference<MetaData> metaData = MetaData::newSavedGameSession(
+    Reference<Metadata> metadata = Metadata::newSavedGameSession(
         timeStarted,
         timeEnded,
         stageID,
@@ -633,12 +633,12 @@ static bool loadLegacy_1_4(
         std::move(playerTags),
         winner);
 
-    metaData->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
-    metaData->asGame()->setRound(Round::fromSessionNumber(sessionNumber));
-    metaData->asGame()->setSetFormat(format);
-    metaData->asGame()->setScore(ScoreCount::fromGameNumber(gameNumber));
+    metadata->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
+    metadata->asGame()->setRound(Round::fromSessionNumber(sessionNumber));
+    metadata->asGame()->setSetFormat(format);
+    metadata->asGame()->setScore(ScoreCount::fromGameNumber(gameNumber));
     for (int i = 0; i != playerNames.count(); ++i)
-        metaData->asGame()->setPlayerName(i, playerNames[i].cStr());
+        metadata->asGame()->setPlayerName(i, playerNames[i].cStr());
 
     const std::string streamDecoded = jPlayerStates.is_string() ?
         base64_decode(jPlayerStates.get<std::string>()) : "";
@@ -743,7 +743,7 @@ static bool loadLegacy_1_4(
         }
     }
 
-    *metaDataOut = metaData;
+    *metadataOut = metadata;
     *mappingInfoOut = mappingInfo;
     *frameDataOut = new FrameData(std::move(frameData));
 
@@ -755,14 +755,14 @@ Session::Session(
         FilePathResolver* pathResolver,
         MappedFile* file,
         MappingInfo* mappingInfo,
-        MetaData* metaData,
+        Metadata* metadata,
         FrameData* frameData,
         VideoMeta* videoMeta,
         VideoEmbed* video)
     : pathResolver_(pathResolver)
     , file_(file)
     , mappingInfo_(mappingInfo)
-    , metaData_(metaData)
+    , metadata_(metadata)
     , frameData_(frameData)
     , videoMeta_(videoMeta)
     , videoEmbed_(video)
@@ -794,7 +794,7 @@ Session* Session::newModernSavedSession(FilePathResolver* pathResolver, MappedFi
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData)
+Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData)
 {
     PROFILE(Session, newLegacySavedSession);
 
@@ -802,14 +802,14 @@ Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, MetaData* meta
         nullptr,
         nullptr,
         mappingInfo,
-        metaData,
+        metadata,
         frameData,
         nullptr,
         nullptr);
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData)
+Session* Session::newActiveSession(MappingInfo* globalMappingInfo, Metadata* metadata)
 {
     PROFILE(Session, newActiveSession);
 
@@ -817,8 +817,8 @@ Session* Session::newActiveSession(MappingInfo* globalMappingInfo, MetaData* met
         nullptr,
         nullptr,
         globalMappingInfo,
-        metaData,
-        new FrameData(metaData->fighterCount()),
+        metadata,
+        new FrameData(metadata->fighterCount()),
         nullptr,
         nullptr);
 }
@@ -881,19 +881,19 @@ Session* Session::load(FilePathResolver* pathResolver, const char* fileName, uin
     if (j.contains("version") == false || j["version"].is_string() == false)
         return nullptr;
 
-    Reference<MetaData> metaData;
+    Reference<Metadata> metadata;
     Reference<MappingInfo> mappingInfo;
     Reference<FrameData> frameData;
     std::string version = j["version"];
     if (version == "1.4")
     {
-        if (loadLegacy_1_4(j, &metaData, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metaData, frameData);
+        if (loadLegacy_1_4(j, &metadata, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metadata, frameData);
     }
     else if (version == "1.3")
     {
-        if (loadLegacy_1_3(j, &metaData, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metaData, frameData);
+        if (loadLegacy_1_3(j, &metadata, &mappingInfo, &frameData))
+            return newLegacySavedSession(mappingInfo, metadata, frameData);
     }
 
     return nullptr;
@@ -971,7 +971,7 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
                     return false;                             \
                 }                                             \
             }
-            LOAD_SECTION(MetaData)
+            LOAD_SECTION(Metadata)
             LOAD_SECTION(VideoMeta)
 #undef LOAD_SECTION
         }
@@ -985,8 +985,8 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
         // how many entries we need. We don't know the offsets or sizes yet.
         if (mappingInfo_.notNull() && (saveFlags & Flags::MappingInfo))
             table.emplace(blobTypeMappingInfo);
-        if (metaData_.notNull() && (saveFlags & Flags::MetaData))
-            table.emplace(blobTypeMetaData);
+        if (metadata_.notNull() && (saveFlags & Flags::Metadata))
+            table.emplace(blobTypeMetadata);
         if (frameData_.notNull() && (saveFlags & Flags::FrameData))
             table.emplace(blobTypeFrameData);
         if (videoMeta_.notNull() && (saveFlags & Flags::VideoMeta))
@@ -1037,8 +1037,8 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
             else
             {
                 entry.offset = offset;
-                entry.size = metaData_ && frameData_ ?
-                    mappingInfo_->saveNecessary(fp, metaData_, frameData_) :
+                entry.size = metadata_ && frameData_ ?
+                    mappingInfo_->saveNecessary(fp, metadata_, frameData_) :
                     mappingInfo_->save(fp);
                 if (entry.size == 0)
                     goto write_fail;
@@ -1046,10 +1046,10 @@ uint64_t Session::save(FILE* fp, uint8_t saveFlags)
             offset += entry.size;
             log->info("Saved mapping info at offset 0x%x, size 0x%x", entry.offset, entry.size);
         }
-        else if (memcmp(entry.type, blobTypeMetaData, 4) == 0)
+        else if (memcmp(entry.type, blobTypeMetadata, 4) == 0)
         {
             entry.offset = offset;
-            entry.size = metaData_->save(fp);
+            entry.size = metadata_->save(fp);
             if (entry.size == 0)
                 goto write_fail;
             offset += entry.size;
@@ -1180,28 +1180,28 @@ MappingInfo* Session::tryGetMappingInfo()
 }
 
 // ----------------------------------------------------------------------------
-MetaData* Session::tryGetMetaData()
+Metadata* Session::tryGetMetadata()
 {
-    PROFILE(Session, tryGetMetaData);
+    PROFILE(Session, tryGetMetadata);
 
-    if (metaData_.isNull())
+    if (metadata_.isNull())
     {
         assert(file_.notNull());
         for (const auto& entry : contentTable_)
-            if (memcmp(entry.type, blobTypeMetaData, 4) == 0)
+            if (memcmp(entry.type, blobTypeMetadata, 4) == 0)
             {
-                metaData_ = MetaData::load(file_->addressAtOffset(entry.offset), entry.size);
+                metadata_ = Metadata::load(file_->addressAtOffset(entry.offset), entry.size);
                 break;
             }
 
         // Sanity check
 #ifndef NDEBUG
-        if (metaData_.notNull() && frameData_.notNull())
-            assert(metaData_->fighterCount() == frameData_->fighterCount());
+        if (metadata_.notNull() && frameData_.notNull())
+            assert(metadata_->fighterCount() == frameData_->fighterCount());
 #endif
     }
 
-    return metaData_;
+    return metadata_;
 }
 
 // ----------------------------------------------------------------------------
@@ -1221,8 +1221,8 @@ FrameData* Session::tryGetFrameData()
 
         // Sanity check
 #ifndef NDEBUG
-        if (metaData_.notNull() && frameData_.notNull())
-            assert(metaData_->fighterCount() == frameData_->fighterCount());
+        if (metadata_.notNull() && frameData_.notNull())
+            assert(metadata_->fighterCount() == frameData_->fighterCount());
 #endif
     }
 
@@ -1337,8 +1337,8 @@ void Session::onFrameDataNewUniqueFrame(int frameIdx, const Frame<4>& frame)
     (void)frameIdx;
 
     // Winner might have changed
-    if (metaData_ && metaData_->type() == MetaData::GAME)
-        metaData_->asGame()->setWinner(findWinner(frame));
+    if (metadata_ && metadata_->type() == Metadata::GAME)
+        metadata_->asGame()->setWinner(findWinner(frame));
 }
 
 // ----------------------------------------------------------------------------
@@ -1350,7 +1350,7 @@ void Session::onFrameDataNewFrame(int frameIdx, const Frame<4>& frame)
 
     // Update ended timestamp
     auto stamp = frame.back().timeStamp();
-    metaData_->setTimeEnded(stamp);
+    metadata_->setTimeEnded(stamp);
 }
 
 // ----------------------------------------------------------------------------

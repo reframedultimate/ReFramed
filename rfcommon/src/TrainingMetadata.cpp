@@ -1,34 +1,34 @@
-#include "rfcommon/TrainingMetaData.hpp"
-#include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
+#include "rfcommon/MetadataListener.hpp"
 #include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-TrainingMetaData::TrainingMetaData(
+TrainingMetadata::TrainingMetadata(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
-    : MetaData(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(costumes), std::move(tags))
+    : Metadata(timeStarted, timeEnded, stageID, std::move(fighterIDs), std::move(costumes), std::move(tags))
     , sessionNumber_(SessionNumber::fromValue(1))
 {}
 
 // ----------------------------------------------------------------------------
-TrainingMetaData::~TrainingMetaData()
+TrainingMetadata::~TrainingMetadata()
 {}
 
 // ----------------------------------------------------------------------------
-void TrainingMetaData::setSessionNumber(SessionNumber sessionNumber)
+void TrainingMetadata::setSessionNumber(SessionNumber sessionNumber)
 {
-    PROFILE(TrainingMetaData, setSessionNumber);
+    PROFILE(TrainingMetadata, setSessionNumber);
 
     bool notify = (sessionNumber_ != sessionNumber);
     sessionNumber_ = sessionNumber;
     if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTrainingSessionNumberChanged, sessionNumber);
+        dispatcher.dispatch(&MetadataListener::onMetadataTrainingSessionNumberChanged, sessionNumber);
 }
 
 }

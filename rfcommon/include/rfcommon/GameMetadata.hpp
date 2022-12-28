@@ -2,7 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/BracketType.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Round.hpp"
 #include "rfcommon/ScoreCount.hpp"
 #include "rfcommon/SetFormat.hpp"
@@ -12,9 +12,9 @@
 
 namespace rfcommon {
 
-class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
+class RFCOMMON_PUBLIC_API GameMetadata : public Metadata
 {
-    GameMetaData(
+    GameMetadata(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -24,7 +24,7 @@ class RFCOMMON_PUBLIC_API GameMetaData : public MetaData
             int winner);
 
 public:
-    ~GameMetaData();
+    ~GameMetadata();
 
     Type type() const override final { return GAME; }
 
@@ -137,7 +137,7 @@ public:
     void setWinner(int fighterIdx);
 
 private:
-    friend class MetaData;
+    friend class Metadata;
 
     struct Person
     {

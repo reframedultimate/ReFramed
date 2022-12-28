@@ -13,7 +13,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
@@ -47,14 +47,14 @@ void DataViewerModel::setSession(rfcommon::Session* session)
     clearSession();
 
     mappingInfo_ = session->tryGetMappingInfo();
-    metadata_ = session->tryGetMetaData();
+    metadata_ = session->tryGetMetadata();
     videoMetadata_ = session->tryGetVideoMeta();
     frameData_ = session->tryGetFrameData();
 
     baseStatusIDModel_->setMappingInfo(mappingInfo_);
     fighterIDModel_->setMappingInfo(mappingInfo_);
     hitStatusIDModel_->setMappingInfo(mappingInfo_);
-    metadataModel_->setMetaData(mappingInfo_, metadata_);
+    metadataModel_->setMetadata(mappingInfo_, metadata_);
     specificStatusIDModel_->setMappingInfo(mappingInfo_);
     stageIDModel_->setMappingInfo(mappingInfo_);
 
@@ -85,7 +85,7 @@ void DataViewerModel::clearSession()
     baseStatusIDModel_->setMappingInfo(nullptr);
     fighterIDModel_->setMappingInfo(nullptr);
     hitStatusIDModel_->setMappingInfo(nullptr);
-    metadataModel_->setMetaData(nullptr, nullptr);
+    metadataModel_->setMetadata(nullptr, nullptr);
     specificStatusIDModel_->setMappingInfo(nullptr);
     stageIDModel_->setMappingInfo(nullptr);
 
@@ -99,7 +99,7 @@ void DataViewerModel::clearSession()
 
 // ----------------------------------------------------------------------------
 rfcommon::MappingInfo* DataViewerModel::mappingInfo() const { return mappingInfo_; }
-rfcommon::MetaData* DataViewerModel::metadata() const { return metadata_; }
+rfcommon::Metadata* DataViewerModel::metadata() const { return metadata_; }
 rfcommon::VideoMeta* DataViewerModel::videoMetadata() const { return videoMetadata_; }
 rfcommon::FrameData* DataViewerModel::frameData() const { return frameData_; }
 
@@ -107,7 +107,7 @@ rfcommon::FrameData* DataViewerModel::frameData() const { return frameData_; }
 QAbstractTableModel* DataViewerModel::baseStatusIDModel() const { return baseStatusIDModel_.get(); }
 QAbstractTableModel* DataViewerModel::fighterIDModel() const { return fighterIDModel_.get(); }
 QAbstractTableModel* DataViewerModel::hitStatusIDModel() const { return hitStatusIDModel_.get(); }
-QAbstractItemModel* DataViewerModel::metaDataModel() const { return metadataModel_.get(); }
+QAbstractItemModel* DataViewerModel::metadataModel() const { return metadataModel_.get(); }
 QAbstractTableModel* DataViewerModel::videoMetadataModel() const { return videoMetadataModel_.get(); }
 QAbstractTableModel* DataViewerModel::specificStatusIDModel() const { return specificStatusIDModel_.get(); }
 QAbstractTableModel* DataViewerModel::stageIDModel() const { return stageIDModel_.get(); }

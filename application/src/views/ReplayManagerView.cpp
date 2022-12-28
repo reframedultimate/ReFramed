@@ -260,7 +260,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
     };
 
     QMenu menu;
-    QAction* editMetaData = menu.addAction("Edit meta data");
+    QAction* editMetadata = menu.addAction("Edit meta data");
     QAction* associateVideo = menu.addAction("Associate video");
     menu.addSeparator();
     QAction* exportPack = menu.addAction("Export as replay pack");
@@ -294,7 +294,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
     if (a == nullptr)
         return;
 
-    if (a == editMetaData)
+    if (a == editMetadata)
     {
         ReplayEditorDialog dialog(replayManager_, playerDetails_, selectedFileNames, this);
         dialog.setGeometry(calculatePopupGeometryActiveScreen(900));

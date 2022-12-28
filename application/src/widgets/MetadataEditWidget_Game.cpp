@@ -1,10 +1,10 @@
-#include "application/ui_MetaDataEditWidget_Game.h"
-#include "application/models/MetaDataEditModel.hpp"
+#include "application/ui_MetadataEditWidget_Game.h"
+#include "application/models/MetadataEditModel.hpp"
 #include "application/models/PlayerDetails.hpp"
-#include "application/widgets/MetaDataEditWidget_Game.hpp"
+#include "application/widgets/MetadataEditWidget_Game.hpp"
 
-#include "rfcommon/GameMetaData.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/SessionNumber.hpp"
 #include "rfcommon/Round.hpp"
@@ -19,10 +19,10 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Game::MetaDataEditWidget_Game(MetaDataEditModel* model, PlayerDetails* playerDetails, QWidget* parent)
-    : MetaDataEditWidget(model, parent)
+MetadataEditWidget_Game::MetadataEditWidget_Game(MetadataEditModel* model, PlayerDetails* playerDetails, QWidget* parent)
+    : MetadataEditWidget(model, parent)
     , playerDetails_(playerDetails)
-    , ui_(new Ui::MetaDataEditWidget_Game)
+    , ui_(new Ui::MetadataEditWidget_Game)
 {
     ui_->setupUi(contentWidget());
     setTitle("Game");
@@ -42,75 +42,75 @@ MetaDataEditWidget_Game::MetaDataEditWidget_Game(MetaDataEditModel* model, Playe
 
     updateSize();
 
-    connect(ui_->dateTimeEdit_started, &QDateTimeEdit::dateTimeChanged, this, &MetaDataEditWidget_Game::onDateTimeStartedChanged);
-    connect(ui_->pushButton_resetTimeStarted, &QPushButton::released, this, &MetaDataEditWidget_Game::onPushButtonResetTimeStartedReleased);
-    connect(ui_->comboBox_roundType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Game::onComboBoxRoundTypeChanged);
-    connect(ui_->spinBox_roundNumber, qOverload<int>(&QSpinBox::valueChanged), this, &MetaDataEditWidget_Game::onSpinBoxRoundNumberChanged);
-    connect(ui_->comboBox_setFormat, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Game::onComboBoxSetFormatChanged);
-    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &MetaDataEditWidget_Game::onSpinBoxGameNumberChanged);
-    connect(ui_->checkBox_leftL, &QCheckBox::stateChanged, this, &MetaDataEditWidget_Game::onCheckBoxLeftLoserSideChanged);
-    connect(ui_->checkBox_rightL, &QCheckBox::stateChanged, this, &MetaDataEditWidget_Game::onCheckBoxRightLoserSideChanged);
-    connect(ui_->lineEdit_leftName, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftNameChanged);
-    connect(ui_->lineEdit_rightName, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightNameChanged);
-    connect(ui_->lineEdit_leftSponsor, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftSponsorChanged);
-    connect(ui_->lineEdit_rightSponsor, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightSponsorChanged);
-    connect(ui_->lineEdit_leftSocial, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftSocialChanged);
-    connect(ui_->lineEdit_rightSocial, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightSocialChanged);
-    connect(ui_->lineEdit_leftPronouns, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditLeftPronounsChanged);
-    connect(ui_->lineEdit_rightPronouns, &QLineEdit::textChanged, this, &MetaDataEditWidget_Game::onLineEditRightPronounsChanged);
-    connect(ui_->toolButton_incLeftScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonIncLeftScoreReleased);
-    connect(ui_->toolButton_decLeftScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonDecLeftScoreReleased);
-    connect(ui_->toolButton_incRightScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonIncRightScoreReleased);
-    connect(ui_->toolButton_decRightScore, &QToolButton::released, this, &MetaDataEditWidget_Game::onPushButtonDecRightScoreReleased);
+    connect(ui_->dateTimeEdit_started, &QDateTimeEdit::dateTimeChanged, this, &MetadataEditWidget_Game::onDateTimeStartedChanged);
+    connect(ui_->pushButton_resetTimeStarted, &QPushButton::released, this, &MetadataEditWidget_Game::onPushButtonResetTimeStartedReleased);
+    connect(ui_->comboBox_roundType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetadataEditWidget_Game::onComboBoxRoundTypeChanged);
+    connect(ui_->spinBox_roundNumber, qOverload<int>(&QSpinBox::valueChanged), this, &MetadataEditWidget_Game::onSpinBoxRoundNumberChanged);
+    connect(ui_->comboBox_setFormat, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetadataEditWidget_Game::onComboBoxSetFormatChanged);
+    connect(ui_->spinBox_gameNumber, qOverload<int>(&QSpinBox::valueChanged), this, &MetadataEditWidget_Game::onSpinBoxGameNumberChanged);
+    connect(ui_->checkBox_leftL, &QCheckBox::stateChanged, this, &MetadataEditWidget_Game::onCheckBoxLeftLoserSideChanged);
+    connect(ui_->checkBox_rightL, &QCheckBox::stateChanged, this, &MetadataEditWidget_Game::onCheckBoxRightLoserSideChanged);
+    connect(ui_->lineEdit_leftName, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditLeftNameChanged);
+    connect(ui_->lineEdit_rightName, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditRightNameChanged);
+    connect(ui_->lineEdit_leftSponsor, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditLeftSponsorChanged);
+    connect(ui_->lineEdit_rightSponsor, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditRightSponsorChanged);
+    connect(ui_->lineEdit_leftSocial, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditLeftSocialChanged);
+    connect(ui_->lineEdit_rightSocial, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditRightSocialChanged);
+    connect(ui_->lineEdit_leftPronouns, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditLeftPronounsChanged);
+    connect(ui_->lineEdit_rightPronouns, &QLineEdit::textChanged, this, &MetadataEditWidget_Game::onLineEditRightPronounsChanged);
+    connect(ui_->toolButton_incLeftScore, &QToolButton::released, this, &MetadataEditWidget_Game::onPushButtonIncLeftScoreReleased);
+    connect(ui_->toolButton_decLeftScore, &QToolButton::released, this, &MetadataEditWidget_Game::onPushButtonDecLeftScoreReleased);
+    connect(ui_->toolButton_incRightScore, &QToolButton::released, this, &MetadataEditWidget_Game::onPushButtonIncRightScoreReleased);
+    connect(ui_->toolButton_decRightScore, &QToolButton::released, this, &MetadataEditWidget_Game::onPushButtonDecRightScoreReleased);
     connect(ui_->pushButton_resetScore, &QPushButton::released, [this] { ui_->spinBox_gameNumber->setValue(1); });
 }
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Game::~MetaDataEditWidget_Game()
+MetadataEditWidget_Game::~MetadataEditWidget_Game()
 {
     delete ui_;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onDateTimeStartedChanged(const QDateTime& dateTime)
+void MetadataEditWidget_Game::onDateTimeStartedChanged(const QDateTime& dateTime)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
+    for (auto& mdata : model_->metadata())
         mdata->setTimeStarted(rfcommon::TimeStamp::fromMillisSinceEpoch(dateTime.toMSecsSinceEpoch()));
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onPushButtonResetTimeStartedReleased()
+void MetadataEditWidget_Game::onPushButtonResetTimeStartedReleased()
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onComboBoxRoundTypeChanged(int index)
+void MetadataEditWidget_Game::onComboBoxRoundTypeChanged(int index)
 {
     updateRoundTypeUI(index);
     model_->setPendingChanges();
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setRound(rfcommon::Round::fromIndex(index, g->round().number()));
         }
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onSpinBoxRoundNumberChanged(int value)
+void MetadataEditWidget_Game::onSpinBoxRoundNumberChanged(int value)
 {
     model_->setPendingChanges();
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setRound(rfcommon::Round::fromType(
                     g->round().type(),
                     rfcommon::SessionNumber::fromValue(value)));
@@ -119,19 +119,19 @@ void MetaDataEditWidget_Game::onSpinBoxRoundNumberChanged(int value)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onComboBoxSetFormatChanged(int index)
+void MetadataEditWidget_Game::onComboBoxSetFormatChanged(int index)
 {
     model_->setPendingChanges();
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setSetFormat(rfcommon::SetFormat::fromIndex(index));
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onSpinBoxGameNumberChanged(int value)
+void MetadataEditWidget_Game::onSpinBoxGameNumberChanged(int value)
 {
     model_->setPendingChanges();
 
@@ -155,44 +155,44 @@ void MetaDataEditWidget_Game::onSpinBoxGameNumberChanged(int value)
         leftScore, rightScore, rfcommon::GameNumber::fromValue(value));
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setScore(score);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onCheckBoxLeftLoserSideChanged(bool enable)
+void MetadataEditWidget_Game::onCheckBoxLeftLoserSideChanged(bool enable)
 {
     model_->setPendingChanges();
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setPlayerIsLoserSide(0, enable);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onCheckBoxRightLoserSideChanged(bool enable)
+void MetadataEditWidget_Game::onCheckBoxRightLoserSideChanged(bool enable)
 {
     model_->setPendingChanges();
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setPlayerIsLoserSide(1, enable);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditLeftNameChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditLeftNameChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerName(0, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(0).cStr(),
                     g->playerName(0).cStr(),
@@ -204,13 +204,13 @@ void MetaDataEditWidget_Game::onLineEditLeftNameChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditRightNameChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditRightNameChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerName(1, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(1).cStr(),
                     g->playerName(1).cStr(),
@@ -222,13 +222,13 @@ void MetaDataEditWidget_Game::onLineEditRightNameChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditLeftSponsorChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditLeftSponsorChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerSponsor(0, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(0).cStr(),
                     g->playerName(0).cStr(),
@@ -240,13 +240,13 @@ void MetaDataEditWidget_Game::onLineEditLeftSponsorChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditRightSponsorChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditRightSponsorChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerSponsor(1, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(1).cStr(),
                     g->playerName(1).cStr(),
@@ -258,13 +258,13 @@ void MetaDataEditWidget_Game::onLineEditRightSponsorChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditLeftSocialChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditLeftSocialChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerSocial(0, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(0).cStr(),
                     g->playerName(0).cStr(),
@@ -276,13 +276,13 @@ void MetaDataEditWidget_Game::onLineEditLeftSocialChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditRightSocialChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditRightSocialChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerSocial(1, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(1).cStr(),
                     g->playerName(1).cStr(),
@@ -294,13 +294,13 @@ void MetaDataEditWidget_Game::onLineEditRightSocialChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditLeftPronounsChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditLeftPronounsChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerPronouns(0, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(0).cStr(),
                     g->playerName(0).cStr(),
@@ -312,13 +312,13 @@ void MetaDataEditWidget_Game::onLineEditLeftPronounsChanged(const QString& text)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onLineEditRightPronounsChanged(const QString& text)
+void MetadataEditWidget_Game::onLineEditRightPronounsChanged(const QString& text)
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
         {
-            rfcommon::GameMetaData* g = mdata->asGame();
+            rfcommon::GameMetadata* g = mdata->asGame();
             g->setPlayerPronouns(1, text.toUtf8().constData());
             playerDetails_->addOrModifyPlayer(g->playerTag(1).cStr(),
                     g->playerName(1).cStr(),
@@ -330,7 +330,7 @@ void MetaDataEditWidget_Game::onLineEditRightPronounsChanged(const QString& text
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onPushButtonIncLeftScoreReleased()
+void MetadataEditWidget_Game::onPushButtonIncLeftScoreReleased()
 {
     model_->setPendingChanges();
 
@@ -347,14 +347,14 @@ void MetaDataEditWidget_Game::onPushButtonIncLeftScoreReleased()
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setScore(score);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onPushButtonDecLeftScoreReleased()
+void MetadataEditWidget_Game::onPushButtonDecLeftScoreReleased()
 {
     model_->setPendingChanges();
 
@@ -373,14 +373,14 @@ void MetaDataEditWidget_Game::onPushButtonDecLeftScoreReleased()
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setScore(score);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onPushButtonIncRightScoreReleased()
+void MetadataEditWidget_Game::onPushButtonIncRightScoreReleased()
 {
     model_->setPendingChanges();
 
@@ -397,14 +397,14 @@ void MetaDataEditWidget_Game::onPushButtonIncRightScoreReleased()
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setScore(score);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onPushButtonDecRightScoreReleased()
+void MetadataEditWidget_Game::onPushButtonDecRightScoreReleased()
 {
     model_->setPendingChanges();
 
@@ -423,14 +423,14 @@ void MetaDataEditWidget_Game::onPushButtonDecRightScoreReleased()
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
 
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->setScore(score);
     ignoreSelf_ = false;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::updateRoundTypeUI(int roundTypeIndex)
+void MetadataEditWidget_Game::updateRoundTypeUI(int roundTypeIndex)
 {
     enableGrandFinalOptions(
             roundTypeIndex == rfcommon::Round::GRAND_FINALS);
@@ -443,13 +443,13 @@ void MetaDataEditWidget_Game::updateRoundTypeUI(int roundTypeIndex)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::enableRoundCounter(bool enable)
+void MetadataEditWidget_Game::enableRoundCounter(bool enable)
 {
     ui_->spinBox_roundNumber->setVisible(enable);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::enableFreePlayOption(bool enable)
+void MetadataEditWidget_Game::enableFreePlayOption(bool enable)
 {
     QSignalBlocker blockSetFormat(ui_->comboBox_setFormat);
 
@@ -478,20 +478,20 @@ void MetaDataEditWidget_Game::enableFreePlayOption(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::enableRoundTypeSelection(bool enable)
+void MetadataEditWidget_Game::enableRoundTypeSelection(bool enable)
 {
     ui_->comboBox_roundType->setVisible(enable);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::enableGrandFinalOptions(bool enable)
+void MetadataEditWidget_Game::enableGrandFinalOptions(bool enable)
 {
     ui_->checkBox_leftL->setVisible(enable);
     ui_->checkBox_rightL->setVisible(enable);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
     rfcommon::TimeStamp::Type timeStartedEpoch = 0, timeEndedEpoch = 0;
     QString stageName, leftName, rightName;
@@ -503,8 +503,8 @@ void MetaDataEditWidget_Game::onAdoptMetaData(const MappingInfoList& map, const 
     {
         switch (mdata[i]->type())
         {
-            case rfcommon::MetaData::GAME: {
-                rfcommon::GameMetaData* g = mdata[i]->asGame();
+            case rfcommon::Metadata::GAME: {
+                rfcommon::GameMetadata* g = mdata[i]->asGame();
 
                 if (first)
                 {
@@ -578,7 +578,7 @@ void MetaDataEditWidget_Game::onAdoptMetaData(const MappingInfoList& map, const 
 
             } break;
 
-            case rfcommon::MetaData::TRAINING:
+            case rfcommon::Metadata::TRAINING:
                 break;
         }
         first = false;
@@ -692,7 +692,7 @@ void MetaDataEditWidget_Game::onAdoptMetaData(const MappingInfoList& map, const 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Game::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
     assert(map.count() == mdata.count());
 
@@ -702,8 +702,8 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, co
     {
         switch (mdata[i]->type())
         {
-            case rfcommon::MetaData::GAME: {
-                rfcommon::GameMetaData* g = mdata[i]->asGame();
+            case rfcommon::Metadata::GAME: {
+                rfcommon::GameMetadata* g = mdata[i]->asGame();
 
                 // We make an exception with time started/ended and with stage
                 // ID, because these are values that can't be edited by the user
@@ -836,7 +836,7 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, co
                 }
             } break;
 
-            case rfcommon::MetaData::TRAINING: {
+            case rfcommon::Metadata::TRAINING: {
             } break;
         }
     }
@@ -845,15 +845,15 @@ void MetaDataEditWidget_Game::onOverwriteMetaData(const MappingInfoList& map, co
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Game::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata)
 {
     playerDetails_->save();
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onNextGameStarted()
+void MetadataEditWidget_Game::onNextGameStarted()
 {
-    auto allTagsMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
+    auto allTagsMatch = [](rfcommon::Metadata* a, rfcommon::Metadata* b) -> bool {
         assert(a->fighterCount() == b->fighterCount());
         for (int i = 0; i != a->fighterCount(); ++i)
             if (a->playerTag(i) != b->playerTag(i))
@@ -861,7 +861,7 @@ void MetaDataEditWidget_Game::onNextGameStarted()
         return true;
     };
 
-    auto allFightersMatch = [](rfcommon::MetaData* a, rfcommon::MetaData* b) -> bool {
+    auto allFightersMatch = [](rfcommon::Metadata* a, rfcommon::Metadata* b) -> bool {
         assert(a->fighterCount() == b->fighterCount());
         for (int i = 0; i != a->fighterCount(); ++i)
             if (a->playerFighterID(i) != b->playerFighterID(i))
@@ -869,7 +869,7 @@ void MetaDataEditWidget_Game::onNextGameStarted()
         return true;
     };
 
-    auto advanceRound = [](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
+    auto advanceRound = [](rfcommon::GameMetadata* mdata, rfcommon::GameMetadata* prev) {
         switch (prev->round().type())
         {
             using namespace rfcommon;
@@ -913,7 +913,7 @@ void MetaDataEditWidget_Game::onNextGameStarted()
         mdata->setScore(rfcommon::ScoreCount::fromScore(0, 0));
     };
 
-    auto advanceScores = [&advanceRound](rfcommon::GameMetaData* mdata, rfcommon::GameMetaData* prev) {
+    auto advanceScores = [&advanceRound](rfcommon::GameMetadata* mdata, rfcommon::GameMetadata* prev) {
         // Update score based on who won the previous game
         int p1 = prev->score().left();
         int p2 = prev->score().right();
@@ -939,13 +939,13 @@ void MetaDataEditWidget_Game::onNextGameStarted()
             mdata->setScore(rfcommon::ScoreCount::fromScore(p1, p2));
     };
 
-    rfcommon::MetaData* mdata = model_->metaData()[0];
-    rfcommon::MetaData* prev = model_->prevMetaData();
+    rfcommon::Metadata* mdata = model_->metadata()[0];
+    rfcommon::Metadata* prev = model_->prevMetadata();
 
     ignoreSelf_ = true;
-    switch (model_->prevMetaData()->type())
+    switch (model_->prevMetadata()->type())
     {
-        case rfcommon::MetaData::GAME: {
+        case rfcommon::Metadata::GAME: {
             if (mdata->type() == prev->type() &&
                 allTagsMatch(mdata, prev) &&
                 allFightersMatch(mdata, prev) &&
@@ -973,7 +973,7 @@ void MetaDataEditWidget_Game::onNextGameStarted()
             ui_->spinBox_roundNumber->setValue(mdata->asGame()->round().number().value());
         } break;
 
-        case rfcommon::MetaData::TRAINING: {
+        case rfcommon::Metadata::TRAINING: {
             if (mdata->type() == prev->type())
                 mdata->asTraining()->setSessionNumber(prev->asTraining()->sessionNumber() + 1);
         } break;
@@ -982,7 +982,7 @@ void MetaDataEditWidget_Game::onNextGameStarted()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
+void MetadataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType bracketType)
 {
     switch (bracketType.type())
     {
@@ -1033,28 +1033,28 @@ void MetaDataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType brack
     updateSize();
 }
 
-void MetaDataEditWidget_Game::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Game::onMetaDataTournamentDetailsChanged() {}
-void MetaDataEditWidget_Game::onMetaDataEventDetailsChanged()
+void MetadataEditWidget_Game::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetadataEditWidget_Game::onMetadataTournamentDetailsChanged() {}
+void MetadataEditWidget_Game::onMetadataEventDetailsChanged()
 {
     if (ignoreSelf_)
         return;
-    onAdoptMetaData(model_->mappingInfo(), model_->metaData());
+    onAdoptMetadata(model_->mappingInfo(), model_->metadata());
 }
-void MetaDataEditWidget_Game::onMetaDataCommentatorsChanged() {}
-void MetaDataEditWidget_Game::onMetaDataGameDetailsChanged()
+void MetadataEditWidget_Game::onMetadataCommentatorsChanged() {}
+void MetadataEditWidget_Game::onMetadataGameDetailsChanged()
 {
     if (ignoreSelf_)
         return;
-    onAdoptMetaData(model_->mappingInfo(), model_->metaData());
+    onAdoptMetadata(model_->mappingInfo(), model_->metadata());
 }
-void MetaDataEditWidget_Game::onMetaDataPlayerDetailsChanged()
+void MetadataEditWidget_Game::onMetadataPlayerDetailsChanged()
 {
     if (ignoreSelf_)
         return;
-    onAdoptMetaData(model_->mappingInfo(), model_->metaData());
+    onAdoptMetadata(model_->mappingInfo(), model_->metadata());
 }
-void MetaDataEditWidget_Game::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Game::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
+void MetadataEditWidget_Game::onMetadataWinnerChanged(int winnerPlayerIdx) {}
+void MetadataEditWidget_Game::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

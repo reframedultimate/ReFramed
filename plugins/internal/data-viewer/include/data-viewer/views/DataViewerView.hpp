@@ -30,11 +30,11 @@ private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-    void populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames);
+    void populateTree(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames);
     void populatePlayerDataTables();
 
 private:
-    void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames) override;
+    void onNewData(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames) override;
     void onClear() override;
     void onNewFrame() override;
 

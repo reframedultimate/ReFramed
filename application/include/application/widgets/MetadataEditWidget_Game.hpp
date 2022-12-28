@@ -1,28 +1,28 @@
 #pragma once
 
-#include "application/widgets/MetaDataEditWidget.hpp"
+#include "application/widgets/MetadataEditWidget.hpp"
 
 class QVBoxLayout;
 
 namespace Ui {
-    class MetaDataEditWidget_Game;
+    class MetadataEditWidget_Game;
 }
 
 namespace rfcommon {
-    class MetaData;
+    class Metadata;
 }
 
 namespace rfapp {
 
 class PlayerDetails;
 
-class MetaDataEditWidget_Game : public MetaDataEditWidget
+class MetadataEditWidget_Game : public MetadataEditWidget
 {
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget_Game(MetaDataEditModel* model, PlayerDetails* playerDetails, QWidget* parent=nullptr);
-    ~MetaDataEditWidget_Game();
+    explicit MetadataEditWidget_Game(MetadataEditModel* model, PlayerDetails* playerDetails, QWidget* parent=nullptr);
+    ~MetadataEditWidget_Game();
 
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
 
@@ -56,24 +56,24 @@ private:
     void enableGrandFinalOptions(bool enable);
 
 private:
-    void onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
-    void onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata) override;
-    void onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) override;
+    void onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata) override;
+    void onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata) override;
+    void onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata) override;
     void onNextGameStarted() override;
     void onBracketTypeChangedUI(rfcommon::BracketType bracketType) override;
 
-    void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
-    void onMetaDataTournamentDetailsChanged() override;
-    void onMetaDataEventDetailsChanged() override;
-    void onMetaDataCommentatorsChanged() override;
-    void onMetaDataGameDetailsChanged() override;
-    void onMetaDataPlayerDetailsChanged() override;
-    void onMetaDataWinnerChanged(int winnerPlayerIdx) override;
-    void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
+    void onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
+    void onMetadataTournamentDetailsChanged() override;
+    void onMetadataEventDetailsChanged() override;
+    void onMetadataCommentatorsChanged() override;
+    void onMetadataGameDetailsChanged() override;
+    void onMetadataPlayerDetailsChanged() override;
+    void onMetadataWinnerChanged(int winnerPlayerIdx) override;
+    void onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
 
 private:
     PlayerDetails* playerDetails_;
-    Ui::MetaDataEditWidget_Game* ui_;
+    Ui::MetadataEditWidget_Game* ui_;
     bool ignoreSelf_ = false;
 };
 

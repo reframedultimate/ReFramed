@@ -4,7 +4,7 @@
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/LastWindowsError.hpp"
 #include "rfcommon/Log.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"

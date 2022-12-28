@@ -2,15 +2,15 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/FighterID.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/SessionNumber.hpp"
 #include "rfcommon/Vector.hpp"
 
 namespace rfcommon {
 
-class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
+class RFCOMMON_PUBLIC_API TrainingMetadata : public Metadata
 {
-    TrainingMetaData(
+    TrainingMetadata(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -19,7 +19,7 @@ class RFCOMMON_PUBLIC_API TrainingMetaData : public MetaData
             SmallVector<String, 2>&& tags);
 
 public:
-    ~TrainingMetaData();
+    ~TrainingMetadata();
 
     Type type() const override final { return TRAINING; }
 
@@ -30,7 +30,7 @@ public:
     void setSessionNumber(SessionNumber sessionNumber);
 
 private:
-    friend class MetaData;
+    friend class Metadata;
 
     SessionNumber sessionNumber_;
 };

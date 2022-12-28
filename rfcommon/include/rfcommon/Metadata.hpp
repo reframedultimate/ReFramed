@@ -15,11 +15,11 @@
 
 namespace rfcommon {
 
-class MetaDataListener;
-class GameMetaData;
-class TrainingMetaData;
+class MetadataListener;
+class GameMetadata;
+class TrainingMetadata;
 
-class RFCOMMON_PUBLIC_API MetaData : public RefCounted
+class RFCOMMON_PUBLIC_API Metadata : public RefCounted
 {
 public:
     enum Type
@@ -29,7 +29,7 @@ public:
     };
 
 protected:
-    MetaData(
+    Metadata(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -39,7 +39,7 @@ protected:
 
 public:
     /*!
-     * \brief Constructs a new GameMetaData object from the specified
+     * \brief Constructs a new GameMetadata object from the specified
      * parameters.
      *
      * - RoundNumber is set to "Free Play" and 1.
@@ -47,25 +47,25 @@ public:
      * - SetFormat is set to "Freeplay"
      * - TimeStarted and TimeEnded are set to the current time
      */
-    static MetaData* newActiveGameSession(
+    static Metadata* newActiveGameSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
     /*!
-     * \brief Constructs a new TrainingMetaData object from the specified
+     * \brief Constructs a new TrainingMetadata object from the specified
      * parameters.
      *
      * - TimeStarted and TimeEnded are set to the current time
      */
-    static MetaData* newActiveTrainingSession(
+    static Metadata* newActiveTrainingSession(
             StageID stageID,
             SmallVector<FighterID, 2>&& fighterIDs,
             SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
-    static MetaData* newSavedGameSession(
+    static Metadata* newSavedGameSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -74,7 +74,7 @@ public:
             SmallVector<String, 2>&& tags,
             int winner);
 
-    static MetaData* newSavedTrainingSession(
+    static Metadata* newSavedTrainingSession(
             TimeStamp timeStarted,
             TimeStamp timeEnded,
             StageID stageID,
@@ -82,15 +82,15 @@ public:
             SmallVector<Costume, 2>&& costumes,
             SmallVector<String, 2>&& tags);
 
-    virtual ~MetaData();
+    virtual ~Metadata();
 
     virtual Type type() const = 0;
-    GameMetaData* asGame();
-    const GameMetaData* asGame() const;
-    TrainingMetaData* asTraining();
-    const TrainingMetaData* asTraining() const;
+    GameMetadata* asGame();
+    const GameMetadata* asGame() const;
+    TrainingMetadata* asTraining();
+    const TrainingMetadata* asTraining() const;
 
-    static MetaData* load(const void*, uint32_t size);
+    static Metadata* load(const void*, uint32_t size);
     uint32_t save(FILE* fp) const;
 
     /*!
@@ -173,7 +173,7 @@ public:
      */
     DeltaTime length() const;
 
-    ListenerDispatcher<MetaDataListener> dispatcher;
+    ListenerDispatcher<MetadataListener> dispatcher;
 
 protected:
     TimeStamp timeStarted_;

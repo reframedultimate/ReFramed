@@ -11,7 +11,7 @@ class XYPositionsPlotModel;
 
 namespace rfcommon {
     class FrameData;
-    class MetaData;
+    class Metadata;
     class Vec2;
 }
 

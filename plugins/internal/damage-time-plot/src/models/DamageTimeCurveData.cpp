@@ -1,15 +1,15 @@
 #include "damage-time-plot/models/DamageTimePlotModel.hpp"
 #include "damage-time-plot/models/DamageTimeCurveData.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------
-DamageTimeCurveData::DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::MetaData* metaData, rfcommon::FrameData* frameData, int fighterIdx)
+DamageTimeCurveData::DamageTimeCurveData(DamageTimePlotModel* model, rfcommon::Metadata* metadata, rfcommon::FrameData* frameData, int fighterIdx)
     : model_(model)
-    , metaData_(metaData)
+    , metadata_(metadata)
     , frameData_(frameData)
     , fighterIdx_(fighterIdx)
 {

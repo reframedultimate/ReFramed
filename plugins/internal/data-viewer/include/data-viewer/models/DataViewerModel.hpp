@@ -10,7 +10,7 @@ namespace rfcommon {
     class FrameData;
     class Hash40Strings;
     class MappingInfo;
-    class MetaData;
+    class Metadata;
     class Session;
     class UserMotionLabels;
     class VideoMeta;
@@ -39,14 +39,14 @@ public:
     void clearSession();
 
     rfcommon::MappingInfo* mappingInfo() const;
-    rfcommon::MetaData* metadata() const;
+    rfcommon::Metadata* metadata() const;
     rfcommon::VideoMeta* videoMetadata() const;
     rfcommon::FrameData* frameData() const;
 
     QAbstractTableModel* baseStatusIDModel() const;
     QAbstractTableModel* fighterIDModel() const;
     QAbstractTableModel* hitStatusIDModel() const;
-    QAbstractItemModel* metaDataModel() const;
+    QAbstractItemModel* metadataModel() const;
     QAbstractTableModel* videoMetadataModel() const;
     QAbstractTableModel* specificStatusIDModel() const;
     QAbstractTableModel* stageIDModel() const;
@@ -75,7 +75,7 @@ private:
     std::vector<std::unique_ptr<FighterStatesModel>> fighterStatesModels_;
 
     rfcommon::Reference<rfcommon::MappingInfo> mappingInfo_;
-    rfcommon::Reference<rfcommon::MetaData> metadata_;
+    rfcommon::Reference<rfcommon::Metadata> metadata_;
     rfcommon::Reference<rfcommon::VideoMeta> videoMetadata_;
     rfcommon::Reference<rfcommon::FrameData> frameData_;
 };

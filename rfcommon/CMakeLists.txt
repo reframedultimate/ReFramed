@@ -146,7 +146,7 @@ add_library (rfcommon SHARED
     "src/FrameData.cpp"
     "src/FrameIndex.cpp"
     "src/FramesLeft.cpp"
-    "src/GameMetaData.cpp"
+    "src/GameMetadata.cpp"
     "src/GameNumber.cpp"
     "src/hash40.cpp"
     "src/Hash40Strings.cpp"
@@ -161,7 +161,7 @@ add_library (rfcommon SHARED
     "src/MappingInfoStage.cpp"
     "src/MappingInfoStatus.cpp"
     "src/MemoryBuffer.cpp"
-    "src/MetaData.cpp"
+    "src/Metadata.cpp"
     "src/Plugin.cpp"
     $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler.cpp>
     $<$<BOOL:${RFCOMMON_PROFILER}>:src/Profiler_exportDOT.cpp>
@@ -175,7 +175,7 @@ add_library (rfcommon SHARED
     "src/SessionNumber.cpp"
     "src/StageID.cpp"
     "src/TimeStamp.cpp"
-    "src/TrainingMetaData.cpp"
+    "src/TrainingMetadata.cpp"
     "src/UserMotionLabels.cpp"
     "src/Vector.cpp"
     "src/Vec2.cpp"

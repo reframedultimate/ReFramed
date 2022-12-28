@@ -1,5 +1,5 @@
-#include "application/models/MetaDataEditModel.hpp"
-#include "application/widgets/MetaDataEditWidget.hpp"
+#include "application/models/MetadataEditModel.hpp"
+#include "application/widgets/MetadataEditWidget.hpp"
 
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
@@ -15,7 +15,7 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget::MetaDataEditWidget(MetaDataEditModel* model, QWidget* parent)
+MetadataEditWidget::MetadataEditWidget(MetadataEditModel* model, QWidget* parent)
     : QWidget(parent)
     , model_(model)
     , toggleButton_(new QToolButton)
@@ -72,38 +72,38 @@ MetaDataEditWidget::MetaDataEditWidget(MetaDataEditModel* model, QWidget* parent
      */
     collapsedHeight_ = sizeHint().height();
 
-    connect(toggleButton_, &QToolButton::clicked, this, &MetaDataEditWidget::onToggleButtonClicked);
+    connect(toggleButton_, &QToolButton::clicked, this, &MetadataEditWidget::onToggleButtonClicked);
 
     model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget::~MetaDataEditWidget()
+MetadataEditWidget::~MetadataEditWidget()
 {
     model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget::setTitle(const QString& title)
+void MetadataEditWidget::setTitle(const QString& title)
 {
     title_->setText(title);
 }
 
 // ----------------------------------------------------------------------------
-QWidget* MetaDataEditWidget::contentWidget()
+QWidget* MetadataEditWidget::contentWidget()
 {
     return contentArea_;
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget::setExpanded(bool expanded)
+void MetadataEditWidget::setExpanded(bool expanded)
 {
     toggleButton_->setChecked(expanded);
     onToggleButtonClicked(expanded);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget::updateSize()
+void MetadataEditWidget::updateSize()
 {
     // http://stackoverflow.com/questions/13942616/qt-resize-window-after-widget-remove
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -137,7 +137,7 @@ void MetaDataEditWidget::updateSize()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget::onToggleButtonClicked(bool checked)
+void MetadataEditWidget::onToggleButtonClicked(bool checked)
 {
     toggleButton_->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
     toggleAnimation_->setDirection(checked ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);

@@ -1,16 +1,16 @@
 #include "application/models/ActiveSessionManager.hpp"
-#include "application/models/MetaDataEditModel.hpp"
+#include "application/models/MetadataEditModel.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/PluginDockView.hpp"
 #include "application/widgets/CollapsibleSplitter.hpp"
-#include "application/widgets/MetaDataEditWidget_AutoAssociateVideo.hpp"
-#include "application/widgets/MetaDataEditWidget_Commentators.hpp"
-#include "application/widgets/MetaDataEditWidget_Event.hpp"
-#include "application/widgets/MetaDataEditWidget_Game.hpp"
-#include "application/widgets/MetaDataEditWidget_Tournament.hpp"
+#include "application/widgets/MetadataEditWidget_AutoAssociateVideo.hpp"
+#include "application/widgets/MetadataEditWidget_Commentators.hpp"
+#include "application/widgets/MetadataEditWidget_Event.hpp"
+#include "application/widgets/MetadataEditWidget_Game.hpp"
+#include "application/widgets/MetadataEditWidget_Tournament.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -41,31 +41,31 @@ ActiveSessionView::ActiveSessionView(
         QWidget* parent)
     : QWidget(parent)
     , activeSessionManager_(activeSessionManager)
-    , metaDataEditModel_(new MetaDataEditModel)
+    , metadataEditModel_(new MetadataEditModel)
 {
-    MetaDataEditWidget_AutoAssociateVideo* assocVideo = new MetaDataEditWidget_AutoAssociateVideo(metaDataEditModel_.get(), activeSessionManager_);
-    MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
-    MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
-    MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
-    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get(), playerDetails);
+    MetadataEditWidget_AutoAssociateVideo* assocVideo = new MetadataEditWidget_AutoAssociateVideo(metadataEditModel_.get(), activeSessionManager_);
+    MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
+    MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
+    MetadataEditWidget_Event* event = new MetadataEditWidget_Event(metadataEditModel_.get());
+    MetadataEditWidget_Game* game = new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails);
 
     event->setExpanded(true);
     game->setExpanded(true);
 
-    QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
-    metaDataEditLayout->addWidget(assocVideo);
-    metaDataEditLayout->addWidget(tournament);
-    metaDataEditLayout->addWidget(commentators);
-    metaDataEditLayout->addWidget(event);
-    metaDataEditLayout->addWidget(game);
-    metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    QVBoxLayout* metadataEditLayout = new QVBoxLayout;
+    metadataEditLayout->addWidget(assocVideo);
+    metadataEditLayout->addWidget(tournament);
+    metadataEditLayout->addWidget(commentators);
+    metadataEditLayout->addWidget(event);
+    metadataEditLayout->addWidget(game);
+    metadataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
-    QWidget* metaDataEditContents = new QWidget;
-    metaDataEditContents->setLayout(metaDataEditLayout);
+    QWidget* metadataEditContents = new QWidget;
+    metadataEditContents->setLayout(metadataEditLayout);
 
     scrollArea_ = new ScrollAreaWithSizeHint;
     scrollArea_->setWidgetResizable(true);
-    scrollArea_->setWidget(metaDataEditContents);
+    scrollArea_->setWidget(metadataEditContents);
 
     splitter_ = new CollapsibleSplitter(Qt::Horizontal);
     splitter_->addWidget(scrollArea_);
@@ -84,7 +84,7 @@ ActiveSessionView::ActiveSessionView(
 ActiveSessionView::~ActiveSessionView()
 {
     // Scroll area contains widgets that are registered as listeners to
-    // metaDataEditModel_. Have to delete them explicitly, otherwise the model
+    // metadataEditModel_. Have to delete them explicitly, otherwise the model
     // is deleted before the widgets are deleted.
     delete scrollArea_;
 
@@ -101,18 +101,18 @@ void ActiveSessionView::toggleSideBar()
 void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* game)
 {
     auto* map = game->tryGetMappingInfo();
-    auto* mdata = game->tryGetMetaData();
+    auto* mdata = game->tryGetMetadata();
     assert(map);
     assert(mdata);
 
-    metaDataEditModel_->setAndOverwrite({map}, {mdata});
-    metaDataEditModel_->startNextGame();
+    metadataEditModel_->setAndOverwrite({map}, {mdata});
+    metadataEditModel_->startNextGame();
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameEnded(rfcommon::Session* game)
 {
-    metaDataEditModel_->clear();
+    metadataEditModel_->clear();
 }
 
 // ----------------------------------------------------------------------------

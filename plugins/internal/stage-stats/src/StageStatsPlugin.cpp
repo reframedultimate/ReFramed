@@ -2,7 +2,7 @@
 #include "stage-stats/models/StageStatsModel.hpp"
 #include "stage-stats/views/StageStatsView.hpp"
 
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -52,9 +52,9 @@ void StageStatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int num
 {
     model_->clearStats();
     for (int i = 0; i != numGames; ++i)
-        if (auto mdata = games[i]->tryGetMetaData())
+        if (auto mdata = games[i]->tryGetMetadata())
             if (auto map = games[i]->tryGetMappingInfo())
-                if (mdata->type() == rfcommon::MetaData::GAME)
+                if (mdata->type() == rfcommon::Metadata::GAME)
                     model_->addSessionData(map, mdata->asGame());
     model_->notifyUpdated();
 }

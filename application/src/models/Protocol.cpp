@@ -7,7 +7,7 @@
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Session.hpp"
@@ -171,7 +171,7 @@ void Protocol::onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedProxy(rfcommon::MetaData* trainingMeta)
+void Protocol::onTrainingStartedProxy(rfcommon::Metadata* trainingMeta)
 {
     PROFILE(Protocol, onTrainingStartedProxy);
 
@@ -205,7 +205,7 @@ void Protocol::onTrainingStartedProxy(rfcommon::MetaData* trainingMeta)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingStartedActually(rfcommon::MetaData* trainingMeta)
+void Protocol::onTrainingStartedActually(rfcommon::Metadata* trainingMeta)
 {
     PROFILE(Protocol, onTrainingStartedActually);
 
@@ -221,7 +221,7 @@ void Protocol::onTrainingStartedActually(rfcommon::MetaData* trainingMeta)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onTrainingResumed(rfcommon::MetaData* trainingMeta)
+void Protocol::onTrainingResumed(rfcommon::Metadata* trainingMeta)
 {
     PROFILE(Protocol, onTrainingResumed);
 
@@ -260,7 +260,7 @@ void Protocol::onTrainingEndedActually()
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameStarted(rfcommon::MetaData* gameMeta)
+void Protocol::onGameStarted(rfcommon::Metadata* gameMeta)
 {
     PROFILE(Protocol, onGameStarted);
 
@@ -276,7 +276,7 @@ void Protocol::onGameStarted(rfcommon::MetaData* gameMeta)
 }
 
 // ----------------------------------------------------------------------------
-void Protocol::onGameResumed(rfcommon::MetaData* gameMeta)
+void Protocol::onGameResumed(rfcommon::Metadata* gameMeta)
 {
     PROFILE(Protocol, onGameResumed);
 
@@ -486,15 +486,15 @@ void Protocol::endSessionIfNecessary()
     if (activeSession_.isNull())
         return;
 
-    rfcommon::MetaData* meta = activeSession_->tryGetMetaData();
+    rfcommon::Metadata* meta = activeSession_->tryGetMetadata();
     assert(meta != nullptr);
 
     switch (meta->type())
     {
-        case rfcommon::MetaData::GAME:
+        case rfcommon::Metadata::GAME:
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolGameEnded, activeSession_);
             break;
-        case rfcommon::MetaData::TRAINING:
+        case rfcommon::Metadata::TRAINING:
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingEnded, activeSession_);
             break;
     }

@@ -1,8 +1,8 @@
-#include "application/models/MetaDataEditModel.hpp"
-#include "application/widgets/MetaDataEditWidget_Event.hpp"
+#include "application/models/MetadataEditModel.hpp"
+#include "application/widgets/MetadataEditWidget_Event.hpp"
 
 #include "rfcommon/BracketType.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -14,8 +14,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWidget* parent)
-    : MetaDataEditWidget(model, parent)
+MetadataEditWidget_Event::MetadataEditWidget_Event(MetadataEditModel* model, QWidget* parent)
+    : MetadataEditWidget(model, parent)
     , label_bracketURL_(new QLabel("Bracket URL:"))
     , lineEdit_bracketURL_(new QLineEdit)
     , lineEdit_otherBracketType_(new QLineEdit)
@@ -44,15 +44,15 @@ MetaDataEditWidget_Event::MetaDataEditWidget_Event(MetaDataEditModel* model, QWi
     contentWidget()->setLayout(layout);
     updateSize();
 
-    connect(bracketType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetaDataEditWidget_Event::onComboBoxBracketTypeChanged);
+    connect(bracketType, qOverload<int>(&QComboBox::currentIndexChanged), this, &MetadataEditWidget_Event::onComboBoxBracketTypeChanged);
 }
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Event::~MetaDataEditWidget_Event()
+MetadataEditWidget_Event::~MetadataEditWidget_Event()
 {}
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
+void MetadataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 {
     rfcommon::BracketType type = index == rfcommon::BracketType::OTHER ?
                 rfcommon::BracketType::makeOther(lineEdit_otherBracketType_->text().toUtf8().constData()) :
@@ -80,34 +80,34 @@ void MetaDataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
     lineEdit_otherBracketType_->setVisible(index == rfcommon::BracketType::OTHER);
     updateSize();
 
-    model_->dispatcher.dispatch(&MetaDataEditListener::onBracketTypeChangedUI, type);
+    model_->dispatcher.dispatch(&MetadataEditListener::onBracketTypeChangedUI, type);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Event::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Event::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onNextGameStarted()
+void MetadataEditWidget_Event::onNextGameStarted()
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Event::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) {}
-void MetaDataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
-void MetaDataEditWidget_Event::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Event::onMetaDataTournamentDetailsChanged() {}
-void MetaDataEditWidget_Event::onMetaDataEventDetailsChanged() {}
-void MetaDataEditWidget_Event::onMetaDataCommentatorsChanged() {}
-void MetaDataEditWidget_Event::onMetaDataGameDetailsChanged() {}
-void MetaDataEditWidget_Event::onMetaDataPlayerDetailsChanged() {}
-void MetaDataEditWidget_Event::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Event::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
+void MetadataEditWidget_Event::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata) {}
+void MetadataEditWidget_Event::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
+void MetadataEditWidget_Event::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetadataEditWidget_Event::onMetadataTournamentDetailsChanged() {}
+void MetadataEditWidget_Event::onMetadataEventDetailsChanged() {}
+void MetadataEditWidget_Event::onMetadataCommentatorsChanged() {}
+void MetadataEditWidget_Event::onMetadataGameDetailsChanged() {}
+void MetadataEditWidget_Event::onMetadataPlayerDetailsChanged() {}
+void MetadataEditWidget_Event::onMetadataWinnerChanged(int winnerPlayerIdx) {}
+void MetadataEditWidget_Event::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

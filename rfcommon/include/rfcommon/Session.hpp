@@ -8,7 +8,7 @@
 
 #define RFCOMMON_SESSION_SECTIONS_LIST \
     X(MappingInfo, 0x01)               \
-    X(MetaData, 0x02)                  \
+    X(Metadata, 0x02)                  \
     X(FrameData, 0x04)                 \
     X(VideoMeta, 0x08)                 \
     X(VideoEmbed, 0x10)
@@ -18,7 +18,7 @@ namespace rfcommon {
 class FilePathResolver;
 class MappedFile;
 class MappingInfo;
-class MetaData;
+class Metadata;
 class FrameData;
 class VideoMeta;
 class VideoEmbed;
@@ -29,7 +29,7 @@ class RFCOMMON_PUBLIC_API Session : public RefCounted, public FrameDataListener
             FilePathResolver* pathResolver,
             MappedFile* file,
             MappingInfo* mappingInfo,
-            MetaData* metaData,
+            Metadata* metadata,
             FrameData* frameData,
             VideoMeta* videoMeta,
             VideoEmbed* video);
@@ -49,8 +49,8 @@ public:
     ~Session();
 
     static Session* newModernSavedSession(FilePathResolver* pathResolver, MappedFile* file);
-    static Session* newLegacySavedSession(MappingInfo* mappingInfo, MetaData* metaData, FrameData* frameData);
-    static Session* newActiveSession(MappingInfo* globalMappingInfo, MetaData* metaData);
+    static Session* newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData);
+    static Session* newActiveSession(MappingInfo* globalMappingInfo, Metadata* metadata);
     static Session* load(FilePathResolver* pathResolver, const char* fileName, uint8_t loadFlags=Flags::None);
     bool save(const char* utf8_filename, uint8_t saveFlags=Flags::All);
     uint64_t save(FILE* fp, uint8_t saveFlags=Flags::All);
@@ -65,7 +65,7 @@ public:
      */
     MappingInfo* tryGetMappingInfo();
 
-    MetaData* tryGetMetaData();
+    Metadata* tryGetMetadata();
 
     FrameData* tryGetFrameData();
 
@@ -96,7 +96,7 @@ private:
     const FilePathResolver* pathResolver_;
     Reference<MappedFile> file_;
     Reference<MappingInfo> mappingInfo_;
-    Reference<MetaData> metaData_;
+    Reference<Metadata> metadata_;
     Reference<FrameData> frameData_;
     Reference<VideoMeta> videoMeta_;
     Reference<VideoEmbed> videoEmbed_;

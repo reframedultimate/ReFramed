@@ -10,7 +10,7 @@ namespace rfcommon {
 
 namespace rfapp {
 
-class MetaDataEditModel;
+class MetadataEditModel;
 class PlayerDetails;
 class ReplayManager;
 
@@ -29,7 +29,7 @@ private slots:
     void onSaveClicked();
 
 private:
-    std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
+    std::unique_ptr<MetadataEditModel> metadataEditModel_;
     ReplayManager* replayManager_;
     rfcommon::SmallVector<rfcommon::Reference<rfcommon::Session>, 1> loadedSessions_;
     QStringList loadedSessionFileNames_;

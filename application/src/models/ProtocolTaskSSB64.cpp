@@ -1,11 +1,11 @@
 #include "application/models/ProtocolTaskSSB64.hpp"
 
 #include "rfcommon/FighterID.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/hash40.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/StageID.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/time.h"
 
@@ -508,7 +508,7 @@ void ProtocolTaskSSB64::run()
                 log_->info("%d: Slot %d, Fighter %d, Costume %d, Tag \"%s\"", i, portMap[i], fighterIDs[i].value(), costumes[i].slot(), tags[i].cStr());
             log_->endDropdown();
 
-            emit gameStarted(rfcommon::MetaData::newActiveGameSession(
+            emit gameStarted(rfcommon::Metadata::newActiveGameSession(
                 stageID, std::move(fighterIDs), std::move(costumes), std::move(tags)
             ));
         }

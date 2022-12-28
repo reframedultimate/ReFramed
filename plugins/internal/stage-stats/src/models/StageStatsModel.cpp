@@ -1,7 +1,7 @@
 #include "stage-stats/listeners/StageStatsListener.hpp"
 #include "stage-stats/models/StageStatsModel.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/Profiler.hpp"
 
 // ----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ void StageStatsModel::clearStats()
 }
 
 // ----------------------------------------------------------------------------
-void StageStatsModel::addSessionData(rfcommon::MappingInfo* map, rfcommon::GameMetaData* mdata)
+void StageStatsModel::addSessionData(rfcommon::MappingInfo* map, rfcommon::GameMetadata* mdata)
 {
     stageNames_.insertIfNew(mdata->stageID(), map->stage.toName(mdata->stageID()));
 

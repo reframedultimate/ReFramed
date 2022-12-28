@@ -1,24 +1,24 @@
 #pragma once
 
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/MetadataListener.hpp"
 #include <QAbstractItemModel>
 
 namespace rfcommon {
-    class MetaData;
-    class GameMetaData;
-    class TrainingMetaData;
+    class Metadata;
+    class GameMetadata;
+    class TrainingMetadata;
     class MappingInfo;
 }
 
 class MetadataModel
         : public QAbstractItemModel
-        , public rfcommon::MetaDataListener
+        , public rfcommon::MetadataListener
 {
 public:
     ~MetadataModel();
 
-    void setMetaData(rfcommon::MappingInfo* mappingInfo, rfcommon::MetaData* metaData);
+    void setMetadata(rfcommon::MappingInfo* mappingInfo, rfcommon::Metadata* metadata);
 
     QModelIndex index(int row, int column, const QModelIndex& parent=QModelIndex()) const override;
     QModelIndex parent(const QModelIndex& index) const override;
@@ -28,22 +28,22 @@ public:
     QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override;
 
 private:
-    int gameRowCount(const rfcommon::GameMetaData* meta, const QModelIndex& parent) const;
-    int trainingRowCount(const rfcommon::TrainingMetaData* meta, const QModelIndex& parent) const;
-    QVariant gameData(const rfcommon::GameMetaData* meta, const QModelIndex& index, int role) const;
-    QVariant trainingData(const rfcommon::TrainingMetaData* meta, const QModelIndex& index, int role) const;
+    int gameRowCount(const rfcommon::GameMetadata* meta, const QModelIndex& parent) const;
+    int trainingRowCount(const rfcommon::TrainingMetadata* meta, const QModelIndex& parent) const;
+    QVariant gameData(const rfcommon::GameMetadata* meta, const QModelIndex& index, int role) const;
+    QVariant trainingData(const rfcommon::TrainingMetadata* meta, const QModelIndex& index, int role) const;
 
 private:
-    void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
-    void onMetaDataTournamentDetailsChanged() override;
-    void onMetaDataEventDetailsChanged() override;
-    void onMetaDataCommentatorsChanged() override;
-    void onMetaDataGameDetailsChanged() override;
-    void onMetaDataPlayerDetailsChanged() override;
-    void onMetaDataWinnerChanged(int winnerPlayerIdx) override;
-    void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
+    void onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
+    void onMetadataTournamentDetailsChanged() override;
+    void onMetadataEventDetailsChanged() override;
+    void onMetadataCommentatorsChanged() override;
+    void onMetadataGameDetailsChanged() override;
+    void onMetadataPlayerDetailsChanged() override;
+    void onMetadataWinnerChanged(int winnerPlayerIdx) override;
+    void onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
 
 private:
-    rfcommon::Reference<rfcommon::MetaData> meta_;
+    rfcommon::Reference<rfcommon::Metadata> meta_;
     rfcommon::Reference<rfcommon::MappingInfo> map_;
 };

@@ -1,7 +1,7 @@
 #include "ui_DataViewerView.h"
 #include "data-viewer/views/DataViewerView.hpp"
 #include "data-viewer/models/DataViewerModel.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include <QDateTime>
@@ -29,7 +29,7 @@ DataViewerView::DataViewerView(DataViewerModel* model, QWidget* parent)
     ui_->splitter->setStretchFactor(1, 1);
 
     ui_->tableView_baseStatusIDs->setModel(model_->baseStatusIDModel());
-    ui_->treeView_metadata->setModel(model_->metaDataModel());
+    ui_->treeView_metadata->setModel(model_->metadataModel());
     ui_->tableView_hitStatusIDs->setModel(model_->hitStatusIDModel());
     ui_->tableView_stageIDs->setModel(model_->stageIDModel());
     ui_->tableView_specificStatusIDs->setModel(model_->specificStatusIDModel());
@@ -52,7 +52,7 @@ DataViewerView::~DataViewerView()
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
+void DataViewerView::onNewData(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
 {
     PROFILE(DataViewerView, onNewData);
 
@@ -175,7 +175,7 @@ void DataViewerView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetI
 }
 
 // ----------------------------------------------------------------------------
-void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
+void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::VideoMeta* vmeta, rfcommon::FrameData* frames)
 {
     PROFILE(DataViewerView, populateTree);
 

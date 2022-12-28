@@ -1,7 +1,7 @@
-#include "application/models/MetaDataEditModel.hpp"
-#include "application/widgets/MetaDataEditWidget_Tournament.hpp"
+#include "application/models/MetadataEditModel.hpp"
+#include "application/widgets/MetadataEditWidget_Tournament.hpp"
 
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 
 #include <QFormLayout>
 #include <QLabel>
@@ -12,8 +12,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(MetaDataEditModel* model, QWidget* parent)
-    : MetaDataEditWidget(model, parent)
+MetadataEditWidget_Tournament::MetadataEditWidget_Tournament(MetadataEditModel* model, QWidget* parent)
+    : MetadataEditWidget(model, parent)
     , lineEdit_name_(new QLineEdit)
     , lineEdit_website_(new QLineEdit)
     , layout_TOs_(new QVBoxLayout)
@@ -44,28 +44,28 @@ MetaDataEditWidget_Tournament::MetaDataEditWidget_Tournament(MetaDataEditModel* 
 
     connect(lineEdit_name_, &QLineEdit::textChanged, [this](const QString& text) {
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
                 mdata->asGame()->setTournamentName(text.toUtf8().constData());
         ignoreSelf_ = false;
     });
     connect(lineEdit_website_, &QLineEdit::textChanged, [this](const QString& text){
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
                 mdata->asGame()->setTournamentWebsite(text.toUtf8().constData());
         ignoreSelf_ = false;
     });
-    connect(addTO, &QToolButton::released, this, &MetaDataEditWidget_Tournament::onAddTOReleased);
-    connect(addSponsor, &QToolButton::released, this, &MetaDataEditWidget_Tournament::onAddSponsorReleased);
+    connect(addTO, &QToolButton::released, this, &MetadataEditWidget_Tournament::onAddTOReleased);
+    connect(addSponsor, &QToolButton::released, this, &MetadataEditWidget_Tournament::onAddSponsorReleased);
 }
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_Tournament::~MetaDataEditWidget_Tournament()
+MetadataEditWidget_Tournament::~MetadataEditWidget_Tournament()
 {}
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& social, const QString& pronouns)
+void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& social, const QString& pronouns)
 {
     QToolButton* removeButton = new QToolButton;
     removeButton->setText("-");
@@ -107,8 +107,8 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
         int i = indexInLayout(gb);
 
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
                 mdata->asGame()->removeTournamentOrganizer(i);
         ignoreSelf_ = false;
 
@@ -130,10 +130,10 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
             gb->setTitle(text);
 
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetaData* m = mdata->asGame();
+                rfcommon::GameMetadata* m = mdata->asGame();
                 m->setTournamentOrganizer(i,
                         text.toUtf8().constData(),
                         m->tournamentOrganizerSocial(i).cStr(),
@@ -146,10 +146,10 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     connect(widgets.social, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
         int i = indexInLayout(gb);
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetaData* m = mdata->asGame();
+                rfcommon::GameMetadata* m = mdata->asGame();
                 m->setTournamentOrganizer(i,
                         m->tournamentOrganizerName(i).cStr(),
                         text.toUtf8().constData(),
@@ -162,10 +162,10 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     connect(widgets.pronouns, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
         int i = indexInLayout(gb);
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetaData* m = mdata->asGame();
+                rfcommon::GameMetadata* m = mdata->asGame();
                 m->setTournamentOrganizer(i,
                         m->tournamentOrganizerName(i).cStr(),
                         m->tournamentOrganizerSocial(i).cStr(),
@@ -176,7 +176,7 @@ void MetaDataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QString& website)
+void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QString& website)
 {
     QToolButton* removeButton = new QToolButton;
     removeButton->setText("-");
@@ -216,8 +216,8 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
         int i = indexInLayout(gb);
 
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
                 mdata->asGame()->removeSponsor(i);
         ignoreSelf_ = false;
 
@@ -239,10 +239,10 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
             gb->setTitle(text);
 
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetaData* m = mdata->asGame();
+                rfcommon::GameMetadata* m = mdata->asGame();
                 m->setSponsor(i,
                         text.toUtf8().constData(),
                         m->sponsorWebsite(i).cStr());
@@ -254,10 +254,10 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     connect(widgets.website, &QLineEdit::textChanged, [this, gb, indexInLayout](const QString& text) {
         int i = indexInLayout(gb);
         ignoreSelf_ = true;
-        for (auto& mdata : model_->metaData())
-            if (mdata->type() == rfcommon::MetaData::GAME)
+        for (auto& mdata : model_->metadata())
+            if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetaData* m = mdata->asGame();
+                rfcommon::GameMetadata* m = mdata->asGame();
                 m->setSponsor(i,
                         m->sponsorWebsite(i).cStr(),
                         text.toUtf8().constData());
@@ -267,11 +267,11 @@ void MetaDataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::onAddTOReleased()
+void MetadataEditWidget_Tournament::onAddTOReleased()
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->addTournamentOrganizer("", "", "he/him");
     ignoreSelf_ = false;
 
@@ -280,11 +280,11 @@ void MetaDataEditWidget_Tournament::onAddTOReleased()
 
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::onAddSponsorReleased()
+void MetadataEditWidget_Tournament::onAddSponsorReleased()
 {
     ignoreSelf_ = true;
-    for (auto& mdata : model_->metaData())
-        if (mdata->type() == rfcommon::MetaData::GAME)
+    for (auto& mdata : model_->metadata())
+        if (mdata->type() == rfcommon::Metadata::GAME)
             mdata->asGame()->addSponsor("", "");
     ignoreSelf_ = false;
 
@@ -292,7 +292,7 @@ void MetaDataEditWidget_Tournament::onAddSponsorReleased()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
     QString tournamentName, tournamentWebsite;
     QStringList organizerNames, organizerSocials, organizerPronouns;
@@ -303,8 +303,8 @@ void MetaDataEditWidget_Tournament::onAdoptMetaData(const MappingInfoList& map, 
     {
         switch (m->type())
         {
-            case rfcommon::MetaData::GAME: {
-                rfcommon::GameMetaData* g = m->asGame();
+            case rfcommon::Metadata::GAME: {
+                rfcommon::GameMetadata* g = m->asGame();
 
                 if (first)
                 {
@@ -360,7 +360,7 @@ void MetaDataEditWidget_Tournament::onAdoptMetaData(const MappingInfoList& map, 
                 }
             } break;
 
-            case rfcommon::MetaData::TRAINING:
+            case rfcommon::Metadata::TRAINING:
                 break;
         }
         first = false;
@@ -389,7 +389,7 @@ void MetaDataEditWidget_Tournament::onAdoptMetaData(const MappingInfoList& map, 
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_Tournament::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
     ignoreSelf_ = true;
 
@@ -397,8 +397,8 @@ void MetaDataEditWidget_Tournament::onOverwriteMetaData(const MappingInfoList& m
     {
         switch (m->type())
         {
-            case rfcommon::MetaData::GAME: {
-                rfcommon::GameMetaData* g = m->asGame();
+            case rfcommon::Metadata::GAME: {
+                rfcommon::GameMetadata* g = m->asGame();
 
                 g->setTournamentName(lineEdit_name_->text().toUtf8().constData());
                 g->setTournamentWebsite(lineEdit_website_->text().toUtf8().constData());
@@ -419,7 +419,7 @@ void MetaDataEditWidget_Tournament::onOverwriteMetaData(const MappingInfoList& m
                             sponsorWidgets_[i].website->text().toUtf8().constData());
             } break;
 
-            case rfcommon::MetaData::TRAINING:
+            case rfcommon::Metadata::TRAINING:
                 break;
         }
     }
@@ -428,22 +428,22 @@ void MetaDataEditWidget_Tournament::onOverwriteMetaData(const MappingInfoList& m
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_Tournament::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata) {}
-void MetaDataEditWidget_Tournament::onNextGameStarted(){}
+void MetadataEditWidget_Tournament::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata) {}
+void MetadataEditWidget_Tournament::onNextGameStarted(){}
 
-void MetaDataEditWidget_Tournament::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
-void MetaDataEditWidget_Tournament::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_Tournament::onMetaDataTournamentDetailsChanged()
+void MetadataEditWidget_Tournament::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
+void MetadataEditWidget_Tournament::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetadataEditWidget_Tournament::onMetadataTournamentDetailsChanged()
 {
     if (ignoreSelf_)
         return;
-    onAdoptMetaData(model_->mappingInfo(), model_->metaData());
+    onAdoptMetadata(model_->mappingInfo(), model_->metadata());
 }
-void MetaDataEditWidget_Tournament::onMetaDataEventDetailsChanged() {}
-void MetaDataEditWidget_Tournament::onMetaDataCommentatorsChanged() {}
-void MetaDataEditWidget_Tournament::onMetaDataGameDetailsChanged() {}
-void MetaDataEditWidget_Tournament::onMetaDataPlayerDetailsChanged() {}
-void MetaDataEditWidget_Tournament::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_Tournament::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
+void MetadataEditWidget_Tournament::onMetadataEventDetailsChanged() {}
+void MetadataEditWidget_Tournament::onMetadataCommentatorsChanged() {}
+void MetadataEditWidget_Tournament::onMetadataGameDetailsChanged() {}
+void MetadataEditWidget_Tournament::onMetadataPlayerDetailsChanged() {}
+void MetadataEditWidget_Tournament::onMetadataWinnerChanged(int winnerPlayerIdx) {}
+void MetadataEditWidget_Tournament::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

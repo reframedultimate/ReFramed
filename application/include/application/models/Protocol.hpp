@@ -11,7 +11,7 @@
 namespace rfcommon {
     class MappingInfo;
     class ProtocolListener;
-    class MetaData;
+    class Metadata;
     class Session;
 }
 
@@ -66,13 +66,13 @@ private slots:
     void onConnectionClosed();
 
     void onMappingInfoReceived(rfcommon::MappingInfo* mappingInfo);
-    void onTrainingStartedProxy(rfcommon::MetaData* trainingMeta);
-    void onTrainingStartedActually(rfcommon::MetaData* trainingMeta);
-    void onTrainingResumed(rfcommon::MetaData* trainingMeta);
+    void onTrainingStartedProxy(rfcommon::Metadata* trainingMeta);
+    void onTrainingStartedActually(rfcommon::Metadata* trainingMeta);
+    void onTrainingResumed(rfcommon::Metadata* trainingMeta);
     void onTrainingEndedProxy();
     void onTrainingEndedActually();
-    void onGameStarted(rfcommon::MetaData* gameMeta);
-    void onGameResumed(rfcommon::MetaData* gameMeta);
+    void onGameStarted(rfcommon::Metadata* gameMeta);
+    void onGameResumed(rfcommon::Metadata* gameMeta);
     void onGameEnded();
     void onFighterState(
             quint64 frameTimeStamp,

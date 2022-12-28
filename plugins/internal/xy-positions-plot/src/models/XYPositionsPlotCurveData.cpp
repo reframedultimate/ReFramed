@@ -1,7 +1,7 @@
 #include "xy-positions-plot/models/XYPositionsPlotModel.hpp"
 #include "xy-positions-plot/models/XYPositionsPlotCurveData.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/Profiler.hpp"

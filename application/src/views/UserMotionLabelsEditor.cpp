@@ -5,7 +5,7 @@
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
@@ -496,7 +496,7 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
     // Create sorted list of all fighters
     rfcommon::Vector<rfcommon::String> fighterNames;
     for (int i = 0; i != sessionCount; ++i)
-        if (const auto mdata = loadedSessions[i]->tryGetMetaData())
+        if (const auto mdata = loadedSessions[i]->tryGetMetadata())
             if (const auto map = loadedSessions[i]->tryGetMappingInfo())
                 for (int f = 0; f != mdata->fighterCount(); ++f)
                 {
@@ -514,7 +514,7 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
         comboBox_fighters->addItem(name.cStr());
 
     for (int i = 0; i != sessionCount; ++i)
-        if (const auto mdata = loadedSessions[i]->tryGetMetaData())
+        if (const auto mdata = loadedSessions[i]->tryGetMetadata())
             if (const auto fdata = loadedSessions[i]->tryGetFrameData())
                 for (int fighterIdx = 0; fighterIdx != fdata->fighterCount(); ++fighterIdx)
                     for (int frameIdx = 0; frameIdx != fdata->frameCount(); ++frameIdx)
@@ -524,7 +524,7 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
                     }
 
     auto model = static_cast<TableModel*>(tableModels_[rfcommon::UserMotionLabelsCategory::UNLABELED]);
-    if (const auto mdata = loadedSessions[0]->tryGetMetaData())
+    if (const auto mdata = loadedSessions[0]->tryGetMetadata())
         model->setFighter(mdata->playerFighterID(0));
 }
 

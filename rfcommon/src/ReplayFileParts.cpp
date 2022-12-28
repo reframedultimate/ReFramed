@@ -1,7 +1,7 @@
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/ReplayFileParts.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
 #include <cctype>
 #include <ctime>
 
@@ -375,7 +375,7 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 }
 
 // ----------------------------------------------------------------------------
-ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
+ReplayFileParts ReplayFileParts::fromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata)
 {
     ReplayFileParts parts("", {}, {}, "", "", "",
             BracketType::makeOther(""),
@@ -384,12 +384,12 @@ ReplayFileParts ReplayFileParts::fromMetaData(const rfcommon::MappingInfo* map, 
             ScoreCount::fromScore(0, 0),
             0x00);
 
-    parts.updateFromMetaData(map, mdata);
+    parts.updateFromMetadata(map, mdata);
     return parts;
 }
 
 // ----------------------------------------------------------------------------
-void ReplayFileParts::updateFromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata)
+void ReplayFileParts::updateFromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata)
 {
     const auto stampMs = mdata->timeStarted().millisSinceEpoch();
     std::time_t t = (std::time_t)(stampMs / 1000);
@@ -401,7 +401,7 @@ void ReplayFileParts::updateFromMetaData(const rfcommon::MappingInfo* map, const
 
     switch (mdata->type())
     {
-        case MetaData::TRAINING: {
+        case Metadata::TRAINING: {
             playerNames_ = { mdata->playerTag(0), "CPU" };
             fighterNames_ = { map->fighter.toName(mdata->playerFighterID(0)), map->fighter.toName(mdata->playerFighterID(1)) };
             date_ = date;
@@ -412,7 +412,7 @@ void ReplayFileParts::updateFromMetaData(const rfcommon::MappingInfo* map, const
             format_ = SetFormat::fromDescription("Training");
         } break;
 
-        case MetaData::GAME: {
+        case Metadata::GAME: {
             auto gdata = mdata->asGame();
 
             playerNames_.clear();

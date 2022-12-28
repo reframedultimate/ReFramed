@@ -1,13 +1,13 @@
-#include "application/models/MetaDataEditModel.hpp"
+#include "application/models/MetadataEditModel.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/widgets/MetaDataEditWidget_Commentators.hpp"
-#include "application/widgets/MetaDataEditWidget_Event.hpp"
-#include "application/widgets/MetaDataEditWidget_Game.hpp"
-#include "application/widgets/MetaDataEditWidget_Tournament.hpp"
+#include "application/widgets/MetadataEditWidget_Commentators.hpp"
+#include "application/widgets/MetadataEditWidget_Event.hpp"
+#include "application/widgets/MetadataEditWidget_Game.hpp"
+#include "application/widgets/MetadataEditWidget_Tournament.hpp"
 #include "application/views/ReplayEditorDialog.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -29,34 +29,34 @@ ReplayEditorDialog::ReplayEditorDialog(
         const QStringList& replayFileNames,
         QWidget* parent)
     : QDialog(parent)
-    , metaDataEditModel_(new MetaDataEditModel)
+    , metadataEditModel_(new MetadataEditModel)
     , replayManager_(replayManager)
 {
-    setWindowTitle("Edit Replay Meta Data");
+    setWindowTitle("Edit Replay Meta data");
 
-    MetaDataEditWidget_Tournament* tournament = new MetaDataEditWidget_Tournament(metaDataEditModel_.get());
-    MetaDataEditWidget_Commentators* commentators = new MetaDataEditWidget_Commentators(metaDataEditModel_.get());
-    MetaDataEditWidget_Event* event = new MetaDataEditWidget_Event(metaDataEditModel_.get());
-    MetaDataEditWidget_Game* game = new MetaDataEditWidget_Game(metaDataEditModel_.get(), playerDetails);
+    MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
+    MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
+    MetadataEditWidget_Event* event = new MetadataEditWidget_Event(metadataEditModel_.get());
+    MetadataEditWidget_Game* game = new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails);
 
     tournament->setExpanded(true);
     commentators->setExpanded(true);
     event->setExpanded(true);
     game->setExpanded(true);
 
-    QVBoxLayout* metaDataEditLayout = new QVBoxLayout;
-    metaDataEditLayout->addWidget(tournament);
-    metaDataEditLayout->addWidget(commentators);
-    metaDataEditLayout->addWidget(event);
-    metaDataEditLayout->addWidget(game);
-    metaDataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    QVBoxLayout* metadataEditLayout = new QVBoxLayout;
+    metadataEditLayout->addWidget(tournament);
+    metadataEditLayout->addWidget(commentators);
+    metadataEditLayout->addWidget(event);
+    metadataEditLayout->addWidget(game);
+    metadataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
-    QWidget* metaDataEditContents = new QWidget;
-    metaDataEditContents->setLayout(metaDataEditLayout);
+    QWidget* metadataEditContents = new QWidget;
+    metadataEditContents->setLayout(metadataEditLayout);
 
     QScrollArea* scrollArea = new QScrollArea;
     scrollArea->setWidgetResizable(true);
-    scrollArea->setWidget(metaDataEditContents);
+    scrollArea->setWidget(metadataEditContents);
 
     QPushButton* saveButton = new QPushButton("Save");
     QPushButton* cancelButton = new QPushButton("Cancel");
@@ -71,8 +71,8 @@ ReplayEditorDialog::ReplayEditorDialog(
     l->addLayout(saveCancelLayout);
     setLayout(l);
 
-    MetaDataEditModel::MappingInfoList mappingInfo;
-    MetaDataEditModel::MetaDataList metaData;
+    MetadataEditModel::MappingInfoList mappingInfo;
+    MetadataEditModel::MetadataList metadata;
     for (const auto& fileName : replayFileNames)
     {
         auto filePathUtf8 = replayManager_->resolveGameFile(fileName.toUtf8().constData());
@@ -92,7 +92,7 @@ ReplayEditorDialog::ReplayEditorDialog(
         }
 
         auto map = session->tryGetMappingInfo();
-        auto mdata = session->tryGetMetaData();
+        auto mdata = session->tryGetMetadata();
         if (map == nullptr || mdata == nullptr)
         {
             if (QMessageBox::question(this,
@@ -108,7 +108,7 @@ ReplayEditorDialog::ReplayEditorDialog(
         }
 
         mappingInfo.push(map);
-        metaData.push(mdata);
+        metadata.push(mdata);
         loadedSessions_.push(session);
         loadedSessionFileNames_.push_back(fileName);
     }
@@ -122,7 +122,7 @@ ReplayEditorDialog::ReplayEditorDialog(
         return;
     }
 
-    metaDataEditModel_->setAndAdopt(std::move(mappingInfo), std::move(metaData));
+    metadataEditModel_->setAndAdopt(std::move(mappingInfo), std::move(metadata));
 
     connect(saveButton, &QPushButton::released, this, &ReplayEditorDialog::onSaveClicked);
     connect(cancelButton, &QPushButton::released, this, &ReplayEditorDialog::close);
@@ -131,7 +131,7 @@ ReplayEditorDialog::ReplayEditorDialog(
 // ----------------------------------------------------------------------------
 ReplayEditorDialog::~ReplayEditorDialog()
 {
-    // We have to make sure that the UI elements registered to the metaDataEditModel_
+    // We have to make sure that the UI elements registered to the metadataEditModel_
     // get deleted before the model itself is deleted
     delete layout()->itemAt(0)->widget();  // this is the scroll area widget
 }

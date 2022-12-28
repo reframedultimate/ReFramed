@@ -10,7 +10,7 @@
 namespace rfcommon {
 
 class MappingInfo;
-class MetaData;
+class Metadata;
 
 class RFCOMMON_PUBLIC_API ReplayFileParts
 {
@@ -30,8 +30,8 @@ public:
     ~ReplayFileParts();
 
     static ReplayFileParts fromFileName(const char* fileName);
-    static ReplayFileParts fromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata);
-    void updateFromMetaData(const rfcommon::MappingInfo* map, const rfcommon::MetaData* mdata);
+    static ReplayFileParts fromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata);
+    void updateFromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata);
     String toFileName() const;
 
     /*!

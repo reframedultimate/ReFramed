@@ -1,7 +1,7 @@
-#include "rfcommon/MetaData.hpp"
-#include "rfcommon/GameMetaData.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
-#include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/Metadata.hpp"
+#include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
+#include "rfcommon/MetadataListener.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/time.h"
 #include "nlohmann/json.hpp"
@@ -10,23 +10,23 @@ namespace rfcommon {
 
 using nlohmann::json;
 
-static MetaData* load_1_5(json& j);
-static MetaData* load_1_6(json& j);
-static MetaData* load_1_7(json& j);
+static Metadata* load_1_5(json& j);
+static Metadata* load_1_6(json& j);
+static Metadata* load_1_7(json& j);
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::newActiveGameSession(
+Metadata* Metadata::newActiveGameSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
-    PROFILE(MetaData, newActiveGameSession);
+    PROFILE(Metadata, newActiveGameSession);
 
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
-    return new GameMetaData(
+    return new GameMetadata(
             now, now,  // Start, end
             stageID,
             std::move(fighterIDs),
@@ -36,18 +36,18 @@ MetaData* MetaData::newActiveGameSession(
 }
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::newActiveTrainingSession(
+Metadata* Metadata::newActiveTrainingSession(
         StageID stageID,
         SmallVector<FighterID, 2>&& fighterIDs,
         SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
-    PROFILE(MetaData, newActiveTrainingSession);
+    PROFILE(Metadata, newActiveTrainingSession);
 
     const auto now = TimeStamp::fromMillisSinceEpoch(
         time_milli_seconds_since_epoch());
 
-    return new TrainingMetaData(
+    return new TrainingMetadata(
             now, now,  // start, end
             stageID,
             std::move(fighterIDs),
@@ -56,7 +56,7 @@ MetaData* MetaData::newActiveTrainingSession(
 }
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::newSavedGameSession(
+Metadata* Metadata::newSavedGameSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
@@ -65,9 +65,9 @@ MetaData* MetaData::newSavedGameSession(
         SmallVector<String, 2>&& tags,
         int winner)
 {
-    PROFILE(MetaData, newSavedGameSession);
+    PROFILE(Metadata, newSavedGameSession);
 
-    return new GameMetaData(
+    return new GameMetadata(
         timeStarted,
         timeEnded,
         stageID,
@@ -78,7 +78,7 @@ MetaData* MetaData::newSavedGameSession(
 }
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::newSavedTrainingSession(
+Metadata* Metadata::newSavedTrainingSession(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
@@ -86,9 +86,9 @@ MetaData* MetaData::newSavedTrainingSession(
         SmallVector<Costume, 2>&& costumes,
         SmallVector<String, 2>&& tags)
 {
-    PROFILE(MetaData, newSavedTrainingSession);
+    PROFILE(Metadata, newSavedTrainingSession);
 
-    return new TrainingMetaData(
+    return new TrainingMetadata(
         timeStarted,
         timeEnded,
         stageID,
@@ -98,7 +98,7 @@ MetaData* MetaData::newSavedTrainingSession(
 }
 
 // ----------------------------------------------------------------------------
-MetaData::MetaData(
+Metadata::Metadata(
         TimeStamp timeStarted,
         TimeStamp timeEnded,
         StageID stageID,
@@ -115,41 +115,41 @@ MetaData::MetaData(
 }
 
 // ----------------------------------------------------------------------------
-MetaData::~MetaData()
+Metadata::~Metadata()
 {}
 
 // ----------------------------------------------------------------------------
-GameMetaData* MetaData::asGame()
+GameMetadata* Metadata::asGame()
 {
     assert(type() == GAME);
-    return static_cast<GameMetaData*>(this);
+    return static_cast<GameMetadata*>(this);
 }
 
 // ----------------------------------------------------------------------------
-const GameMetaData* MetaData::asGame() const
+const GameMetadata* Metadata::asGame() const
 {
     assert(type() == GAME);
-    return static_cast<const GameMetaData*>(this);
+    return static_cast<const GameMetadata*>(this);
 }
 
 // ----------------------------------------------------------------------------
-TrainingMetaData* MetaData::asTraining()
+TrainingMetadata* Metadata::asTraining()
 {
     assert(type() == TRAINING);
-    return static_cast<TrainingMetaData*>(this);
+    return static_cast<TrainingMetadata*>(this);
 }
 
 // ----------------------------------------------------------------------------
-const TrainingMetaData* MetaData::asTraining() const
+const TrainingMetadata* Metadata::asTraining() const
 {
     assert(type() == TRAINING);
-    return static_cast<const TrainingMetaData*>(this);
+    return static_cast<const TrainingMetadata*>(this);
 }
 
 // ----------------------------------------------------------------------------
-MetaData* MetaData::load(const void* data, uint32_t size)
+Metadata* Metadata::load(const void* data, uint32_t size)
 {
-    PROFILE(MetaData, load);
+    PROFILE(Metadata, load);
 
     // Parse
     const unsigned char* const begin = static_cast<const unsigned char*>(data);
@@ -168,9 +168,9 @@ MetaData* MetaData::load(const void* data, uint32_t size)
     // unsupported version
     return nullptr;
 }
-static MetaData* load_1_5(json& j)
+static Metadata* load_1_5(json& j)
 {
-    PROFILE(MetaDataGlobal, load_1_5);
+    PROFILE(MetadataGlobal, load_1_5);
 
     json jPlayerInfo = j["playerinfo"];
     json jGameInfo = j["gameinfo"];
@@ -213,7 +213,7 @@ static MetaData* load_1_5(json& j)
         if (winner > fighterCount)
             winner = -1;
 
-        GameMetaData* g = MetaData::newSavedGameSession(
+        GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted, timeEnded,
             stageID,
             std::move(fighterIDs),
@@ -250,7 +250,7 @@ static MetaData* load_1_5(json& j)
     }
     if (type == "training")
     {
-        TrainingMetaData* t = MetaData::newSavedTrainingSession(
+        TrainingMetadata* t = Metadata::newSavedTrainingSession(
             timeStarted,
             timeEnded,
             stageID,
@@ -267,9 +267,9 @@ static MetaData* load_1_5(json& j)
 
     return nullptr;
 }
-static MetaData* load_1_6(json& j)
+static Metadata* load_1_6(json& j)
 {
-    PROFILE(MetaDataGlobal, load_1_6);
+    PROFILE(MetadataGlobal, load_1_6);
 
     json jPlayerInfo = j["playerinfo"];
     json jGameInfo = j["gameinfo"];
@@ -312,7 +312,7 @@ static MetaData* load_1_6(json& j)
         if (winner > fighterCount)
             winner = -1;
 
-        GameMetaData* g = MetaData::newSavedGameSession(
+        GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted,
             timeEnded,
             stageID,
@@ -393,7 +393,7 @@ static MetaData* load_1_6(json& j)
     }
     if (type == "training")
     {
-        TrainingMetaData* t = MetaData::newSavedTrainingSession(
+        TrainingMetadata* t = Metadata::newSavedTrainingSession(
             timeStarted,
             timeEnded,
             stageID,
@@ -410,9 +410,9 @@ static MetaData* load_1_6(json& j)
 
     return nullptr;
 }
-static MetaData* load_1_7(json& j)
+static Metadata* load_1_7(json& j)
 {
-    PROFILE(MetaDataGlobal, load_1_7);
+    PROFILE(MetadataGlobal, load_1_7);
 
     json jType = j["type"];
     json jPlayerInfo = j["playerinfo"];
@@ -458,7 +458,7 @@ static MetaData* load_1_7(json& j)
         if (winner > fighterCount)
             winner = -1;
 
-        GameMetaData* g = MetaData::newSavedGameSession(
+        GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted,
             timeEnded,
             stageID,
@@ -585,7 +585,7 @@ static MetaData* load_1_7(json& j)
     }
     if (type == "training")
     {
-        TrainingMetaData* t = MetaData::newSavedTrainingSession(
+        TrainingMetadata* t = Metadata::newSavedTrainingSession(
             timeStarted,
             timeEnded,
             stageID,
@@ -604,9 +604,9 @@ static MetaData* load_1_7(json& j)
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MetaData::save(FILE* fp) const
+uint32_t Metadata::save(FILE* fp) const
 {
-    PROFILE(MetaData, save);
+    PROFILE(Metadata, save);
 
     json jPlayerInfo = json::array();
     for (int i = 0; i != fighterCount(); ++i)
@@ -655,11 +655,11 @@ uint32_t MetaData::save(FILE* fp) const
         } break;
     }
 
-    auto sessionTypeToString = [](rfcommon::MetaData::Type type) -> const char* {
+    auto sessionTypeToString = [](rfcommon::Metadata::Type type) -> const char* {
         switch (type)
         {
-            case rfcommon::MetaData::GAME: return "game";
-            case rfcommon::MetaData::TRAINING: return "training";
+            case rfcommon::Metadata::GAME: return "game";
+            case rfcommon::Metadata::TRAINING: return "training";
         }
         return "";
     };
@@ -745,29 +745,29 @@ uint32_t MetaData::save(FILE* fp) const
 }
 
 // ----------------------------------------------------------------------------
-void MetaData::setTimeStarted(TimeStamp timeStamp)
+void Metadata::setTimeStarted(TimeStamp timeStamp)
 {
-    PROFILE(MetaData, setTimeStarted);
+    PROFILE(Metadata, setTimeStarted);
 
     bool notify = (timeStarted_ == timeStamp);
     timeStarted_ = timeStamp;
     if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeChanged, timeStamp, timeEnded_);
+        dispatcher.dispatch(&MetadataListener::onMetadataTimeChanged, timeStamp, timeEnded_);
 }
 
 // ----------------------------------------------------------------------------
-void MetaData::setTimeEnded(TimeStamp timeStamp)
+void Metadata::setTimeEnded(TimeStamp timeStamp)
 {
-    PROFILE(MetaData, setTimeEnded);
+    PROFILE(Metadata, setTimeEnded);
 
     bool notify = (timeEnded_ == timeStamp);
     timeEnded_ = timeStamp;
     if (notify)
-        dispatcher.dispatch(&MetaDataListener::onMetaDataTimeChanged, timeStarted_, timeStamp);
+        dispatcher.dispatch(&MetadataListener::onMetadataTimeChanged, timeStarted_, timeStamp);
 }
 
 // ----------------------------------------------------------------------------
-DeltaTime MetaData::length() const
+DeltaTime Metadata::length() const
 {
     NOPROFILE();
 

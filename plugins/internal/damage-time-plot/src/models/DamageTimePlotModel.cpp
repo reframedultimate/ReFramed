@@ -5,7 +5,7 @@
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "qwt_series_data.h"
 
@@ -25,7 +25,7 @@ void DamageTimePlotModel::addSession(rfcommon::Session* session)
     PROFILE(DamageTimePlotModel, addSession);
 
     rfcommon::FrameData* frameData = session->tryGetFrameData();
-    rfcommon::MetaData* metaData = session->tryGetMetaData();
+    rfcommon::Metadata* metadata = session->tryGetMetadata();
     if (frameData == nullptr)
         return;  // No frame data, no point
 
@@ -64,7 +64,7 @@ DamageTimeCurveData* DamageTimePlotModel::newCurveData(int sessionIdx, int fight
 {
     PROFILE(DamageTimePlotModel, newCurveData);
 
-    return new DamageTimeCurveData(this, sessions_[sessionIdx]->tryGetMetaData(), sessions_[sessionIdx]->tryGetFrameData(), fighterIdx);
+    return new DamageTimeCurveData(this, sessions_[sessionIdx]->tryGetMetadata(), sessions_[sessionIdx]->tryGetFrameData(), fighterIdx);
 }
 
 // ----------------------------------------------------------------------------

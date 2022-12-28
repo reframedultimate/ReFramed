@@ -2,7 +2,7 @@
 
 #include "stats/listeners/SettingsListener.hpp"
 #include "rfcommon/FrameDataListener.hpp"
-#include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/MetadataListener.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Reference.hpp"
@@ -12,7 +12,7 @@ namespace rfcommon {
     class FrameData;
     class Hash40Strings;
     class MappingInfo;
-    class MetaData;
+    class Metadata;
     class UserMotionLabels;
 }
 

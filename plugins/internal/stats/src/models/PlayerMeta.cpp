@@ -2,7 +2,7 @@
 #include "stats/models/PlayerMeta.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
 // ----------------------------------------------------------------------------
@@ -23,9 +23,9 @@ PlayerMeta::~PlayerMeta()
 }
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::setMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata)
+void PlayerMeta::setMetadata(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata)
 {
-    clearMetaData();
+    clearMetadata();
 
     map_ = map;
     mdata_ = mdata;
@@ -35,7 +35,7 @@ void PlayerMeta::setMetaData(rfcommon::MappingInfo* map, rfcommon::MetaData* mda
 }
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::clearMetaData()
+void PlayerMeta::clearMetadata()
 {
     if (mdata_)
         mdata_->dispatcher.removeListener(this);
@@ -45,11 +45,11 @@ void PlayerMeta::clearMetaData()
 }
 
 // ----------------------------------------------------------------------------
-rfcommon::GameMetaData* PlayerMeta::latestMetaData() const
+rfcommon::GameMetadata* PlayerMeta::latestMetadata() const
 {
     if (mdata_.isNull())
         return nullptr;
-    if (mdata_->type() != rfcommon::MetaData::GAME)
+    if (mdata_->type() != rfcommon::Metadata::GAME)
         return nullptr;
     return mdata_->asGame();
 }
@@ -105,17 +105,17 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 }
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
-void PlayerMeta::onMetaDataTournamentDetailsChanged() {}
-void PlayerMeta::onMetaDataEventDetailsChanged() {}
-void PlayerMeta::onMetaDataCommentatorsChanged() {}
-void PlayerMeta::onMetaDataGameDetailsChanged() {}
-void PlayerMeta::onMetaDataPlayerDetailsChanged()
+void PlayerMeta::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void PlayerMeta::onMetadataTournamentDetailsChanged() {}
+void PlayerMeta::onMetadataEventDetailsChanged() {}
+void PlayerMeta::onMetadataCommentatorsChanged() {}
+void PlayerMeta::onMetadataGameDetailsChanged() {}
+void PlayerMeta::onMetadataPlayerDetailsChanged()
 {
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
-void PlayerMeta::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void PlayerMeta::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
+void PlayerMeta::onMetadataWinnerChanged(int winnerPlayerIdx) {}
+void PlayerMeta::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 // ----------------------------------------------------------------------------
 void PlayerMeta::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }

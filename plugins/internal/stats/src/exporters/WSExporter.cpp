@@ -5,7 +5,7 @@
 #include "stats/models/WebSocketServer.hpp"
 #include "stats/util/StatsFormatter.hpp"
 
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -61,8 +61,8 @@ void WSExporter::writeJSON(bool gameStarted, bool gameEnded) const
         jStatValues += jPlayerValues;
     }
 
-    auto mdata = playerMeta_->latestMetaData();
-    QJsonObject jMetaData = mdata ? QJsonObject({
+    auto mdata = playerMeta_->latestMetadata();
+    QJsonObject jMetadata = mdata ? QJsonObject({
         {"started", qint64(mdata->timeStarted().millisSinceEpoch())},
         {"ended", qint64(mdata->timeEnded().millisSinceEpoch())},
         {"gamenumber", mdata->score().gameNumber().value()},
@@ -78,7 +78,7 @@ void WSExporter::writeJSON(bool gameStarted, bool gameEnded) const
 
     QJsonObject jStats = {
         {"version", "1.0"},
-        {"metadata", jMetaData},
+        {"metadata", jMetadata},
         {"players", jPlayers},
         {"names", jStatNames},
         {"values", jStatValues},

@@ -15,7 +15,7 @@ namespace rfapp {
 
 class ActiveSessionManager;
 class CollapsibleSplitter;
-class MetaDataEditModel;
+class MetadataEditModel;
 class PlayerDetails;
 class PluginManager;
 class Protocol;
@@ -43,7 +43,7 @@ private:
 
 private:
     ActiveSessionManager* activeSessionManager_;
-    std::unique_ptr<MetaDataEditModel> metaDataEditModel_;
+    std::unique_ptr<MetadataEditModel> metadataEditModel_;
     QScrollArea* scrollArea_;
     CollapsibleSplitter* splitter_;
     int size0_, size1_;

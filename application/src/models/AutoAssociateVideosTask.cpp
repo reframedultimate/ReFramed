@@ -4,7 +4,7 @@
 #include "rfcommon/DeltaTime.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
@@ -78,7 +78,7 @@ void AutoAssociateVideoTask::run()
     auto videoInterface = videoPlugin_->videoPlayerInterface();
 
     rfcommon::Reference<rfcommon::MappedFile> file = new rfcommon::MappedFile;
-    auto gameStarted = session_->tryGetMetaData()->timeStarted();
+    auto gameStarted = session_->tryGetMetadata()->timeStarted();
 
     QDir dir(vidDir_);
     for (const auto& fileName : dir.entryList(QDir::Files))

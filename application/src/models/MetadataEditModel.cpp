@@ -1,17 +1,17 @@
-#include "application/models/MetaDataEditModel.hpp"
-#include "application/listeners/MetaDataEditListener.hpp"
+#include "application/models/MetadataEditModel.hpp"
+#include "application/listeners/MetadataEditListener.hpp"
 
 #include "rfcommon/MappingInfo.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditModel::MetaDataEditModel()
+MetadataEditModel::MetadataEditModel()
 {}
 
 // ----------------------------------------------------------------------------
-MetaDataEditModel::~MetaDataEditModel()
+MetadataEditModel::~MetadataEditModel()
 {
     if (mdata_.count())
         for (auto& m : mdata_)
@@ -19,7 +19,7 @@ MetaDataEditModel::~MetaDataEditModel()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndAdopt(MappingInfoList&& map, MetaDataList&& mdata)
+void MetadataEditModel::setAndAdopt(MappingInfoList&& map, MetadataList&& mdata)
 {
     clear();
 
@@ -28,11 +28,11 @@ void MetaDataEditModel::setAndAdopt(MappingInfoList&& map, MetaDataList&& mdata)
     for (auto& m : mdata_)
         m->dispatcher.addListener(this);
 
-    dispatcher.dispatch(&MetaDataEditListener::onAdoptMetaData, map, mdata);
+    dispatcher.dispatch(&MetadataEditListener::onAdoptMetadata, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::setAndOverwrite(MappingInfoList&& map, MetaDataList&& mdata)
+void MetadataEditModel::setAndOverwrite(MappingInfoList&& map, MetadataList&& mdata)
 {
     clear();
 
@@ -41,16 +41,16 @@ void MetaDataEditModel::setAndOverwrite(MappingInfoList&& map, MetaDataList&& md
     for (auto& m : mdata_)
         m->dispatcher.addListener(this);
 
-    dispatcher.dispatch(&MetaDataEditListener::onOverwriteMetaData, map, mdata);
+    dispatcher.dispatch(&MetadataEditListener::onOverwriteMetadata, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::clear()
+void MetadataEditModel::clear()
 {
     if (mdata_.count() == 0)
         return;
 
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataCleared, map_, mdata_);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataCleared, map_, mdata_);
 
     if (mdata_.count() == 1)
         prevMdata_ = mdata_[0];
@@ -64,7 +64,7 @@ void MetaDataEditModel::clear()
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::startNextGame()
+void MetadataEditModel::startNextGame()
 {
     if (prevMdata_.isNull())
         return;
@@ -77,55 +77,55 @@ void MetaDataEditModel::startNextGame()
         return;
     }
 
-    dispatcher.dispatch(&MetaDataEditListener::onNextGameStarted);
+    dispatcher.dispatch(&MetadataEditListener::onNextGameStarted);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded)
+void MetadataEditModel::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded)
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataTimeChanged, timeStarted, timeEnded);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataTimeChanged, timeStarted, timeEnded);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataTournamentDetailsChanged()
+void MetadataEditModel::onMetadataTournamentDetailsChanged()
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataTournamentDetailsChanged);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataEventDetailsChanged()
+void MetadataEditModel::onMetadataEventDetailsChanged()
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataEventDetailsChanged);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataCommentatorsChanged()
+void MetadataEditModel::onMetadataCommentatorsChanged()
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataCommentatorsChanged);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataCommentatorsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataGameDetailsChanged()
+void MetadataEditModel::onMetadataGameDetailsChanged()
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataGameDetailsChanged);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataGameDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataPlayerDetailsChanged()
+void MetadataEditModel::onMetadataPlayerDetailsChanged()
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataPlayerDetailsChanged);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataPlayerDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataWinnerChanged(int winnerPlayerIdx)
+void MetadataEditModel::onMetadataWinnerChanged(int winnerPlayerIdx)
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataWinnerChanged, winnerPlayerIdx);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataWinnerChanged, winnerPlayerIdx);
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditModel::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number)
+void MetadataEditModel::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number)
 {
-    dispatcher.dispatch(&MetaDataEditListener::onMetaDataTrainingSessionNumberChanged ,number);
+    dispatcher.dispatch(&MetadataEditListener::onMetadataTrainingSessionNumberChanged ,number);
 }
 
 }

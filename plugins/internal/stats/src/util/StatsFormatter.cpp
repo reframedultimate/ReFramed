@@ -1,7 +1,7 @@
 #include "stats/util/StatsFormatter.hpp"
 #include "stats/models/PlayerMeta.hpp"
 #include "stats/models/StatsCalculator.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include <utility>
 
 // ----------------------------------------------------------------------------

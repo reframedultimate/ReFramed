@@ -17,7 +17,7 @@
 namespace rfcommon {
     class GameNumber;
     class MappingInfo;
-    class MetaData;
+    class Metadata;
     class Session;
 }
 

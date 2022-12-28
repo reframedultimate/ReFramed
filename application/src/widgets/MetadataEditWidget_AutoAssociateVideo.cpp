@@ -1,6 +1,6 @@
-#include "application/models/MetaDataEditModel.hpp"
+#include "application/models/MetadataEditModel.hpp"
 #include "application/models/ActiveSessionManager.hpp"
-#include "application/widgets/MetaDataEditWidget_AutoAssociateVideo.hpp"
+#include "application/widgets/MetadataEditWidget_AutoAssociateVideo.hpp"
 
 #include <QGridLayout>
 #include <QCheckBox>
@@ -12,8 +12,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_AutoAssociateVideo::MetaDataEditWidget_AutoAssociateVideo(MetaDataEditModel* model, ActiveSessionManager* activeSessionManager, QWidget* parent)
-    : MetaDataEditWidget(model, parent)
+MetadataEditWidget_AutoAssociateVideo::MetadataEditWidget_AutoAssociateVideo(MetadataEditModel* model, ActiveSessionManager* activeSessionManager, QWidget* parent)
+    : MetadataEditWidget(model, parent)
     , activeSessionManager_(activeSessionManager)
 {
     setTitle("Auto-Associate Video");
@@ -44,16 +44,16 @@ MetaDataEditWidget_AutoAssociateVideo::MetaDataEditWidget_AutoAssociateVideo(Met
     contentWidget()->setLayout(layout);
     updateSize();
 
-    connect(checkBox_enable, &QCheckBox::toggled, this, &MetaDataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled);
-    connect(toolButton_chooseDir, &QToolButton::released, this, &MetaDataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased);
+    connect(checkBox_enable, &QCheckBox::toggled, this, &MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled);
+    connect(toolButton_chooseDir, &QToolButton::released, this, &MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased);
 }
 
 // ----------------------------------------------------------------------------
-MetaDataEditWidget_AutoAssociateVideo::~MetaDataEditWidget_AutoAssociateVideo()
+MetadataEditWidget_AutoAssociateVideo::~MetadataEditWidget_AutoAssociateVideo()
 {}
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
+void MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
 {
     label_chooseDir->setEnabled(enable);
     lineEdit_dir->setEnabled(enable);
@@ -64,7 +64,7 @@ void MetaDataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased()
+void MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased()
 {
     QString vidDir = QFileDialog::getExistingDirectory(this, "Choose video directory", "", QFileDialog::ShowDirsOnly);
     if (vidDir.isEmpty())
@@ -75,33 +75,33 @@ void MetaDataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased(
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onAdoptMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_AutoAssociateVideo::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onOverwriteMetaData(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_AutoAssociateVideo::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataCleared(const MappingInfoList& map, const MetaDataList& mdata)
+void MetadataEditWidget_AutoAssociateVideo::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata)
 {
 }
 
 // ----------------------------------------------------------------------------
-void MetaDataEditWidget_AutoAssociateVideo::onNextGameStarted()
+void MetadataEditWidget_AutoAssociateVideo::onNextGameStarted()
 {
 }
 
-void MetaDataEditWidget_AutoAssociateVideo::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataTournamentDetailsChanged() {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataEventDetailsChanged() {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataCommentatorsChanged() {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataGameDetailsChanged() {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataPlayerDetailsChanged() {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataWinnerChanged(int winnerPlayerIdx) {}
-void MetaDataEditWidget_AutoAssociateVideo::onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
+void MetadataEditWidget_AutoAssociateVideo::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataTournamentDetailsChanged() {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataEventDetailsChanged() {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataCommentatorsChanged() {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataGameDetailsChanged() {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataPlayerDetailsChanged() {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataWinnerChanged(int winnerPlayerIdx) {}
+void MetadataEditWidget_AutoAssociateVideo::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 }

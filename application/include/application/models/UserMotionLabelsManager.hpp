@@ -7,7 +7,7 @@
 
 namespace rfcommon {
     class Hash40Strings;
-    class MetaData;
+    class Metadata;
     class Session;
     class UserMotionLabels;
 }

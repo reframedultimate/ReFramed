@@ -29,18 +29,18 @@ private slots:
     void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 private:
-    void repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames);
+    void repopulateTree(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames);
     void repopulatePlayerDataTables();
 
 private:
-    void onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
-    void onDataFinalized(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames) override;
+    void onNewData(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames) override;
+    void onDataFinalized(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames) override;
     void onNewFrame() override;
 
 private:
     FrameDataListModel* model_;
     Ui::FrameDataListView* ui_;
-    QTreeWidgetItem* metaDataItem_ = nullptr;
+    QTreeWidgetItem* metadataItem_ = nullptr;
     QTreeWidgetItem* stageIDMappingsItem_ = nullptr;
     QTreeWidgetItem* fighterIDMappingsItem_ = nullptr;
     QTreeWidgetItem* baseStatusIDMappingsItem_ = nullptr;

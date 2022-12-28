@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/listeners/MetaDataEditListener.hpp"
+#include "application/listeners/MetadataEditListener.hpp"
 
 #include <QWidget>
 #include <QVector>
@@ -12,7 +12,7 @@ class QLabel;
 
 namespace rfapp {
 
-class MetaDataEditModel;
+class MetadataEditModel;
 
 /*!
  * @brief Collapsible widget. Code was copied from here and adapted:
@@ -28,15 +28,15 @@ class MetaDataEditModel;
  * You should also call ```setExpanded(true);``` once you've finished
  * constructing, so your widget is initially expanded.
  */
-class MetaDataEditWidget
+class MetadataEditWidget
         : public QWidget
-        , public MetaDataEditListener
+        , public MetadataEditListener
 {
     Q_OBJECT
 
 public:
-    explicit MetaDataEditWidget(MetaDataEditModel* model, QWidget* parent=nullptr);
-    ~MetaDataEditWidget();
+    explicit MetadataEditWidget(MetadataEditModel* model, QWidget* parent=nullptr);
+    ~MetadataEditWidget();
 
     void setTitle(const QString& title);
     QWidget* contentWidget();
@@ -54,7 +54,7 @@ public slots:
 protected:
     void updateSize();
 
-    MetaDataEditModel* model_;
+    MetadataEditModel* model_;
 
 private:
     QToolButton* toggleButton_;

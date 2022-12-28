@@ -1,40 +1,40 @@
 #pragma once
 
 #include "rfcommon/ListenerDispatcher.hpp"
-#include "rfcommon/MetaDataListener.hpp"
+#include "rfcommon/MetadataListener.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/Reference.hpp"
 
 namespace rfcommon {
     class MappingInfo;
-    class MetaData;
+    class Metadata;
 }
 
 namespace rfapp {
 
-class MetaDataEditListener;
+class MetadataEditListener;
 
-class MetaDataEditModel : public rfcommon::MetaDataListener
+class MetadataEditModel : public rfcommon::MetadataListener
 {
 public:
     typedef rfcommon::SmallVector<rfcommon::Reference<rfcommon::MappingInfo>, 1> MappingInfoList;
-    typedef rfcommon::SmallVector<rfcommon::Reference<rfcommon::MetaData>, 1> MetaDataList;
+    typedef rfcommon::SmallVector<rfcommon::Reference<rfcommon::Metadata>, 1> MetadataList;
 
-    MetaDataEditModel();
-    ~MetaDataEditModel();
+    MetadataEditModel();
+    ~MetadataEditModel();
 
     /*!
      * The listening widgets will take the data stored in map and mdata and
      * load it into their UIs. The metadata will stay in tact.
      */
-    void setAndAdopt(MappingInfoList&& map, MetaDataList&& mdata);
+    void setAndAdopt(MappingInfoList&& map, MetadataList&& mdata);
 
     /*!
      * The listening widgets will copy the data they have in their UIs into the
      * metadata. The current metadata will be overwritten with the values in the
      * UIs.
      */
-    void setAndOverwrite(MappingInfoList&& map, MetaDataList&& mdata);
+    void setAndOverwrite(MappingInfoList&& map, MetadataList&& mdata);
 
     /*!
      * All references to mapping info and metadata are released. The widgets
@@ -47,12 +47,12 @@ public:
      * order to e.g. increment the score or game counter. Call this after
      * setting the metadata (setAndAdopt() or setAndOverwrite).
      *
-     * The widgets will use prevMetaData() as a point of reference/comparison
+     * The widgets will use prevMetadata() as a point of reference/comparison
      * to derive the new game/score count. Note that if more than session's
      * metadata is set, this will do nothing.
      *
-     * Widgets can assume that prevMetaData() will always return a valid
-     * object, and metaData()/mappingInfo() will always contain exactly 1
+     * Widgets can assume that prevMetadata() will always return a valid
+     * object, and metadata()/mappingInfo() will always contain exactly 1
      * instance.
      */
     void startNextGame();
@@ -63,26 +63,26 @@ public:
      */
     void setPendingChanges() { pendingChanges_ = true; }
 
-    rfcommon::MetaData* prevMetaData() const { return prevMdata_; }
+    rfcommon::Metadata* prevMetadata() const { return prevMdata_; }
     const MappingInfoList& mappingInfo() const { return map_; }
-    const MetaDataList& metaData() const { return mdata_; }
+    const MetadataList& metadata() const { return mdata_; }
 
-    rfcommon::ListenerDispatcher<MetaDataEditListener> dispatcher;
-
-private:
-    void onMetaDataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
-    void onMetaDataTournamentDetailsChanged() override;
-    void onMetaDataEventDetailsChanged() override;
-    void onMetaDataCommentatorsChanged() override;
-    void onMetaDataGameDetailsChanged() override;
-    void onMetaDataPlayerDetailsChanged() override;
-    void onMetaDataWinnerChanged(int winnerPlayerIdx) override;
-    void onMetaDataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
+    rfcommon::ListenerDispatcher<MetadataEditListener> dispatcher;
 
 private:
-    rfcommon::Reference<rfcommon::MetaData> prevMdata_;
+    void onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) override;
+    void onMetadataTournamentDetailsChanged() override;
+    void onMetadataEventDetailsChanged() override;
+    void onMetadataCommentatorsChanged() override;
+    void onMetadataGameDetailsChanged() override;
+    void onMetadataPlayerDetailsChanged() override;
+    void onMetadataWinnerChanged(int winnerPlayerIdx) override;
+    void onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) override;
+
+private:
+    rfcommon::Reference<rfcommon::Metadata> prevMdata_;
     MappingInfoList map_;
-    MetaDataList mdata_;
+    MetadataList mdata_;
     bool pendingChanges_ = false;
 };
 

@@ -4,14 +4,14 @@
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
-#include "rfcommon/TrainingMetaData.hpp"
+#include "rfcommon/TrainingMetadata.hpp"
 
 #include <QDateTime>
 #include <QStandardPaths>
@@ -403,7 +403,7 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
     QString tmpFileName = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
 
     // Determine new file name
-    auto newFileNameParts = rfcommon::ReplayFileParts::fromMetaData(session->tryGetMappingInfo(), session->tryGetMetaData());
+    auto newFileNameParts = rfcommon::ReplayFileParts::fromMetadata(session->tryGetMappingInfo(), session->tryGetMetadata());
     QString newFileName = QString::fromUtf8(newFileNameParts.toFileName().cStr());
 
     if (allReplayGroup()->isInGroup(oldFileName) == false)
@@ -513,17 +513,17 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
     PROFILE(ReplayManager, saveReplayWithDefaultSettings);
 
     auto map = session->tryGetMappingInfo();
-    auto mdata = session->tryGetMetaData();
-    auto type = mdata ? mdata->type() : rfcommon::MetaData::GAME;
+    auto mdata = session->tryGetMetadata();
+    auto type = mdata ? mdata->type() : rfcommon::Metadata::GAME;
 
     // Determine target directory based on type
-    QDir dir = type == rfcommon::MetaData::TRAINING ?
+    QDir dir = type == rfcommon::Metadata::TRAINING ?
             defaultTrainingPath() : defaultGamePath();
 
     if (dir.exists() == false)
         dir.mkpath(".");
 
-    auto fileNameParts = rfcommon::ReplayFileParts::fromMetaData(map, mdata);
+    auto fileNameParts = rfcommon::ReplayFileParts::fromMetadata(map, mdata);
     auto fileNameUtf8 = fileNameParts.toFileName();
     auto fileName = QString::fromUtf8(fileNameUtf8.cStr());
     auto filePath = dir.absoluteFilePath(fileName);

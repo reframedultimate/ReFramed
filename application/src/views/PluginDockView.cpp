@@ -5,7 +5,7 @@
 
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VisualizerContext.hpp"
 
@@ -166,17 +166,17 @@ void PluginDockView::clearActiveSession()
         && activeSessionState_ != GAME_RESUMED_ENDED)
     {
         assert(activeSession_.notNull());
-        assert(activeSession_->tryGetMetaData());
+        assert(activeSession_->tryGetMetadata());
 
-        switch (activeSession_->tryGetMetaData()->type())
+        switch (activeSession_->tryGetMetadata()->type())
         {
-            case rfcommon::MetaData::GAME:
+            case rfcommon::Metadata::GAME:
                 for (const auto& data : plugins_)
                     if (auto i = data.plugin->realtimeInterface())
                         i->onProtocolGameEnded(activeSession_);
                 break;
 
-            case rfcommon::MetaData::TRAINING:
+            case rfcommon::Metadata::TRAINING:
                 for (const auto& data : plugins_)
                     if (auto i = data.plugin->realtimeInterface())
                         i->onProtocolTrainingEnded(activeSession_);
@@ -455,8 +455,8 @@ void PluginDockView::onClosePluginRequested(ads::CDockWidget* dockWidget)
             case TRAINING_STARTED:
             case TRAINING_RESUMED:
                 assert(activeSession_.notNull());
-                assert(activeSession_->tryGetMetaData());
-                assert(activeSession_->tryGetMetaData()->type() == rfcommon::MetaData::TRAINING);
+                assert(activeSession_->tryGetMetadata());
+                assert(activeSession_->tryGetMetadata()->type() == rfcommon::Metadata::TRAINING);
                 if (auto i = it->plugin->realtimeInterface())
                     i->onProtocolTrainingEnded(activeSession_);
                 break;
@@ -464,8 +464,8 @@ void PluginDockView::onClosePluginRequested(ads::CDockWidget* dockWidget)
             case GAME_STARTED:
             case GAME_RESUMED:
                 assert(activeSession_.notNull());
-                assert(activeSession_->tryGetMetaData());
-                assert(activeSession_->tryGetMetaData()->type() == rfcommon::MetaData::GAME);
+                assert(activeSession_->tryGetMetadata());
+                assert(activeSession_->tryGetMetadata()->type() == rfcommon::Metadata::GAME);
                 if (auto i = it->plugin->realtimeInterface())
                     i->onProtocolGameEnded(activeSession_);
                 break;

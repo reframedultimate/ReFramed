@@ -195,8 +195,8 @@ void ReplayListModel::addReplay(const QString& fileName)
             rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayPathResolver_, filePathUtf8.cStr());
             if (session)
                 if (auto map = session->tryGetMappingInfo())
-                    if (auto mdata = session->tryGetMetaData())
-                        parts.updateFromMetaData(map, mdata);
+                    if (auto mdata = session->tryGetMetadata())
+                        parts.updateFromMetadata(map, mdata);
         }
     }
 

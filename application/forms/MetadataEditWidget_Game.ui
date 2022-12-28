@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MetaDataEditWidget_Game</class>
- <widget class="QWidget" name="MetaDataEditWidget_Game">
+ <class>MetadataEditWidget_Game</class>
+ <widget class="QWidget" name="MetadataEditWidget_Game">
   <property name="geometry">
    <rect>
     <x>0</x>

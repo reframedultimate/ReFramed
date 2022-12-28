@@ -39,10 +39,10 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="page_metaData">
+      <widget class="QWidget" name="page_metadata">
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QTableView" name="tableView_metaData">
+         <widget class="QTableView" name="tableView_metadata">
           <attribute name="horizontalHeaderVisible">
            <bool>true</bool>
           </attribute>

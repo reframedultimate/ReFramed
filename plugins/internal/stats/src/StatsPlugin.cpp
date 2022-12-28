@@ -10,7 +10,7 @@
 
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/GameMetaData.hpp"
+#include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -44,8 +44,8 @@ void StatsPlugin::resetStatsIfAppropriate(rfcommon::Session* session)
 
         case SettingsModel::RESET_EACH_SET: {
             // Reset statistics if this is game 1 in a set
-            auto mdata = session->tryGetMetaData();
-            if (mdata && mdata->type() == rfcommon::MetaData::GAME)
+            auto mdata = session->tryGetMetadata();
+            if (mdata && mdata->type() == rfcommon::Metadata::GAME)
             {
                 if (mdata->asGame()->score().gameNumber().value() == 1)
                     statsCalculator_->resetStatistics();
@@ -64,7 +64,7 @@ void StatsPlugin::clearSession()
         frameData_.drop();
     }
 
-    playerMeta_->clearMetaData();
+    playerMeta_->clearMetadata();
 }
 
 // ----------------------------------------------------------------------------
@@ -73,12 +73,12 @@ bool StatsPlugin::addSession(rfcommon::Session* session)
     // We need mapping info, metadata and frame data in order to process
     // statistics
     auto map = session->tryGetMappingInfo();
-    auto mdata = session->tryGetMetaData();
+    auto mdata = session->tryGetMetadata();
     auto fdata = session->tryGetFrameData();
     if (map == nullptr || mdata == nullptr || fdata == nullptr)
         return false;
 
-    playerMeta_->setMetaData(map, mdata);
+    playerMeta_->setMetadata(map, mdata);
 
     // If the session already has frames, process them so we are caught up
     statsCalculator_->udpateStatisticsBulk(fdata);

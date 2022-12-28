@@ -6,7 +6,7 @@
 namespace rfcommon {
     class Log;
     class MappingInfo;
-    class MetaData;
+    class Metadata;
 }
 
 namespace rfapp {
@@ -24,11 +24,11 @@ signals:
     void connectionSuccess(const QString& ipAddress, quint16 port);
     void connectionClosed();
 
-    void trainingStarted(rfcommon::MetaData* training);
-    void trainingResumed(rfcommon::MetaData* training);
+    void trainingStarted(rfcommon::Metadata* training);
+    void trainingResumed(rfcommon::Metadata* training);
     void trainingEnded();
-    void gameStarted(rfcommon::MetaData* game);
-    void gameResumed(rfcommon::MetaData* game);
+    void gameStarted(rfcommon::Metadata* game);
+    void gameResumed(rfcommon::Metadata* game);
     void gameEnded();
     void fighterState(
             quint64 frameTimeStamp,

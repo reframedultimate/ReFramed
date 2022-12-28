@@ -1,7 +1,7 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FighterState.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "nlohmann/json.hpp"
 #include <memory>
@@ -197,11 +197,11 @@ uint32_t MappingInfo::save(FILE* fp) const
 }
 
 // ----------------------------------------------------------------------------
-uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const FrameData* frameData) const
+uint32_t MappingInfo::saveNecessary(FILE* fp, const Metadata* metadata, const FrameData* frameData) const
 {
     PROFILE(MappingInfo, saveNecessary);
 
-    assert(metaData->fighterCount() == frameData->fighterCount());
+    assert(metadata->fighterCount() == frameData->fighterCount());
 
     struct FighterStatusHasherStd {
         std::size_t operator()(const FighterStatus& status) const {
@@ -235,8 +235,8 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
         usedStatuses.push_back(std::move(usedFighterStatuses));
     }
     std::unordered_set<FighterID, FighterIDHasherStd> usedFighterIDs;
-    for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
-        usedFighterIDs.insert(metaData->playerFighterID(fighter));
+    for (int fighter = 0; fighter != metadata->fighterCount(); ++fighter)
+        usedFighterIDs.insert(metadata->playerFighterID(fighter));
 
     auto statusUsedByAnyone = [&usedStatuses](FighterStatus status) -> bool {
         for (const auto& usedFighterStatuses : usedStatuses)
@@ -258,11 +258,11 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
     }
 
     json fighterSpecificStatusMapping;
-    for (int fighter = 0; fighter != metaData->fighterCount(); ++fighter)
+    for (int fighter = 0; fighter != metadata->fighterCount(); ++fighter)
     {
         json specificMapping = json::object();
-        const auto specificNames = status.specificNames(metaData->playerFighterID(fighter));
-        const auto specificStatuses = status.specificStatuses(metaData->playerFighterID(fighter));
+        const auto specificNames = status.specificNames(metadata->playerFighterID(fighter));
+        const auto specificStatuses = status.specificStatuses(metadata->playerFighterID(fighter));
         for (int i = 0; i != specificStatuses.count(); ++i)
         {
             // Skip saving enums that aren't actually used in the set of player states
@@ -273,7 +273,7 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
         }
 
         if (specificMapping.size() > 0)
-            fighterSpecificStatusMapping[std::to_string(metaData->playerFighterID(fighter).value())] = specificMapping;
+            fighterSpecificStatusMapping[std::to_string(metadata->playerFighterID(fighter).value())] = specificMapping;
     }
 
     json fighterStatusMapping = {
@@ -290,7 +290,7 @@ uint32_t MappingInfo::saveNecessary(FILE* fp, const MetaData* metaData, const Fr
 
     // Only care about saving the stage that was played on
     json stageIDMapping = {
-        {std::to_string(metaData->stageID().value()), stage.toName(metaData->stageID())}
+        {std::to_string(metadata->stageID().value()), stage.toName(metadata->stageID())}
     };
 
     json hitStatusMapping;

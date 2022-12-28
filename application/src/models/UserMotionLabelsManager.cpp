@@ -5,7 +5,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MappedFile.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
@@ -244,7 +244,7 @@ void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfco
 {
     PROFILE(UserMotionLabelsManager, onFrameDataNewUniqueFrame);
 
-    auto mdata = activeSession_->tryGetMetaData();
+    auto mdata = activeSession_->tryGetMetadata();
     if (!mdata)
         return;
 

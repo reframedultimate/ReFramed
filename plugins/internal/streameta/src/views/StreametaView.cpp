@@ -1,7 +1,7 @@
 #include "ui_FrameDataListView.h"
 #include "frame-data-list/views/FrameDataListView.hpp"
 #include "frame-data-list/models/FrameDataListModel.hpp"
-#include "rfcommon/MetaData.hpp"
+#include "rfcommon/Metadata.hpp"
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/Profiler.hpp"
 #include <QDateTime>
@@ -29,13 +29,13 @@ FrameDataListView::FrameDataListView(FrameDataListModel* model, QWidget* parent)
     ui_->splitter->setStretchFactor(1, 1);
 
     ui_->tableView_baseStatusIDs->setModel(model_->baseStatusIDModel());
-    ui_->tableView_metaData->setModel(model_->metaDataModel());
+    ui_->tableView_metadata->setModel(model_->metadataModel());
     ui_->tableView_hitStatusIDs->setModel(model_->hitStatusIDModel());
     ui_->tableView_stageIDs->setModel(model_->stageIDModel());
     ui_->tableView_specificStatusIDs->setModel(model_->specificStatusIDModel());
     ui_->tableView_fighterIDs->setModel(model_->fighterIDModel());
 
-    FrameDataListView::onNewData(model_->mappingInfo(), model_->metaData(), model_->frameData());
+    FrameDataListView::onNewData(model_->mappingInfo(), model_->metadata(), model_->frameData());
 
     connect(ui_->treeWidget, &QTreeWidget::currentItemChanged,
             this, &FrameDataListView::onCurrentItemChanged);
@@ -52,7 +52,7 @@ FrameDataListView::~FrameDataListView()
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames)
 {
     PROFILE(FrameDataListView, onNewData);
 
@@ -60,7 +60,7 @@ void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData
     repopulateTree(map, meta, frames);
 
     ui_->tableView_baseStatusIDs->resizeColumnsToContents();
-    ui_->tableView_metaData->resizeColumnsToContents();
+    ui_->tableView_metadata->resizeColumnsToContents();
     ui_->tableView_hitStatusIDs->resizeColumnsToContents();
     ui_->tableView_stageIDs->resizeColumnsToContents();
     ui_->tableView_specificStatusIDs->resizeColumnsToContents();
@@ -68,7 +68,7 @@ void FrameDataListView::onNewData(rfcommon::MappingInfo* map, rfcommon::MetaData
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::onDataFinalized(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void FrameDataListView::onDataFinalized(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames)
 {
     PROFILE(FrameDataListView, onDataFinalized);
 
@@ -100,8 +100,8 @@ void FrameDataListView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
             break;
         }
 
-    if (current == metaDataItem_)
-        ui_->stackedWidget->setCurrentWidget(ui_->page_metaData);
+    if (current == metadataItem_)
+        ui_->stackedWidget->setCurrentWidget(ui_->page_metadata);
     else if (current == stageIDMappingsItem_)
         ui_->stackedWidget->setCurrentWidget(ui_->page_stageIDs);
     else if (current == fighterIDMappingsItem_)
@@ -129,7 +129,7 @@ void FrameDataListView::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidg
 }
 
 // ----------------------------------------------------------------------------
-void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::MetaData* meta, rfcommon::FrameData* frames)
+void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Metadata* meta, rfcommon::FrameData* frames)
 {
     PROFILE(FrameDataListView, repopulateTree);
 
@@ -137,7 +137,7 @@ void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Met
         const auto item = ui_->treeWidget->currentItem();
         if (item == nullptr)
             return -1;
-        if (item == metaDataItem_) return 0;
+        if (item == metadataItem_) return 0;
         else if (item == stageIDMappingsItem_) return 1;
         else if (item == fighterIDMappingsItem_) return 2;
         else if (item == baseStatusIDMappingsItem_) return 3;
@@ -152,18 +152,18 @@ void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Met
     ui_->treeWidget->clear();
     playerDataItems_.clear();
 
-    metaDataItem_ = nullptr;
+    metadataItem_ = nullptr;
     stageIDMappingsItem_ = nullptr;
     fighterIDMappingsItem_ = nullptr;
     baseStatusIDMappingsItem_ = nullptr;
     specificStatusIDMappingsItem_ = nullptr;
     hitStatusIDMappingsItem_ = nullptr;
 
-    // Meta Data
+    // Meta data
     if (meta)
     {
-        metaDataItem_ = new QTreeWidgetItem({"Meta Data"});
-        ui_->treeWidget->addTopLevelItem(metaDataItem_);
+        metadataItem_ = new QTreeWidgetItem({"Meta data"});
+        ui_->treeWidget->addTopLevelItem(metadataItem_);
     }
 
     // Mapping info
@@ -209,7 +209,7 @@ void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Met
     switch (previouslySelectedItem)
     {
 #define SELECT(item) { ui_->treeWidget->setCurrentItem(item); }
-        case 0: SELECT(metaDataItem_) break;
+        case 0: SELECT(metadataItem_) break;
         case 1: SELECT(stageIDMappingsItem_) break;
         case 2: SELECT(fighterIDMappingsItem_) break;
         case 3: SELECT(baseStatusIDMappingsItem_) break;

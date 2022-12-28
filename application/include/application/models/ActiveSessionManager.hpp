@@ -11,9 +11,9 @@
 
 namespace rfcommon {
     class FrameData;
-    class GameMetaData;
+    class GameMetadata;
     class Session;
-    class TrainingMetaData;
+    class TrainingMetadata;
 }
 
 namespace rfapp {
@@ -48,7 +48,7 @@ public:
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
-    bool findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::MetaData* mdata);
+    bool findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata);
 
 private:
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
@@ -82,7 +82,7 @@ private:
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
     QString autoAssociateVideoDir_;
-    QVector<rfcommon::Reference<rfcommon::GameMetaData>> pastMetaData_;
+    QVector<rfcommon::Reference<rfcommon::GameMetadata>> pastMetadata_;
 };
 
 }
