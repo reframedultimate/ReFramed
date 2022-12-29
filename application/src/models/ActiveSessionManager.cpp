@@ -44,18 +44,24 @@ Protocol* ActiveSessionManager::protocol() const
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::setAutoAssociateVideoDirectory(const QString& dir)
 {
+    PROFILE(ActiveSessionManager, setAutoAssociateVideoDirectory);
+
     autoAssociateVideoDir_ = dir;
 }
 
 // ----------------------------------------------------------------------------
 const QString& ActiveSessionManager::autoAssociateVideoDirectory() const
 {
+    PROFILE(ActiveSessionManager, autoAssociateVideoDirectory);
+
     return autoAssociateVideoDir_;
 }
 
 // ----------------------------------------------------------------------------
 bool ActiveSessionManager::findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata)
 {
+    PROFILE(ActiveSessionManager, findFreeRoundAndGameNumbers);
+
     const QDir& dir = replayManager_->defaultGamePath();
     while (true)
     {

@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/models/MetadataEditModel.hpp"
 #include "application/models/ActiveSessionManager.hpp"
 #include "application/widgets/MetadataEditWidget_AutoAssociateVideo.hpp"
@@ -16,7 +17,7 @@ MetadataEditWidget_AutoAssociateVideo::MetadataEditWidget_AutoAssociateVideo(Met
     : MetadataEditWidget(model, parent)
     , activeSessionManager_(activeSessionManager)
 {
-    setTitle("Auto-Associate Video");
+    setTitle(QIcon::fromTheme("film"), "Auto-Associate Video");
 
     const QString& vidDir = activeSessionManager_->autoAssociateVideoDirectory();
 
@@ -55,6 +56,8 @@ MetadataEditWidget_AutoAssociateVideo::~MetadataEditWidget_AutoAssociateVideo()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onCheckBoxEnableToggled);
+
     label_chooseDir->setEnabled(enable);
     lineEdit_dir->setEnabled(enable);
     toolButton_chooseDir->setEnabled(enable);
@@ -66,6 +69,8 @@ void MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased()
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onToolButtonChooseDirectoryReleased);
+
     QString vidDir = QFileDialog::getExistingDirectory(this, "Choose video directory", "", QFileDialog::ShowDirsOnly);
     if (vidDir.isEmpty())
         return;
@@ -77,21 +82,29 @@ void MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased(
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onAdoptMetadata);
+
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onOverwriteMetadata);
+
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onMetadataCleared);
+
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_AutoAssociateVideo::onNextGameStarted()
 {
+    PROFILE(MetadataEditWidget_AutoAssociateVideo, onNextGameStarted);
+
 }
 
 void MetadataEditWidget_AutoAssociateVideo::onBracketTypeChangedUI(rfcommon::BracketType bracketType) {}

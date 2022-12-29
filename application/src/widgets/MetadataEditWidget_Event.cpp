@@ -3,6 +3,7 @@
 
 #include "rfcommon/BracketType.hpp"
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -20,7 +21,7 @@ MetadataEditWidget_Event::MetadataEditWidget_Event(MetadataEditModel* model, QWi
     , lineEdit_bracketURL_(new QLineEdit)
     , lineEdit_otherBracketType_(new QLineEdit)
 {
-    setTitle("Event");
+    setTitle(QIcon::fromTheme(""), "Event");
 
     QComboBox* bracketType = new QComboBox;
 #define X(type, name) bracketType->addItem(name);
@@ -54,6 +55,8 @@ MetadataEditWidget_Event::~MetadataEditWidget_Event()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 {
+    PROFILE(MetadataEditWidget_Event, onComboBoxBracketTypeChanged);
+
     rfcommon::BracketType type = index == rfcommon::BracketType::OTHER ?
                 rfcommon::BracketType::makeOther(lineEdit_otherBracketType_->text().toUtf8().constData()) :
                 rfcommon::BracketType::fromIndex(index);
@@ -86,17 +89,19 @@ void MetadataEditWidget_Event::onComboBoxBracketTypeChanged(int index)
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Event::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_Event, onAdoptMetadata);
+
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Event::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_Event, onOverwriteMetadata);
+
 }
 
 // ----------------------------------------------------------------------------
-void MetadataEditWidget_Event::onNextGameStarted()
-{
-}
+void MetadataEditWidget_Event::onNextGameStarted() {}
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Event::onMetadataCleared(const MappingInfoList& map, const MetadataList& mdata) {}

@@ -25,7 +25,7 @@ AVDecoder::~AVDecoder()
 
 static int read_callback(void* opaque, uint8_t* buf, int buf_size)
 {
-    PROFILE(VideoDecoderGlobal, read_callback);
+    PROFILE(AVDecoderGlobal, read_callback);
 
     auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
     return ioChunkReader->read(buf, buf_size);
@@ -33,7 +33,7 @@ static int read_callback(void* opaque, uint8_t* buf, int buf_size)
 
 static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 {
-    PROFILE(VideoDecoderGlobal, seek_callback);
+    PROFILE(AVDecoderGlobal, seek_callback);
 
     auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
     switch (whence)
@@ -50,7 +50,7 @@ static int64_t seek_callback(void* opaque, int64_t offset, int whence)
 // ----------------------------------------------------------------------------
 bool AVDecoder::openFile(const void* address, uint64_t size)
 {
-    PROFILE(VideoDecoder, openFile);
+    PROFILE(AVDecoder, openFile);
 
     log_->info("Opening file from memory, address: 0x%" PRIxPTR ", size: 0x%" PRIx64, (intptr_t)address, size);
 
@@ -198,7 +198,7 @@ bool AVDecoder::openFile(const void* address, uint64_t size)
 // ----------------------------------------------------------------------------
 void AVDecoder::closeFile()
 {
-    PROFILE(VideoDecoder, closeFile);
+    PROFILE(AVDecoder, closeFile);
 
     // Remove all entries still left in queues
     while (videoQueue_.count())
@@ -240,6 +240,8 @@ void AVDecoder::closeFile()
 // ----------------------------------------------------------------------------
 AVFrame* AVDecoder::takeNextVideoFrame()
 {
+    PROFILE(AVDecoder, takeNextVideoFrame);
+
     while (videoQueue_.count() == 0)
     {
         if (decodeNextPacket() == false)
@@ -255,6 +257,8 @@ AVFrame* AVDecoder::takeNextVideoFrame()
 // ----------------------------------------------------------------------------
 void AVDecoder::giveNextVideoFrame(AVFrame* frame)
 {
+    PROFILE(AVDecoder, giveNextVideoFrame);
+
     FrameEntry* e = freeFrameEntries_.take();
     if (e == nullptr)
     {
@@ -273,12 +277,16 @@ void AVDecoder::giveNextVideoFrame(AVFrame* frame)
 // ----------------------------------------------------------------------------
 AVFrame* AVDecoder::takePrevVideoFrame()
 {
+    PROFILE(AVDecoder, takePrevVideoFrame);
+
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
 void AVDecoder::givePrevVideoFrame(AVFrame* frame)
 {
+    PROFILE(AVDecoder, givePrevVideoFrame);
+
     FrameEntry* e = freeFrameEntries_.take();
     if (e == nullptr)
     {
@@ -297,6 +305,8 @@ void AVDecoder::givePrevVideoFrame(AVFrame* frame)
 // ----------------------------------------------------------------------------
 AVFrame* AVDecoder::takeNextAudioFrame()
 {
+    PROFILE(AVDecoder, takeNextAudioFrame);
+
     while (audioQueue_.count() == 0)
     {
         if (decodeNextPacket() == false)
@@ -312,6 +322,8 @@ AVFrame* AVDecoder::takeNextAudioFrame()
 // ----------------------------------------------------------------------------
 void AVDecoder::giveNextAudioFrame(AVFrame* frame)
 {
+    PROFILE(AVDecoder, giveNextAudioFrame);
+
     FrameEntry* e = freeFrameEntries_.take();
     if (e == nullptr)
     {
@@ -329,7 +341,7 @@ void AVDecoder::giveNextAudioFrame(AVFrame* frame)
 // ----------------------------------------------------------------------------
 bool AVDecoder::seekNearKeyframe(int64_t target_ts)
 {
-    PROFILE(VideoDecoder, seekToMs);
+    PROFILE(AVDecoder, seekNearKeyframe);
 
     // Clear all buffers before seeking
     while (videoQueue_.count())
@@ -367,6 +379,8 @@ bool AVDecoder::seekNearKeyframe(int64_t target_ts)
 // ----------------------------------------------------------------------------
 int64_t AVDecoder::toCodecTimeStamp(int64_t ts, int num, int den) const
 {
+    PROFILE(AVDecoder, toCodecTimeStamp);
+
     AVRational from = av_make_q(num, den);
     AVRational to = inputCtx_->streams[videoStreamIdx_]->time_base;
     return av_rescale_q(ts, from, to);
@@ -375,6 +389,8 @@ int64_t AVDecoder::toCodecTimeStamp(int64_t ts, int num, int den) const
 // ----------------------------------------------------------------------------
 int64_t AVDecoder::fromCodecTimeStamp(int64_t codec_ts, int num, int den) const
 {
+    PROFILE(AVDecoder, fromCodecTimeStamp);
+
     AVRational from = inputCtx_->streams[videoStreamIdx_]->time_base;
     AVRational to = av_make_q(num, den);
     return av_rescale_q(codec_ts, from, to);
@@ -383,6 +399,8 @@ int64_t AVDecoder::fromCodecTimeStamp(int64_t codec_ts, int num, int den) const
 // ----------------------------------------------------------------------------
 void AVDecoder::frameRate(int* num, int* den) const
 {
+    PROFILE(AVDecoder, frameRate);
+
     AVRational r = inputCtx_->streams[videoStreamIdx_]->r_frame_rate;
     *num = r.num;
     *den = r.den;
@@ -391,13 +409,15 @@ void AVDecoder::frameRate(int* num, int* den) const
 // ----------------------------------------------------------------------------
 int64_t AVDecoder::duration() const
 {
+    PROFILE(AVDecoder, duration);
+
     return inputCtx_->streams[videoStreamIdx_]->duration;
 }
 
 // ----------------------------------------------------------------------------
 bool AVDecoder::decodeNextPacket()
 {
-    PROFILE(VideoDecoder, decodeNextFrame);
+    PROFILE(AVDecoder, decodeNextPacket);
 
     int response;
     while (true)

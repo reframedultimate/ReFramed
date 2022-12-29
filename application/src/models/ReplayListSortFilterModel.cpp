@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/models/ReplayListSortFilterModel.hpp"
 #include "application/models/ReplayListModel.hpp"
 
@@ -16,19 +17,27 @@ ReplayListSortFilterModel::~ReplayListSortFilterModel()
 
 // ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setStage(const QString& stage)
-{}
+{
+    PROFILE(ReplayListSortFilterModel, setStage);
+}
 
 // ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setFighterNames(const QStringList& fighterNames)
-{}
+{
+    PROFILE(ReplayListSortFilterModel, setFighterNames);
+}
 
 // ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setPlayerNames(const QStringList& playerNames)
-{}
+{
+    PROFILE(ReplayListSortFilterModel, setPlayerNames);
+}
 
 // ----------------------------------------------------------------------------
 void ReplayListSortFilterModel::setGenericSearchTerms(const QStringList& terms)
 {
+    PROFILE(ReplayListSortFilterModel, setGenericSearchTerms);
+
     genericSearchTerms_ = terms;
     invalidateFilter();
 }
@@ -36,6 +45,8 @@ void ReplayListSortFilterModel::setGenericSearchTerms(const QStringList& terms)
 // ----------------------------------------------------------------------------
 bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& parent) const
 {
+    PROFILE(ReplayListSortFilterModel, filterAcceptsRow);
+
     static int columnsToSearch[] = {
         ReplayListModel::P1,
         ReplayListModel::P2,
@@ -70,6 +81,8 @@ bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& par
 // ----------------------------------------------------------------------------
 bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
 {
+    PROFILE(ReplayListSortFilterModel, lessThan);
+
     int leftRow = left.row();
     int rightRow = right.row();
 
@@ -126,6 +139,8 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
 // ----------------------------------------------------------------------------
 bool ReplayListSortFilterModel::filtersCleared() const
 {
+    PROFILE(ReplayListSortFilterModel, filtersCleared);
+
     return stage_.isEmpty() && fighterNames_.size() == 0 && playerNames_.size() == 0 && genericSearchTerms_.size() == 0;
 }
 

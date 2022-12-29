@@ -3,6 +3,7 @@
 
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfapp {
 
@@ -21,6 +22,8 @@ MetadataEditModel::~MetadataEditModel()
 // ----------------------------------------------------------------------------
 void MetadataEditModel::setAndAdopt(MappingInfoList&& map, MetadataList&& mdata)
 {
+    PROFILE(MetadataEditModel, setAndAdopt);
+
     clear();
 
     map_ = map;
@@ -34,6 +37,8 @@ void MetadataEditModel::setAndAdopt(MappingInfoList&& map, MetadataList&& mdata)
 // ----------------------------------------------------------------------------
 void MetadataEditModel::setAndOverwrite(MappingInfoList&& map, MetadataList&& mdata)
 {
+    PROFILE(MetadataEditModel, setAndOverwrite);
+
     clear();
 
     map_ = map;
@@ -47,6 +52,8 @@ void MetadataEditModel::setAndOverwrite(MappingInfoList&& map, MetadataList&& md
 // ----------------------------------------------------------------------------
 void MetadataEditModel::clear()
 {
+    PROFILE(MetadataEditModel, clear);
+
     if (mdata_.count() == 0)
         return;
 
@@ -66,6 +73,8 @@ void MetadataEditModel::clear()
 // ----------------------------------------------------------------------------
 void MetadataEditModel::startNextGame()
 {
+    PROFILE(MetadataEditModel, startNextGame);
+
     if (prevMdata_.isNull())
         return;
     if (mdata_.count() != 1)
@@ -83,48 +92,64 @@ void MetadataEditModel::startNextGame()
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded)
 {
+    PROFILE(MetadataEditModel, onMetadataTimeChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataTimeChanged, timeStarted, timeEnded);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataTournamentDetailsChanged()
 {
+    PROFILE(MetadataEditModel, onMetadataTournamentDetailsChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataTournamentDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataEventDetailsChanged()
 {
+    PROFILE(MetadataEditModel, onMetadataEventDetailsChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataEventDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataCommentatorsChanged()
 {
+    PROFILE(MetadataEditModel, onMetadataCommentatorsChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataCommentatorsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataGameDetailsChanged()
 {
+    PROFILE(MetadataEditModel, onMetadataGameDetailsChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataGameDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataPlayerDetailsChanged()
 {
+    PROFILE(MetadataEditModel, onMetadataPlayerDetailsChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataPlayerDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataWinnerChanged(int winnerPlayerIdx)
 {
+    PROFILE(MetadataEditModel, onMetadataWinnerChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataWinnerChanged, winnerPlayerIdx);
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditModel::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number)
 {
+    PROFILE(MetadataEditModel, onMetadataTrainingSessionNumberChanged);
+
     dispatcher.dispatch(&MetadataEditListener::onMetadataTrainingSessionNumberChanged ,number);
 }
 

@@ -91,6 +91,8 @@ void VODReviewPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int nu
 // ----------------------------------------------------------------------------
 void VODReviewPlugin::onVisualizerDataChanged()
 {
+    PROFILE(VODReviewPlugin, onVisualizerDataChanged);
+
     for (int i = 0; i != visualizerSourceCount(); ++i)
     {
         const auto& timeIntervals = visualizerData(i).timeIntervals;
@@ -106,6 +108,8 @@ void VODReviewPlugin::onPlayerPaused() {}
 void VODReviewPlugin::onPlayerResumed() {}
 void VODReviewPlugin::onPresentImage(const QImage& image)
 {
+    PROFILE(VODReviewPlugin, onPresentImage);
+
     if (visualizerSourceCount() == 0)
         return;
 

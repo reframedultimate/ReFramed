@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/exporters/OBSExporter.hpp"
 #include "stats/models/SettingsModel.hpp"
 #include "stats/util/StatsFormatter.hpp"
@@ -16,6 +17,8 @@ OBSExporter::OBSExporter(
 // ----------------------------------------------------------------------------
 bool OBSExporter::exportEmptyValues() const
 {
+    PROFILE(OBSExporter, exportEmptyValues);
+
     return 
         writeNames() &&
         writeScene() &&
@@ -27,6 +30,8 @@ bool OBSExporter::exportEmptyValues() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::exportStatistics() const
 {
+    PROFILE(OBSExporter, exportStatistics);
+
     return
         writeNames() &&
         writeScene() &&
@@ -38,6 +43,8 @@ bool OBSExporter::exportStatistics() const
 // ----------------------------------------------------------------------------
 void OBSExporter::setPlayerTag(int idx, const QString& tag)
 {
+    PROFILE(OBSExporter, setPlayerTag);
+
     while (tags_.size() <= idx)
         tags_.push_back("--");
 
@@ -47,6 +54,8 @@ void OBSExporter::setPlayerTag(int idx, const QString& tag)
 // ----------------------------------------------------------------------------
 void OBSExporter::setPlayerCharacter(int idx, const QString& character)
 {
+    PROFILE(OBSExporter, setPlayerCharacter);
+
     while (chars_.size() <= idx)
         chars_.push_back("--");
 
@@ -56,6 +65,8 @@ void OBSExporter::setPlayerCharacter(int idx, const QString& character)
 // ----------------------------------------------------------------------------
 bool OBSExporter::writeNames() const
 {
+    PROFILE(OBSExporter, writeNames);
+
     QFile names(settings_->obsDestinationFolder().absoluteFilePath("names.txt"));
     if (names.open(QIODevice::WriteOnly) == false)
         return false;
@@ -78,6 +89,8 @@ bool OBSExporter::writeNames() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writeScene() const
 {
+    PROFILE(OBSExporter, writeScene);
+
     QFile scene(settings_->obsDestinationFolder().absoluteFilePath("obsscene.txt"));
     if (scene.open(QIODevice::WriteOnly) == false)
         return false;
@@ -89,6 +102,8 @@ bool OBSExporter::writeScene() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerCharacters() const
 {
+    PROFILE(OBSExporter, writePlayerCharacters);
+
     QFile p1char(settings_->obsDestinationFolder().absoluteFilePath("p1char.txt"));
     QFile p2char(settings_->obsDestinationFolder().absoluteFilePath("p2char.txt"));
 
@@ -111,6 +126,8 @@ bool OBSExporter::writePlayerCharacters() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerTags() const
 {
+    PROFILE(OBSExporter, writePlayerTags);
+
     QFile p1tag(settings_->obsDestinationFolder().absoluteFilePath("p1tag.txt"));
     QFile p2tag(settings_->obsDestinationFolder().absoluteFilePath("p2tag.txt"));
 
@@ -133,6 +150,8 @@ bool OBSExporter::writePlayerTags() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerStats() const
 {
+    PROFILE(OBSExporter, writePlayerStats);
+
     QFile p1stats(settings_->obsDestinationFolder().absoluteFilePath("p1stats.txt"));
     QFile p2stats(settings_->obsDestinationFolder().absoluteFilePath("p2stats.txt"));
 
@@ -171,6 +190,8 @@ bool OBSExporter::writePlayerStats() const
 // ----------------------------------------------------------------------------
 bool OBSExporter::writePlayerStatsEmpty() const
 {
+    PROFILE(OBSExporter, writePlayerStatsEmpty);
+
     QFile p1stats(settings_->obsDestinationFolder().absoluteFilePath("p1stats.txt"));
     QFile p2stats(settings_->obsDestinationFolder().absoluteFilePath("p2stats.txt"));
 

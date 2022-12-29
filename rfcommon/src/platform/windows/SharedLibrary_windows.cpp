@@ -1,5 +1,6 @@
 #include "rfcommon/LastWindowsError.hpp"
 #include "rfcommon/Log.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/SharedLibrary.hpp"
 #include <cstdlib>
 
@@ -43,6 +44,8 @@ SharedLibrary::SharedLibrary(SharedLibrary&& other)
 /* ------------------------------------------------------------------------- */
 bool SharedLibrary::isOpen() const
 {
+    PROFILE(SharedLibrary, isOpen);
+
     HMODULE hModule = static_cast<HMODULE>(handle_);
     return hModule != NULL;
 }
@@ -50,6 +53,8 @@ bool SharedLibrary::isOpen() const
 /* ------------------------------------------------------------------------- */
 void* SharedLibrary::lookupSymbolAddress(const char* name)
 {
+    PROFILE(SharedLibrary, lookupSymbolAddress);
+
     HMODULE hModule = static_cast<HMODULE>(handle_);
     return (void*)GetProcAddress(hModule, name);
 }

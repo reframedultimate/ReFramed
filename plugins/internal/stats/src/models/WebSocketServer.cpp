@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/models/WebSocketServer.hpp"
 #include "stats/listeners/WebSocketServerListener.hpp"
 
@@ -22,6 +23,8 @@ WebSocketServer::~WebSocketServer()
 // ----------------------------------------------------------------------------
 void WebSocketServer::startServer(const QString& hostName, uint16_t port, bool secureMode)
 {
+    PROFILE(WebSocketServer, startServer);
+
     stopServer();
 
     dispatcher.dispatch(&WebSocketServerListener::onWSServerStarting);
@@ -50,6 +53,8 @@ void WebSocketServer::startServer(const QString& hostName, uint16_t port, bool s
 // ----------------------------------------------------------------------------
 void WebSocketServer::stopServer()
 {
+    PROFILE(WebSocketServer, stopServer);
+
     if (server_ == nullptr)
         return;
 
@@ -62,12 +67,16 @@ void WebSocketServer::stopServer()
 // ----------------------------------------------------------------------------
 bool WebSocketServer::isRunning() const
 {
+    PROFILE(WebSocketServer, isRunning);
+
     return server_ != nullptr;
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::sendBinaryMessage(const QByteArray& ba) const
 {
+    PROFILE(WebSocketServer, sendBinaryMessage);
+
     for (auto client : clients_)
         client->sendBinaryMessage(ba);
 }
@@ -75,12 +84,16 @@ void WebSocketServer::sendBinaryMessage(const QByteArray& ba) const
 // ----------------------------------------------------------------------------
 void WebSocketServer::onAcceptError(QAbstractSocket::SocketError socketError)
 {
+    PROFILE(WebSocketServer, onAcceptError);
+
     dispatcher.dispatch(&WebSocketServerListener::onWSClientError, "Failed to accept client connection: " + QString(socketError));
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::onNewConnection()
 {
+    PROFILE(WebSocketServer, onNewConnection);
+
     QWebSocket* sock = server_->nextPendingConnection();
     if (sock == nullptr)
         return;
@@ -96,29 +109,39 @@ void WebSocketServer::onNewConnection()
 // ----------------------------------------------------------------------------
 void WebSocketServer::onOriginAuthenticationRequired(QWebSocketCorsAuthenticator* authenticator)
 {
+    PROFILE(WebSocketServer, onOriginAuthenticationRequired);
+
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::onPeerVerifyError(const QSslError& error)
 {
+    PROFILE(WebSocketServer, onPeerVerifyError);
+
     dispatcher.dispatch(&WebSocketServerListener::onWSClientError, "Peer verification error: " + error.errorString());
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::onPreSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator* authenticator)
 {
+    PROFILE(WebSocketServer, onPreSharedKeyAuthenticationRequired);
+
 
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::onServerError(QWebSocketProtocol::CloseCode closeCode)
 {
+    PROFILE(WebSocketServer, onServerError);
+
     dispatcher.dispatch(&WebSocketServerListener::onWSClientError, "Server error: " + QString(closeCode));
 }
 
 // ----------------------------------------------------------------------------
 void WebSocketServer::onSslErrors(const QList<QSslError>& errors)
 {
+    PROFILE(WebSocketServer, onSslErrors);
+
     QString errorStr;
     for (int i = 0; i != errors.size(); ++i)
     {
@@ -133,6 +156,8 @@ void WebSocketServer::onSslErrors(const QList<QSslError>& errors)
 // ----------------------------------------------------------------------------
 void WebSocketServer::onSocketDisconnected(QWebSocket* sock)
 {
+    PROFILE(WebSocketServer, onSocketDisconnected);
+
     for (int i = 0; i != clients_.count(); ++i)
         if (clients_[i] == sock)
         {

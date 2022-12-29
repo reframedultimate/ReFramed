@@ -1,5 +1,6 @@
 #include "application/models/FighterIcon.hpp"
 #include "rfcommon/FighterID.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <QHash>
 
 namespace rfapp {
@@ -104,6 +105,8 @@ static const char* files[] = {
 // ----------------------------------------------------------------------------
 QPixmap FighterIcon::fromFighterName(const char* name, int skin)
 {
+    PROFILE(FighterIcon, fromFighterName);
+
     static QHash<QString, rfcommon::FighterID> map = {
         {"Mario",            rfcommon::FighterID::fromValue(0)},
         {"Donkey Kong",      rfcommon::FighterID::fromValue(1)},

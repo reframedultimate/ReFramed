@@ -185,9 +185,13 @@ static rfcommon::Plugin* createPlugin(
         rfcommon::Log* log,
         rfcommon::UserMotionLabels* userLabels,
         rfcommon::Hash40Strings* hash40Strings)
-    { return new DebugAssertsPlugin(factory); }
+    {
+    PROFILE(DebugAssertsPluginGlobal, createPlugin);
+ return new DebugAssertsPlugin(factory); }
 static void destroyPlugin(rfcommon::Plugin* plugin)
-    { delete plugin; }
+    {
+    PROFILE(DebugAssertsPluginGlobal, destroyPlugin);
+ delete plugin; }
 
 static const RFPluginType pluginTypes =
     RFPluginType::UI |
@@ -207,14 +211,14 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
-    PROFILE(PluginGlobal, start);
+    PROFILE(DebugAssertsPluginGlobal, start);
 
     return 0;
 }
 
 static void stop()
 {
-    PROFILE(PluginGlobal, stop);
+    PROFILE(DebugAssertsPluginGlobal, stop);
 
 }
 

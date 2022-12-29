@@ -25,6 +25,8 @@ ReplayListModel::~ReplayListModel()
 // ----------------------------------------------------------------------------
 void ReplayListModel::setReplayGroup(ReplayGroup* group)
 {
+    PROFILE(ReplayListModel, setReplayGroup);
+
     beginResetModel();
         if (currentGroup_)
         {
@@ -44,6 +46,8 @@ void ReplayListModel::setReplayGroup(ReplayGroup* group)
 // ----------------------------------------------------------------------------
 void ReplayListModel::clearReplayGroup()
 {
+    PROFILE(ReplayListModel, clearReplayGroup);
+
     if (currentGroup_ == nullptr)
         return;
 
@@ -58,6 +62,8 @@ void ReplayListModel::clearReplayGroup()
 // ----------------------------------------------------------------------------
 QModelIndex ReplayListModel::index(int row, int column, const QModelIndex& parent) const
 {
+    PROFILE(ReplayListModel, index);
+
     if (parent.isValid() == false)
         return createIndex(row, column, quintptr(-1));
     return createIndex(row, column, parent.row());
@@ -66,6 +72,8 @@ QModelIndex ReplayListModel::index(int row, int column, const QModelIndex& paren
 // ----------------------------------------------------------------------------
 QModelIndex ReplayListModel::parent(const QModelIndex& index) const
 {
+    PROFILE(ReplayListModel, parent);
+
     if (index.isValid() == false)
         return QModelIndex();
     if (index.internalId() == quintptr(-1))
@@ -76,6 +84,8 @@ QModelIndex ReplayListModel::parent(const QModelIndex& index) const
 // ----------------------------------------------------------------------------
 int ReplayListModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(ReplayListModel, rowCount);
+
     if (parent.isValid() == false)
         return days_.size();
     if (parent.internalId() == quintptr(-1))
@@ -86,12 +96,16 @@ int ReplayListModel::rowCount(const QModelIndex& parent) const
 // ----------------------------------------------------------------------------
 int ReplayListModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(ReplayListModel, columnCount);
+
     return ColumnCount;
 }
 
 // ----------------------------------------------------------------------------
 QVariant ReplayListModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(ReplayListModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole: {
@@ -147,6 +161,8 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
 // ----------------------------------------------------------------------------
 QVariant ReplayListModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(ReplayListModel, headerData);
+
     switch (role)
     {
         case Qt::DisplayRole: {
@@ -172,6 +188,8 @@ QVariant ReplayListModel::headerData(int section, Qt::Orientation orientation, i
 // ----------------------------------------------------------------------------
 QString ReplayListModel::indexFileName(const QModelIndex& index) const
 {
+    PROFILE(ReplayListModel, indexFileName);
+
     if (index.isValid() == false)
         return "";
     if (index.internalId() == quintptr(-1))
@@ -257,6 +275,8 @@ void ReplayListModel::removeReplay(const QString& fileName)
 // ----------------------------------------------------------------------------
 void ReplayListModel::onReplayGroupFileAdded(ReplayGroup* group, const QString& file)
 {
+    PROFILE(ReplayListModel, onReplayGroupFileAdded);
+
     if (currentGroup_ && currentGroup_ == group)
         addReplay(file);
 }
@@ -264,6 +284,8 @@ void ReplayListModel::onReplayGroupFileAdded(ReplayGroup* group, const QString& 
 // ----------------------------------------------------------------------------
 void ReplayListModel::onReplayGroupFileRemoved(ReplayGroup* group, const QString& file)
 {
+    PROFILE(ReplayListModel, onReplayGroupFileRemoved);
+
     if (currentGroup_ && currentGroup_ == group)
         removeReplay(file);
 }

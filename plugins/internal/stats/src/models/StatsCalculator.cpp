@@ -4,6 +4,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/LinearMap.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <limits>
 
 // TODO Extract this info from the global mapping info structure, once
@@ -23,6 +24,8 @@ static const auto FIGHTER_STATUS_KIND_DEAD = rfcommon::FighterStatus::fromValue(
 // ----------------------------------------------------------------------------
 static bool isTouchingGround(const rfcommon::FighterState& state)
 {
+    PROFILE(StatsCalculatorGlobal, isTouchingGround);
+
     const rfcommon::FighterStatus landStates[] = {
         FIGHTER_STATUS_KIND_LANDING,
         FIGHTER_STATUS_KIND_PASSIVE,
@@ -50,6 +53,8 @@ StatsCalculator::StatsCalculator()
 // ----------------------------------------------------------------------------
 void StatsCalculator::resetStatistics()
 {
+    PROFILE(StatsCalculator, resetStatistics);
+
     helpers.reset();
     damageCounters.reset();
     damagesAtDeath.reset();
@@ -64,6 +69,8 @@ void StatsCalculator::resetStatistics()
 // ----------------------------------------------------------------------------
 void StatsCalculator::updateStatsSilent(const rfcommon::Frame<4>& frame)
 {
+    PROFILE(StatsCalculator, updateStatsSilent);
+
     // We only care about 1v1 for now
     if (frame.count() != 2)
         return;
@@ -84,6 +91,8 @@ void StatsCalculator::updateStatsSilent(const rfcommon::Frame<4>& frame)
 // ----------------------------------------------------------------------------
 void StatsCalculator::updateStatistics(const rfcommon::Frame<4>& frame)
 {
+    PROFILE(StatsCalculator, updateStatistics);
+
     updateStatsSilent(frame);
     dispatcher.dispatch(&StatsCalculatorListener::onStatsUpdated);
 }
@@ -91,6 +100,8 @@ void StatsCalculator::updateStatistics(const rfcommon::Frame<4>& frame)
 // ----------------------------------------------------------------------------
 void StatsCalculator::udpateStatisticsBulk(const rfcommon::FrameData* fdata)
 {
+    PROFILE(StatsCalculator, udpateStatisticsBulk);
+
     for (int frameIdx = 0; frameIdx != fdata->frameCount(); ++frameIdx)
     {
         rfcommon::Frame<4> frame;
@@ -355,6 +366,8 @@ void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommo
 // ----------------------------------------------------------------------------
 double StatsCalculator::avgDeathPercentAfterHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, avgDeathPercentAfterHit);
+
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
 
@@ -368,6 +381,8 @@ double StatsCalculator::avgDeathPercentAfterHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::avgDeathPercentBeforeHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, avgDeathPercentBeforeHit);
+
     // Figure out who killed us
     // XXX: Currently we only support 1v1
     if (fighterIdx > 1)
@@ -390,6 +405,8 @@ double StatsCalculator::avgDeathPercentBeforeHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::earliestDeathPercentAfterHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, earliestDeathPercentAfterHit);
+
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
 
@@ -403,6 +420,8 @@ double StatsCalculator::earliestDeathPercentAfterHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::earliestDeathPercentBeforeHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, earliestDeathPercentBeforeHit);
+
     // Figure out who killed us
     // XXX: Currently we only support 1v1
     if (fighterIdx > 1)
@@ -437,6 +456,8 @@ double StatsCalculator::earliestDeathPercentBeforeHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::latestDeathPercentAfterHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, latestDeathPercentAfterHit);
+
     if (damagesAtDeath.damagesAtDeath[fighterIdx].count() == 0)
         return 0.0;
 
@@ -450,6 +471,8 @@ double StatsCalculator::latestDeathPercentAfterHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::latestDeathPercentBeforeHit(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, latestDeathPercentBeforeHit);
+
     // Figure out who killed us
     // XXX: Currently we only support 1v1
     if (fighterIdx > 1)
@@ -467,12 +490,16 @@ double StatsCalculator::latestDeathPercentBeforeHit(int fighterIdx) const
 // ----------------------------------------------------------------------------
 int StatsCalculator::numNeutralWins(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numNeutralWins);
+
     return stringFinder.strings[fighterIdx].count();
 }
 
 // ----------------------------------------------------------------------------
 int StatsCalculator::numNeutralLosses(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numNeutralLosses);
+
     if (fighterIdx > 1)  // Only support 1v1 for now
         return 0;
 
@@ -483,6 +510,8 @@ int StatsCalculator::numNeutralLosses(int fighterIdx) const
 // ----------------------------------------------------------------------------
 int StatsCalculator::numNonKillingNeutralWins(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numNonKillingNeutralWins);
+
     int count = 0;
     for (const auto& string : stringFinder.strings[fighterIdx])
         if (string.killed == false)
@@ -493,6 +522,8 @@ int StatsCalculator::numNonKillingNeutralWins(int fighterIdx) const
 // ----------------------------------------------------------------------------
 int StatsCalculator::numStocksTaken(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numStocksTaken);
+
     int count = 0;
     for (const auto& string : stringFinder.strings[fighterIdx])
         if (string.killed)
@@ -504,6 +535,8 @@ int StatsCalculator::numStocksTaken(int fighterIdx) const
 // SELF DESTRUCTS WIP
 int StatsCalculator::numStocks(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numStocks);
+
     if (fighterIdx > 1)  // Only support 1v1 for now
         return 0;
 
@@ -516,6 +549,8 @@ int StatsCalculator::numStocks(int fighterIdx) const
 // SELF DESTRUCTS WIP
 int StatsCalculator::numSelfDestructs(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, numSelfDestructs);
+
     if (fighterIdx > 1)  // Only support 1v1 for now
         return 0;
 
@@ -527,6 +562,8 @@ int StatsCalculator::numSelfDestructs(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::neutralWinPercent(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, neutralWinPercent);
+
     const double wins = static_cast<double>(numNeutralWins(fighterIdx));
     const double losses = static_cast<double>(numNeutralLosses(fighterIdx));
 
@@ -539,6 +576,8 @@ double StatsCalculator::neutralWinPercent(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::avgDamagePerOpening(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, avgDamagePerOpening);
+
     const int neutralWins = numNeutralWins(fighterIdx);
     if (neutralWins == 0)
         return 0.0;
@@ -548,6 +587,8 @@ double StatsCalculator::avgDamagePerOpening(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::openingsPerKill(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, openingsPerKill);
+
     // See issue #10 - Used to be numNeutralWins() / numStocksTaken(),
     // but the problem is this assumes that the last few neutral openings
     // lead to a kill. Thanks to kensen on pikacord for pointing this out.
@@ -578,6 +619,8 @@ double StatsCalculator::openingsPerKill(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::stageControlPercent(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, stageControlPercent);
+
     int totalStageControl = 0;
     for (int stageControl : stageControl.stageControl)
         totalStageControl += stageControl;
@@ -591,18 +634,24 @@ double StatsCalculator::stageControlPercent(int fighterIdx) const
 // ----------------------------------------------------------------------------
 double StatsCalculator::totalDamageDealt(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, totalDamageDealt);
+
     return damageCounters.totalDamageDealt[fighterIdx];
 }
 
 // ----------------------------------------------------------------------------
 double StatsCalculator::totalDamageTaken(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, totalDamageTaken);
+
     return damageCounters.totalDamageTaken[fighterIdx];
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::FighterMotion StatsCalculator::mostCommonNeutralOpeningMove(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, mostCommonNeutralOpeningMove);
+
     rfcommon::SmallLinearMap<rfcommon::FighterMotion, int, 8> candidates;
     for (const auto& string : stringFinder.strings[fighterIdx])
         candidates.insertOrGet(string.moves.front(), 0)->value()++;
@@ -622,6 +671,8 @@ rfcommon::FighterMotion StatsCalculator::mostCommonNeutralOpeningMove(int fighte
 // ----------------------------------------------------------------------------
 rfcommon::FighterMotion StatsCalculator::mostCommonKillMove(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, mostCommonKillMove);
+
     rfcommon::SmallLinearMap<rfcommon::FighterMotion, int, 8> candidates;
     for (const auto& string : stringFinder.strings[fighterIdx])
         if (string.killed)
@@ -642,6 +693,8 @@ rfcommon::FighterMotion StatsCalculator::mostCommonKillMove(int fighterIdx) cons
 // ----------------------------------------------------------------------------
 rfcommon::FighterMotion StatsCalculator::mostCommonNeutralOpenerIntoKillMove(int fighterIdx) const
 {
+    PROFILE(StatsCalculator, mostCommonNeutralOpenerIntoKillMove);
+
     rfcommon::SmallLinearMap<rfcommon::FighterMotion, int, 8> candidates;
     for (const auto& string : stringFinder.strings[fighterIdx])
         if (string.killed)

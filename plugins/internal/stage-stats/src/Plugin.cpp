@@ -10,14 +10,14 @@ static rfcommon::Plugin* createPlugin(
     rfcommon::UserMotionLabels* userLabels,
     rfcommon::Hash40Strings* hash40Strings)
 {
-    PROFILE(PluginGlobal, createLedgePlugin);
+    PROFILE(PluginGlobal, createPlugin);
 
     return new StageStatsPlugin(factory);
 }
 
 static void destroyPlugin(rfcommon::Plugin* plugin)
 {
-    PROFILE(PluginGlobal, destroyLedgePlugin);
+    PROFILE(PluginGlobal, destroyPlugin);
 
     delete plugin;
 }

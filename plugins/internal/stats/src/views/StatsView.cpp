@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/views/StatsView.hpp"
 #include "stats/models/PlayerMeta.hpp"
 #include "stats/models/StatsCalculator.hpp"
@@ -10,6 +11,8 @@
 // ----------------------------------------------------------------------------
 static void clearLayout(QLayout* layout)
 {
+    PROFILE(StatsViewGlobal, clearLayout);
+
     QLayoutItem* item;
     while ((item = layout->takeAt(0)) != nullptr)
     {
@@ -54,6 +57,8 @@ StatsView::~StatsView()
 // ----------------------------------------------------------------------------
 void StatsView::updateStatsLabels()
 {
+    PROFILE(StatsView, updateStatsLabels);
+
     StatsFormatter fmt(stats_, playerMeta_);
     for (int i = 0; i != settings_->numStatsEnabled(); ++i)
     {
@@ -72,6 +77,8 @@ void StatsView::updateStatsLabels()
 // ----------------------------------------------------------------------------
 void StatsView::recreateLayout()
 {
+    PROFILE(StatsView, recreateLayout);
+
     clearLayout(layout_);
 
     QFont titleFont;
@@ -118,12 +125,16 @@ void StatsView::recreateLayout()
 // ----------------------------------------------------------------------------
 void StatsView::onStatsUpdated()
 {
+    PROFILE(StatsView, onStatsUpdated);
+
     updateStatsLabels();
 }
 
 // ----------------------------------------------------------------------------
 void StatsView::onSettingsStatsChanged()
 {
+    PROFILE(StatsView, onSettingsStatsChanged);
+
     recreateLayout();
     updateStatsLabels();
 }
@@ -135,6 +146,8 @@ void StatsView::onSettingsWSChanged() {}
 // ----------------------------------------------------------------------------
 void StatsView::onPlayerMetaChanged()
 {
+    PROFILE(StatsView, onPlayerMetaChanged);
+
     // Names might have changed
     const QString& p1name = playerMeta_->character(0);
     const QString& p2name = playerMeta_->character(1);

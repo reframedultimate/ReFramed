@@ -21,12 +21,16 @@ ReplayListView::~ReplayListView()
 // ----------------------------------------------------------------------------
 QSize ReplayListView::sizeHint() const
 {
+    PROFILE(ReplayListView, sizeHint);
+
     return QSize(900, 100);
 }
 
 // ----------------------------------------------------------------------------
 void ReplayListView::onDeleteKeyPressed()
 {
+    PROFILE(ReplayListView, onDeleteKeyPressed);
+
 
 }
 

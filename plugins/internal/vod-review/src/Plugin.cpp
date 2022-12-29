@@ -32,7 +32,7 @@ static rfcommon::Plugin* createVODReviewPlugin(
 
 static void destroyPlugin(rfcommon::Plugin* plugin)
 {
-    PROFILE(PluginGlobal, destroyVideoPlayerPlugin);
+    PROFILE(PluginGlobal, destroyPlugin);
 
     delete plugin;
 }

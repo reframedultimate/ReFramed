@@ -1,5 +1,6 @@
 #include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/ReplayFileParts.hpp"
 #include "rfcommon/TrainingMetadata.hpp"
 #include <cctype>
@@ -38,6 +39,8 @@ ReplayFileParts::~ReplayFileParts()
 // ----------------------------------------------------------------------------
 int parseDateTime(const char* fn, String* date, String* time)
 {
+    PROFILE(ReplayFilePartsGlobal, parseDateTime);
+
     const char* s_date = fn;
     const char* s_time = fn;
     const char* p;
@@ -81,6 +84,8 @@ retry:
 // ----------------------------------------------------------------------------
 static int parseEvent(int pos, const char* fn, String* event)
 {
+    PROFILE(ReplayFilePartsGlobal, parseEvent);
+
     const char* s_event;
     const char* p;
 
@@ -105,6 +110,8 @@ static int parseEvent(int pos, const char* fn, String* event)
 // ----------------------------------------------------------------------------
 static int parseSetFormatAndRound(int pos, const char* fn, String* setFormat, String* round)
 {
+    PROFILE(ReplayFilePartsGlobal, parseSetFormatAndRound);
+
     const char* s_format;
     const char* s_round;
     const char* p;
@@ -156,6 +163,8 @@ static int parseSetFormatAndRound(int pos, const char* fn, String* setFormat, St
 // ----------------------------------------------------------------------------
 static int parsePlayers(int pos, const char* fn, SmallVector<String, 2>* players, SmallVector<String, 2>* fighters, uint8_t* loserSide)
 {
+    PROFILE(ReplayFilePartsGlobal, parsePlayers);
+
     const char* s_player;
     const char* s_fighter;
     const char* p;
@@ -248,6 +257,8 @@ skip_fighter:
 // ----------------------------------------------------------------------------
 static int parseGameAndScore(int pos, const char* fn, int* game, int* p1Score, int* p2Score)
 {
+    PROFILE(ReplayFilePartsGlobal, parseGameAndScore);
+
     const char* s_game;
     const char* p;
     int game_len;
@@ -312,6 +323,8 @@ retry:
 // ----------------------------------------------------------------------------
 static int parseStage(int pos, const char* fn, String* stage)
 {
+    PROFILE(ReplayFilePartsGlobal, parseStage);
+
     const char* s_stage;
     const char* p;
 
@@ -337,6 +350,8 @@ static int parseStage(int pos, const char* fn, String* stage)
 // ----------------------------------------------------------------------------
 ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 {
+    PROFILE(ReplayFileParts, fromFileName);
+
     // Example:
     //   2020-05-23_19-45-01 - Singles - Bo3 (WR2) - TheComet (Pika) vs TAEL (Falcon) - Game 3 (1-1) - Kalos.rfr
 
@@ -377,6 +392,8 @@ ReplayFileParts ReplayFileParts::fromFileName(const char* fileName)
 // ----------------------------------------------------------------------------
 ReplayFileParts ReplayFileParts::fromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata)
 {
+    PROFILE(ReplayFileParts, fromMetadata);
+
     ReplayFileParts parts("", {}, {}, "", "", "",
             BracketType::makeOther(""),
             Round::makeFree(),
@@ -391,6 +408,8 @@ ReplayFileParts ReplayFileParts::fromMetadata(const rfcommon::MappingInfo* map, 
 // ----------------------------------------------------------------------------
 void ReplayFileParts::updateFromMetadata(const rfcommon::MappingInfo* map, const rfcommon::Metadata* mdata)
 {
+    PROFILE(ReplayFileParts, updateFromMetadata);
+
     const auto stampMs = mdata->timeStarted().millisSinceEpoch();
     std::time_t t = (std::time_t)(stampMs / 1000);
     std::tm* tm = std::localtime(&t);
@@ -443,6 +462,8 @@ void ReplayFileParts::updateFromMetadata(const rfcommon::MappingInfo* map, const
 // ----------------------------------------------------------------------------
 String ReplayFileParts::toFileName() const
 {
+    PROFILE(ReplayFileParts, toFileName);
+
     // Examples:
     //   2020-05-23_19-45-01 - Singles - Bo3 (WR2) - TheComet (Pika) vs TAEL (Falcon) - Game 3 (1-1) - Kalos.rfr
     //   2020-05-23_19-45-01 - Friendlies - Free (5) - TheComet (Pika) vs TAEL (Falcon) - Game 2 (0-1) - Kalos.rfr
@@ -472,6 +493,8 @@ String ReplayFileParts::toFileName() const
 // ----------------------------------------------------------------------------
 bool ReplayFileParts::hasMissingInfo() const
 {
+    PROFILE(ReplayFileParts, hasMissingInfo);
+
     if (playerNames_.count() == 0)
         return true;
     for (const auto& name : playerNames_)

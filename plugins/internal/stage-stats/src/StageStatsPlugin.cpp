@@ -50,6 +50,8 @@ void StageStatsPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 // ----------------------------------------------------------------------------
 void StageStatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(StageStatsPlugin, onGameSessionSetLoaded);
+
     model_->clearStats();
     for (int i = 0; i != numGames; ++i)
         if (auto mdata = games[i]->tryGetMetadata())
@@ -62,6 +64,8 @@ void StageStatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int num
 // ----------------------------------------------------------------------------
 void StageStatsPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(StageStatsPlugin, onGameSessionSetUnloaded);
+
     model_->clearStats();
     model_->notifyUpdated();
 }

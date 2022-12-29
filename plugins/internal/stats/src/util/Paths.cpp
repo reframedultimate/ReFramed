@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/util/Paths.hpp"
 
 #include <QStandardPaths>
@@ -6,6 +7,8 @@
 // ----------------------------------------------------------------------------
 bool ensureDataDirExists()
 {
+    PROFILE(PathsGlobal, ensureDataDirExists);
+
     QDir dir = dataDir();
     if (dir.exists() == false)
         dir.mkpath(dir.absolutePath());
@@ -18,6 +21,8 @@ bool ensureDataDirExists()
 // ----------------------------------------------------------------------------
 const QDir dataDir()
 {
+    PROFILE(PathsGlobal, dataDir);
+
     const QString datadir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     return QDir(datadir).filePath("stats");
 }

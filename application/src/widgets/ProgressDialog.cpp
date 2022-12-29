@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/widgets/ProgressDialog.hpp"
 #include <QProgressBar>
 #include <QLabel>
@@ -38,6 +39,8 @@ ProgressDialog::~ProgressDialog()
 // ----------------------------------------------------------------------------
 void ProgressDialog::setPercent(int percent, const QString& text)
 {
+    PROFILE(ProgressDialog, setPercent);
+
     bar_->setValue(percent);
 
     if (text.length() > 0)

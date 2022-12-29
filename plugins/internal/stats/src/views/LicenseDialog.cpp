@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "ui_LicenseView.h"
 #include "stats/config.hpp"
 #include "stats/views/LicenseDialog.hpp"
@@ -33,12 +34,16 @@ LicenseDialog::~LicenseDialog()
 // ----------------------------------------------------------------------------
 void LicenseDialog::onRadioButtonAgreeToggled(bool enable)
 {
+    PROFILE(LicenseDialog, onRadioButtonAgreeToggled);
+
     ui_->pushButton_continue->setEnabled(enable);
 }
 
 // ----------------------------------------------------------------------------
 void LicenseDialog::onPushButtonContinueReleased()
 {
+    PROFILE(LicenseDialog, onPushButtonContinueReleased);
+
     if (ui_->radioButton_agree->isChecked())
         accept();
 }
@@ -46,5 +51,7 @@ void LicenseDialog::onPushButtonContinueReleased()
 // ----------------------------------------------------------------------------
 void LicenseDialog::onPushButtonCancelReleased()
 {
+    PROFILE(LicenseDialog, onPushButtonCancelReleased);
+
     reject();
 }

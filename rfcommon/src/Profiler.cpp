@@ -167,6 +167,8 @@ ProfileBlock* ProfileRootBlock::getRoot()
 // ----------------------------------------------------------------------------
 void Profiler::init()
 {
+    NOPROFILE();
+
     if (profiler)
         return;
     profiler = new Profiler;
@@ -175,6 +177,8 @@ void Profiler::init()
 // ----------------------------------------------------------------------------
 void Profiler::deinit()
 {
+    NOPROFILE();
+
     delete profiler;
     profiler = nullptr;
 }

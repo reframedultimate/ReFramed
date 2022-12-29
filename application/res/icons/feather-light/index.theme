@@ -1,0 +1,11 @@
+[Icon Theme]
+Name=Feather Light
+Comment=Feather Light
+
+[apps/scalable]
+Size=48
+Context=Applications
+MinSize=16
+MaxSize=256
+Type=Scalable
+

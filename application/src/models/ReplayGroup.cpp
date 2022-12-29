@@ -18,7 +18,7 @@ ReplayGroup::ReplayGroup(const QString& name)
 // ----------------------------------------------------------------------------
 const QSet<QString>& ReplayGroup::files() const
 {
-    PROFILE(ReplayGroup, fileNames);
+    PROFILE(ReplayGroup, files);
 
     return files_;
 }
@@ -81,6 +81,8 @@ void ReplayGroup::removeAllFiles()
 // ----------------------------------------------------------------------------
 bool ReplayGroup::isInGroup(const QString& file) const
 {
+    PROFILE(ReplayGroup, isInGroup);
+
     return files_.contains(file);
 }
 

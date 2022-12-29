@@ -1,5 +1,7 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/models/MetadataEditModel.hpp"
 #include "application/widgets/MetadataEditWidget.hpp"
+#include "application/widgets/IconLabel.hpp"
 
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
@@ -19,7 +21,7 @@ MetadataEditWidget::MetadataEditWidget(MetadataEditModel* model, QWidget* parent
     : QWidget(parent)
     , model_(model)
     , toggleButton_(new QToolButton)
-    , title_(new QLabel)
+    , title_(new IconLabel(QSize(16, 16)))
     , toggleAnimation_(new QParallelAnimationGroup(this))
     , contentArea_(new QWidget)
     , animationDuration_(100)
@@ -84,20 +86,27 @@ MetadataEditWidget::~MetadataEditWidget()
 }
 
 // ----------------------------------------------------------------------------
-void MetadataEditWidget::setTitle(const QString& title)
+void MetadataEditWidget::setTitle(const QIcon& icon, const QString& title)
 {
+    PROFILE(MetadataEditWidget, setTitle);
+
+    title_->setIcon(icon);
     title_->setText(title);
 }
 
 // ----------------------------------------------------------------------------
 QWidget* MetadataEditWidget::contentWidget()
 {
+    PROFILE(MetadataEditWidget, contentWidget);
+
     return contentArea_;
 }
 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget::setExpanded(bool expanded)
 {
+    PROFILE(MetadataEditWidget, setExpanded);
+
     toggleButton_->setChecked(expanded);
     onToggleButtonClicked(expanded);
 }
@@ -105,6 +114,8 @@ void MetadataEditWidget::setExpanded(bool expanded)
 // ----------------------------------------------------------------------------
 void MetadataEditWidget::updateSize()
 {
+    PROFILE(MetadataEditWidget, updateSize);
+
     // http://stackoverflow.com/questions/13942616/qt-resize-window-after-widget-remove
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
@@ -139,6 +150,8 @@ void MetadataEditWidget::updateSize()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget::onToggleButtonClicked(bool checked)
 {
+    PROFILE(MetadataEditWidget, onToggleButtonClicked);
+
     toggleButton_->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
     toggleAnimation_->setDirection(checked ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
     toggleAnimation_->start();

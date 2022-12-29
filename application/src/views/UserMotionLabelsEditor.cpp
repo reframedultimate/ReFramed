@@ -337,11 +337,13 @@ public:
         if (event->key() == Qt::Key_C && (event->modifiers() & Qt::ControlModifier))
         {
             QModelIndexList cells = selectedIndexes();
-            qSort(cells); // Necessary, otherwise they are in column order
+            std::sort(cells.begin(), cells.end()); // Necessary, otherwise they are in column order
 
             QString text;
             int currentRow = 0; // To determine when to insert newlines
             foreach(const QModelIndex & cell, cells) {
+    PROFILE(UserMotionLabelsEditorGlobal, foreach);
+
                 if (text.length() == 0) {
                     // First item
                 }

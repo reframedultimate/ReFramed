@@ -60,16 +60,12 @@ MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings
     setWindowTitle("ReFramed - " APP_VERSION_STR);
     setWindowIcon(QIcon(":/icons/reframed-icon.ico"));
 
+    // Set icons in dropdown menus
+    ui_->action_quit->setIcon(QIcon::fromTheme("power"));
+
     setCentralWidget(categoryTabsView_);
 
     statusBar()->addPermanentWidget(new ConnectionStatusWidget(protocol_.get()));
-
-    /*
-    QDockWidget* categoryDock = new QDockWidget(this);
-    categoryDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    categoryDock->setWidget(categoryView_);
-    categoryDock->setFeatures(QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::LeftDockWidgetArea, categoryDock);*/
 
     protocol_->dispatcher.addListener(this);
 
@@ -213,6 +209,8 @@ void MainWindow::onConnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onAttachToN64EmuTriggered()
 {
+    PROFILE(MainWindow, onAttachToN64EmuTriggered);
+
     protocol_->connectToSSB64Process();
 }
 
@@ -228,6 +226,8 @@ void MainWindow::onDisconnectActionTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onImportReplayPackTriggered()
 {
+    PROFILE(MainWindow, onImportReplayPackTriggered);
+
     ImportReplayPackDialog dialog(replayManager_.get(), this);
     dialog.exec();
 }
@@ -235,6 +235,12 @@ void MainWindow::onImportReplayPackTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onDefaultThemeTriggered()
 {
+    PROFILE(MainWindow, onDefaultThemeTriggered);
+
+    // NOTE: Hack, but we change the app's style *after* changing the icon
+    // theme so that widgets that listen to QEvent::StyleChange can reload
+    // the icons properly
+    QIcon::setThemeName("feather-light");
     qApp->setStyleSheet("");
 
     ui_->action_defaultTheme->setChecked(true);
@@ -247,11 +253,17 @@ void MainWindow::onDefaultThemeTriggered()
 // ----------------------------------------------------------------------------
 void MainWindow::onDarkThemeTriggered()
 {
+    PROFILE(MainWindow, onDarkThemeTriggered);
+
     QFile f(":/qdarkstyle/dark/darkstyle.qss");
     f.open(QIODevice::ReadOnly);
     if (!f.isOpen())
         return;
 
+    // NOTE: Hack, but we change the app's style *after* changing the icon
+    // theme so that widgets that listen to QEvent::StyleChange can reload
+    // the icons properly
+    QIcon::setThemeName("feather-dark");
     QTextStream ts(&f);
     qApp->setStyleSheet(ts.readAll());
 

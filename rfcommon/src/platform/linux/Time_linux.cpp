@@ -12,7 +12,7 @@
 /* ------------------------------------------------------------------------- */
 uint64_t time_milli_seconds_since_epoch(void)
 {
-    PROFILE(time_linuxGlobal, time_milli_seconds_since_epoch);
+    PROFILE(Time_linuxGlobal, time_milli_seconds_since_epoch);
 
     struct timeval tv;
 #ifndef NDEBUG
@@ -34,7 +34,7 @@ uint64_t time_milli_seconds_since_epoch(void)
 /* ------------------------------------------------------------------------- */
 uint64_t time_qt_to_milli_seconds_since_epoch(const char* str)
 {
-    PROFILE(time_linuxGlobal, time_qt_to_milli_seconds_since_epoch);
+    PROFILE(Time_linuxGlobal, time_qt_to_milli_seconds_since_epoch);
 
     std::tm t;
     std::stringstream ss(str);

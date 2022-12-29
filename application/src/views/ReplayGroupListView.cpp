@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/views/ReplayGroupListView.hpp"
 #include "application/models/ReplayManager.hpp"
 #include "application/models/ReplayGroup.hpp"
@@ -21,12 +22,16 @@ ReplayGroupListView::~ReplayGroupListView()
 // ----------------------------------------------------------------------------
 void ReplayGroupListView::onReplayManagerGroupAdded(ReplayGroup* group)
 {
+    PROFILE(ReplayGroupListView, onReplayManagerGroupAdded);
+
     addItem(group->name());
 }
 
 // ----------------------------------------------------------------------------
 void ReplayGroupListView::onReplayManagerGroupNameChanged(ReplayGroup* group, const QString& oldName, const QString& newName)
 {
+    PROFILE(ReplayGroupListView, onReplayManagerGroupNameChanged);
+
     for (int i = 0; i != count(); ++i)
     {
         QListWidgetItem* it = item(i);
@@ -41,6 +46,8 @@ void ReplayGroupListView::onReplayManagerGroupNameChanged(ReplayGroup* group, co
 // ----------------------------------------------------------------------------
 void ReplayGroupListView::onReplayManagerGroupRemoved(ReplayGroup* group)
 {
+    PROFILE(ReplayGroupListView, onReplayManagerGroupRemoved);
+
     for (int i = 0; i != count(); ++i)
     {
         QListWidgetItem* it = item(i);

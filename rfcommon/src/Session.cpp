@@ -915,7 +915,7 @@ Session::ContentTableEntry::ContentTableEntry(const char* typeStr)
 // ----------------------------------------------------------------------------
 bool Session::save(const char* utf8_filename, uint8_t saveFlags)
 {
-    PROFILE(Session, save_FileName);
+    PROFILE(Session, save);
 
     Log* log = Log::root();
     log->beginDropdown("Saving session %s", utf8_filename);
@@ -942,7 +942,7 @@ bool Session::save(const char* utf8_filename, uint8_t saveFlags)
 // ----------------------------------------------------------------------------
 uint64_t Session::save(FILE* fp, uint8_t saveFlags)
 {
-    PROFILE(Session, save_FilePointer);
+    PROFILE(Session, save);
     Log* log = Log::root();
 
     // This could either be a session that was recorded live, or a session
@@ -1297,6 +1297,8 @@ VideoEmbed* Session::tryGetVideo()
 // ----------------------------------------------------------------------------
 void Session::setNewVideo(VideoMeta* meta, VideoEmbed* embed)
 {
+    PROFILE(Session, setNewVideo);
+
     videoMeta_ = meta;
     videoEmbed_ = embed;
 
@@ -1316,6 +1318,8 @@ void Session::setNewVideo(VideoMeta* meta, VideoEmbed* embed)
 // ----------------------------------------------------------------------------
 void Session::eraseFromContentTable(Flags::Flag flag)
 {
+    PROFILE(Session, eraseFromContentTable);
+
     for (auto it = contentTable_.begin(); it != contentTable_.end(); ++it)
     {
 #define X(name, value) \

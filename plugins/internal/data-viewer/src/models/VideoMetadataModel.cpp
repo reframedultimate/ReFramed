@@ -1,6 +1,7 @@
 #include "data-viewer/models/VideoMetadataModel.hpp"
 
 #include "rfcommon/VideoMeta.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QTime>
 
@@ -14,6 +15,8 @@ VideoMetadataModel::~VideoMetadataModel()
 // ----------------------------------------------------------------------------
 void VideoMetadataModel::setVideoMetadata(rfcommon::VideoMeta* vmeta)
 {
+    PROFILE(VideoMetadataModel, setVideoMetadata);
+
     beginResetModel();
         if (vmeta_)
             vmeta_->dispatcher.removeListener(this);
@@ -28,6 +31,8 @@ void VideoMetadataModel::setVideoMetadata(rfcommon::VideoMeta* vmeta)
 // ----------------------------------------------------------------------------
 int VideoMetadataModel::rowCount(const QModelIndex& parent) const
 {
+    PROFILE(VideoMetadataModel, rowCount);
+
     if (vmeta_)
         return 4;
     return 0;
@@ -36,12 +41,16 @@ int VideoMetadataModel::rowCount(const QModelIndex& parent) const
 // ----------------------------------------------------------------------------
 int VideoMetadataModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(VideoMetadataModel, columnCount);
+
     return 2;
 }
 
 // ----------------------------------------------------------------------------
 QVariant VideoMetadataModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    PROFILE(VideoMetadataModel, headerData);
+
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
         switch (section)
@@ -57,6 +66,8 @@ QVariant VideoMetadataModel::headerData(int section, Qt::Orientation orientation
 // ----------------------------------------------------------------------------
 QVariant VideoMetadataModel::data(const QModelIndex& index, int role) const
 {
+    PROFILE(VideoMetadataModel, data);
+
     switch (role)
     {
         case Qt::DisplayRole:

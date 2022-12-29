@@ -1,4 +1,5 @@
 #include "rfcommon/ScoreCount.hpp"
+#include "rfcommon/Profiler.hpp"
 
 namespace rfcommon {
 
@@ -16,18 +17,24 @@ ScoreCount::~ScoreCount()
 // ----------------------------------------------------------------------------
 ScoreCount ScoreCount::fromGameNumber(GameNumber gameNumber)
 {
+    PROFILE(ScoreCount, fromGameNumber);
+
     return ScoreCount(0, 0, gameNumber.value());
 }
 
 // ----------------------------------------------------------------------------
 ScoreCount ScoreCount::fromScore(int p1, int p2)
 {
+    PROFILE(ScoreCount, fromScore);
+
     return ScoreCount(p1, p2, p1 + p2 + 1);
 }
 
 // ----------------------------------------------------------------------------
 ScoreCount ScoreCount::fromScoreAndGameNumber(int p1, int p2, GameNumber gameNumber)
 {
+    PROFILE(ScoreCount, fromScoreAndGameNumber);
+
     return ScoreCount(p1, p2, gameNumber.value());
 }
 

@@ -14,6 +14,8 @@ extern "C" {
 
 static void printDeque(const char* queueName, rfcommon::Deque<BufferedSeekableDecoder::FrameEntry>* d)
 {
+    PROFILE(BufferedSeekableDecoderGlobal, printDeque);
+
     int i = 0;
     printf("%s\n", queueName);
     for (auto it : *d)
@@ -37,6 +39,8 @@ BufferedSeekableDecoder::~BufferedSeekableDecoder()
 // ----------------------------------------------------------------------------
 bool BufferedSeekableDecoder::openFile(const void* address, uint64_t size)
 {
+    PROFILE(BufferedSeekableDecoder, openFile);
+
     if (decoder_->openFile(address, size) == false)
         return false;
 
@@ -52,6 +56,8 @@ bool BufferedSeekableDecoder::openFile(const void* address, uint64_t size)
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::closeFile()
 {
+    PROFILE(BufferedSeekableDecoder, closeFile);
+
     mutex_.lock();
         requestShutdown_ = true;
         cond_.wakeOne();
@@ -78,6 +84,8 @@ void BufferedSeekableDecoder::closeFile()
 // ----------------------------------------------------------------------------
 AVFrame* BufferedSeekableDecoder::takeNextVideoFrame()
 {
+    PROFILE(BufferedSeekableDecoder, takeNextVideoFrame);
+
     mutex_.lock();
     cond_.wakeOne();
 
@@ -109,6 +117,8 @@ AVFrame* BufferedSeekableDecoder::takeNextVideoFrame()
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::giveNextVideoFrame(AVFrame* frame)
 {
+    PROFILE(BufferedSeekableDecoder, giveNextVideoFrame);
+
     mutex_.lock();
     cond_.wakeOne();
 
@@ -129,6 +139,8 @@ void BufferedSeekableDecoder::giveNextVideoFrame(AVFrame* frame)
 // ----------------------------------------------------------------------------
 AVFrame* BufferedSeekableDecoder::takePrevVideoFrame()
 {
+    PROFILE(BufferedSeekableDecoder, takePrevVideoFrame);
+
     mutex_.lock();
     cond_.wakeOne();
 
@@ -160,6 +172,8 @@ AVFrame* BufferedSeekableDecoder::takePrevVideoFrame()
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::givePrevVideoFrame(AVFrame* frame)
 {
+    PROFILE(BufferedSeekableDecoder, givePrevVideoFrame);
+
     mutex_.lock();
     cond_.wakeOne();
 
@@ -180,29 +194,39 @@ void BufferedSeekableDecoder::givePrevVideoFrame(AVFrame* frame)
 // ----------------------------------------------------------------------------
 AVFrame* BufferedSeekableDecoder::takeNextAudioFrame()
 {
+    PROFILE(BufferedSeekableDecoder, takeNextAudioFrame);
+
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::giveNextAudioFrame(AVFrame* frame)
 {
+    PROFILE(BufferedSeekableDecoder, giveNextAudioFrame);
+
 }
 
 // ----------------------------------------------------------------------------
 AVFrame* BufferedSeekableDecoder::takePrevAudioFrame()
 {
+    PROFILE(BufferedSeekableDecoder, takePrevAudioFrame);
+
     return nullptr;
 }
 
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::givePrevAudioFrame(AVFrame* frame)
 {
+    PROFILE(BufferedSeekableDecoder, givePrevAudioFrame);
+
 
 }
 
 // ----------------------------------------------------------------------------
 bool BufferedSeekableDecoder::seekNearKeyframe(int64_t ts)
 {
+    PROFILE(BufferedSeekableDecoder, seekNearKeyframe);
+
     mutex_.lock();
     cond_.wakeOne();
 
@@ -225,36 +249,48 @@ bool BufferedSeekableDecoder::seekNearKeyframe(int64_t ts)
 // ----------------------------------------------------------------------------
 int64_t BufferedSeekableDecoder::toCodecTimeStamp(int64_t ts, int num, int den) const
 {
+    PROFILE(BufferedSeekableDecoder, toCodecTimeStamp);
+
     return decoder_->toCodecTimeStamp(ts, num, den);
 }
 
 // ----------------------------------------------------------------------------
 int64_t BufferedSeekableDecoder::fromCodecTimeStamp(int64_t codec_ts, int num, int den) const
 {
+    PROFILE(BufferedSeekableDecoder, fromCodecTimeStamp);
+
     return decoder_->fromCodecTimeStamp(codec_ts, num, den);
 }
 
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::frameRate(int* num, int* den) const
 {
+    PROFILE(BufferedSeekableDecoder, frameRate);
+
     decoder_->frameRate(num, den);
 }
 
 // ----------------------------------------------------------------------------
 int64_t BufferedSeekableDecoder::duration() const
 {
+    PROFILE(BufferedSeekableDecoder, duration);
+
     return decoder_->duration();
 }
 
 // ----------------------------------------------------------------------------
 int BufferedSeekableDecoder::step(int deltaFrames)
 {
+    PROFILE(BufferedSeekableDecoder, step);
+
     return 0;
 }
 
 // ----------------------------------------------------------------------------
 bool BufferedSeekableDecoder::handleSeekRequest(const int balancedVBackSize)
 {
+    PROFILE(BufferedSeekableDecoder, handleSeekRequest);
+
     if (requestSeek_)
     {
         // Clear queues
@@ -350,6 +386,8 @@ bool BufferedSeekableDecoder::handleSeekRequest(const int balancedVBackSize)
 // ----------------------------------------------------------------------------
 bool BufferedSeekableDecoder::handleDecodeForwards(const int vFrontThreshold, const int balancedVFrontSize)
 {
+    PROFILE(BufferedSeekableDecoder, handleDecodeForwards);
+
     if (vFront_.count() < balancedVFrontSize)
     {
         puts("(thread) vFront_.count() < vFrontThreshold");
@@ -414,6 +452,8 @@ bool BufferedSeekableDecoder::handleDecodeForwards(const int vFrontThreshold, co
 // ----------------------------------------------------------------------------
 bool BufferedSeekableDecoder::handleDecodeBackwards(const int vBackThreshold, const int balancedVBackSize)
 {
+    PROFILE(BufferedSeekableDecoder, handleDecodeBackwards);
+
     if (vBack_.count() < vBackThreshold)
     {
         puts("(thread) vBack_.count() < vBackThreshold");
@@ -524,6 +564,8 @@ bool BufferedSeekableDecoder::handleDecodeBackwards(const int vBackThreshold, co
 // ----------------------------------------------------------------------------
 void BufferedSeekableDecoder::run()
 {
+    PROFILE(BufferedSeekableDecoder, run);
+
     mutex_.lock();
     while (requestShutdown_ == false)
     {

@@ -5,6 +5,8 @@ namespace rfcommon {
 
 static int parse_string(const char* s, const char* prefix, int* num)
 {
+    PROFILE(RoundGlobal, parse_string);
+
     while(*prefix)
     {
         if(*prefix++ != *s++)
@@ -58,12 +60,16 @@ Round::~Round()
 // ----------------------------------------------------------------------------
 Round Round::makeFree()
 {
+    PROFILE(Round, makeFree);
+
     return Round(FREE, SessionNumber::fromValue(1));
 }
 
 // ----------------------------------------------------------------------------
 Round Round::fromType(Type type, SessionNumber number)
 {
+    PROFILE(Round, fromType);
+
     switch (type)
     {
         case WINNERS_ROUND:
@@ -88,24 +94,32 @@ Round Round::fromType(Type type, SessionNumber number)
 // ----------------------------------------------------------------------------
 Round Round::fromIndex(int index, SessionNumber number)
 {
+    PROFILE(Round, fromIndex);
+
     return Round(static_cast<Type>(index), number);
 }
 
 // ----------------------------------------------------------------------------
 Round Round::fromSessionNumber(SessionNumber sessionNumber)
 {
+    PROFILE(Round, fromSessionNumber);
+
     return Round(FREE, sessionNumber);
 }
 
 // ----------------------------------------------------------------------------
 Round Round::fromDescription(const char* desc)
 {
+    PROFILE(Round, fromDescription);
+
     return Round(desc);
 }
 
 // ----------------------------------------------------------------------------
 String Round::shortDescription() const
 {
+    PROFILE(Round, shortDescription);
+
     static const char* table[] = {
 #define X(name, shortstr, longstr) shortstr,
         ROUND_TYPES_LIST
@@ -140,6 +154,8 @@ String Round::shortDescription() const
 // ----------------------------------------------------------------------------
 String Round::longDescription() const
 {
+    PROFILE(Round, longDescription);
+
     static const char* table[] = {
 #define X(name, shortstr, longstr) longstr,
         ROUND_TYPES_LIST

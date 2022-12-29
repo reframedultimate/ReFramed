@@ -204,6 +204,8 @@ void VideoAssociatorDialog::onChooseFileReleased()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onFrameOffsetChanged(int value)
 {
+    PROFILE(VideoAssociatorDialog, onFrameOffsetChanged);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -220,6 +222,8 @@ void VideoAssociatorDialog::onFrameOffsetChanged(int value)
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onTimeOffsetChanged(const QTime& time)
 {
+    PROFILE(VideoAssociatorDialog, onTimeOffsetChanged);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -237,6 +241,8 @@ void VideoAssociatorDialog::onTimeOffsetChanged(const QTime& time)
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onPlayToggled()
 {
+    PROFILE(VideoAssociatorDialog, onPlayToggled);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -260,6 +266,8 @@ void VideoAssociatorDialog::onPlayToggled()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onNextFrame()
 {
+    PROFILE(VideoAssociatorDialog, onNextFrame);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -275,6 +283,8 @@ void VideoAssociatorDialog::onNextFrame()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::onPrevFrame()
 {
+    PROFILE(VideoAssociatorDialog, onPrevFrame);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -290,6 +300,8 @@ void VideoAssociatorDialog::onPrevFrame()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::updateUIOffsets()
 {
+    PROFILE(VideoAssociatorDialog, updateUIOffsets);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
@@ -307,6 +319,8 @@ void VideoAssociatorDialog::updateUIOffsets()
 // ----------------------------------------------------------------------------
 void VideoAssociatorDialog::updateUIVideoButtons()
 {
+    PROFILE(VideoAssociatorDialog, updateUIVideoButtons);
+
     if (videoPlugin_ == nullptr)
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())

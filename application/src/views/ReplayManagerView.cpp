@@ -12,6 +12,7 @@
 #include "application/widgets/CollapsibleSplitter.hpp"
 
 #include "rfcommon/Session.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QSplitter>
 #include <QVBoxLayout>
@@ -116,12 +117,16 @@ ReplayManagerView::~ReplayManagerView()
 // ----------------------------------------------------------------------------
 void ReplayManagerView::toggleSideBar()
 {
+    PROFILE(ReplayManagerView, toggleSideBar);
+
     hSplitter_->toggleCollapse();
 }
 
 // ----------------------------------------------------------------------------
 void ReplayManagerView::groupSelected(QListWidgetItem* current, QListWidgetItem* previous)
 {
+    PROFILE(ReplayManagerView, groupSelected);
+
     replayListModel_->clearReplayGroup();
 
     if (current == nullptr)
@@ -153,6 +158,8 @@ void ReplayManagerView::groupSelected(QListWidgetItem* current, QListWidgetItem*
 // ----------------------------------------------------------------------------
 void ReplayManagerView::searchTextChanged(int type, const QStringList& text)
 {
+    PROFILE(ReplayManagerView, searchTextChanged);
+
     if (replayListSortFilterModel_->filtersCleared() && text.size() > 0)
     {
         storeExpandedStates_.clear();
@@ -185,6 +192,8 @@ void ReplayManagerView::searchTextChanged(int type, const QStringList& text)
 // ----------------------------------------------------------------------------
 void ReplayManagerView::onItemSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
+    PROFILE(ReplayManagerView, onItemSelectionChanged);
+
     pluginDockView_->clearReplays();
 
     QStringList selectedFileNames;
@@ -228,6 +237,8 @@ void ReplayManagerView::onItemSelectionChanged(const QItemSelection& selected, c
 // ----------------------------------------------------------------------------
 void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
 {
+    PROFILE(ReplayManagerView, onReplayRightClicked);
+
     QStringList selectedFileNames;
     const auto selectedIdxs = replayListView_->selectionModel()->selectedRows();
     for (const auto& idx : selectedIdxs)
@@ -260,17 +271,17 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
     };
 
     QMenu menu;
-    QAction* editMetadata = menu.addAction("Edit meta data");
-    QAction* associateVideo = menu.addAction("Associate video");
+    QAction* editMetadata = menu.addAction(QIcon::fromTheme("edit"), "Edit meta data");
+    QAction* associateVideo = menu.addAction(QIcon::fromTheme("film"), "Associate video");
     menu.addSeparator();
-    QAction* exportPack = menu.addAction("Export as replay pack");
+    QAction* exportPack = menu.addAction(QIcon::fromTheme("package"), "Export as replay pack");
     menu.addSeparator();
-    QAction* addToNewGroup = menu.addAction("Add to new group");
-    QAction* addToGroup = menu.addAction("Add to group");
+    QAction* addToNewGroup = menu.addAction(QIcon::fromTheme("plus"), "Add to new group");
+    QAction* addToGroup = menu.addAction(QIcon::fromTheme("arrow-right"), "Add to group");
     addToGroup->setMenu(&groupMenu);
-    QAction* removeFromGroup = menu.addAction("Remove from group");
+    QAction* removeFromGroup = menu.addAction(QIcon::fromTheme("x"), "Remove from group");
     menu.addSeparator();
-    QAction* deleteReplays = menu.addAction("Delete");
+    QAction* deleteReplays = menu.addAction(QIcon::fromTheme("trash-2"), "Delete");
 
     if (selectedFileNames.size() == 1)
     {
@@ -384,6 +395,8 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
 // ----------------------------------------------------------------------------
 void ReplayManagerView::onGroupRightClicked(const QPoint& pos)
 {
+    PROFILE(ReplayManagerView, onGroupRightClicked);
+
     QMenu menu;
     QAction* createGroup = menu.addAction("Create new group");
     QAction* duplicateGroup = menu.addAction("Duplicate group");

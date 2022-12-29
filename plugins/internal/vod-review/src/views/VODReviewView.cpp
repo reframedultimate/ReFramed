@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "ui_VODReviewView.h"
 #include "vod-review/views/VODReviewView.hpp"
 #include "vod-review/views/VideoPlayerView.hpp"
@@ -15,6 +16,8 @@ public:
 
     int styleHint(QStyle::StyleHint hint, const QStyleOption* option = 0, const QWidget* widget = 0, QStyleHintReturn* returnData = 0) const
     {
+    PROFILE(VODReviewViewGlobal, styleHint);
+
         if (hint == QStyle::SH_Slider_AbsoluteSetButtons)
             return (Qt::LeftButton | Qt::MiddleButton | Qt::RightButton);
         return QProxyStyle::styleHint(hint, option, widget, returnData);
@@ -62,6 +65,8 @@ VODReviewView::~VODReviewView()
 // ----------------------------------------------------------------------------
 void VODReviewView::onPlayPauseReleased()
 {
+    PROFILE(VODReviewView, onPlayPauseReleased);
+
     if (videoPlayer_->isVideoPlaying())
     {
         updateUITimer_.stop();
@@ -77,6 +82,8 @@ void VODReviewView::onPlayPauseReleased()
 // ----------------------------------------------------------------------------
 void VODReviewView::onStepForwardsReleased()
 {
+    PROFILE(VODReviewView, onStepForwardsReleased);
+
     updateUITimer_.stop();
     videoPlayer_->pauseVideo();
     videoPlayer_->stepVideo(1);
@@ -86,6 +93,8 @@ void VODReviewView::onStepForwardsReleased()
 // ----------------------------------------------------------------------------
 void VODReviewView::onStepBackwardsReleased()
 {
+    PROFILE(VODReviewView, onStepBackwardsReleased);
+
     updateUITimer_.stop();
     videoPlayer_->pauseVideo();
     videoPlayer_->stepVideo(-1);
@@ -95,6 +104,8 @@ void VODReviewView::onStepBackwardsReleased()
 // ----------------------------------------------------------------------------
 void VODReviewView::onSliderValueChanged(int index)
 {
+    PROFILE(VODReviewView, onSliderValueChanged);
+
     auto frame = rfcommon::FrameIndex::fromValue(index);
     videoPlayer_->seekVideoToGameFrame(frame);
 }
@@ -102,6 +113,8 @@ void VODReviewView::onSliderValueChanged(int index)
 // ----------------------------------------------------------------------------
 void VODReviewView::onUpdateUI()
 {
+    PROFILE(VODReviewView, onUpdateUI);
+
     bool store = ui_->slider_videoPos->blockSignals(true);
     ui_->slider_videoPos->setValue(videoPlayer_->currentVideoGameFrame().index());
     ui_->slider_videoPos->blockSignals(store);
@@ -110,6 +123,8 @@ void VODReviewView::onUpdateUI()
 // ----------------------------------------------------------------------------
 void VODReviewView::onFileOpened()
 {
+    PROFILE(VODReviewView, onFileOpened);
+
     auto frameCount = videoPlayer_->videoGameFrameCount();
     ui_->slider_videoPos->setRange(0, frameCount.index() - 1);
     ui_->slider_videoPos->setValue(videoPlayer_->currentVideoGameFrame().index());
@@ -121,22 +136,30 @@ void VODReviewView::onFileOpened()
 // ----------------------------------------------------------------------------
 void VODReviewView::onFileClosed()
 {
+    PROFILE(VODReviewView, onFileClosed);
+
     updateUITimer_.stop();
 }
 
 // ----------------------------------------------------------------------------
 void VODReviewView::onPlayerPaused()
 {
+    PROFILE(VODReviewView, onPlayerPaused);
+
     updateUITimer_.stop();
 }
 
 // ----------------------------------------------------------------------------
 void VODReviewView::onPlayerResumed()
 {
+    PROFILE(VODReviewView, onPlayerResumed);
+
     updateUITimer_.start();
 }
 
 // ----------------------------------------------------------------------------
 void VODReviewView::onPresentImage(const QImage& image)
 {
+    PROFILE(VODReviewView, onPresentImage);
+
 }

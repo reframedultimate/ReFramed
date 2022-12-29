@@ -64,6 +64,11 @@ int main(int argc, char** argv)
             QTextStream ts(&f);
             qApp->setStyleSheet(ts.readAll());
         }
+        QIcon::setThemeName("feather-dark");
+    }
+    else
+    {
+        QIcon::setThemeName("feather-light");
     }
 
     // Load hash40 strings. These are pretty much required for the
@@ -99,6 +104,8 @@ int main(int argc, char** argv)
 
 #if defined(RFCOMMON_PROFILER)
     {
+        NOPROFILE();
+
         FILE* fp = fopen("profile.dot", "w");
         if (fp)
             rfcommon::profiler->exportGraph(fp, rfcommon::Profiler::DOT);

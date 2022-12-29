@@ -121,6 +121,8 @@ Metadata::~Metadata()
 // ----------------------------------------------------------------------------
 GameMetadata* Metadata::asGame()
 {
+    PROFILE(Metadata, asGame);
+
     assert(type() == GAME);
     return static_cast<GameMetadata*>(this);
 }
@@ -128,6 +130,8 @@ GameMetadata* Metadata::asGame()
 // ----------------------------------------------------------------------------
 const GameMetadata* Metadata::asGame() const
 {
+    PROFILE(Metadata, asGame);
+
     assert(type() == GAME);
     return static_cast<const GameMetadata*>(this);
 }
@@ -135,6 +139,8 @@ const GameMetadata* Metadata::asGame() const
 // ----------------------------------------------------------------------------
 TrainingMetadata* Metadata::asTraining()
 {
+    PROFILE(Metadata, asTraining);
+
     assert(type() == TRAINING);
     return static_cast<TrainingMetadata*>(this);
 }
@@ -142,6 +148,8 @@ TrainingMetadata* Metadata::asTraining()
 // ----------------------------------------------------------------------------
 const TrainingMetadata* Metadata::asTraining() const
 {
+    PROFILE(Metadata, asTraining);
+
     assert(type() == TRAINING);
     return static_cast<const TrainingMetadata*>(this);
 }

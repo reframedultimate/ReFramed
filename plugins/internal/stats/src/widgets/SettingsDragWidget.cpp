@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/widgets/SettingsDragWidget.hpp"
 #include "stats/widgets/SettingsStatsItem.hpp"
 
@@ -21,12 +22,16 @@ SettingsDragWidget::SettingsDragWidget(QWidget* parent)
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::addStat(StatType type)
 {
+    PROFILE(SettingsDragWidget, addStat);
+
     layout()->addWidget(new SettingsStatsItem(type));
 }
 
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::removeStat(StatType type)
 {
+    PROFILE(SettingsDragWidget, removeStat);
+
     for (int i = 0; i != layout()->count(); ++i)
     {
         SettingsStatsItem* item = static_cast<SettingsStatsItem*>(layout()->itemAt(i)->widget());
@@ -41,6 +46,8 @@ void SettingsDragWidget::removeStat(StatType type)
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::dragEnterEvent(QDragEnterEvent* e)
 {
+    PROFILE(SettingsDragWidget, dragEnterEvent);
+
     if (!e->mimeData()->hasFormat("application/x-stats-settings-item"))
     {
         e->ignore();
@@ -61,6 +68,8 @@ void SettingsDragWidget::dragEnterEvent(QDragEnterEvent* e)
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::dragMoveEvent(QDragMoveEvent* e)
 {
+    PROFILE(SettingsDragWidget, dragMoveEvent);
+
     if (!e->mimeData()->hasFormat("application/x-stats-settings-item"))
     {
         e->ignore();
@@ -81,6 +90,8 @@ void SettingsDragWidget::dragMoveEvent(QDragMoveEvent* e)
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::dropEvent(QDropEvent* e)
 {
+    PROFILE(SettingsDragWidget, dropEvent);
+
     if (!e->mimeData()->hasFormat("application/x-stats-settings-item"))
     {
         e->ignore();
@@ -144,6 +155,8 @@ void SettingsDragWidget::dropEvent(QDropEvent* e)
 // ----------------------------------------------------------------------------
 void SettingsDragWidget::mousePressEvent(QMouseEvent* e)
 {
+    PROFILE(SettingsDragWidget, mousePressEvent);
+
     QWidget* widget = childAt(e->pos());
     SettingsStatsItem* item = qobject_cast<SettingsStatsItem*>(widget);
     QLabel* item2 = qobject_cast<QLabel*>(widget);

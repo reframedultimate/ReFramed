@@ -6,6 +6,7 @@
 
 #include "rfcommon/Deserializer.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Utf8.hpp"
 
 #include <QFileDialog>
@@ -52,6 +53,8 @@ ImportReplayPackDialog::~ImportReplayPackDialog()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::checkEnableImportButton()
 {
+    PROFILE(ImportReplayPackDialog, checkEnableImportButton);
+
     QFileInfo packInfo(ui_->lineEdit_packFileName->text());
     QString replayDir = ui_->lineEdit_replayPath->text();
     QString videoDir = ui_->lineEdit_videoPath->text();
@@ -71,6 +74,8 @@ void ImportReplayPackDialog::checkEnableImportButton()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onSelectReplayPack()
 {
+    PROFILE(ImportReplayPackDialog, onSelectReplayPack);
+
     QString packFileName = QFileDialog::getOpenFileName(this, "Open Replay Pack", "", "Replay Pack (*.rfp)");
     if (packFileName.length() == 0)
         return;
@@ -132,6 +137,8 @@ void ImportReplayPackDialog::onSelectReplayPack()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onSelectReplayDir()
 {
+    PROFILE(ImportReplayPackDialog, onSelectReplayDir);
+
     QString replayDir = QFileDialog::getExistingDirectory(this, "Extract Replays To...");
     if (replayDir.length() == 0)
         return;
@@ -143,6 +150,8 @@ void ImportReplayPackDialog::onSelectReplayDir()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onSelectVideoDir()
 {
+    PROFILE(ImportReplayPackDialog, onSelectVideoDir);
+
     QString videoDir = QFileDialog::getExistingDirectory(this, "Extract Videos To...");
     if (videoDir.length() == 0)
         return;
@@ -154,6 +163,8 @@ void ImportReplayPackDialog::onSelectVideoDir()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onExtractVideoSettingChanged()
 {
+    PROFILE(ImportReplayPackDialog, onExtractVideoSettingChanged);
+
     checkEnableImportButton();
 
     bool needVideoPath = ui_->radioButton_extractVideos->isChecked();
@@ -164,6 +175,8 @@ void ImportReplayPackDialog::onExtractVideoSettingChanged()
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onTargetReplayGroupChanged(int index)
 {
+    PROFILE(ImportReplayPackDialog, onTargetReplayGroupChanged);
+
     ui_->label_newGroupName->setVisible(index == 1);
     ui_->lineEdit_newGroupName->setVisible(index == 1);
 
@@ -173,12 +186,16 @@ void ImportReplayPackDialog::onTargetReplayGroupChanged(int index)
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onNewGroupNameChanged(const QString& name)
 {
+    PROFILE(ImportReplayPackDialog, onNewGroupNameChanged);
+
     checkEnableImportButton();
 }
 
 // ----------------------------------------------------------------------------
 void ImportReplayPackDialog::onImport()
 {
+    PROFILE(ImportReplayPackDialog, onImport);
+
     ProgressDialog progress("Importing", "Importing data from \"" + ui_->lineEdit_packFileName->text() + "\"");
     progress.show();
     progress.raise();

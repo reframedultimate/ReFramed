@@ -3,6 +3,7 @@
 #include "stats/StatsPlugin.hpp"
 #include "stats/util/Paths.hpp"
 #include "rfcommon/PluginInterface.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #if defined(STATS_ENABLE_LICENSING)
 #   include "stats/views/LicenseDialog.hpp"
@@ -16,6 +17,8 @@ static rfcommon::Plugin* createStatsPlugin(
     rfcommon::UserMotionLabels* userLabels,
     rfcommon::Hash40Strings* hash40Strings)
 {
+    PROFILE(PluginGlobal, createStatsPlugin);
+
     return new StatsPlugin(factory, userLabels, hash40Strings);
 }
 
@@ -23,6 +26,8 @@ static rfcommon::Plugin* createStatsPlugin(
 // list. You have to delete the object here.
 static void destroyStatsPlugin(rfcommon::Plugin* model)
 {
+    PROFILE(PluginGlobal, destroyStatsPlugin);
+
     delete model;
 }
 
@@ -57,6 +62,8 @@ static RFPluginFactory factories[] = {
 
 static int start(uint32_t version, const char** error)
 {
+    PROFILE(PluginGlobal, start);
+
     // Gets called right after shared library is loaded. Initialize global state
     // here
     //
@@ -116,6 +123,8 @@ static int start(uint32_t version, const char** error)
 
 static void stop()
 {
+    PROFILE(PluginGlobal, stop);
+
     // Gets called before the shared libary is unloaded. Clean up global state here.
 }
 

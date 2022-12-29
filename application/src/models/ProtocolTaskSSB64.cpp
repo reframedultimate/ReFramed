@@ -2,6 +2,7 @@
 
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/hash40.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/StageID.hpp"
@@ -248,6 +249,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
 // ----------------------------------------------------------------------------
 static int scanForEmulators(uint32_t* pid, void** processHandle, uintptr_t* moduleBaseAddr, rfcommon::Log* log)
 {
+    PROFILE(ProtocolTaskSSB64Global, scanForEmulators);
+
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
     if (hSnapshot == INVALID_HANDLE_VALUE)
@@ -343,6 +346,8 @@ static int scanForEmulators(uint32_t* pid, void** processHandle, uintptr_t* modu
 // ----------------------------------------------------------------------------
 static uint32_t getGameBaseAddress(int emuIdx, void* processHandle, uintptr_t moduleBaseAddr, rfcommon::Log* log)
 {
+    PROFILE(ProtocolTaskSSB64Global, getGameBaseAddress);
+
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
     HANDLE hProcess = (HANDLE)processHandle;
     uint32_t gameBaseAddr;
@@ -360,6 +365,8 @@ static uint32_t getGameBaseAddress(int emuIdx, void* processHandle, uintptr_t mo
 // ----------------------------------------------------------------------------
 static uint8_t getCurrentScreen(void* processHandle, uint32_t gameBaseAddr, rfcommon::Log* log)
 {
+    PROFILE(ProtocolTaskSSB64Global, getCurrentScreen);
+
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
     HANDLE hProcess = (HANDLE)processHandle;
     uint8_t screen;
@@ -385,6 +392,8 @@ static bool getMatchSettings(
     rfcommon::StageID* stageID,
     rfcommon::Log* log)
 {
+    PROFILE(ProtocolTaskSSB64Global, getMatchSettings);
+
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
     HANDLE hProcess = (HANDLE)processHandle;
     uint32_t matchSettingsAddr;
@@ -451,6 +460,8 @@ static bool getMatchSettings(
 // ----------------------------------------------------------------------------
 void ProtocolTaskSSB64::run()
 {
+    PROFILE(ProtocolTaskSSB64, run);
+
     void* processHandle;
     uintptr_t emuBaseAddr;
     uint32_t pid;

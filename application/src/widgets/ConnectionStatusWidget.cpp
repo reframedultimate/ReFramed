@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/widgets/ConnectionStatusWidget.hpp"
 #include "application/models/Protocol.hpp"
 
@@ -32,12 +33,16 @@ void ConnectionStatusWidget::onProtocolFailedToConnectToServer(const char* error
 // ----------------------------------------------------------------------------
 void ConnectionStatusWidget::onProtocolConnectedToServer(const char* ipAddress, uint16_t port)
 {
+    PROFILE(ConnectionStatusWidget, onProtocolConnectedToServer);
+
     text_->setText(QString("Connected to ") + ipAddress + ":" + QString::number(port));
 }
 
 // ----------------------------------------------------------------------------
 void ConnectionStatusWidget::onProtocolDisconnectedFromServer()
 {
+    PROFILE(ConnectionStatusWidget, onProtocolDisconnectedFromServer);
+
     text_->setText("Disconnected");
 }
 

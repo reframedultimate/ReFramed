@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/widgets/SettingsStatsItem.hpp"
 #include <QSizePolicy>
 #include <QLabel>
@@ -25,11 +26,15 @@ SettingsStatsItem::SettingsStatsItem(StatType type, QWidget* parent)
 // ----------------------------------------------------------------------------
 void SettingsStatsItem::setDragInProgress()
 {
+    PROFILE(SettingsStatsItem, setDragInProgress);
+
     setText("...");
 }
 
 // ----------------------------------------------------------------------------
 void SettingsStatsItem::setDragCancelled()
 {
+    PROFILE(SettingsStatsItem, setDragCancelled);
+
     setText(typeAsString());
 }

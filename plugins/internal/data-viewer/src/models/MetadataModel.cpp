@@ -68,6 +68,8 @@ void MetadataModel::setMetadata(rfcommon::MappingInfo* mappingInfo, rfcommon::Me
 // ----------------------------------------------------------------------------
 QModelIndex MetadataModel::index(int row, int column, const QModelIndex& parent) const
 {
+    PROFILE(MetadataModel, index);
+
     if (parent.isValid() == false)
         switch (row)
         {
@@ -141,6 +143,8 @@ QModelIndex MetadataModel::index(int row, int column, const QModelIndex& parent)
 // ----------------------------------------------------------------------------
 QModelIndex MetadataModel::parent(const QModelIndex& index) const
 {
+    PROFILE(MetadataModel, parent);
+
     if (index.isValid() == false)
         return QModelIndex();
     switch (index.internalId() & 0xFFFF)
@@ -201,6 +205,8 @@ int MetadataModel::rowCount(const QModelIndex& parent) const
 // ----------------------------------------------------------------------------
 int MetadataModel::gameRowCount(const rfcommon::GameMetadata* meta, const QModelIndex& parent) const
 {
+    PROFILE(MetadataModel, gameRowCount);
+
     auto bracketTypeHasURL = [](const rfcommon::BracketType bracketType) {
         switch (bracketType.type())
         {
@@ -237,12 +243,16 @@ int MetadataModel::gameRowCount(const rfcommon::GameMetadata* meta, const QModel
 // ----------------------------------------------------------------------------
 int MetadataModel::trainingRowCount(const rfcommon::TrainingMetadata* meta, const QModelIndex& parent) const
 {
+    PROFILE(MetadataModel, trainingRowCount);
+
     return 0;
 }
 
 // ----------------------------------------------------------------------------
 int MetadataModel::columnCount(const QModelIndex& parent) const
 {
+    PROFILE(MetadataModel, columnCount);
+
     return 2;
 }
 
@@ -470,6 +480,8 @@ QVariant MetadataModel::trainingData(const rfcommon::TrainingMetadata* meta, con
 // ----------------------------------------------------------------------------
 void MetadataModel::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded)
 {
+    PROFILE(MetadataModel, onMetadataTimeChanged);
+
 }
 
 // ----------------------------------------------------------------------------
@@ -484,12 +496,14 @@ void MetadataModel::onMetadataCommentatorsChanged() {}
 // ----------------------------------------------------------------------------
 void MetadataModel::onMetadataGameDetailsChanged()
 {
+    PROFILE(MetadataModel, onMetadataGameDetailsChanged);
+
 }
 
 // ----------------------------------------------------------------------------
 void MetadataModel::onMetadataPlayerDetailsChanged()
 {
-    PROFILE(MetadataModel, onMetadataPlayerNameChanged);
+    PROFILE(MetadataModel, onMetadataPlayerDetailsChanged);
 }
 
 // ----------------------------------------------------------------------------

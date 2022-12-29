@@ -68,6 +68,8 @@ bool MappedFile::open(const char* fileName)
 // ----------------------------------------------------------------------------
 bool MappedFile::setDeleteOnClose(const char* fileName)
 {
+    PROFILE(MappedFile, setDeleteOnClose);
+
     return unlink(fileName) == 0;
 }
 

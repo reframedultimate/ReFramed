@@ -6,6 +6,7 @@
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/Plugin.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
 #include "rfcommon/VideoEmbed.hpp"
@@ -69,6 +70,8 @@ AutoAssociateVideoTask::~AutoAssociateVideoTask()
 // ----------------------------------------------------------------------------
 void AutoAssociateVideoTask::run()
 {
+    PROFILE(AutoAssociateVideoTask, run);
+
     if (videoPlugin_ == nullptr)
     {
         log_->error("No video plugin was found. Can't open video files.");

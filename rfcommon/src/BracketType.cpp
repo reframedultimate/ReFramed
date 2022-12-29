@@ -32,7 +32,7 @@ BracketType BracketType::fromIndex(int index) { assert(index >= 0 && index < OTH
 // ----------------------------------------------------------------------------
 const char* BracketType::description() const
 {
-    PROFILE(EventType, description);
+    PROFILE(BracketType, description);
 
     if (type_ == OTHER)
         return otherDesc_.cStr();

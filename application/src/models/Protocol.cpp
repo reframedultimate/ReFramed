@@ -77,6 +77,8 @@ void Protocol::connectToServer(const QString& ipAddress, uint16_t port)
 // ----------------------------------------------------------------------------
 void Protocol::connectToSSB64Process()
 {
+    PROFILE(Protocol, connectToSSB64Process);
+
     disconnectFromServer();
 
     uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;

@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "ui_ExportView.h"
 #include "stats/config.hpp"
 #include "stats/models/SettingsModel.hpp"
@@ -95,6 +96,8 @@ ExportView::~ExportView()
 // ----------------------------------------------------------------------------
 void ExportView::onResetEachGameToggled(bool eachGame)
 {
+    PROFILE(ExportView, onResetEachGameToggled);
+
     settings_->setResetBehavior(eachGame ?
         SettingsModel::RESET_EACH_GAME :
         SettingsModel::RESET_EACH_SET);
@@ -103,6 +106,8 @@ void ExportView::onResetEachGameToggled(bool eachGame)
 // ----------------------------------------------------------------------------
 void ExportView::onOBSEnabledToggled(bool enable)
 {
+    PROFILE(ExportView, onOBSEnabledToggled);
+
     ui_->label_obsDestFolder->setEnabled(enable);
     ui_->lineEdit_obsDestFolder->setEnabled(enable);
     ui_->toolButton_obsBrowseFolder->setEnabled(enable);
@@ -119,6 +124,8 @@ void ExportView::onOBSEnabledToggled(bool enable)
 // ----------------------------------------------------------------------------
 void ExportView::onOBSInsertNewLinesCheckBoxToggled(bool enable)
 {
+    PROFILE(ExportView, onOBSInsertNewLinesCheckBoxToggled);
+
     ui_->spinBox_obsNewlines->setEnabled(enable);
 
     settings_->obsSetAdditionalNewlines(enable ? ui_->spinBox_obsNewlines->value() : 0);
@@ -127,12 +134,16 @@ void ExportView::onOBSInsertNewLinesCheckBoxToggled(bool enable)
 // ----------------------------------------------------------------------------
 void ExportView::onOBSSpinBoxNewLinesChanged(int value)
 {
+    PROFILE(ExportView, onOBSSpinBoxNewLinesChanged);
+
     settings_->obsSetAdditionalNewlines(value);
 }
 
 // ----------------------------------------------------------------------------
 void ExportView::onOBSBrowseFolderButtonReleased()
 {
+    PROFILE(ExportView, onOBSBrowseFolderButtonReleased);
+
     QString dir = QFileDialog::getExistingDirectory(this, "Destination Folder");
     if (dir.length() == 0)
         return;
@@ -144,6 +155,8 @@ void ExportView::onOBSBrowseFolderButtonReleased()
 // ----------------------------------------------------------------------------
 void ExportView::onOBSExportAfterEachGameToggled(bool checked)
 {
+    PROFILE(ExportView, onOBSExportAfterEachGameToggled);
+
     ui_->spinBox_obsSeconds->setEnabled(!checked);
 
     settings_->obsSetExportInterval(checked ?
@@ -154,12 +167,16 @@ void ExportView::onOBSExportAfterEachGameToggled(bool checked)
 // ----------------------------------------------------------------------------
 void ExportView::onOBSExportIntervalValueChanged(int value)
 {
+    PROFILE(ExportView, onOBSExportIntervalValueChanged);
+
     settings_->obsSetExportInterval(value);
 }
 
 // ----------------------------------------------------------------------------
 void ExportView::onWSEnabledToggled(bool checked)
 {
+    PROFILE(ExportView, onWSEnabledToggled);
+
     ui_->checkBox_wsAutoStart->setEnabled(checked);
     ui_->label_wsAddress->setEnabled(checked);
     ui_->label_wsPort->setEnabled(checked);
@@ -174,18 +191,24 @@ void ExportView::onWSEnabledToggled(bool checked)
 // ----------------------------------------------------------------------------
 void ExportView::onWSAutoStartToggled(bool checked)
 {
+    PROFILE(ExportView, onWSAutoStartToggled);
+
     settings_->wsSetAutoStart(checked);
 }
 
 // ----------------------------------------------------------------------------
 void ExportView::onWSSecureModeToggled(bool checked)
 {
+    PROFILE(ExportView, onWSSecureModeToggled);
+
     settings_->wsSetSecureMode(checked);
 }
 
 // ----------------------------------------------------------------------------
 void ExportView::onWSStartStopReleased()
 {
+    PROFILE(ExportView, onWSStartStopReleased);
+
     if (wsServer_->isRunning())
     {
         wsServer_->stopServer();
@@ -202,6 +225,8 @@ void ExportView::onWSStartStopReleased()
 // ----------------------------------------------------------------------------
 void ExportView::onWSServerStarting()
 {
+    PROFILE(ExportView, onWSServerStarting);
+
     ui_->label_wsStatus->setText("Starting server...");
 
     ui_->pushButton_wsStartStop->setEnabled(false);
@@ -213,6 +238,8 @@ void ExportView::onWSServerStarting()
 // ----------------------------------------------------------------------------
 void ExportView::onWSServerFailedToStart(const QString& error)
 {
+    PROFILE(ExportView, onWSServerFailedToStart);
+
     ui_->label_wsStatus->setText("Failed to start: " + error);
 
     ui_->pushButton_wsStartStop->setEnabled(true);
@@ -224,6 +251,8 @@ void ExportView::onWSServerFailedToStart(const QString& error)
 // ----------------------------------------------------------------------------
 void ExportView::onWSServerStarted(const QString& host, uint16_t port)
 {
+    PROFILE(ExportView, onWSServerStarted);
+
     ui_->label_wsStatus->setText("Server is running");
 
     ui_->pushButton_wsStartStop->setEnabled(true);
@@ -235,6 +264,8 @@ void ExportView::onWSServerStarted(const QString& host, uint16_t port)
 // ----------------------------------------------------------------------------
 void ExportView::onWSServerStopped()
 {
+    PROFILE(ExportView, onWSServerStopped);
+
     ui_->label_wsStatus->setText("Stopped.");
 
     ui_->pushButton_wsStartStop->setText("Start Server");
@@ -246,11 +277,15 @@ void ExportView::onWSServerStopped()
 // ----------------------------------------------------------------------------
 void ExportView::onWSClientConnected(const QString& address, uint16_t port)
 {
+    PROFILE(ExportView, onWSClientConnected);
+
     ui_->label_wsStatus->setText("Client connected: " + address + ":" + QString::number(port));
 }
 
 // ----------------------------------------------------------------------------
 void ExportView::onWSClientError(const QString& error)
 {
+    PROFILE(ExportView, onWSClientError);
+
     ui_->label_wsStatus->setText(error);
 }

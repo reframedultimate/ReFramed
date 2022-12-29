@@ -6,6 +6,7 @@
 #include "stats/util/StatsFormatter.hpp"
 
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -31,6 +32,8 @@ WSExporter::~WSExporter()
 // ----------------------------------------------------------------------------
 void WSExporter::writeJSON(bool gameStarted, bool gameEnded) const
 {
+    PROFILE(WSExporter, writeJSON);
+
     // Don't send anything if there's no data
     if (playerMeta_->playerCount() == 0)
         return;

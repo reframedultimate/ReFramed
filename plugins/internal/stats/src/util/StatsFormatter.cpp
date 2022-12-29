@@ -2,6 +2,7 @@
 #include "stats/models/PlayerMeta.hpp"
 #include "stats/models/StatsCalculator.hpp"
 #include "rfcommon/Metadata.hpp"
+#include "rfcommon/Profiler.hpp"
 #include <utility>
 
 // ----------------------------------------------------------------------------
@@ -16,6 +17,8 @@ StatsFormatter::StatsFormatter(
 // ----------------------------------------------------------------------------
 QString StatsFormatter::playerStatAsString(int fighterIdx, StatType type) const
 {
+    PROFILE(StatsFormatter, playerStatAsString);
+
     switch (type)
     {
     case STAT_AVERAGE_DEATH_PERCENT:

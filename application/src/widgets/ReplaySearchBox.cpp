@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/widgets/ReplaySearchBox.hpp"
 
 #include <QDebug>
@@ -18,6 +19,8 @@ ReplaySearchBox::~ReplaySearchBox()
 // ----------------------------------------------------------------------------
 void ReplaySearchBox::onTextChanged(const QString& text)
 {
+    PROFILE(ReplaySearchBox, onTextChanged);
+
     if (text.isEmpty())
     {
         emit searchTextChanged(GENERIC, {});

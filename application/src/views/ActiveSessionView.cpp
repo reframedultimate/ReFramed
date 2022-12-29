@@ -94,12 +94,16 @@ ActiveSessionView::~ActiveSessionView()
 // ----------------------------------------------------------------------------
 void ActiveSessionView::toggleSideBar()
 {
+    PROFILE(ActiveSessionView, toggleSideBar);
+
     splitter_->toggleCollapse();
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* game)
 {
+    PROFILE(ActiveSessionView, onActiveSessionManagerGameStarted);
+
     auto* map = game->tryGetMappingInfo();
     auto* mdata = game->tryGetMetadata();
     assert(map);
@@ -112,17 +116,23 @@ void ActiveSessionView::onActiveSessionManagerGameStarted(rfcommon::Session* gam
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerGameEnded(rfcommon::Session* game)
 {
+    PROFILE(ActiveSessionView, onActiveSessionManagerGameEnded);
+
     metadataEditModel_->clear();
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTrainingStarted(rfcommon::Session* training)
 {
+    PROFILE(ActiveSessionView, onActiveSessionManagerTrainingStarted);
+
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionView::onActiveSessionManagerTrainingEnded(rfcommon::Session* training)
 {
+    PROFILE(ActiveSessionView, onActiveSessionManagerTrainingEnded);
+
 }
 
 }

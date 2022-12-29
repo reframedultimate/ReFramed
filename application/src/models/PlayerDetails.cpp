@@ -1,6 +1,7 @@
 #include "application/models/PlayerDetails.hpp"
 
 #include "rfcommon/Log.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -27,6 +28,8 @@ PlayerDetails::~PlayerDetails()
 // ----------------------------------------------------------------------------
 void PlayerDetails::load()
 {
+    PROFILE(PlayerDetails, load);
+
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QString fileName = dir.absoluteFilePath("playerDetails.json");
 
@@ -34,7 +37,7 @@ void PlayerDetails::load()
     QFile f(fileName);
     if (!f.open(QIODevice::ReadOnly))
     {
-        rfcommon::Log::root()->notice("playerDetails.json doesn't exist. Player details will be empty.", fileName.toUtf8().constData());
+        rfcommon::Log::root()->notice("%s doesn't exist. Player details will be empty.", fileName.toUtf8().constData());
         return;
     }
 
@@ -42,20 +45,20 @@ void PlayerDetails::load()
     json root = json::parse(ba.begin(), ba.end(), nullptr, false);
     if (root.is_discarded())
     {
-        rfcommon::Log::root()->error("Failed to parse playerDetails.json");
+        rfcommon::Log::root()->error("Failed to parse %s", fileName.toUtf8().constData());
         return;
     }
 
     if (root.is_object() == false)
     {
-        rfcommon::Log::root()->error("Root invalid in playerDetails.json");
+        rfcommon::Log::root()->error("Root invalid in %s", fileName.toUtf8().constData());
         return;
     }
 
     json jPlayers = root["players"];
     if (jPlayers.is_object() == false)
     {
-        rfcommon::Log::root()->error("\"players\" node invalid in playerDetails.json");
+        rfcommon::Log::root()->error("\"players\" node invalid in %s", fileName.toUtf8().constData());
         return;
     }
 
@@ -85,6 +88,8 @@ void PlayerDetails::load()
 // ----------------------------------------------------------------------------
 void PlayerDetails::save()
 {
+    PROFILE(PlayerDetails, save);
+
     auto log = rfcommon::Log::root();
 
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
@@ -119,7 +124,7 @@ void PlayerDetails::save()
     const std::string jsonStr = root.dump(2);
     if (f.write(jsonStr.data(), jsonStr.length()) != jsonStr.length())
     {
-        log->error("Failed to write data to playerDetails.json");
+        log->error("Failed to write data to %s", fileName.toUtf8().constData());
         return;
     }
 
@@ -129,6 +134,8 @@ void PlayerDetails::save()
 // ----------------------------------------------------------------------------
 const PlayerDetails::Player* PlayerDetails::findTag(const rfcommon::String& tag) const
 {
+    PROFILE(PlayerDetails, findTag);
+
     const auto it = players_.find(tag);
     if (it == players_.end())
         return nullptr;
@@ -139,6 +146,8 @@ const PlayerDetails::Player* PlayerDetails::findTag(const rfcommon::String& tag)
 // ----------------------------------------------------------------------------
 const PlayerDetails::Player* PlayerDetails::findName(const rfcommon::String& name) const
 {
+    PROFILE(PlayerDetails, findName);
+
     for (const auto it : players_)
         if (it.value().name == name)
             return &it.value();
@@ -149,6 +158,8 @@ const PlayerDetails::Player* PlayerDetails::findName(const rfcommon::String& nam
 // ----------------------------------------------------------------------------
 void PlayerDetails::addOrModifyPlayer(const char* tag, const char* name, const char* sponsor, const char* social, const char* pronouns)
 {
+    PROFILE(PlayerDetails, addOrModifyPlayer);
+
     players_.insertAlways(tag, Player{name, sponsor, social, pronouns});
 }
 

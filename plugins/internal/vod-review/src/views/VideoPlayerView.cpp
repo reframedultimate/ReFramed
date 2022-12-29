@@ -75,27 +75,35 @@ VideoPlayerView::~VideoPlayerView()
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onFileOpened()
 {
+    PROFILE(VideoPlayerView, onFileOpened);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onFileClosed()
 {
+    PROFILE(VideoPlayerView, onFileClosed);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onPlayerPaused()
 {
+    PROFILE(VideoPlayerView, onPlayerPaused);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onPlayerResumed()
 {
+    PROFILE(VideoPlayerView, onPlayerResumed);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerView::onPresentImage(const QImage& image)
 {
-    PROFILE(VideoPlayerView, onPresentCurrentFrame);
+    PROFILE(VideoPlayerView, onPresentImage);
 
     videoSurface_->image = image;
     videoSurface_->update();

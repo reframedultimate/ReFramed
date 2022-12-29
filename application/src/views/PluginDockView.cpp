@@ -191,14 +191,7 @@ void PluginDockView::clearActiveSession()
 // ----------------------------------------------------------------------------
 void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
 {
-    PROFILE(PluginDockView, onTabBarClicked);
-
-    auto pluginLoaded = [this](const QString& name) -> bool {
-        for (const auto& data : plugins_)
-            if (data.name == name)
-                return true;
-        return false;
-    };
+    PROFILE(PluginDockView, onAddNewPluginRequested);
 
     // Create a list of all available plugins that can be loaded. There are
     // two modes here. Either this class was created with a valid protocol
@@ -443,7 +436,7 @@ void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
 // ----------------------------------------------------------------------------
 void PluginDockView::onClosePluginRequested(ads::CDockWidget* dockWidget)
 {
-    PROFILE(PluginDockView, closeTabWithView);
+    PROFILE(PluginDockView, onClosePluginRequested);
 
     for (auto it = plugins_.begin(); it != plugins_.end(); ++it)
     {
@@ -520,6 +513,8 @@ void PluginDockView::onClosePluginRequested(ads::CDockWidget* dockWidget)
 // ----------------------------------------------------------------------------
 void PluginDockView::onDockAreaCreated(ads::CDockAreaWidget* dockArea)
 {
+    PROFILE(PluginDockView, onDockAreaCreated);
+
     QToolButton* launchPluginButton = new QToolButton;
     launchPluginButton->setText("+");
 

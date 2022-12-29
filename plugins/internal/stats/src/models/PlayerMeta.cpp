@@ -3,6 +3,7 @@
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
 
 // ----------------------------------------------------------------------------
@@ -25,6 +26,8 @@ PlayerMeta::~PlayerMeta()
 // ----------------------------------------------------------------------------
 void PlayerMeta::setMetadata(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata)
 {
+    PROFILE(PlayerMeta, setMetadata);
+
     clearMetadata();
 
     map_ = map;
@@ -37,6 +40,8 @@ void PlayerMeta::setMetadata(rfcommon::MappingInfo* map, rfcommon::Metadata* mda
 // ----------------------------------------------------------------------------
 void PlayerMeta::clearMetadata()
 {
+    PROFILE(PlayerMeta, clearMetadata);
+
     if (mdata_)
         mdata_->dispatcher.removeListener(this);
     mdata_.drop();
@@ -47,6 +52,8 @@ void PlayerMeta::clearMetadata()
 // ----------------------------------------------------------------------------
 rfcommon::GameMetadata* PlayerMeta::latestMetadata() const
 {
+    PROFILE(PlayerMeta, latestMetadata);
+
     if (mdata_.isNull())
         return nullptr;
     if (mdata_->type() != rfcommon::Metadata::GAME)
@@ -57,12 +64,16 @@ rfcommon::GameMetadata* PlayerMeta::latestMetadata() const
 // ----------------------------------------------------------------------------
 int PlayerMeta::playerCount() const
 {
+    PROFILE(PlayerMeta, playerCount);
+
     return mdata_ ? mdata_->fighterCount() : 0;
 }
 
 // ----------------------------------------------------------------------------
 QString PlayerMeta::name(int fighterIdx) const
 {
+    PROFILE(PlayerMeta, name);
+
     return mdata_ ?
         mdata_->asGame()->playerName(fighterIdx).cStr() :
         QString("Player ") + QString::number(fighterIdx + 1);
@@ -71,6 +82,8 @@ QString PlayerMeta::name(int fighterIdx) const
 // ----------------------------------------------------------------------------
 QString PlayerMeta::tag(int fighterIdx) const
 {
+    PROFILE(PlayerMeta, tag);
+
     return mdata_ ?
         mdata_->playerTag(fighterIdx).cStr() :
         QString("Player ") + QString::number(fighterIdx + 1);
@@ -79,6 +92,8 @@ QString PlayerMeta::tag(int fighterIdx) const
 // ----------------------------------------------------------------------------
 QString PlayerMeta::character(int fighterIdx) const
 {
+    PROFILE(PlayerMeta, character);
+
     return mdata_ ?
         map_->fighter.toName(mdata_->playerFighterID(fighterIdx)) :
         QString("Player ") + QString::number(fighterIdx + 1);
@@ -87,6 +102,8 @@ QString PlayerMeta::character(int fighterIdx) const
 // ----------------------------------------------------------------------------
 QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) const
 {
+    PROFILE(PlayerMeta, moveName);
+
     const char* label = nullptr;
 
     if (motion.isValid() == false)
@@ -112,6 +129,8 @@ void PlayerMeta::onMetadataCommentatorsChanged() {}
 void PlayerMeta::onMetadataGameDetailsChanged() {}
 void PlayerMeta::onMetadataPlayerDetailsChanged()
 {
+    PROFILE(PlayerMeta, onMetadataPlayerDetailsChanged);
+
     dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged);
 }
 void PlayerMeta::onMetadataWinnerChanged(int winnerPlayerIdx) {}

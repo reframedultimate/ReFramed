@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "ui_StatsArrangeView.h"
 #include "stats/models/SettingsModel.hpp"
 #include "stats/views/StatsArrangeView.hpp"
@@ -46,6 +47,8 @@ StatsArrangeView::~StatsArrangeView()
 // ----------------------------------------------------------------------------
 void StatsArrangeView::onStatEnabled(int insertIndex, StatType type)
 {
+    PROFILE(StatsArrangeView, onStatEnabled);
+
     settings_->setStatEnabled(type, true);
     settings_->setStatAtIndex(insertIndex, type);
 }
@@ -53,5 +56,7 @@ void StatsArrangeView::onStatEnabled(int insertIndex, StatType type)
 // ----------------------------------------------------------------------------
 void StatsArrangeView::onStatDisabled(int insertIndex, StatType type)
 {
+    PROFILE(StatsArrangeView, onStatDisabled);
+
     settings_->setStatEnabled(type, false);
 }

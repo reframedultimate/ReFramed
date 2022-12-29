@@ -75,6 +75,8 @@ PluginManager::~PluginManager()
 // ----------------------------------------------------------------------------
 void PluginManager::scanForPlugins()
 {
+    PROFILE(PluginManager, scanForPlugins);
+
     auto log = rfcommon::Log::root();
 
     log->beginDropdown("Loading plugin interfaces");
@@ -88,7 +90,7 @@ void PluginManager::scanForPlugins()
 // ----------------------------------------------------------------------------
 bool PluginManager::loadInterface(const QString& fileName)
 {
-    PROFILE(PluginManager, loadPlugin);
+    PROFILE(PluginManager, loadInterface);
 
     auto log = rfcommon::Log::root();
 
@@ -146,7 +148,7 @@ QVector<QString> PluginManager::availableFactoryNames(RFPluginType type) const
 // ----------------------------------------------------------------------------
 QVector<QString> PluginManager::availableFactoryNamesExact(RFPluginType type) const
 {
-    PROFILE(PluginManager, availableFactoryNames);
+    PROFILE(PluginManager, availableFactoryNamesExact);
 
     QVector<QString> list;
     for (const auto& plugin : plugins_)

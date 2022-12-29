@@ -12,6 +12,7 @@ class QLabel;
 
 namespace rfapp {
 
+class IconLabel;
 class MetadataEditModel;
 
 /*!
@@ -38,7 +39,7 @@ public:
     explicit MetadataEditWidget(MetadataEditModel* model, QWidget* parent=nullptr);
     ~MetadataEditWidget();
 
-    void setTitle(const QString& title);
+    void setTitle(const QIcon& icon, const QString& title);
     QWidget* contentWidget();
 
     /*!
@@ -58,7 +59,7 @@ protected:
 
 private:
     QToolButton* toggleButton_;
-    QLabel* title_;
+    IconLabel* title_;
     QParallelAnimationGroup* toggleAnimation_;
     QWidget* contentArea_;
     int animationDuration_;

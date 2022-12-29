@@ -47,6 +47,7 @@ set (APPLICATION_SOURCES
     "src/widgets/MetadataEditWidget_Tournament.cpp"
     "src/widgets/ProgressDialog.cpp"
     "src/widgets/ReplaySearchBox.cpp"
+    "src/widgets/IconLabel.cpp"
     "src/views/MainWindow.cpp"
     "src/Util.cpp"
     "src/main.cpp")
@@ -74,6 +75,7 @@ set (APPLICATION_HEADERS
     "include/application/views/RunningGameSessionView.hpp"
     "include/application/widgets/CollapsibleSplitter.hpp"
     "include/application/widgets/ConnectionStatusWidget.hpp"
+    "include/application/widgets/IconLabel.hpp"
     "include/application/Util.hpp")
 set (APPLICATION_HEADERS_MOC
     "include/application/models/ActiveSessionManager.hpp"

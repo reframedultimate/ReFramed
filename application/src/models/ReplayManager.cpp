@@ -47,8 +47,8 @@ ReplayManager::ReplayManager(Config* config)
     }
 
     // Populate all search paths
-    defaultGamePath_ = QString::fromUtf8(jDefaultGamePath.get<std::string>().c_str());
-    defaultTrainingPath_ = QString::fromUtf8(jDefaultTrainingPath.get<std::string>().c_str());
+    defaultGamePath_.setPath(QString::fromUtf8(jDefaultGamePath.get<std::string>().c_str()));
+    defaultTrainingPath_.setPath(QString::fromUtf8(jDefaultTrainingPath.get<std::string>().c_str()));
     for (const auto& jPath : jGamePaths)
     {
         if (jPath.is_string() == false)
@@ -368,7 +368,7 @@ ReplayGroup* ReplayManager::replayGroup(int idx) const
 // ----------------------------------------------------------------------------
 int ReplayManager::replayGroupCount() const
 {
-    PROFILE(ReplayManager, replayGroupsCount);
+    PROFILE(ReplayManager, replayGroupCount);
 
     return groups_.size();
 }
@@ -450,7 +450,7 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
         // to the session are dropped
         QByteArray ba = dir.absoluteFilePath(tmpFileName).toUtf8();
         if (rfcommon::MappedFile::setDeleteOnClose(ba.constData()) == false)
-            log->error("Failed to remove file %s");
+            log->error("Failed to remove file %s", ba.constData());
     }
 
     if (allGroup_->removeFile(oldFileName))
@@ -465,6 +465,8 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
 // ----------------------------------------------------------------------------
 bool ReplayManager::deleteReplay(const QString& fileName)
 {
+    PROFILE(ReplayManager, deleteReplay);
+
     rfcommon::Log* log = rfcommon::Log::root();
     bool success = true;
 
@@ -554,6 +556,8 @@ void ReplayManager::scanForReplays()
 // ----------------------------------------------------------------------------
 void ReplayManager::updateConfig()
 {
+    PROFILE(ReplayManager, updateConfig);
+
     json& cfg = getConfig();
     json& jReplayManager = cfg["replaymanager"];
 
@@ -589,6 +593,8 @@ void ReplayManager::updateConfig()
 // ----------------------------------------------------------------------------
 rfcommon::String ReplayManager::resolveGameFile(const char* fileName) const
 {
+    PROFILE(ReplayManager, resolveGameFile);
+
     for (auto dir : gamePaths_)
     {
         QString name = QString::fromUtf8(fileName);
@@ -602,6 +608,8 @@ rfcommon::String ReplayManager::resolveGameFile(const char* fileName) const
 // ----------------------------------------------------------------------------
 rfcommon::String ReplayManager::resolveVideoFile(const char* fileName) const
 {
+    PROFILE(ReplayManager, resolveVideoFile);
+
     for (auto dir : videoPaths_)
     {
         QString name = QString::fromUtf8(fileName);

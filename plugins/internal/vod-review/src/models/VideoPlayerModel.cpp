@@ -28,12 +28,16 @@ VideoPlayerModel::~VideoPlayerModel()
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::onTimerTimeout()
 {
+    PROFILE(VideoPlayerModel, onTimerTimeout);
+
     stepVideo(1);
 }
 
 // ----------------------------------------------------------------------------
 bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
 {
+    PROFILE(VideoPlayerModel, openVideoFromMemory);
+
     closeVideo();
 
     isOpen_ = decoder_->openFile(address, size);
@@ -52,6 +56,8 @@ bool VideoPlayerModel::openVideoFromMemory(const void* address, uint64_t size)
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::closeVideo()
 {
+    PROFILE(VideoPlayerModel, closeVideo);
+
     if (isOpen_ == false)
         return;
 
@@ -71,6 +77,8 @@ void VideoPlayerModel::closeVideo()
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::playVideo()
 {
+    PROFILE(VideoPlayerModel, playVideo);
+
     timer_.start();
     dispatcher.dispatch(&VideoPlayerListener::onPlayerResumed);
 }
@@ -78,6 +86,8 @@ void VideoPlayerModel::playVideo()
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::pauseVideo()
 {
+    PROFILE(VideoPlayerModel, pauseVideo);
+
     timer_.stop();
     dispatcher.dispatch(&VideoPlayerListener::onPlayerPaused);
 }
@@ -85,17 +95,23 @@ void VideoPlayerModel::pauseVideo()
 // ----------------------------------------------------------------------------
 bool VideoPlayerModel::isVideoPlaying() const
 {
+    PROFILE(VideoPlayerModel, isVideoPlaying);
+
     return timer_.isActive();
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::setVideoVolume(int percent)
 {
+    PROFILE(VideoPlayerModel, setVideoVolume);
+
 }
 
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::stepVideo(int videoFrames)
 {
+    PROFILE(VideoPlayerModel, stepVideo);
+
     if (isOpen_ == false)
         return;
 
@@ -150,6 +166,8 @@ void VideoPlayerModel::stepVideo(int videoFrames)
 // ----------------------------------------------------------------------------
 void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 {
+    PROFILE(VideoPlayerModel, seekVideoToGameFrame);
+
     if (isOpen_ == false)
         return;
 
@@ -194,6 +212,8 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
 // ----------------------------------------------------------------------------
 rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame() const
 {
+    PROFILE(VideoPlayerModel, currentVideoGameFrame);
+
     if (isOpen_ == false || currentFrame_ == nullptr)
         return rfcommon::FrameIndex::fromValue(0);
 
@@ -204,6 +224,8 @@ rfcommon::FrameIndex VideoPlayerModel::currentVideoGameFrame() const
 // ----------------------------------------------------------------------------
 rfcommon::FrameIndex VideoPlayerModel::videoGameFrameCount() const
 {
+    PROFILE(VideoPlayerModel, videoGameFrameCount);
+
     return rfcommon::FrameIndex::fromValue(
             decoder_->fromCodecTimeStamp(decoder_->duration(), 1, 60));
 }

@@ -1,4 +1,5 @@
 #include "rfcommon/Log.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/SharedLibrary.hpp"
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,12 +42,16 @@ SharedLibrary::~SharedLibrary()
 /* ------------------------------------------------------------------------- */
 bool SharedLibrary::isOpen() const
 {
+    PROFILE(SharedLibrary, isOpen);
+
     return handle_ != nullptr;
 }
 
 /* ------------------------------------------------------------------------- */
 void* SharedLibrary::lookupSymbolAddress(const char* name)
 {
+    PROFILE(SharedLibrary, lookupSymbolAddress);
+
     return dlsym(handle_, name);
 }
 

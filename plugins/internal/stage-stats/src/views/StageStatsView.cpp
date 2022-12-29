@@ -11,6 +11,8 @@
 // ----------------------------------------------------------------------------
 static void clearLayout(QLayout* layout)
 {
+    PROFILE(StageStatsViewGlobal, clearLayout);
+
     QLayoutItem* item;
     while ((item = layout->takeAt(0)) != nullptr)
     {

@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "stats/models/SettingsModel.hpp"
 #include "stats/listeners/SettingsListener.hpp"
 
@@ -16,6 +17,8 @@ SettingsModel::SettingsModel(const QString& settingsFile)
 // ----------------------------------------------------------------------------
 bool SettingsModel::load()
 {
+    PROFILE(SettingsModel, load);
+
     QFile file(settingsFile_);
     if (file.open(QIODevice::ReadOnly) == false)
         return false;
@@ -83,6 +86,8 @@ bool SettingsModel::load()
 // ----------------------------------------------------------------------------
 bool SettingsModel::save()
 {
+    PROFILE(SettingsModel, save);
+
     QJsonArray enabledStats;
     for (int i = 0; i != numStatsEnabled(); ++i)
     {
@@ -135,6 +140,8 @@ bool SettingsModel::save()
 // ----------------------------------------------------------------------------
 void SettingsModel::setStatEnabled(StatType type, bool enable)
 {
+    PROFILE(SettingsModel, setStatEnabled);
+
     if (statEnabled_[type] == enable)
         return;
 
@@ -159,12 +166,16 @@ void SettingsModel::setStatEnabled(StatType type, bool enable)
 // ----------------------------------------------------------------------------
 bool SettingsModel::statEnabled(StatType type) const
 {
+    PROFILE(SettingsModel, statEnabled);
+
     return statEnabled_[type];
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::setStatAtIndex(int idx, StatType type)
 {
+    PROFILE(SettingsModel, setStatAtIndex);
+
     if (statAtIndex_[idx] == type)
         return;
 
@@ -183,24 +194,32 @@ void SettingsModel::setStatAtIndex(int idx, StatType type)
 // ----------------------------------------------------------------------------
 StatType SettingsModel::statAtIndex(int idx) const
 {
+    PROFILE(SettingsModel, statAtIndex);
+
     return statAtIndex_[idx];
 }
 
 // ----------------------------------------------------------------------------
 int SettingsModel::numStatsEnabled() const
 {
+    PROFILE(SettingsModel, numStatsEnabled);
+
     return statAtIndex_.count();
 }
 
 // ----------------------------------------------------------------------------
 SettingsModel::ResetBehavior SettingsModel::resetBehavior() const
 {
+    PROFILE(SettingsModel, resetBehavior);
+
     return resetBehavior_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::setResetBehavior(ResetBehavior behavior)
 {
+    PROFILE(SettingsModel, setResetBehavior);
+
     resetBehavior_ = behavior;
 
     save();
@@ -210,12 +229,16 @@ void SettingsModel::setResetBehavior(ResetBehavior behavior)
 // ----------------------------------------------------------------------------
 bool SettingsModel::obsEnabled() const
 {
+    PROFILE(SettingsModel, obsEnabled);
+
     return obsEnabled_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::obsSetEnabled(bool enable)
 {
+    PROFILE(SettingsModel, obsSetEnabled);
+
     obsEnabled_ = enable;
 
     save();
@@ -225,6 +248,8 @@ void SettingsModel::obsSetEnabled(bool enable)
 // ----------------------------------------------------------------------------
 void SettingsModel::obsSetAdditionalNewlines(int lines)
 {
+    PROFILE(SettingsModel, obsSetAdditionalNewlines);
+
     obsAdditionalNewlines_ = lines;
 
     save();
@@ -234,12 +259,16 @@ void SettingsModel::obsSetAdditionalNewlines(int lines)
 // ----------------------------------------------------------------------------
 int SettingsModel::obsAdditionalNewlines() const
 {
+    PROFILE(SettingsModel, obsAdditionalNewlines);
+
     return obsAdditionalNewlines_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::obsSetDestinationFolder(const QDir& dir)
 {
+    PROFILE(SettingsModel, obsSetDestinationFolder);
+
     obsDestinationFolder_ = dir;
 
     save();
@@ -249,18 +278,24 @@ void SettingsModel::obsSetDestinationFolder(const QDir& dir)
 // ----------------------------------------------------------------------------
 const QDir& SettingsModel::obsDestinationFolder() const
 {
+    PROFILE(SettingsModel, obsDestinationFolder);
+
     return obsDestinationFolder_;
 }
 
 // ----------------------------------------------------------------------------
 int SettingsModel::obsExportInterval() const
 {
+    PROFILE(SettingsModel, obsExportInterval);
+
     return obsExportInterval_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::obsSetExportInterval(int seconds)
 {
+    PROFILE(SettingsModel, obsSetExportInterval);
+
     obsExportInterval_ = seconds;
 
     save();
@@ -270,12 +305,16 @@ void SettingsModel::obsSetExportInterval(int seconds)
 // ----------------------------------------------------------------------------
 bool SettingsModel::wsEnabled() const
 {
+    PROFILE(SettingsModel, wsEnabled);
+
     return wsEnabled_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::wsSetEnabled(bool enable)
 {
+    PROFILE(SettingsModel, wsSetEnabled);
+
     wsEnabled_ = enable;
 
     save();
@@ -285,12 +324,16 @@ void SettingsModel::wsSetEnabled(bool enable)
 // ----------------------------------------------------------------------------
 bool SettingsModel::wsAutoStart() const
 {
+    PROFILE(SettingsModel, wsAutoStart);
+
     return wsAutoStart_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::wsSetAutoStart(bool enable)
 {
+    PROFILE(SettingsModel, wsSetAutoStart);
+
     wsAutoStart_ = enable;
 
     save();
@@ -300,12 +343,16 @@ void SettingsModel::wsSetAutoStart(bool enable)
 // ----------------------------------------------------------------------------
 bool SettingsModel::wsSecureMode() const
 {
+    PROFILE(SettingsModel, wsSecureMode);
+
     return wsSecureMode_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::wsSetSecureMode(bool enable)
 {
+    PROFILE(SettingsModel, wsSetSecureMode);
+
     wsSecureMode_ = enable;
 
     save();
@@ -315,12 +362,16 @@ void SettingsModel::wsSetSecureMode(bool enable)
 // ----------------------------------------------------------------------------
 QString SettingsModel::wsHostName() const
 {
+    PROFILE(SettingsModel, wsHostName);
+
     return wsHostName_;
 }
 
 // ----------------------------------------------------------------------------
 void SettingsModel::wsSetHostNameAndPort(const QString& hostName, uint16_t port)
 {
+    PROFILE(SettingsModel, wsSetHostNameAndPort);
+
     wsHostName_ = hostName;
     wsPort_ = port;
 
@@ -331,5 +382,7 @@ void SettingsModel::wsSetHostNameAndPort(const QString& hostName, uint16_t port)
 // ----------------------------------------------------------------------------
 uint16_t SettingsModel::wsPort() const
 {
+    PROFILE(SettingsModel, wsPort);
+
     return wsPort_;
 }

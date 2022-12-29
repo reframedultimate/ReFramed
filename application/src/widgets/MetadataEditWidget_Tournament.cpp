@@ -2,6 +2,7 @@
 #include "application/widgets/MetadataEditWidget_Tournament.hpp"
 
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/Profiler.hpp"
 
 #include <QFormLayout>
 #include <QLabel>
@@ -19,7 +20,7 @@ MetadataEditWidget_Tournament::MetadataEditWidget_Tournament(MetadataEditModel* 
     , layout_TOs_(new QVBoxLayout)
     , layout_sponsors_(new QVBoxLayout)
 {
-    setTitle("Tournament");
+    setTitle(QIcon::fromTheme(""), "Tournament");
 
     QToolButton* addTO = new QToolButton;
     addTO->setText("+");
@@ -67,6 +68,8 @@ MetadataEditWidget_Tournament::~MetadataEditWidget_Tournament()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& social, const QString& pronouns)
 {
+    PROFILE(MetadataEditWidget_Tournament, addTOUI);
+
     QToolButton* removeButton = new QToolButton;
     removeButton->setText("-");
 
@@ -83,7 +86,7 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     layout->addRow(removeButton);
 
     QGroupBox* gb = new QGroupBox;
-    gb->setTitle(name.isEmpty() ? "TO #" + QString::number(layout_TOs_->count()) : name);
+    gb->setTitle(name.isEmpty() || name == "*" ? "TO #" + QString::number(layout_TOs_->count()) : name);
     gb->setLayout(layout);
 
     QLayoutItem* addButtonItem = layout_TOs_->takeAt(layout_TOs_->count() - 1);
@@ -106,12 +109,15 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
     connect(removeButton, &QToolButton::released, [this, gb, indexInLayout] {
         int i = indexInLayout(gb);
 
+        // Update models
         ignoreSelf_ = true;
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
-                mdata->asGame()->removeTournamentOrganizer(i);
+                if (i < mdata->asGame()->tournamentOrganizerCount())  // In the case of multiple replays, there could be less in one than in the other
+                    mdata->asGame()->removeTournamentOrganizer(i);
         ignoreSelf_ = false;
 
+        // Update UI
         organizerWidgets_.erase(organizerWidgets_.begin() + i);
 
         QLayoutItem* item = layout_TOs_->takeAt(i);
@@ -133,11 +139,15 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetadata* m = mdata->asGame();
-                m->setTournamentOrganizer(i,
+                // In the case of multiple replays, if one replay has a gap,
+                // we just add an empty commentator in its place
+                rfcommon::GameMetadata* g = mdata->asGame();
+                while (i >= g->tournamentOrganizerCount())
+                    g->addTournamentOrganizer("", "");
+                g->setTournamentOrganizer(i,
                         text.toUtf8().constData(),
-                        m->tournamentOrganizerSocial(i).cStr(),
-                        m->tournamentOrganizerPronouns(i).cStr());
+                        g->tournamentOrganizerSocial(i).cStr(),
+                        g->tournamentOrganizerPronouns(i).cStr());
             }
         ignoreSelf_ = false;
     });
@@ -149,11 +159,15 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetadata* m = mdata->asGame();
-                m->setTournamentOrganizer(i,
-                        m->tournamentOrganizerName(i).cStr(),
+                // In the case of multiple replays, if one replay has a gap,
+                // we just add an empty commentator in its place
+                rfcommon::GameMetadata* g = mdata->asGame();
+                while (i >= g->tournamentOrganizerCount())
+                    g->addTournamentOrganizer("", "");
+                g->setTournamentOrganizer(i,
+                        g->tournamentOrganizerName(i).cStr(),
                         text.toUtf8().constData(),
-                        m->tournamentOrganizerPronouns(i).cStr());
+                        g->tournamentOrganizerPronouns(i).cStr());
             }
         ignoreSelf_ = false;
     });
@@ -165,10 +179,14 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetadata* m = mdata->asGame();
-                m->setTournamentOrganizer(i,
-                        m->tournamentOrganizerName(i).cStr(),
-                        m->tournamentOrganizerSocial(i).cStr(),
+                // In the case of multiple replays, if one replay has a gap,
+                // we just add an empty commentator in its place
+                rfcommon::GameMetadata* g = mdata->asGame();
+                while (i >= g->tournamentOrganizerCount())
+                    g->addTournamentOrganizer("", "");
+                g->setTournamentOrganizer(i,
+                        g->tournamentOrganizerName(i).cStr(),
+                        g->tournamentOrganizerSocial(i).cStr(),
                         text.toUtf8().constData());
             }
         ignoreSelf_ = false;
@@ -178,6 +196,8 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QString& website)
 {
+    PROFILE(MetadataEditWidget_Tournament, addSponsorUI);
+
     QToolButton* removeButton = new QToolButton;
     removeButton->setText("-");
 
@@ -192,7 +212,7 @@ void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     layout->addRow(removeButton);
 
     QGroupBox* gb = new QGroupBox;
-    gb->setTitle(name.isEmpty() ? "Sponsor #" + QString::number(layout_sponsors_->count()) : name);
+    gb->setTitle(name.isEmpty() || name == "*" ? "Sponsor #" + QString::number(layout_sponsors_->count()) : name);
     gb->setLayout(layout);
 
     QLayoutItem* addButtonItem = layout_sponsors_->takeAt(layout_sponsors_->count() - 1);
@@ -215,12 +235,15 @@ void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
     connect(removeButton, &QToolButton::released, [this, gb, indexInLayout] {
         int i = indexInLayout(gb);
 
+        // Update models
         ignoreSelf_ = true;
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
-                mdata->asGame()->removeSponsor(i);
+                if (i < mdata->asGame()->sponsorCount())  // In the case of multiple replays, there could be less in one than in the other
+                    mdata->asGame()->removeSponsor(i);
         ignoreSelf_ = false;
 
+        // Update UI
         sponsorWidgets_.erase(sponsorWidgets_.begin() + i);
 
         QLayoutItem* item = layout_sponsors_->takeAt(i);
@@ -242,10 +265,14 @@ void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetadata* m = mdata->asGame();
-                m->setSponsor(i,
+                // In the case of multiple replays, if one replay has a gap,
+                // we just add an empty commentator in its place
+                rfcommon::GameMetadata* g = mdata->asGame();
+                while (i >= g->sponsorCount())
+                    g->addSponsor("", "");
+                g->setSponsor(i,
                         text.toUtf8().constData(),
-                        m->sponsorWebsite(i).cStr());
+                        g->sponsorWebsite(i).cStr());
             }
         ignoreSelf_ = false;
     });
@@ -257,9 +284,13 @@ void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
         for (auto& mdata : model_->metadata())
             if (mdata->type() == rfcommon::Metadata::GAME)
             {
-                rfcommon::GameMetadata* m = mdata->asGame();
-                m->setSponsor(i,
-                        m->sponsorWebsite(i).cStr(),
+                // In the case of multiple replays, if one replay has a gap,
+                // we just add an empty commentator in its place
+                rfcommon::GameMetadata* g = mdata->asGame();
+                while (i >= g->sponsorCount())
+                    g->addSponsor("", "");
+                g->setSponsor(i,
+                        g->sponsorWebsite(i).cStr(),
                         text.toUtf8().constData());
             }
         ignoreSelf_ = false;
@@ -269,6 +300,8 @@ void MetadataEditWidget_Tournament::addSponsorUI(const QString& name, const QStr
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::onAddTOReleased()
 {
+    PROFILE(MetadataEditWidget_Tournament, onAddTOReleased);
+
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
         if (mdata->type() == rfcommon::Metadata::GAME)
@@ -282,6 +315,8 @@ void MetadataEditWidget_Tournament::onAddTOReleased()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::onAddSponsorReleased()
 {
+    PROFILE(MetadataEditWidget_Tournament, onAddSponsorReleased);
+
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
         if (mdata->type() == rfcommon::Metadata::GAME)
@@ -294,6 +329,8 @@ void MetadataEditWidget_Tournament::onAddSponsorReleased()
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_Tournament, onAdoptMetadata);
+
     QString tournamentName, tournamentWebsite;
     QStringList organizerNames, organizerSocials, organizerPronouns;
     QStringList sponsorNames, sponsorWebsites;
@@ -328,6 +365,17 @@ void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, 
                         tournamentName = "*";
                     if (tournamentWebsite != QString::fromUtf8(g->tournamentWebsite().cStr()))
                         tournamentWebsite = "*";
+
+                    // If any replays have missing TOs, mark them as "*"
+                    for (int i = 0; i != organizerNames.size(); ++i)
+                        if (i >= g->tournamentOrganizerCount())
+                        {
+                            organizerNames[i] = "*";
+                            organizerSocials[i] = "*";
+                            organizerPronouns[i] = "*";
+                        }
+
+                    // If existing TOs are different, mark them as "*"
                     for (int i = 0; i != g->tournamentOrganizerCount(); ++i)
                     {
                         if (i >= organizerNames.size())
@@ -345,6 +393,16 @@ void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, 
                         else if (organizerPronouns[i] != QString::fromUtf8(g->tournamentOrganizerPronouns(i).cStr()))
                             organizerPronouns[i] = "*";
                     }
+
+                    // If any replays have missing TOs, mark them as "*"
+                    for (int i = 0; i != sponsorNames.size(); ++i)
+                        if (i >= g->sponsorCount())
+                        {
+                            sponsorNames[i] = "*";
+                            sponsorWebsites[i] = "*";
+                        }
+
+                    // If existing sponsors are different, mark them as "*"
                     for (int i = 0; i != g->sponsorCount(); ++i)
                     {
                         if (i >= sponsorNames.size())
@@ -366,6 +424,8 @@ void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, 
         first = false;
     }
 
+    const QSignalBlocker blockName(lineEdit_name_);
+    const QSignalBlocker blockWebsite(lineEdit_website_);
     lineEdit_name_->setText(tournamentName);
     lineEdit_website_->setText(tournamentWebsite);
 
@@ -391,6 +451,8 @@ void MetadataEditWidget_Tournament::onAdoptMetadata(const MappingInfoList& map, 
 // ----------------------------------------------------------------------------
 void MetadataEditWidget_Tournament::onOverwriteMetadata(const MappingInfoList& map, const MetadataList& mdata)
 {
+    PROFILE(MetadataEditWidget_Tournament, onOverwriteMetadata);
+
     ignoreSelf_ = true;
 
     for (auto& m : mdata)
@@ -435,6 +497,8 @@ void MetadataEditWidget_Tournament::onBracketTypeChangedUI(rfcommon::BracketType
 void MetadataEditWidget_Tournament::onMetadataTimeChanged(rfcommon::TimeStamp timeStarted, rfcommon::TimeStamp timeEnded) {}
 void MetadataEditWidget_Tournament::onMetadataTournamentDetailsChanged()
 {
+    PROFILE(MetadataEditWidget_Tournament, onMetadataTournamentDetailsChanged);
+
     if (ignoreSelf_)
         return;
     onAdoptMetadata(model_->mappingInfo(), model_->metadata());

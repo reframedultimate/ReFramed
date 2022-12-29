@@ -12,6 +12,7 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
 // ----------------------------------------------------------------------------
@@ -35,6 +36,8 @@ StatsPlugin::~StatsPlugin()
 // ----------------------------------------------------------------------------
 void StatsPlugin::resetStatsIfAppropriate(rfcommon::Session* session)
 {
+    PROFILE(StatsPlugin, resetStatsIfAppropriate);
+
     // Statistics reset logic
     switch (settingsModel_->resetBehavior())
     {
@@ -57,6 +60,8 @@ void StatsPlugin::resetStatsIfAppropriate(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void StatsPlugin::clearSession()
 {
+    PROFILE(StatsPlugin, clearSession);
+
     // Unregister from current session
     if (frameData_)
     {
@@ -70,6 +75,8 @@ void StatsPlugin::clearSession()
 // ----------------------------------------------------------------------------
 bool StatsPlugin::addSession(rfcommon::Session* session)
 {
+    PROFILE(StatsPlugin, addSession);
+
     // We need mapping info, metadata and frame data in order to process
     // statistics
     auto map = session->tryGetMappingInfo();
@@ -93,6 +100,8 @@ bool StatsPlugin::addSession(rfcommon::Session* session)
 // ----------------------------------------------------------------------------
 void StatsPlugin::exportOBSEmptyStats() const
 {
+    PROFILE(StatsPlugin, exportOBSEmptyStats);
+
     if (settingsModel_->obsEnabled())
     {
         OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
@@ -107,6 +116,8 @@ void StatsPlugin::exportOBSEmptyStats() const
 // ----------------------------------------------------------------------------
 void StatsPlugin::exportOBSStats() const
 {
+    PROFILE(StatsPlugin, exportOBSStats);
+
     if (settingsModel_->obsEnabled())
     {
         OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
@@ -121,6 +132,8 @@ void StatsPlugin::exportOBSStats() const
 // ----------------------------------------------------------------------------
 void StatsPlugin::sendWebSocketStats(bool gameStarted, bool gameEnded) const
 {
+    PROFILE(StatsPlugin, sendWebSocketStats);
+
     if (settingsModel_->wsEnabled())
     {
         WSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get(), wsServer_.get());
@@ -138,6 +151,8 @@ rfcommon::Plugin::VideoPlayerInterface* StatsPlugin::videoPlayerInterface() { re
 // ----------------------------------------------------------------------------
 QWidget* StatsPlugin::createView()
 {
+    PROFILE(StatsPlugin, createView);
+
     // Create new instance of view. The view registers as a listener to this model
     //return new StatsView(model_.get());
     return new MainView(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get(), wsServer_.get());
@@ -146,6 +161,8 @@ QWidget* StatsPlugin::createView()
 // ----------------------------------------------------------------------------
 void StatsPlugin::destroyView(QWidget* view)
 {
+    PROFILE(StatsPlugin, destroyView);
+
     // ReFramed no longer needs the view, delete it
     delete view;
 }
@@ -153,6 +170,8 @@ void StatsPlugin::destroyView(QWidget* view)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onProtocolGameStarted(rfcommon::Session* game)
 {
+    PROFILE(StatsPlugin, onProtocolGameStarted);
+
     resetStatsIfAppropriate(game);
     clearSession();
     if (addSession(game))
@@ -168,6 +187,8 @@ void StatsPlugin::onProtocolGameStarted(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onProtocolGameResumed(rfcommon::Session* game)
 {
+    PROFILE(StatsPlugin, onProtocolGameResumed);
+
     resetStatsIfAppropriate(game);
     clearSession();
     if (addSession(game))
@@ -183,6 +204,8 @@ void StatsPlugin::onProtocolGameResumed(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onProtocolGameEnded(rfcommon::Session* game)
 {
+    PROFILE(StatsPlugin, onProtocolGameEnded);
+
     weAreLive_ = false;
 
     exportOBSStats();
@@ -195,6 +218,8 @@ void StatsPlugin::onProtocolGameEnded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onProtocolTrainingStarted(rfcommon::Session* training)
 {
+    PROFILE(StatsPlugin, onProtocolTrainingStarted);
+
     statsCalculator_->resetStatistics();
     clearSession();
 }
@@ -202,6 +227,8 @@ void StatsPlugin::onProtocolTrainingStarted(rfcommon::Session* training)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onProtocolTrainingResumed(rfcommon::Session* training)
 {
+    PROFILE(StatsPlugin, onProtocolTrainingResumed);
+
     statsCalculator_->resetStatistics();
     clearSession();
 }
@@ -213,6 +240,8 @@ void StatsPlugin::onProtocolTrainingEnded(rfcommon::Session* training) {}
 // ----------------------------------------------------------------------------
 void StatsPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
+    PROFILE(StatsPlugin, onGameSessionLoaded);
+
     statsCalculator_->resetStatistics();
     clearSession();
     if (addSession(game))
@@ -225,6 +254,8 @@ void StatsPlugin::onGameSessionLoaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
+    PROFILE(StatsPlugin, onGameSessionUnloaded);
+
     statsCalculator_->resetStatistics();
     clearSession();
 }
@@ -232,6 +263,8 @@ void StatsPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 // ----------------------------------------------------------------------------
 void StatsPlugin::onTrainingSessionLoaded(rfcommon::Session* training)
 {
+    PROFILE(StatsPlugin, onTrainingSessionLoaded);
+
     statsCalculator_->resetStatistics();
     clearSession();
 }
@@ -242,6 +275,8 @@ void StatsPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 // ----------------------------------------------------------------------------
 void StatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(StatsPlugin, onGameSessionSetLoaded);
+
     statsCalculator_->resetStatistics();
 
     for (int s = 0; s != numGames; ++s)
@@ -257,6 +292,8 @@ void StatsPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames
 // ----------------------------------------------------------------------------
 void StatsPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames)
 {
+    PROFILE(StatsPlugin, onGameSessionSetUnloaded);
+
     statsCalculator_->resetStatistics();
     clearSession();
 }
@@ -264,6 +301,8 @@ void StatsPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGam
 // ----------------------------------------------------------------------------
 void StatsPlugin::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
+    PROFILE(StatsPlugin, onFrameDataNewFrame);
+
     statsCalculator_->updateStatistics(frame);
 
     if (weAreLive_ && settingsModel_->obsExportInterval() > 0)
@@ -282,6 +321,8 @@ void StatsPlugin::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& fr
 // ----------------------------------------------------------------------------
 void StatsPlugin::onSettingsStatsChanged()
 {
+    PROFILE(StatsPlugin, onSettingsStatsChanged);
+
     if (frameData_)
     {
         exportOBSStats();
@@ -294,6 +335,8 @@ void StatsPlugin::onSettingsStatsChanged()
 // ----------------------------------------------------------------------------
 void StatsPlugin::onSettingsOBSChanged()
 {
+    PROFILE(StatsPlugin, onSettingsOBSChanged);
+
     if (frameData_)
     {
         exportOBSStats();
@@ -305,7 +348,9 @@ void StatsPlugin::onSettingsOBSChanged()
 
 // ----------------------------------------------------------------------------
 void StatsPlugin::onSettingsWSChanged()
-{}
+{
+    PROFILE(StatsPlugin, onSettingsWSChanged);
+}
 
 // ----------------------------------------------------------------------------
 // Unused callbacks

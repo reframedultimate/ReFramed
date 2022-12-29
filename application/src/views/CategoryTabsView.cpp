@@ -1,3 +1,4 @@
+#include "rfcommon/Profiler.hpp"
 #include "application/views/ActiveSessionView.hpp"
 #include "application/views/CategoryTabsView.hpp"
 #include "application/views/ReplayManagerView.hpp"
@@ -12,6 +13,8 @@ class CustomTabStyle : public QProxyStyle
 public:
     QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size, const QWidget* widget) const
     {
+        PROFILE(CategoryTabsViewGlobal, sizeFromContents);
+
         QSize s = QProxyStyle::sizeFromContents(type, option, size, widget);
         if (type == QStyle::CT_TabBarTab)
             s.transpose();
@@ -20,6 +23,8 @@ public:
 
     void drawControl(ControlElement element, const QStyleOption* option, QPainter* painter, const QWidget* widget) const
     {
+        PROFILE(CategoryTabsViewGlobal, drawControl);
+
         if (element == CE_TabBarTabLabel)
         {
             if (const QStyleOptionTab* tab = qstyleoption_cast<const QStyleOptionTab*>(option))
@@ -48,13 +53,13 @@ CategoryTabsView::CategoryTabsView(
     , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager, playerDetails))
 {
     setTabPosition(QTabWidget::West);
-    //tabBar()->setStyle(new CustomTabStyle);
+    tabBar()->setStyle(new CustomTabStyle);
     tabBar()->setObjectName("categoryTab");
 
-    addTab(activeSessionView_, "Session");
-    addTab(replayManagerView_, "Replays");
-    addTab(new QWidget, "Compare");
-    addTab(new QWidget, "Marketplace");
+    addTab(activeSessionView_, QIcon::fromTheme("smashball"), "Session");
+    addTab(replayManagerView_, QIcon::fromTheme("replay"), "Replays");
+    addTab(new QWidget, QIcon::fromTheme("compare"), "Compare");
+    addTab(new QWidget, QIcon::fromTheme("globe"), "Get Plugins");
     setCurrentIndex(1);
 
     setStyleSheet(
@@ -68,10 +73,16 @@ CategoryTabsView::CategoryTabsView(
             "background: #f9b233;\n"
             //"background: lightgray;\n"
          "}\n"*/
+
         "QTabBar#categoryTab::tab {\n"
-        "   width: 50px;\n"
-        "   height: 160px;\n"
-        "   font-size: 12pt;\n"
+        "   width: 80px;\n"
+        "   height: 180px;\n"
+        "   font-size: 11pt;\n"
+        "   text-align: top;\n"
+        "}\n"
+
+        "QTabBar {\n"
+        "   icon-size: 32px;\n"
         "}\n"
     );
 
@@ -85,6 +96,8 @@ CategoryTabsView::~CategoryTabsView()
 // ----------------------------------------------------------------------------
 void CategoryTabsView::onTabBarClicked(int index)
 {
+    PROFILE(CategoryTabsView, onTabBarClicked);
+
     if (index != currentIndex())
         return;
 

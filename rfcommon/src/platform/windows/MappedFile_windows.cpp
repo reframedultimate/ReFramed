@@ -102,6 +102,8 @@ void MappedFile::close()
 // ----------------------------------------------------------------------------
 bool MappedFile::setDeleteOnClose(const char* utf8_filename)
 {
+    PROFILE(MappedFile, setDeleteOnClose);
+
     wchar_t* utf16_filename = utf8_to_utf16(utf8_filename, strlen(utf8_filename));
     if (utf16_filename == nullptr)
         return false;

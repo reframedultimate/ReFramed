@@ -2,10 +2,10 @@
 #include "application/views/ExportReplayPackDialog.hpp"
 #include "application/widgets/ProgressDialog.hpp"
 
-#include "rfcommon/Endian.hpp"
 #include "rfcommon/FilePathResolver.hpp"
 #include "rfcommon/HashMap.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Serializer.hpp"
 #include "rfcommon/Session.hpp"
@@ -59,6 +59,8 @@ ExportReplayPackDialog::~ExportReplayPackDialog()
 // ----------------------------------------------------------------------------
 void ExportReplayPackDialog::onSelectionChanged()
 {
+    PROFILE(ExportReplayPackDialog, onSelectionChanged);
+
     bool canProceed = ui_->listWidget_replays->selectedItems().size() > 0;
     ui_->pushButton_next->setEnabled(canProceed);
 }
@@ -66,6 +68,8 @@ void ExportReplayPackDialog::onSelectionChanged()
 // ----------------------------------------------------------------------------
 void ExportReplayPackDialog::onChoosePackFile()
 {
+    PROFILE(ExportReplayPackDialog, onChoosePackFile);
+
     QString destination = QFileDialog::getSaveFileName(this, "Replay Pack Destination", "", "Replay Pack (*.rfp)");
     if (destination.length() == 0)
         return;
@@ -78,6 +82,8 @@ void ExportReplayPackDialog::onChoosePackFile()
 // ----------------------------------------------------------------------------
 void ExportReplayPackDialog::onExport()
 {
+    PROFILE(ExportReplayPackDialog, onExport);
+
     struct SessionWithName
     {
         rfcommon::Reference<rfcommon::Session> session;
@@ -92,7 +98,7 @@ void ExportReplayPackDialog::onExport()
     for (int i = 0; i != ui_->listWidget_replays->count(); ++i)
     {
         QListWidgetItem* item = ui_->listWidget_replays->item(i);
-        if (ui_->listWidget_replays->isItemSelected(item) == false)
+        if (item->isSelected() == false)
             continue;
 
         SessionWithName swn;
@@ -180,7 +186,7 @@ void ExportReplayPackDialog::onExport()
 
     // Calculate space we need for the content table, as this is written later
     const int headerSize = 4 + 2 + 4;  // magic, version, entry count
-    const int contentTableEntries = sessions.count() + videoFiles.count();
+    //const int contentTableEntries = sessions.count() + videoFiles.count();
     int contentTableSize = headerSize;
     for (const auto& swn : sessions)
         contentTableSize += 4 + 8 + 8 + 1 + swn.name.toUtf8().size();
@@ -342,12 +348,14 @@ out:
 // ----------------------------------------------------------------------------
 void ExportReplayPackDialog::estimateFileSize()
 {
+    PROFILE(ExportReplayPackDialog, estimateFileSize);
+
     rfcommon::Vector<rfcommon::Reference<rfcommon::Session>> sessions;
 
     for (int i = 0; i != ui_->listWidget_replays->count(); ++i)
     {
         QListWidgetItem* item = ui_->listWidget_replays->item(i);
-        if (ui_->listWidget_replays->isItemSelected(item) == false)
+        if (item->isSelected() == false)
             continue;
 
         assert(QDir(replayFileNames_[i]).isRelative());
@@ -386,7 +394,7 @@ void ExportReplayPackDialog::estimateFileSize()
         size += session->file()->size();
     for (auto it : videoFiles)
         size += it->value()->size();
-    
+
     const char* units[] = { "B", "KiB", "MiB", "GiB", "TiB" };
     int unitIdx = 0;
     size *= 10;
