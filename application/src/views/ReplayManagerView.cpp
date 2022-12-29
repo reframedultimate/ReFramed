@@ -21,8 +21,19 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QShortcut>
 
 namespace rfapp {
+
+static const QKeySequence editMetadataShortcut("Ctrl+D");
+static const QKeySequence associateVideoShortcut("Ctrl+V");
+static const QKeySequence exportReplayPackShortcut("Ctrl+E");
+static const QKeySequence addToNewGroupShortcut("Ctrl+G");
+static const QKeySequence removeFromGroupShortcut("Alt+G");
+static const QKeySequence deleteShortcut("Del");
+
+static const QKeySequence createNewGroupShortcut("Ctrl+N");
+static const QKeySequence duplicateGroupShortcut("Shift+D");
 
 // ----------------------------------------------------------------------------
 ReplayManagerView::ReplayManagerView(
@@ -101,6 +112,28 @@ ReplayManagerView::ReplayManagerView(
     l->addWidget(hSplitter_);
 
     setLayout(l);
+
+    QShortcut* shortcutEditMetadata = new QShortcut(editMetadataShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutAssocateVideo = new QShortcut(associateVideoShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutExportReplayPack = new QShortcut(exportReplayPackShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutAddToNewGroup = new QShortcut(addToNewGroupShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutRemoveFromNewGroup = new QShortcut(removeFromGroupShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutDeleteReplay = new QShortcut(deleteShortcut, replayListView_, nullptr, nullptr, Qt::WidgetShortcut);
+
+    QShortcut* shortcutCreateNewGroup = new QShortcut(createNewGroupShortcut, replayGroupListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutDuplicateGroup = new QShortcut(duplicateGroupShortcut, replayGroupListView_, nullptr, nullptr, Qt::WidgetShortcut);
+    QShortcut* shortcutDeleteGroup = new QShortcut(deleteShortcut, replayGroupListView_, nullptr, nullptr, Qt::WidgetShortcut);
+
+    connect(shortcutEditMetadata, &QShortcut::activated, [this]{ doEditMetaData(collectSelectedFileNames()); });
+    connect(shortcutAssocateVideo, &QShortcut::activated, [this]{ doAssociateVideo(collectSelectedFileNames()); });
+    connect(shortcutExportReplayPack, &QShortcut::activated, [this]{ doExportReplayPack(collectSelectedFileNames()); });
+    connect(shortcutAddToNewGroup, &QShortcut::activated, [this]{ doAddToNewGroup(collectSelectedFileNames()); });
+    connect(shortcutRemoveFromNewGroup, &QShortcut::activated, [this]{ doRemoveFromGroup(collectSelectedFileNames()); });
+    connect(shortcutDeleteReplay, &QShortcut::activated, [this]{ doDeleteReplays(collectSelectedFileNames()); });
+
+    connect(shortcutCreateNewGroup, &QShortcut::activated, this, &ReplayManagerView::doCreateNewGroup);
+    connect(shortcutDuplicateGroup, &QShortcut::activated, this, &ReplayManagerView::doDuplicateGroup);
+    connect(shortcutDeleteGroup, &QShortcut::activated, this, &ReplayManagerView::doDeleteGroup);
 
     connect(replayGroupListView_, &QListWidget::currentItemChanged, this, &ReplayManagerView::groupSelected);
     connect(searchBox, &ReplaySearchBox::searchTextChanged, this, &ReplayManagerView::searchTextChanged);
@@ -239,19 +272,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
 {
     PROFILE(ReplayManagerView, onReplayRightClicked);
 
-    QStringList selectedFileNames;
-    const auto selectedIdxs = replayListView_->selectionModel()->selectedRows();
-    for (const auto& idx : selectedIdxs)
-    {
-        // NOTE: The selection model is using proxy model indices, but we need
-        // source model indices in order to successfully retrieve the filename
-        const QModelIndex& srcIdx = replayListSortFilterModel_->mapToSource(idx);
-        QString fileName = replayListModel_->indexFileName(srcIdx);
-        if (fileName.isEmpty())
-            continue;
-        selectedFileNames.push_back(std::move(fileName));
-    }
-
+    const auto selectedFileNames = collectSelectedFileNames();
     if (selectedFileNames.size() == 0)
         return;
 
@@ -283,22 +304,22 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
     menu.addSeparator();
     QAction* deleteReplays = menu.addAction(QIcon::fromTheme("trash-2"), "Delete");
 
+    editMetadata->setShortcut(editMetadataShortcut);
+    associateVideo->setShortcut(associateVideoShortcut);
+    exportPack->setShortcut(exportReplayPackShortcut);
+    addToNewGroup->setShortcut(addToNewGroupShortcut);
+    removeFromGroup->setShortcut(removeFromGroupShortcut);
+    deleteReplays->setShortcut(deleteShortcut);
+
     if (selectedFileNames.size() == 1)
-    {
-    }
+        {}
     else
-    {
         associateVideo->setEnabled(false);
-    }
 
     if (currentGroupItem->text() == replayManager_->allReplayGroup()->name())
-    {
         removeFromGroup->setEnabled(false);
-    }
     else
-    {
         deleteReplays->setEnabled(false);
-    }
 
     QPoint item = replayListView_->viewport()->mapToGlobal(pos);
     QAction* a = menu.exec(item);
@@ -306,51 +327,13 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         return;
 
     if (a == editMetadata)
-    {
-        ReplayEditorDialog dialog(replayManager_, playerDetails_, selectedFileNames, this);
-        dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
-        dialog.exec();
-    }
+        doEditMetaData(selectedFileNames);
     else if (a == associateVideo)
-    {
-        const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
-        rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
-        if (session)
-        {
-            VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0], this);
-            dialog.setGeometry(calculatePopupGeometryActiveScreen());
-            dialog.exec();
-        }
-    }
+        doAssociateVideo(selectedFileNames);
     else if (a == exportPack)
-    {
-        ExportReplayPackDialog dialog(replayManager_, selectedFileNames, selectedFileNames, this);
-        dialog.exec();
-    }
+        doExportReplayPack(selectedFileNames);
     else if (a == addToNewGroup)
-    {
-        retryAddToNewGroup:
-        bool ok;
-        QString name = QInputDialog::getText(this, "Create new group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
-        if (ok)
-        {
-            if (name.isEmpty())
-            {
-                QMessageBox::critical(this, "Empty name", "The group name must not be empty");
-                goto retryAddToNewGroup;
-            }
-
-            ReplayGroup* group = replayManager_->addReplayGroup(name);
-            if (group == nullptr)
-            {
-                QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
-                goto retryAddToNewGroup;
-            }
-
-            for (const auto& fileName : selectedFileNames)
-                group->addFile(fileName);
-        }
-    }
+        doAddToNewGroup(selectedFileNames);
     else if (isAddToGroupAction(a))
     {
         for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
@@ -365,31 +348,9 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
         }
     }
     else if (a == removeFromGroup)
-    {
-        for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
-        {
-            ReplayGroup* group = replayManager_->replayGroup(i);
-            if (currentGroupItem->text() == group->name())
-            {
-                for (const auto& fileName : selectedFileNames)
-                    group->removeFile(fileName);
-                break;
-            }
-        }
-    }
+        doRemoveFromGroup(selectedFileNames);
     else if (a == deleteReplays)
-    {
-        if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete these replays?") == QMessageBox::Yes)
-        {
-            bool success = true;
-            for (const auto& fileName : selectedFileNames)
-                if (replayManager_->deleteReplay(fileName) == false)
-                    success = false;
-
-            if (success == false)
-                QMessageBox::critical(this, "Error deleting file(s)", "Failed to delete some of the selected files because they don't exist. They were probably deleted by an external process.");
-        }
-    }
+        doDeleteReplays(selectedFileNames);
 }
 
 // ----------------------------------------------------------------------------
@@ -397,10 +358,19 @@ void ReplayManagerView::onGroupRightClicked(const QPoint& pos)
 {
     PROFILE(ReplayManagerView, onGroupRightClicked);
 
+    QListWidgetItem* currentGroupItem = replayGroupListView_->currentItem();
+
     QMenu menu;
     QAction* createGroup = menu.addAction("Create new group");
     QAction* duplicateGroup = menu.addAction("Duplicate group");
     QAction* deleteGroup = menu.addAction("Delete group");
+
+    createGroup->setShortcut(createNewGroupShortcut);
+    duplicateGroup->setShortcut(duplicateGroupShortcut);
+    deleteGroup->setShortcut(deleteShortcut);
+
+    if (currentGroupItem == nullptr || currentGroupItem->text() == replayManager_->allReplayGroup()->name())
+        deleteGroup->setEnabled(false);
 
     QPoint item = replayGroupListView_->mapToGlobal(pos);
     QAction* a = menu.exec(item);
@@ -408,72 +378,206 @@ void ReplayManagerView::onGroupRightClicked(const QPoint& pos)
         return;
 
     if (a == createGroup)
-    {
-        retryAddToNewGroup:
-        bool ok;
-        QString name = QInputDialog::getText(this, "Create new group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
-        if (ok)
-        {
-            if (name.isEmpty())
-            {
-                QMessageBox::critical(this, "Empty name", "The group name must not be empty");
-                goto retryAddToNewGroup;
-            }
-
-            ReplayGroup* group = replayManager_->addReplayGroup(name);
-            if (group == nullptr)
-            {
-                QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
-                goto retryAddToNewGroup;
-            }
-        }
-    }
+        doCreateNewGroup();
     else if (a == duplicateGroup)
+        doDuplicateGroup();
+    else if (a == deleteGroup)
+        doDeleteGroup();
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doEditMetaData(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() == 0)
+        return;
+
+    ReplayEditorDialog dialog(replayManager_, playerDetails_, selectedFileNames, this);
+    dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
+    dialog.exec();
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doAssociateVideo(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() != 1)
+        return;
+
+    const auto filePathUtf8 = replayManager_->resolveGameFile(selectedFileNames[0].toUtf8().constData());
+    rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayManager_, filePathUtf8.cStr());
+    if (session)
     {
-        retryDupToNewGroup:
-        bool ok;
-        QString name = QInputDialog::getText(this, "Duplicate group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
-        if (ok)
+        VideoAssociatorDialog dialog(pluginManager_, replayManager_, session, selectedFileNames[0], this);
+        dialog.setGeometry(calculatePopupGeometryActiveScreen());
+        dialog.exec();
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doExportReplayPack(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() == 0)
+        return;
+
+    ExportReplayPackDialog dialog(replayManager_, selectedFileNames, selectedFileNames, this);
+    dialog.exec();
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doAddToNewGroup(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() == 0)
+        return;
+
+retryAddToNewGroup:
+    bool ok;
+    QString name = QInputDialog::getText(this, "Create new group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
+    if (ok)
+    {
+        if (name.isEmpty())
         {
-            if (name.isEmpty())
-            {
-                QMessageBox::critical(this, "Empty name", "The group name must not be empty");
-                goto retryDupToNewGroup;
-            }
+            QMessageBox::critical(this, "Empty name", "The group name must not be empty");
+            goto retryAddToNewGroup;
+        }
 
-            ReplayGroup* group = replayManager_->addReplayGroup(name);
-            if (group == nullptr)
-            {
-                QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
-                goto retryDupToNewGroup;
-            }
+        ReplayGroup* group = replayManager_->addReplayGroup(name);
+        if (group == nullptr)
+        {
+            QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
+            goto retryAddToNewGroup;
+        }
 
-            QListWidgetItem* item = replayGroupListView_->currentItem();
-            for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
-            {
-                ReplayGroup* oldGroup = replayManager_->replayGroup(i);
-                if (item->text() == oldGroup->name())
-                {
-                    for (const auto& fileName : oldGroup->files())
-                        group->addFile(fileName);
-                    break;
-                }
-            }
+        for (const auto& fileName : selectedFileNames)
+            group->addFile(fileName);
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doRemoveFromGroup(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() == 0)
+        return;
+
+    QListWidgetItem* currentGroupItem = replayGroupListView_->currentItem();
+    for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
+    {
+        ReplayGroup* group = replayManager_->replayGroup(i);
+        if (currentGroupItem->text() == group->name())
+        {
+            for (const auto& fileName : selectedFileNames)
+                group->removeFile(fileName);
+            break;
         }
     }
-    else if (a == deleteGroup)
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doDeleteReplays(const QStringList& selectedFileNames)
+{
+    if (selectedFileNames.size() == 0)
+        return;
+
+    if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete these replays?") == QMessageBox::Yes)
     {
+        bool success = true;
+        for (const auto& fileName : selectedFileNames)
+            if (replayManager_->deleteReplay(fileName) == false)
+                success = false;
+
+        if (success == false)
+            QMessageBox::critical(this, "Error deleting file(s)", "Failed to delete some of the selected files because they don't exist. They were probably deleted by an external process.");
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doCreateNewGroup()
+{
+retryAddToNewGroup:
+    bool ok;
+    QString name = QInputDialog::getText(this, "Create new group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
+    if (ok)
+    {
+        if (name.isEmpty())
+        {
+            QMessageBox::critical(this, "Empty name", "The group name must not be empty");
+            goto retryAddToNewGroup;
+        }
+
+        ReplayGroup* group = replayManager_->addReplayGroup(name);
+        if (group == nullptr)
+        {
+            QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
+            goto retryAddToNewGroup;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doDuplicateGroup()
+{
+retryDupToNewGroup:
+    bool ok;
+    QString name = QInputDialog::getText(this, "Duplicate group", "Enter the name of the new group", QLineEdit::Normal, "", &ok);
+    if (ok)
+    {
+        if (name.isEmpty())
+        {
+            QMessageBox::critical(this, "Empty name", "The group name must not be empty");
+            goto retryDupToNewGroup;
+        }
+
+        ReplayGroup* group = replayManager_->addReplayGroup(name);
+        if (group == nullptr)
+        {
+            QMessageBox::critical(this, "Duplicate group", "Group \"" + name + "\" already exists");
+            goto retryDupToNewGroup;
+        }
+
         QListWidgetItem* item = replayGroupListView_->currentItem();
         for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
         {
-            ReplayGroup* group = replayManager_->replayGroup(i);
-            if (item->text() == group->name())
+            ReplayGroup* oldGroup = replayManager_->replayGroup(i);
+            if (item->text() == oldGroup->name())
             {
-                replayManager_->removeReplayGroup(group);
+                for (const auto& fileName : oldGroup->files())
+                    group->addFile(fileName);
                 break;
             }
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+void ReplayManagerView::doDeleteGroup()
+{
+    QListWidgetItem* item = replayGroupListView_->currentItem();
+    for (int i = 0; i != replayManager_->replayGroupCount(); ++i)
+    {
+        ReplayGroup* group = replayManager_->replayGroup(i);
+        if (item->text() == group->name())
+        {
+            if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete this group?") == QMessageBox::Yes)
+                replayManager_->removeReplayGroup(group);
+            break;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+QStringList ReplayManagerView::collectSelectedFileNames() const
+{
+    QStringList selectedFileNames;
+    for (const auto& idx : replayListView_->selectionModel()->selectedRows())
+    {
+        // NOTE: The selection model is using proxy model indices, but we need
+        // source model indices in order to successfully retrieve the filename
+        const QModelIndex& srcIdx = replayListSortFilterModel_->mapToSource(idx);
+        QString fileName = replayListModel_->indexFileName(srcIdx);
+        if (fileName.isEmpty())
+            continue;
+        selectedFileNames.push_back(std::move(fileName));
+    }
+
+    return selectedFileNames;
 }
 
 }

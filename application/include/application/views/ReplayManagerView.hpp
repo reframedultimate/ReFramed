@@ -51,6 +51,20 @@ private slots:
     void onReplayRightClicked(const QPoint& pos);
     void onGroupRightClicked(const QPoint& pos);
 
+    void doEditMetaData(const QStringList& selectedFileNames);
+    void doAssociateVideo(const QStringList& selectedFileNames);
+    void doExportReplayPack(const QStringList& selectedFileNames);
+    void doAddToNewGroup(const QStringList& selectedFileNames);
+    void doRemoveFromGroup(const QStringList& selectedFileNames);
+    void doDeleteReplays(const QStringList& selectedFileNames);
+
+    void doCreateNewGroup();
+    void doDuplicateGroup();
+    void doDeleteGroup();
+
+private:
+    QStringList collectSelectedFileNames() const;
+
 private:
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
