@@ -3,9 +3,7 @@
     <qresource prefix="/">
         <file>icons/reframed-icon.ico</file>
         <file>icons/reframed-icon2.ico</file>
-    </qresource>
-
-    <qresource prefix="/">
+		
         <file>icons/feather-light/index.theme</file>
         <file>icons/feather-light/apps/scalable/arrow-right.svg</file>
         <file>icons/feather-light/apps/scalable/compare.svg</file>
@@ -25,9 +23,7 @@
         <file>icons/feather-light/apps/scalable/trash-2.svg</file>
         <file>icons/feather-light/apps/scalable/wifi.svg</file>
         <file>icons/feather-light/apps/scalable/x.svg</file>
-    </qresource>
-
-    <qresource prefix="/">
+		
         <file>icons/feather-dark/index.theme</file>
         <file>icons/feather-dark/apps/scalable/arrow-right.svg</file>
         <file>icons/feather-dark/apps/scalable/columns.svg</file>
@@ -47,9 +43,7 @@
         <file>icons/feather-dark/apps/scalable/trash-2.svg</file>
         <file>icons/feather-dark/apps/scalable/wifi.svg</file>
         <file>icons/feather-dark/apps/scalable/x.svg</file>
-    </qresource>
-
-    <qresource prefix="/">
+		
         <file>ssbu_icons/chara_2_bayonetta_00.png</file>
         <file>ssbu_icons/chara_2_bayonetta_01.png</file>
         <file>ssbu_icons/chara_2_bayonetta_02.png</file>

@@ -243,6 +243,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
             data->emuIdx = i;
             return FALSE;
         }
+    return TRUE;
 }
 #endif
 

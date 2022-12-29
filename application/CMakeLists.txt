@@ -6,7 +6,7 @@ include (GNUInstallDirs)
 
 configure_file ("cmake/templates/config.hpp.in" "include/application/config.hpp")
 
-find_package (Qt5 COMPONENTS Core Widgets Gui LinguistTools REQUIRED)
+find_package (Qt5 COMPONENTS Core Widgets Gui Svg LinguistTools REQUIRED)
 
 set (APPLICATION_SOURCES
     "src/models/ActiveSessionManager.cpp"
@@ -150,6 +150,7 @@ target_link_libraries (application
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
+		Qt5::Svg
         ads::qtadvanceddocking
         rfplot)
 set_target_properties (application
@@ -183,14 +184,18 @@ add_custom_command (TARGET application POST_BUILD
 
 if (WIN32 OR CYGWIN)
     add_custom_command (TARGET application POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/iconengines
         COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/imageformats
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_BINDIR}/platforms
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll         ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll          ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll       ${REFRAMED_BUILD_BINDIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Svg$<$<CONFIG:Debug>:d>.dll       ${REFRAMED_BUILD_BINDIR}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll      ${REFRAMED_BUILD_BINDIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/platforms
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/iconengines/qsvgicon$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/iconengines
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/imageformats
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/imageformats/qsvg$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/imageformats
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_BINDIR}/platforms
 
         COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_BINDIR}'"
         VERBATIM)
@@ -199,14 +204,22 @@ if (WIN32 OR CYGWIN)
             ${Qt5_DIR}/../../../bin/Qt5Core$<$<CONFIG:Debug>:d>.dll
             ${Qt5_DIR}/../../../bin/Qt5Gui$<$<CONFIG:Debug>:d>.dll
             ${Qt5_DIR}/../../../bin/Qt5OpenGL$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../bin/Qt5Svg$<$<CONFIG:Debug>:d>.dll
             ${Qt5_DIR}/../../../bin/Qt5Widgets$<$<CONFIG:Debug>:d>.dll
         DESTINATION ${REFRAMED_INSTALL_BINDIR})
     install (
-        FILES ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
-        DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
+        FILES
+			${Qt5_DIR}/../../../plugins/iconengines/qsvgicon$<$<CONFIG:Debug>:d>.dll
+        DESTINATION "${REFRAMED_INSTALL_BINDIR}/iconengines")
     install (
-        FILES ${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll
+        FILES
+			${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll
+			${Qt5_DIR}/../../../plugins/imageformats/qsvg$<$<CONFIG:Debug>:d>.dll
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/imageformats")
+    install (
+        FILES
+			${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
+        DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
 endif ()
 
 install (
