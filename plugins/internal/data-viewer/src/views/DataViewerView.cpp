@@ -30,6 +30,7 @@ DataViewerView::DataViewerView(DataViewerModel* model, QWidget* parent)
 
     ui_->tableView_baseStatusIDs->setModel(model_->baseStatusIDModel());
     ui_->treeView_metadata->setModel(model_->metadataModel());
+    ui_->tableView_videoMetadata->setModel(model_->videoMetadataModel());
     ui_->tableView_hitStatusIDs->setModel(model_->hitStatusIDModel());
     ui_->tableView_stageIDs->setModel(model_->stageIDModel());
     ui_->tableView_specificStatusIDs->setModel(model_->specificStatusIDModel());
@@ -210,7 +211,7 @@ void DataViewerView::populateTree(rfcommon::MappingInfo* map, rfcommon::Metadata
         mappings->setFlags(Qt::ItemIsEnabled);
 
         ui_->treeWidget->addTopLevelItem(mappings);
-        mappings->setExpanded(true);
+        mappings->setExpanded(false);
         statusMappings->setExpanded(true);
     }
 

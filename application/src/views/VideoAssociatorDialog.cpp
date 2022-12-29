@@ -296,14 +296,11 @@ void VideoAssociatorDialog::updateUIOffsets()
     {
         auto frame = i->currentVideoGameFrame();
 
-        bool save1 = ui_->spinBox_frameOffset->blockSignals(true);
-        bool save2 = ui_->timeEdit_timeOffset->blockSignals(true);
+        const QSignalBlocker blockFrameOffset(ui_->spinBox_frameOffset);
+        const QSignalBlocker blockTimeOffset(ui_->timeEdit_timeOffset);
 
         ui_->spinBox_frameOffset->setValue(frame.index());
         ui_->timeEdit_timeOffset->setTime(QTime(0, 0).addMSecs(frame.secondsPassed() * 1000));
-
-        ui_->spinBox_frameOffset->blockSignals(save1);
-        ui_->timeEdit_timeOffset->blockSignals(save2);
     }
 }
 

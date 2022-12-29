@@ -152,7 +152,7 @@ void MetadataEditWidget_Commentators::onAddCommentatorReleased()
             mdata->asGame()->addCommentator("", "");
     ignoreSelf_ = false;
 
-    onMetadataCommentatorsChanged();
+    addCommentatorUI("", "", "he/him");
 }
 
 // ----------------------------------------------------------------------------

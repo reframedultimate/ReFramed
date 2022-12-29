@@ -2,12 +2,15 @@
 
 #include "rfcommon/config.hpp"
 #include "rfcommon/FrameIndex.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/RefCounted.hpp"
 #include "rfcommon/String.hpp"
 #include <cstdio>
 #include <cstdint>
 
 namespace rfcommon {
+
+class VideoMetadataListener;
 
 class RFCOMMON_PUBLIC_API VideoMeta : public RefCounted
 {
@@ -21,6 +24,8 @@ public:
     const char* fileName() const { return fileName_.cStr(); }
     rfcommon::FrameIndex frameOffset() const { return offset_; }
     bool isEmbedded() const { return isEmbedded_; }
+
+    ListenerDispatcher<VideoMetadataListener> dispatcher;
 
 private:
     rfcommon::String fileName_;

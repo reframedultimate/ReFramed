@@ -29,6 +29,13 @@ public:
      */
     static Hash40Strings* loadCSV(const char* fileName);
 
+    /*!
+     * \brief Load all hash40 strings from the specified file.
+     * \param fileName Path to the paramLabels.dat file.
+     * \return Returns true if all labels were loaded successfully.
+     */
+    static Hash40Strings* loadBinary(const char* fileName);
+
     static Hash40Strings* makeEmpty();
 
     /*!

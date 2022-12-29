@@ -55,6 +55,7 @@ void DataViewerModel::setSession(rfcommon::Session* session)
     fighterIDModel_->setMappingInfo(mappingInfo_);
     hitStatusIDModel_->setMappingInfo(mappingInfo_);
     metadataModel_->setMetadata(mappingInfo_, metadata_);
+    videoMetadataModel_->setVideoMetadata(videoMetadata_);
     specificStatusIDModel_->setMappingInfo(mappingInfo_);
     stageIDModel_->setMappingInfo(mappingInfo_);
 

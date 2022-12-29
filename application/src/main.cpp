@@ -71,11 +71,13 @@ int main(int argc, char** argv)
     rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings;
     {
 #if defined(_WIN32)
-        const char* file = "share\\reframed\\data\\motion\\ParamLabels.csv";
+        //const char* file = "share\\reframed\\data\\motion\\ParamLabels.csv";
+        const char* file = "share\\reframed\\data\\motion\\ParamLabels.dat";
 #else
-        const char* file = "share/reframed/data/motion/ParamLabels.csv";
+        //const char* file = "share/reframed/data/motion/ParamLabels.csv";
+        const char* file = "share/reframed/data/motion/ParamLabels.dat";
 #endif
-        hash40Strings = rfcommon::Hash40Strings::loadCSV(file);
+        hash40Strings = rfcommon::Hash40Strings::loadBinary(file);
         if (hash40Strings == nullptr)
         {
             QMessageBox::critical(nullptr,

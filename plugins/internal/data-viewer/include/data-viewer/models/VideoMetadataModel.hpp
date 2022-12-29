@@ -13,6 +13,7 @@ class VideoMetadataModel
         , rfcommon::VideoMetadataListener
 {
 public:
+    ~VideoMetadataModel();
     void setVideoMetadata(rfcommon::VideoMeta* vmeta);
 
     int rowCount(const QModelIndex& parent=QModelIndex()) const override;

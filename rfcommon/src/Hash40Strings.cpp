@@ -1,7 +1,10 @@
-#include "rfcommon/Hash40Strings.hpp"
-#include "rfcommon/Profiler.hpp"
+#include "rfcommon/Deserializer.hpp"
 #include "rfcommon/hash40.hpp"
-#include <cstdio>
+#include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/Log.hpp"
+#include "rfcommon/MappedFile.hpp"
+#include "rfcommon/Profiler.hpp"
+
 #include <memory>
 
 namespace rfcommon {
@@ -70,7 +73,7 @@ Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
 
         if (labelStr[0] == '\0')
         {
-            fprintf(stderr, "Label string empty for \"%s\"", line);
+            Log::root()->warning("Label string empty for \"%s\"", line);
             continue;
         }
 
@@ -79,22 +82,50 @@ Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
         if (motion.value() == 0)
         {
             if (error)
-                fprintf(stderr, "Failed to parse \"%s\" into hex value\n", line);
+                Log::root()->error("Failed to parse \"%s\" into hex value\n", line);
             else
-                fprintf(stderr, "Invalid hex value \"%s\"\n", line);
+                Log::root()->warning("Invalid hex value \"%s\"\n", line);
             continue;
         }
 
         auto motionMapResult = hash40Strings->entries_.insertIfNew(motion, labelStr);
         if (motionMapResult == hash40Strings->entries_.end())
         {
-            fprintf(stderr, "Duplicate motion value: %s\n", line);
+            Log::root()->warning("Duplicate motion value: %s\n", line);
             continue;
         }
     }
     fclose(fp);
 
-    fprintf(stderr, "Loaded %d motion labels\n", hash40Strings->entries_.count());
+    Log::root()->info("Loaded %d motion labels\n", hash40Strings->entries_.count());
+
+    return hash40Strings;
+}
+
+// ----------------------------------------------------------------------------
+Hash40Strings* Hash40Strings::loadBinary(const char* fileName)
+{
+    PROFILE(Hash40Strings, loadBinary);
+
+    MappedFile f;
+    if (f.open(fileName) == false)
+        return nullptr;
+
+    Hash40Strings* hash40Strings = new Hash40Strings();
+    Deserializer d(f.address(), f.size());
+
+    while (d.bytesLeft())
+    {
+        const uint32_t motion_l = d.readLU32();
+        const uint8_t motion_h = d.readU8();
+        const auto motion = FighterMotion::fromParts(motion_h, motion_l);
+
+        const uint8_t len = d.readU8();
+        const char* labelStr = static_cast<const char*>(d.readFromPtr(len));
+        hash40Strings->entries_.insertAlways(motion, labelStr);
+    }
+
+    Log::root()->info("Loaded %d motion labels\n", hash40Strings->entries_.count());
 
     return hash40Strings;
 }
