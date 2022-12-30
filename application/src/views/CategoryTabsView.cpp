@@ -53,7 +53,7 @@ CategoryTabsView::CategoryTabsView(
     , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager, playerDetails))
 {
     setTabPosition(QTabWidget::West);
-    tabBar()->setStyle(new CustomTabStyle);
+    //tabBar()->setStyle(new CustomTabStyle);
     tabBar()->setObjectName("categoryTab");
 
     addTab(activeSessionView_, QIcon::fromTheme("smashball"), "Session");
