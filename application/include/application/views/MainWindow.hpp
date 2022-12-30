@@ -49,6 +49,7 @@ private slots:
     void onDefaultThemeTriggered();
     void onDarkThemeTriggered();
     void onUserLabelsEditorActionTriggered();
+    void onPathManagerActionTriggered();
 
     void onAboutActionTriggered();
     void onViewLogActionTriggered();

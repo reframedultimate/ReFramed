@@ -11,6 +11,7 @@
 #include "application/views/ConnectView.hpp"
 #include "application/views/ImportReplayPackDialog.hpp"
 #include "application/views/MainWindow.hpp"
+#include "application/views/PathManagerDialog.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/widgets/ConnectionStatusWidget.hpp"
 #include "application/Util.hpp"
@@ -77,12 +78,14 @@ MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings
             this, &MainWindow::onDisconnectActionTriggered);
     connect(ui_->action_importReplayPack, &QAction::triggered,
             this, &MainWindow::onImportReplayPackTriggered);
-    connect(ui_->action_userLabelsEditor, &QAction::triggered,
-            this, &MainWindow::onUserLabelsEditorActionTriggered);
     connect(ui_->action_defaultTheme, &QAction::triggered,
             this, &MainWindow::onDefaultThemeTriggered);
     connect(ui_->action_darkTheme, &QAction::triggered,
             this, &MainWindow::onDarkThemeTriggered);
+    connect(ui_->action_userLabelsEditor, &QAction::triggered,
+        this, &MainWindow::onUserLabelsEditorActionTriggered);
+    connect(ui_->action_pathManager, &QAction::triggered,
+        this, &MainWindow::onPathManagerActionTriggered);
 
     // Execute this later so the main window is visible when the popup opens
     // A single popup without the main window feels weird
@@ -112,7 +115,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
     auto askForDir = [this](const QString& path) -> QString {
         return QFileDialog::getExistingDirectory(
             this,
-            "Choose directory to save recordings to",
+            "Choose directory to save replays to",
             path,
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
         );
@@ -305,6 +308,14 @@ void MainWindow::onUserLabelsEditorActionTriggered()
 
     // Disable action in dropdown so user can't open this more than once
     ui_->action_userLabelsEditor->setEnabled(false);
+}
+
+// ----------------------------------------------------------------------------
+void MainWindow::onPathManagerActionTriggered()
+{
+    PathManagerDialog dialog(replayManager_.get(), replayManager_.get(), this);
+    dialog.setGeometry(calculatePopupGeometryActiveScreen(800));
+    dialog.exec();
 }
 
 // ----------------------------------------------------------------------------

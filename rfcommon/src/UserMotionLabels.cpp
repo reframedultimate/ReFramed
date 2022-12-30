@@ -451,9 +451,7 @@ SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, co
 {
     PROFILE(UserMotionLabels, toMotion);
 
-    assert(fighterID.isValid());
-
-    if (fighterID.value() >= fighters_.count())
+    if (fighterID.isValid() == false || fighterID.value() >= fighters_.count())
         return SmallVector<FighterMotion, 4>();
 
     // A user label can map to multiple motion values. Additionally, there
@@ -489,13 +487,11 @@ const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterM
 const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
     PROFILE(UserMotionLabels, toStringHighestLayer);
-
-    assert(fighterID.isValid());
     
     if (motion.isValid() == false)
         return fallback;
 
-    if (fighterID.value() >= fighters_.count())
+    if (fighterID.isValid() == false || fighterID.value() >= fighters_.count())
         return fallback;
 
     const auto& map = fighters_[fighterID.value()].motionMap;
@@ -523,12 +519,10 @@ String UserMotionLabels::toStringAllLayers(FighterID fighterID, FighterMotion mo
 {
     PROFILE(UserMotionLabels, toStringAllLayers);
 
-    assert(fighterID.isValid());
-
     if (motion.isValid() == false)
         return fallback;
 
-    if (fighterID.value() >= fighters_.count())
+    if (fighterID.isValid() == false || fighterID.value() >= fighters_.count())
         return fallback;
 
     const auto& map = fighters_[fighterID.value()].motionMap;

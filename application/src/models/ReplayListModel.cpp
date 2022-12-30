@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#include <QBrush>
+
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
@@ -117,20 +119,25 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             else
             {
                 const auto& r = days_[index.internalId()].replays[index.row()];
-                if (r.playerCount() == 2)
+                if (r.hasMissingInfo())
+                {
+                    if (index.column() == 0)
+                        return QString::fromUtf8(r.originalFileName().cStr());
+                }
+                else if (r.playerCount() == 2)
                 {
                     switch (index.column())
                     {
-                        case Time: return r.time().cStr();
-                        case P1: return r.playerName(0).cStr();
-                        case P2: return r.playerName(1).cStr();
-                        case SetFormat: return r.setFormat().shortDescription();
+                        case Time: return QString::fromUtf8(r.time().cStr());
+                        case P1: return QString::fromUtf8(r.playerName(0).cStr());
+                        case P2: return QString::fromUtf8(r.playerName(1).cStr());
+                        case SetFormat: return QString::fromUtf8(r.setFormat().shortDescription());
                         case SetNumber: return r.round().number().value();
                         case GameNumber: return r.score().gameNumber().value();
-                        case Stage: return r.stage().cStr();
+                        case Stage: return QString::fromUtf8(r.stage().cStr());
 
-                        case P1Char: return r.fighterName(0).cStr();
-                        case P2Char: return r.fighterName(1).cStr();
+                        case P1Char: return QString::fromUtf8(r.fighterName(0).cStr());
+                        case P2Char: return QString::fromUtf8(r.fighterName(1).cStr());
                     }
                 }
                 else if (r.playerCount() == 4)
@@ -153,6 +160,15 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
                     return FighterIcon::fromFighterName(r.fighterName(1).cStr(), 0).scaledToHeight(20);
             }
         } break;
+
+        case Qt::ForegroundRole: {
+            if (index.internalId() == quintptr(-1))
+                break;
+
+            const auto& r = days_[index.internalId()].replays[index.row()];
+            if (r.hasMissingInfo())
+                return QBrush(QColor(Qt::red));
+        }
     }
 
     return QVariant();

@@ -145,9 +145,14 @@ bool ReplayManager::addGamePath(const QDir& path)
         return false;
 
     gamePaths_.insert(path);
+
+    for (const auto& file : path.entryList({ "*.rfr" }, QDir::Files))
+        allReplayGroup()->addFile(file);
+
     updateConfig();
     saveConfig();
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathAdded, path);
+
     return true;
 }
 
@@ -159,9 +164,13 @@ bool ReplayManager::removeGamePath(const QDir& path)
     if (gamePaths_.remove(path) == false)
         return false;
 
+    for (const auto& file : path.entryList({ "*.rfr" }, QDir::Files))
+        allReplayGroup()->removeFile(file);
+
     updateConfig();
     saveConfig();
     dispatcher.dispatch(&ReplayManagerListener::onReplayManagerGamePathRemoved, path);
+
     return true;
 }
 

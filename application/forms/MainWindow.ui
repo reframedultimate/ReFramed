@@ -22,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>312</width>
-     <height>39</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -40,16 +40,11 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <widget class="QMenu" name="menuTheme">
-     <property name="title">
-      <string>Theme</string>
-     </property>
-     <addaction name="action_defaultTheme"/>
-     <addaction name="action_darkTheme"/>
-    </widget>
-    <addaction name="menuTheme"/>
+    <addaction name="action_defaultTheme"/>
+    <addaction name="action_darkTheme"/>
     <addaction name="separator"/>
     <addaction name="action_userLabelsEditor"/>
+    <addaction name="action_pathManager"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuSettings"/>
@@ -108,6 +103,11 @@
    </property>
    <property name="text">
     <string>Default Theme</string>
+   </property>
+  </action>
+  <action name="action_pathManager">
+   <property name="text">
+    <string>Path Manager</string>
    </property>
   </action>
  </widget>

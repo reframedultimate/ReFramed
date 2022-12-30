@@ -794,13 +794,13 @@ Session* Session::newModernSavedSession(FilePathResolver* pathResolver, MappedFi
 }
 
 // ----------------------------------------------------------------------------
-Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData)
+Session* Session::newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData, MappedFile* file)
 {
     PROFILE(Session, newLegacySavedSession);
 
     return new Session(
         nullptr,
-        nullptr,
+        file,
         mappingInfo,
         metadata,
         frameData,
@@ -888,12 +888,12 @@ Session* Session::load(FilePathResolver* pathResolver, const char* fileName, uin
     if (version == "1.4")
     {
         if (loadLegacy_1_4(j, &metadata, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metadata, frameData);
+            return newLegacySavedSession(mappingInfo, metadata, frameData, file);
     }
     else if (version == "1.3")
     {
         if (loadLegacy_1_3(j, &metadata, &mappingInfo, &frameData))
-            return newLegacySavedSession(mappingInfo, metadata, frameData);
+            return newLegacySavedSession(mappingInfo, metadata, frameData, file);
     }
 
     return nullptr;

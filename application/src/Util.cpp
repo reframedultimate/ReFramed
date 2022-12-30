@@ -35,9 +35,17 @@ void clearLayout(QLayout* layout)
     while ((item = layout->takeAt(0)) != nullptr)
     {
         if (item->layout() != nullptr)
-            item->layout()->deleteLater();
-        if (item->widget() != nullptr)
-            item->widget()->deleteLater();
+        {
+            clearLayout(item->layout());
+            delete item;
+        }
+        else if (item->spacerItem() != nullptr)
+            delete item;
+        else if (item->widget() != nullptr)
+        {
+            delete item->widget();
+            delete item;
+        }
     }
 }
 

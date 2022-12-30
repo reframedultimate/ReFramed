@@ -49,7 +49,7 @@ public:
     ~Session();
 
     static Session* newModernSavedSession(FilePathResolver* pathResolver, MappedFile* file);
-    static Session* newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData);
+    static Session* newLegacySavedSession(MappingInfo* mappingInfo, Metadata* metadata, FrameData* frameData, MappedFile* file);
     static Session* newActiveSession(MappingInfo* globalMappingInfo, Metadata* metadata);
     static Session* load(FilePathResolver* pathResolver, const char* fileName, uint8_t loadFlags=Flags::None);
     bool save(const char* utf8_filename, uint8_t saveFlags=Flags::All);

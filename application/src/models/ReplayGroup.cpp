@@ -44,6 +44,8 @@ bool ReplayGroup::addFile(const QString& file)
 {
     PROFILE(ReplayGroup, addFile);
 
+    assert(QDir(file).isRelative());
+
     if (files_.contains(file))
         return false;
 
