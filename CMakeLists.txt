@@ -29,6 +29,7 @@ set (REFRAMED_BUILD_LIBDIR "${REFRAMED_BUILD_BINDIR}/lib")
 set (REFRAMED_BUILD_DATADIR "${REFRAMED_BUILD_BINDIR}/share/reframed/data")
 set (REFRAMED_BUILD_PLUGINDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugins")
 set (REFRAMED_BUILD_PLUGINDEPSDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugindeps")
+set (REFRAMED_BUILD_CMAKEDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/cmake")
 
 set (REFRAMED_INSTALL_BINDIR ".")
 set (REFRAMED_INSTALL_LIBDIR "lib")
@@ -104,6 +105,12 @@ install (
     EXPORT ReFramedTargets
     NAMESPACE ReFramed::
     DESTINATION ${REFRAMED_INSTALL_CMAKEDIR})
+export (
+    EXPORT ReFramedTargets
+    NAMESPACE ReFramed::
+    FILE ${REFRAMED_BUILD_CMAKEDIR}/ReFramedTargets.cmake)
+
+configure_file ("cmake/modules/TestVisibilityMacros.cmake" "${REFRAMED_BUILD_CMAKEDIR}/modules/TestVisibilityMacros.cmake")
 
 install (
     DIRECTORY "cmake/modules/"
@@ -111,8 +118,8 @@ install (
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file("cmake/ReFramedConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/ReFramedConfig.cmake"
+    "${REFRAMED_BUILD_CMAKEDIR}/ReFramedConfig.cmake"
     INSTALL_DESTINATION "${REFRAMED_INSTALL_CMAKEDIR}")
 install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/ReFramedConfig.cmake"
+    FILES "${REFRAMED_BUILD_CMAKEDIR}/ReFramedConfig.cmake"
     DESTINATION ${REFRAMED_INSTALL_CMAKEDIR})

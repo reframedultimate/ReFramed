@@ -34,23 +34,27 @@ add_library (rfplot SHARED
     "src/RealtimePlot.cpp")
 
 target_include_directories (rfplot
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-    PUBLIC $<INSTALL_INTERFACE:include>)
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
 target_compile_definitions (rfplot
-    PRIVATE RFPLOT_BUILDING
-    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>)
+    PRIVATE
+        RFPLOT_BUILDING
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>)
 target_compile_options (rfplot
-    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic>
-    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>)
+    PRIVATE
+        $<$<CXX_COMPILER_ID:GNU>:-Wall -Wextra -pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic>)
 target_compile_features (rfplot
     PUBLIC cxx_std_17)
 target_link_libraries (rfplot
-    PRIVATE Qt5::Core
-    PRIVATE Qt5::Gui
-    PRIVATE Qt5::Widgets
-    PUBLIC ReFramed::rfqwt
-    PUBLIC ReFramed::rfcommon)
+    PRIVATE
+        Qt5::Core
+        Qt5::Gui
+        Qt5::Widgets
+        ReFramed::rfqwt
+        ReFramed::rfcommon)
 set_target_properties (rfplot
     PROPERTIES
         DEBUG_POSTFIX "d"
@@ -77,7 +81,4 @@ install (
     DIRECTORY "${PROJECT_BINARY_DIR}/include/rfplot"
     DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp")
-export (
-    TARGETS rfplot
-    NAMESPACE ReFramed::
-    FILE ReFramedTargets.cmake)
+

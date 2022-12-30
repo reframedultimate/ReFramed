@@ -292,7 +292,7 @@ void ReplayManagerView::onReplayRightClicked(const QPoint& pos)
     };
 
     QMenu menu;
-    QAction* editMetadata = menu.addAction(QIcon::fromTheme("edit"), "Edit meta data");
+    QAction* editMetadata = menu.addAction(QIcon::fromTheme("edit"), "Edit metadata");
     QAction* associateVideo = menu.addAction(QIcon::fromTheme("film"), "Associate video");
     menu.addSeparator();
     QAction* exportPack = menu.addAction(QIcon::fromTheme("package"), "Export as replay pack");

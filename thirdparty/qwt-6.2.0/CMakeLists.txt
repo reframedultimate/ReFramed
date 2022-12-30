@@ -259,7 +259,6 @@ target_link_libraries (rfqwt
 		$<$<BOOL:${QWT_SVG}>:Qt5::Svg>
 		$<$<BOOL:${QWT_OPENGL}>:Qt5::OpenGL>
 		$<$<BOOL:${QWT_WIDGETS}>:Qt5::Widgets>)
-	
 target_compile_definitions (rfqwt
     PRIVATE 
 		QWT_BUILDING
@@ -292,7 +291,4 @@ install (
     DIRECTORY "${PROJECT_BINARY_DIR}/src/"
     DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h")
-export (
-    TARGETS rfqwt
-    NAMESPACE ReFramed::
-    FILE ReFramedTargets.cmake)
+

@@ -32,7 +32,7 @@ ReplayEditorDialog::ReplayEditorDialog(
     , metadataEditModel_(new MetadataEditModel)
     , replayManager_(replayManager)
 {
-    setWindowTitle("Edit Replay Meta data");
+    setWindowTitle("Edit Replay Metadata");
 
     MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
     MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
@@ -96,8 +96,8 @@ ReplayEditorDialog::ReplayEditorDialog(
         if (map == nullptr || mdata == nullptr)
         {
             if (QMessageBox::question(this,
-                "Missing meta data",
-                "Replay has missing meta data \"" + fileName + "\"\n"
+                "Missing metadata",
+                "Replay has missing metadata \"" + fileName + "\"\n"
                 "Absolute path was: \"" + filePathUtf8.cStr() + "\"\n\n"
                 "Would you like to continue without including this file?") == QMessageBox::Yes)
             {
@@ -116,8 +116,8 @@ ReplayEditorDialog::ReplayEditorDialog(
     if (mappingInfo.count() == 0)
     {
         QMessageBox::critical(this,
-                "No meta data loaded",
-                "The selected replays contain no meta data. Can't do anything");
+                "No metadata loaded",
+                "The selected replays contain no metadata. Can't do anything");
         QMetaObject::invokeMethod(this, "close", Qt::QueuedConnection);
         return;
     }

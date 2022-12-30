@@ -49,6 +49,7 @@ macro (reframed_add_plugin PLUGIN)
                 Qt5::Gui
                 Qt5::Widgets
                 ReFramed::rfplot
+                ReFramed::rfqwt
                 ReFramed::rfcommon)
         set_target_properties (${PLUGIN}
             PROPERTIES

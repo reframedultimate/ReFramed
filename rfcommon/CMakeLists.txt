@@ -262,7 +262,4 @@ install (
 install (
     DIRECTORY "${PROJECT_BINARY_DIR}/include/rfcommon"
     DESTINATION ${REFRAMED_INSTALL_INCLUDEDIR})
-export (
-    TARGETS rfcommon
-    NAMESPACE ReFramed::
-    FILE ReFramedTargets.cmake)
+

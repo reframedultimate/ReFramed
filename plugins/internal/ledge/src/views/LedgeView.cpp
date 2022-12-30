@@ -159,10 +159,10 @@ void FrameDataListView::repopulateTree(rfcommon::MappingInfo* map, rfcommon::Met
     specificStatusIDMappingsItem_ = nullptr;
     hitStatusIDMappingsItem_ = nullptr;
 
-    // Meta data
+    // Metadata
     if (meta)
     {
-        metadataItem_ = new QTreeWidgetItem({"Meta data"});
+        metadataItem_ = new QTreeWidgetItem({"Metadata"});
         ui_->treeWidget->addTopLevelItem(metadataItem_);
     }
 

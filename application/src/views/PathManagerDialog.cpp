@@ -102,7 +102,7 @@ PathManagerDialog::PathManagerDialog(ReplayManager* replayManager, rfcommon::Fil
 
     QPushButton* findMissingVideos = new QPushButton("Find missing videos...");
     QPushButton* removeUnusedVideoPaths = new QPushButton("Remove unused paths...");
-    
+
     QTabWidget* tabWidget = new QTabWidget;
     tabWidget->addTab(createReplayTab(replayPathsLayout_, searchForReplays, removeUnusedReplayPaths), "Replay Search Paths");
     tabWidget->addTab(createVideoTab(videoPathsLayout_, findMissingVideos, removeUnusedVideoPaths), "Video Search Paths");
@@ -196,7 +196,7 @@ void PathManagerDialog::onRemoveUnusedReplayPathsReleased()
     for (const auto& path : replayPaths_)
         if (QDir(path).entryList({ "*.rfr" }, QDir::Files).size() || path == defaultReplayPath_)
             newList.push_back(path);
-    
+
     QLayoutItem* spacerItem = replayPathsLayout_->takeAt(replayPathsLayout_->count() - 1);
     QLayoutItem* addItem = replayPathsLayout_->takeAt(replayPathsLayout_->count() - 1);
     clearLayout(replayPathsLayout_);
@@ -461,7 +461,7 @@ void PathManagerDialog::addVideoPath(const QString& path)
             QLayoutItem* item = videoPathsLayout_->itemAt(i);
             if (item->layout() == containerLayout)
             {
-                item = replayPathsLayout_->takeAt(i);
+                item = videoPathsLayout_->takeAt(i);
                 clearLayout(item->layout());
                 delete item;
 

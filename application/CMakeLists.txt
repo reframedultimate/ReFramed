@@ -153,7 +153,7 @@ target_link_libraries (application
         Qt5::Widgets
 		Qt5::Svg
         ads::qtadvanceddocking
-        rfplot)
+        ReFramed::rfcommon)
 set_target_properties (application
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${REFRAMED_BUILD_BINDIR}
