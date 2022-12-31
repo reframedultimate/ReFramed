@@ -111,7 +111,7 @@ void MetadataEditWidget_Commentators::addCommentatorUI(const QString& name, cons
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->commentatorCount())
-                    g->addCommentator("", "");
+                    g->addCommentator("", "", "");
                 g->setCommentator(i,
                         text.toUtf8().constData(),
                         g->commentatorSocial(i).cStr(),
@@ -131,7 +131,7 @@ void MetadataEditWidget_Commentators::addCommentatorUI(const QString& name, cons
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->commentatorCount())
-                    g->addCommentator("", "");
+                    g->addCommentator("", "", "");
                 g->setCommentator(i,
                         g->commentatorName(i).cStr(),
                         text.toUtf8().constData(),
@@ -151,7 +151,7 @@ void MetadataEditWidget_Commentators::addCommentatorUI(const QString& name, cons
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->commentatorCount())
-                    g->addCommentator("", "");
+                    g->addCommentator("", "", "");
                 g->setCommentator(i,
                         g->commentatorName(i).cStr(),
                         g->commentatorSocial(i).cStr(),
@@ -169,10 +169,10 @@ void MetadataEditWidget_Commentators::onAddCommentatorReleased()
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
         if (mdata->type() == rfcommon::Metadata::GAME)
-            mdata->asGame()->addCommentator("", "");
+            mdata->asGame()->addCommentator("", "", "");
     ignoreSelf_ = false;
 
-    addCommentatorUI("", "", "he/him");
+    addCommentatorUI("", "", "");
 }
 
 // ----------------------------------------------------------------------------

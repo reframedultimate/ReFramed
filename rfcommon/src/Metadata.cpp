@@ -337,7 +337,7 @@ static Metadata* load_1_6(json& j)
         json jCommentators = j["commentators"];
         for (auto& commentator : jCommentators)
             if (commentator.is_string())
-                g->addCommentator(commentator.get<std::string>().c_str(), "");
+                g->addCommentator(commentator.get<std::string>().c_str(), "", "");
 
         // In this version of the file, the user was able to type in the bracket
         // type by hand. Try to fuzzy match "singles" or "1v1", since that's the

@@ -143,7 +143,7 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->tournamentOrganizerCount())
-                    g->addTournamentOrganizer("", "");
+                    g->addTournamentOrganizer("", "", "");
                 g->setTournamentOrganizer(i,
                         text.toUtf8().constData(),
                         g->tournamentOrganizerSocial(i).cStr(),
@@ -163,7 +163,7 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->tournamentOrganizerCount())
-                    g->addTournamentOrganizer("", "");
+                    g->addTournamentOrganizer("", "", "");
                 g->setTournamentOrganizer(i,
                         g->tournamentOrganizerName(i).cStr(),
                         text.toUtf8().constData(),
@@ -183,7 +183,7 @@ void MetadataEditWidget_Tournament::addTOUI(const QString& name, const QString& 
                 // we just add an empty commentator in its place
                 rfcommon::GameMetadata* g = mdata->asGame();
                 while (i >= g->tournamentOrganizerCount())
-                    g->addTournamentOrganizer("", "");
+                    g->addTournamentOrganizer("", "", "");
                 g->setTournamentOrganizer(i,
                         g->tournamentOrganizerName(i).cStr(),
                         g->tournamentOrganizerSocial(i).cStr(),
@@ -305,10 +305,10 @@ void MetadataEditWidget_Tournament::onAddTOReleased()
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
         if (mdata->type() == rfcommon::Metadata::GAME)
-            mdata->asGame()->addTournamentOrganizer("", "", "he/him");
+            mdata->asGame()->addTournamentOrganizer("", "", "");
     ignoreSelf_ = false;
 
-    addTOUI("", "", "he/him");
+    addTOUI("", "", "");
 }
 
 

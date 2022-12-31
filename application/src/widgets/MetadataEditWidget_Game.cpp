@@ -373,10 +373,9 @@ void MetadataEditWidget_Game::onPushButtonIncLeftScoreReleased()
     int rightScore = ui_->label_rightScore->text().toInt();
     int gameNumber = 1 + leftScore + rightScore;
 
-    bool store = ui_->spinBox_gameNumber->blockSignals(true);
+    const QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(gameNumber);
     ui_->label_leftScore->setText(QString::number(leftScore));
-    ui_->spinBox_gameNumber->blockSignals(store);
 
     auto score = rfcommon::ScoreCount::fromScoreAndGameNumber(
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
@@ -401,10 +400,9 @@ void MetadataEditWidget_Game::onPushButtonDecLeftScoreReleased()
         leftScore = 0;
     int gameNumber = 1 + leftScore + rightScore;
 
-    bool store = ui_->spinBox_gameNumber->blockSignals(true);
+    const QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(gameNumber);
     ui_->label_leftScore->setText(QString::number(leftScore));
-    ui_->spinBox_gameNumber->blockSignals(store);
 
     auto score = rfcommon::ScoreCount::fromScoreAndGameNumber(
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
@@ -427,10 +425,9 @@ void MetadataEditWidget_Game::onPushButtonIncRightScoreReleased()
     int rightScore = ui_->label_rightScore->text().toInt() + 1;
     int gameNumber = 1 + leftScore + rightScore;
 
-    bool store = ui_->spinBox_gameNumber->blockSignals(true);
+    const QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(gameNumber);
     ui_->label_rightScore->setText(QString::number(rightScore));
-    ui_->spinBox_gameNumber->blockSignals(store);
 
     auto score = rfcommon::ScoreCount::fromScoreAndGameNumber(
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
@@ -455,10 +452,9 @@ void MetadataEditWidget_Game::onPushButtonDecRightScoreReleased()
         rightScore = 0;
     int gameNumber = 1 + leftScore + rightScore;
 
-    bool store = ui_->spinBox_gameNumber->blockSignals(true);
+    const QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
     ui_->spinBox_gameNumber->setValue(gameNumber);
     ui_->label_rightScore->setText(QString::number(rightScore));
-    ui_->spinBox_gameNumber->blockSignals(store);
 
     auto score = rfcommon::ScoreCount::fromScoreAndGameNumber(
         leftScore, rightScore, rfcommon::GameNumber::fromValue(gameNumber));
@@ -639,23 +635,23 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
 
     // We do not want to trigger any signals when modifying the UI, because
     // most of these try to update the model
-    QSignalBlocker blockTimeStarted(ui_->dateTimeEdit_started);
-    QSignalBlocker blockTimeEnded(ui_->dateTimeEdit_ended);
-    QSignalBlocker blockStageID(ui_->lineEdit_stageID);
-    QSignalBlocker blockStageName(ui_->lineEdit_stageName);
-    QSignalBlocker blockRoundType(ui_->comboBox_roundType);
-    QSignalBlocker blockRoundNumber(ui_->spinBox_roundNumber);
-    QSignalBlocker blockSetFormat(ui_->comboBox_setFormat);
-    QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
+    const QSignalBlocker blockTimeStarted(ui_->dateTimeEdit_started);
+    const QSignalBlocker blockTimeEnded(ui_->dateTimeEdit_ended);
+    const QSignalBlocker blockStageID(ui_->lineEdit_stageID);
+    const QSignalBlocker blockStageName(ui_->lineEdit_stageName);
+    const QSignalBlocker blockRoundType(ui_->comboBox_roundType);
+    const QSignalBlocker blockRoundNumber(ui_->spinBox_roundNumber);
+    const QSignalBlocker blockSetFormat(ui_->comboBox_setFormat);
+    const QSignalBlocker blockGameNumber(ui_->spinBox_gameNumber);
 
-    QSignalBlocker blockLName(ui_->lineEdit_leftName);
-    QSignalBlocker blockLSponsor(ui_->lineEdit_leftSponsor);
-    QSignalBlocker blockLSocial(ui_->lineEdit_leftSocial);
-    QSignalBlocker blockLPronouns(ui_->lineEdit_leftPronouns);
-    QSignalBlocker blockRName(ui_->lineEdit_rightName);
-    QSignalBlocker blockRSponsor(ui_->lineEdit_rightSponsor);
-    QSignalBlocker blockRSocial(ui_->lineEdit_rightSocial);
-    QSignalBlocker blockRPronouns(ui_->lineEdit_rightPronouns);
+    const QSignalBlocker blockLName(ui_->lineEdit_leftName);
+    const QSignalBlocker blockLSponsor(ui_->lineEdit_leftSponsor);
+    const QSignalBlocker blockLSocial(ui_->lineEdit_leftSocial);
+    const QSignalBlocker blockLPronouns(ui_->lineEdit_leftPronouns);
+    const QSignalBlocker blockRName(ui_->lineEdit_rightName);
+    const QSignalBlocker blockRSponsor(ui_->lineEdit_rightSponsor);
+    const QSignalBlocker blockRSocial(ui_->lineEdit_rightSocial);
+    const QSignalBlocker blockRPronouns(ui_->lineEdit_rightPronouns);
 
     ui_->dateTimeEdit_started->setMinimumDateTime(QDateTime::fromMSecsSinceEpoch(0));
     ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
@@ -684,8 +680,8 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
 
     if (roundTypeIdx == -1)
     {
-        ui_->comboBox_roundType->setCurrentIndex(0);
-        ui_->comboBox_roundType->setCurrentText("*");
+        ui_->comboBox_roundType->setCurrentIndex(-1);
+        ui_->comboBox_roundType->setPlaceholderText("*");
     }
     else
     {
@@ -703,8 +699,8 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
 
     if (setFormatIdx == -1)
     {
-        ui_->comboBox_setFormat->setPlaceholderText("*");
         ui_->comboBox_setFormat->setCurrentIndex(-1);
+        ui_->comboBox_setFormat->setPlaceholderText("*");
     }
     else
         ui_->comboBox_setFormat->setCurrentIndex(setFormatIdx);
@@ -804,7 +800,7 @@ void MetadataEditWidget_Game::onOverwriteMetadata(const MappingInfoList& map, co
                     //
                     // If there is a valid tag, we can try to fetch the player
                     // details if this player has played before.
-                    const PlayerDetails::Player defaultPlayer{"", "", "", "he/him"};
+                    const PlayerDetails::Player defaultPlayer{"", "", "", ""};
                     const PlayerDetails::Player* p;
                     p = playerDetails_->findTag(g->playerTag(0));
                     if (p == nullptr)
@@ -1071,6 +1067,7 @@ void MetadataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType brack
             break;
     }
 
+    const QSignalBlocker blockSetFormat(ui_->comboBox_setFormat);
     switch (bracketType.type())
     {
         case rfcommon::BracketType::SINGLES:

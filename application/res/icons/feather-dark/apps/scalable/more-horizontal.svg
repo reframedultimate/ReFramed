@@ -43,17 +43,17 @@
      cy="12"
      r="1"
      id="circle2"
-     style="stroke:#000000;stroke-opacity:1" />
+     style="stroke:#ffffff;stroke-opacity:1" />
   <circle
      cx="19"
      cy="12"
      r="1"
      id="circle4"
-     style="stroke:#000000;stroke-opacity:1" />
+     style="stroke:#ffffff;stroke-opacity:1" />
   <circle
      cx="5"
      cy="12"
      r="1"
      id="circle6"
-     style="stroke:#000000;stroke-opacity:1" />
+     style="stroke:#ffffff;stroke-opacity:1" />
 </svg>

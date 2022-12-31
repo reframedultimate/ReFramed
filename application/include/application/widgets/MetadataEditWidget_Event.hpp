@@ -2,6 +2,7 @@
 
 #include "application/widgets/MetadataEditWidget.hpp"
 
+class QComboBox;
 class QLineEdit;
 class QLabel;
 
@@ -16,6 +17,9 @@ public:
     ~MetadataEditWidget_Event();
 
     QVector<QWidget*> scrollIgnoreWidgets() override { return {}; }
+
+private:
+    void updateUIVisibility(rfcommon::BracketType bracketType);
 
 private:
     void onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata) override;
@@ -35,11 +39,15 @@ private:
 
 private slots:
     void onComboBoxBracketTypeChanged(int index);
+    void onLineEditBracketURLChanged(const QString& text);
+    void onLineEditOtherChanged(const QString& text);
 
 private:
+    QComboBox* comboBox_bracketType_;
     QLabel* label_bracketURL_;
     QLineEdit* lineEdit_bracketURL_;
     QLineEdit* lineEdit_otherBracketType_;
+    bool ignoreSelf_ = false;
 };
 
 }

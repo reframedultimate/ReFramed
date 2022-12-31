@@ -38,7 +38,7 @@ public:
     const String& tournamentOrganizerName(int toIdx) const { return organizers_[toIdx].name; }
     const String& tournamentOrganizerSocial(int toIdx) const { return organizers_[toIdx].social; }
     const String& tournamentOrganizerPronouns(int toIdx) const { return organizers_[toIdx].pronouns; }
-    void addTournamentOrganizer(const char* name, const char* social, const char* pronouns="he/him");
+    void addTournamentOrganizer(const char* name, const char* social, const char* pronouns);
     void setTournamentOrganizer(int toIdx, const char* name, const char* social, const char* pronouns);
     void removeTournamentOrganizer(int toIdx);
 
@@ -53,11 +53,11 @@ public:
     const String& commentatorName(int idx) const { return commentators_[idx].name; }
     const String& commentatorSocial(int idx) const { return commentators_[idx].social; }
     const String& commentatorPronouns(int idx) const { return commentators_[idx].pronouns; }
-    void addCommentator(const char* name, const char* social, const char* pronouns="he/him");
+    void addCommentator(const char* name, const char* social, const char* pronouns);
     void setCommentator(int idx, const char* name, const char* social, const char* pronouns);
     void removeCommentator(int idx);
 
-    const BracketType bracketType() const { return bracketType_; }
+    BracketType bracketType() const { return bracketType_; }
     const String& bracketURL() const { return eventURL_; }
     void setBracketType(BracketType type);
     void setBracketURL(const char* url);
