@@ -76,7 +76,7 @@ CategoryTabsView::CategoryTabsView(
 
         "QTabBar#categoryTab::tab {\n"
         "   width: 80px;\n"
-        "   height: 180px;\n"
+        "   height: 200px;\n"
         "   font-size: 11pt;\n"
         //"   text-align: top;\n"
         "}\n"

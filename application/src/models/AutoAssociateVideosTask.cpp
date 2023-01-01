@@ -92,20 +92,16 @@ void AutoAssociateVideoTask::run()
         const char* utf8FilePath = filePathBA.constData();
 
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
-        wchar_t* utf16FileName = rfcommon::utf8_to_utf16(utf8FileName, strlen(utf8FileName));
-        if (utf16FileName == nullptr)
-        {
-            emit failure();
-            return;
-        }
+        wchar_t* utf16FilePath = rfcommon::utf8_to_utf16(utf8FilePath, strlen(utf8FilePath));
+        if (utf8FilePath == nullptr)
+            continue;
 
         WIN32_FILE_ATTRIBUTE_DATA fileAttributes;
-        if (GetFileAttributesExW(utf16FileName, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
+        if (GetFileAttributesExW(utf16FilePath, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
         {
-            log_->error("Failed to get file attributes: %s", rfcommon::LastWindowsError().cStr());
-            emit failure();
-            rfcommon::utf16_free(utf16FileName);
-            return;
+            log_->error("Failed to get file attributes for file \"%s\": %s", utf8FilePath, rfcommon::LastWindowsError().cStr());
+            rfcommon::utf16_free(utf16FilePath);
+            continue;
         }
 
         auto videoStarted = rfcommon::TimeStamp::fromMillisSinceEpoch(
@@ -117,7 +113,7 @@ void AutoAssociateVideoTask::run()
                         ((uint64_t)fileAttributes.ftLastWriteTime.dwHighDateTime << 32) +
                         (uint64_t)fileAttributes.ftLastWriteTime.dwLowDateTime));
 
-        rfcommon::utf16_free(utf16FileName);
+        rfcommon::utf16_free(utf16FilePath);
 #elif defined(RFCOMMON_PLATFORM_LINUX)
         struct stat st;
         stat(utf8FilePath, &st);

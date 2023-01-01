@@ -8,6 +8,7 @@
 class AVDecoder;
 class BufferedSeekableDecoder;
 class VideoPlayerModel;
+class VODReviewModel;
 
 namespace rfcommon {
     class Log;
@@ -18,8 +19,6 @@ class VODReviewPlugin
         : public rfcommon::Plugin
         , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::ReplayInterface
-        , private rfcommon::Plugin::VisualizerInterface
-        , private VideoPlayerListener
 {
 public:
     VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log);
@@ -45,19 +44,9 @@ private:
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override final;
 
 private:
-    void onVisualizerDataChanged() override;
-
-private:
-    void onFileOpened() override;
-    void onFileClosed() override;
-    void onPlayerPaused() override;
-    void onPlayerResumed() override;
-    void onPresentImage(const QImage& image) override;
-
-private:
     rfcommon::Log* log_;
     std::unique_ptr<AVDecoder> decoder_;
     std::unique_ptr<BufferedSeekableDecoder> seekableDecoder_;
     std::unique_ptr<VideoPlayerModel> videoPlayer_;
-    rfcommon::Reference<rfcommon::VideoEmbed> activeVideo_;
+    std::unique_ptr<VODReviewModel> vodReviewModel_;
 };

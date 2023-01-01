@@ -2,37 +2,36 @@
 #include "vod-review/models/AVDecoder.hpp"
 #include "vod-review/models/BufferedSeekableDecoder.hpp"
 #include "vod-review/models/VideoPlayerModel.hpp"
+#include "vod-review/models/VODReviewModel.hpp"
 #include "vod-review/views/VODReviewView.hpp"
 
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
-#include "rfcommon/VisualizerData.hpp"
+#include "rfcommon/FrameData.hpp"
 
 // ----------------------------------------------------------------------------
 VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log)
     : Plugin(factory)
-    , Plugin::VisualizerInterface(visCtx, factory)
     , log_(log)
     , decoder_(new AVDecoder(log))
     , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
     , videoPlayer_(new VideoPlayerModel(decoder_.get(), log))
+    , vodReviewModel_(new VODReviewModel(videoPlayer_.get(), visCtx, factory))
 {
-    videoPlayer_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 VODReviewPlugin::~VODReviewPlugin()
 {
-    videoPlayer_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::Plugin::UIInterface* VODReviewPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* VODReviewPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* VODReviewPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* VODReviewPlugin::visualizerInterface() { return this; }
+rfcommon::Plugin::VisualizerInterface* VODReviewPlugin::visualizerInterface() { return vodReviewModel_.get(); }
 rfcommon::Plugin::VideoPlayerInterface* VODReviewPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
@@ -40,7 +39,7 @@ QWidget* VODReviewPlugin::createView()
 {
     PROFILE(VODReviewPlugin, createView);
 
-    return new VODReviewView(videoPlayer_.get());
+    return new VODReviewView(vodReviewModel_.get(), videoPlayer_.get());
 }
 
 // ----------------------------------------------------------------------------
@@ -56,22 +55,7 @@ void VODReviewPlugin::onGameSessionLoaded(rfcommon::Session* game)
 {
     PROFILE(VODReviewPlugin, onGameSessionLoaded);
 
-    activeVideo_ = game->tryGetVideo();
-
-    if (activeVideo_.isNull())
-        return;
-
-    if (videoPlayer_->openVideoFromMemory(activeVideo_->address(), activeVideo_->size()) == false)
-    {
-        activeVideo_.drop();
-        return;
-    }
-
-    if (auto vmeta = game->tryGetVideoMeta())
-        videoPlayer_->seekVideoToGameFrame(vmeta->frameOffset());
-    VODReviewPlugin::onVisualizerDataChanged();
-
-    videoPlayer_->playVideo();
+    vodReviewModel_->setSession(game);
 }
 
 // ----------------------------------------------------------------------------
@@ -79,7 +63,7 @@ void VODReviewPlugin::onGameSessionUnloaded(rfcommon::Session* game)
 {
     PROFILE(VODReviewPlugin, onGameSessionUnloaded);
 
-    videoPlayer_->closeVideo();
+    vodReviewModel_->clearSession();
 }
 
 void VODReviewPlugin::onTrainingSessionLoaded(rfcommon::Session* training) {}
@@ -87,42 +71,3 @@ void VODReviewPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 
 void VODReviewPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
 void VODReviewPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
-
-// ----------------------------------------------------------------------------
-void VODReviewPlugin::onVisualizerDataChanged()
-{
-    PROFILE(VODReviewPlugin, onVisualizerDataChanged);
-
-    for (int i = 0; i != visualizerSourceCount(); ++i)
-    {
-        const auto& timeIntervals = visualizerData(i).timeIntervals;
-        if (timeIntervals.count() > 0)
-            videoPlayer_->seekVideoToGameFrame(timeIntervals[0].start);
-    }
-}
-
-// ----------------------------------------------------------------------------
-void VODReviewPlugin::onFileOpened() {}
-void VODReviewPlugin::onFileClosed() {}
-void VODReviewPlugin::onPlayerPaused() {}
-void VODReviewPlugin::onPlayerResumed() {}
-void VODReviewPlugin::onPresentImage(const QImage& image)
-{
-    PROFILE(VODReviewPlugin, onPresentImage);
-
-    if (visualizerSourceCount() == 0)
-        return;
-
-    const auto& timeIntervals = visualizerData(0).timeIntervals;
-    for (int i = 1; i < timeIntervals.count(); ++i)
-    {
-        const auto& a = timeIntervals[i - 1];
-        const auto& b = timeIntervals[i];
-        const auto current = videoPlayer_->currentVideoGameFrame();
-        if (current > rfcommon::FrameIndex::fromValue(a.end.index() + 60) && current < b.start)
-        {
-            videoPlayer_->seekVideoToGameFrame(b.start);
-            break;
-        }
-    }
-}

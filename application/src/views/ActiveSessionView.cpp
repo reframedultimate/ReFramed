@@ -43,21 +43,21 @@ ActiveSessionView::ActiveSessionView(
     , activeSessionManager_(activeSessionManager)
     , metadataEditModel_(new MetadataEditModel)
 {
-    MetadataEditWidget_AutoAssociateVideo* assocVideo = new MetadataEditWidget_AutoAssociateVideo(metadataEditModel_.get(), activeSessionManager_);
     MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
     MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
     MetadataEditWidget_Event* event = new MetadataEditWidget_Event(metadataEditModel_.get());
     MetadataEditWidget_Game* game = new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails);
+    MetadataEditWidget_AutoAssociateVideo* assocVideo = new MetadataEditWidget_AutoAssociateVideo(metadataEditModel_.get(), activeSessionManager_);
 
     event->setExpanded(true);
     game->setExpanded(true);
 
     QVBoxLayout* metadataEditLayout = new QVBoxLayout;
-    metadataEditLayout->addWidget(assocVideo);
     metadataEditLayout->addWidget(tournament);
     metadataEditLayout->addWidget(commentators);
     metadataEditLayout->addWidget(event);
     metadataEditLayout->addWidget(game);
+    metadataEditLayout->addWidget(assocVideo);
     metadataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metadataEditContents = new QWidget;

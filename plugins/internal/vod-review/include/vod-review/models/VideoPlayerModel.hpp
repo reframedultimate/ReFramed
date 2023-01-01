@@ -34,6 +34,7 @@ public slots:
 public:
     bool openVideoFromMemory(const void* data, uint64_t size) override final;
     void closeVideo() override final;
+    bool isVideoOpen() const override final;
     void playVideo() override final;
     void pauseVideo() override final;
     bool isVideoPlaying() const override final;

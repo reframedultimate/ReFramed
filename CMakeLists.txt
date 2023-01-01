@@ -110,7 +110,7 @@ export (
     NAMESPACE ReFramed::
     FILE ${REFRAMED_BUILD_CMAKEDIR}/ReFramedTargets.cmake)
 
-configure_file ("cmake/modules/TestVisibilityMacros.cmake" "${REFRAMED_BUILD_CMAKEDIR}/modules/TestVisibilityMacros.cmake")
+configure_file ("cmake/modules/TestVisibilityMacros.cmake" "${REFRAMED_BUILD_CMAKEDIR}/modules/TestVisibilityMacros.cmake" COPYONLY)
 
 install (
     DIRECTORY "cmake/modules/"

@@ -140,7 +140,7 @@ public:
             return *this;
         }
 
-        Iterator operator+(int rhs)
+        Iterator operator+(int rhs) const
         {
             Iterator tmp(*this);
             tmp += rhs;

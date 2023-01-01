@@ -28,11 +28,21 @@ public:
     bool operator<=(FrameIndex other) const { return value_ <= other.value_; }
     bool operator>=(FrameIndex other) const { return value_ >= other.value_; }
 
+    FrameIndex& operator+=(FrameIndex rhs) { value_ += rhs.value_; return *this; }
+    FrameIndex& operator+=(int rhs) { value_ += rhs; return *this; }
+    FrameIndex& operator-=(FrameIndex rhs) { value_ -= rhs.value_; return *this; }
+    FrameIndex& operator-=(int rhs) { value_ -= rhs; return *this; }
+
 private:
     FrameIndex(Type value);
 
 private:
     Type value_;
 };
+
+inline FrameIndex operator+(FrameIndex lhs, FrameIndex rhs) { lhs += rhs; return lhs; }
+inline FrameIndex operator+(FrameIndex lhs, int rhs) { lhs += rhs; return lhs; }
+inline FrameIndex operator-(FrameIndex lhs, FrameIndex rhs) { lhs -= rhs; return lhs; }
+inline FrameIndex operator-(FrameIndex lhs, int rhs) { lhs -= rhs; return lhs; }
 
 }

@@ -411,7 +411,8 @@ int64_t AVDecoder::duration() const
 {
     PROFILE(AVDecoder, duration);
 
-    return inputCtx_->streams[videoStreamIdx_]->duration;
+    int64_t duration = inputCtx_->streams[videoStreamIdx_]->duration;
+    return duration >= 0 ? duration : 0;
 }
 
 // ----------------------------------------------------------------------------

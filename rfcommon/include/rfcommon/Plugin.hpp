@@ -45,8 +45,12 @@ public:
         virtual ~VisualizerInterface();
 
         int visualizerSourceCount() const;
+
+        const char* visualizerName(int sourceIdx) const;
         const VisualizerData& visualizerData(int sourceIdx) const;
+
         void setVisualizerData(VisualizerData&& data);
+        void clearVisualizerData();
 
         virtual void onVisualizerDataChanged() = 0;
 
@@ -83,6 +87,12 @@ public:
          * twice in a row.
          */
         virtual void closeVideo() = 0;
+
+        /*!
+         * \brief Return true if the video was opened successfully. If the
+         * video is closed, then this should return false.
+         */
+        virtual bool isVideoOpen() const = 0;
 
         /*!
          * \brief Begin normal playback of the video stream.

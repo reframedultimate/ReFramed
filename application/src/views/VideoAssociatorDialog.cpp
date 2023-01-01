@@ -36,6 +36,10 @@ VideoAssociatorDialog::VideoAssociatorDialog(
 {
     ui_->setupUi(this);
 
+    ui_->pushButton_playPause->setIcon(QIcon::fromTheme("play"));
+    ui_->pushButton_stepBackwards->setIcon(QIcon::fromTheme("chevron-left"));
+    ui_->pushButton_stepForwards->setIcon(QIcon::fromTheme("chevron-right"));
+
     // Start video plugin and add it to the UI
     const auto availableVideoPlugins = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::VIDEO_PLAYER);
     for (const auto& factoryName : availableVideoPlugins)
@@ -325,7 +329,7 @@ void VideoAssociatorDialog::updateUIVideoButtons()
         return;
     if (auto i = videoPlugin_->videoPlayerInterface())
     {
-        ui_->pushButton_playPause->setText(i->isVideoPlaying() ? "Pause" : "Play");
+        ui_->pushButton_playPause->setIcon(i->isVideoPlaying() ? QIcon::fromTheme("pause") : QIcon::fromTheme("play"));
     }
 }
 

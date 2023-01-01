@@ -86,7 +86,7 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
     int leftRow = left.row();
     int rightRow = right.row();
 
-    if (left.parent().isValid() == false && right.parent().isValid() == false)
+    if (left.parent().isValid() == false || right.parent().isValid() == false)
     {
         const QModelIndex leftIdx = sourceModel()->index(leftRow, 0, left.parent());
         const QModelIndex rightIdx = sourceModel()->index(rightRow, 0, right.parent());
@@ -108,6 +108,8 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
     {
         const QModelIndex leftIdx = sourceModel()->index(leftRow, col, left.parent());
         const QModelIndex rightIdx = sourceModel()->index(rightRow, col, right.parent());
+        if (leftIdx.isValid() == false || rightIdx.isValid() == false)
+            continue;
 
         switch (col)
         {

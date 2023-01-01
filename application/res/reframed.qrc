@@ -6,6 +6,8 @@
 		
         <file>icons/feather-light/index.theme</file>
         <file>icons/feather-light/apps/scalable/arrow-right.svg</file>
+        <file>icons/feather-light/apps/scalable/chevron-left.svg</file>
+		<file>icons/feather-light/apps/scalable/chevron-right.svg</file>
         <file>icons/feather-light/apps/scalable/compare.svg</file>
         <file>icons/feather-light/apps/scalable/columns.svg</file>
         <file>icons/feather-light/apps/scalable/download-cloud.svg</file>
@@ -16,6 +18,8 @@
         <file>icons/feather-light/apps/scalable/mic.svg</file>
 		<file>icons/feather-light/apps/scalable/more-horizontal.svg</file>
         <file>icons/feather-light/apps/scalable/package.svg</file>
+        <file>icons/feather-light/apps/scalable/pause.svg</file>
+        <file>icons/feather-light/apps/scalable/play.svg</file>
         <file>icons/feather-light/apps/scalable/plus.svg</file>
         <file>icons/feather-light/apps/scalable/power.svg</file>
         <file>icons/feather-light/apps/scalable/replay.svg</file>

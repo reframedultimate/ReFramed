@@ -1,23 +1,28 @@
 #pragma once
 
 #include "vod-review/listeners/VideoPlayerListener.hpp"
+#include "vod-review/listeners/VODReviewListener.hpp"
 #include <QWidget>
 #include <QTimer>
 
 class VideoPlayerModel;
+class VODReviewModel;
 
 namespace Ui {
     class VODReviewView;
 }
 
+class TimelineWidget;
+
 class VODReviewView
         : public QWidget
         , public VideoPlayerListener
+        , public VODReviewListener
 {
     Q_OBJECT
 
 public:
-    explicit VODReviewView(VideoPlayerModel* videoPlayer, QWidget* parent=nullptr);
+    explicit VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* videoPlayer, QWidget* parent=nullptr);
     ~VODReviewView();
 
 private slots:
@@ -35,7 +40,12 @@ private:
     void onPresentImage(const QImage& image) override final;
 
 private:
+    void onVODReviewVisualizerDataChanged() override final;
+
+private:
     Ui::VODReviewView* ui_;
+    VODReviewModel* vodReviewModel_;
     VideoPlayerModel* videoPlayer_;
     QTimer updateUITimer_;
+    QVector<TimelineWidget*> timelineWidgets_;
 };

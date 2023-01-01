@@ -132,7 +132,7 @@ PathManagerDialog::PathManagerDialog(ReplayManager* replayManager, rfcommon::Fil
         QString path = QFileDialog::getExistingDirectory(this, "Choose video directory");
         if (path.isEmpty())
             return;
-        addReplayPath(path);
+        addVideoPath(path);
     });
 
     connect(searchForReplays, &QPushButton::released, this, &PathManagerDialog::onFindReplaysReleased);

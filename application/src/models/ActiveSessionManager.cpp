@@ -147,6 +147,10 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
         connect(task, &AutoAssociateVideoTask::success, saveGame);
         connect(task, &AutoAssociateVideoTask::failure, saveGame);
 
+        connect(task, &AutoAssociateVideoTask::success, [this] {
+            replayManager_->addVideoPath(autoAssociateVideoDir_);
+        });
+
         task->start();
     }
 

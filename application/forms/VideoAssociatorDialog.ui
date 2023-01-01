@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Associate Video</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0" columnstretch="0,1">
    <item row="0" column="0" rowspan="2">
@@ -174,21 +174,21 @@
      <item>
       <widget class="QPushButton" name="pushButton_stepBackwards">
        <property name="text">
-        <string>&lt;</string>
+        <string/>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_playPause">
        <property name="text">
-        <string>Play</string>
+        <string/>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_stepForwards">
        <property name="text">
-        <string>&gt;</string>
+        <string/>
        </property>
       </widget>
      </item>

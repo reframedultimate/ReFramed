@@ -75,6 +75,12 @@ void VideoPlayerModel::closeVideo()
 }
 
 // ----------------------------------------------------------------------------
+bool VideoPlayerModel::isVideoOpen() const
+{
+    return isOpen_;
+}
+
+// ----------------------------------------------------------------------------
 void VideoPlayerModel::playVideo()
 {
     PROFILE(VideoPlayerModel, playVideo);
