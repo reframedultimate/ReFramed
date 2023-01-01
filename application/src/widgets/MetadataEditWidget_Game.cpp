@@ -115,6 +115,13 @@ void MetadataEditWidget_Game::onSpinBoxRoundNumberChanged(int value)
 
     model_->setPendingChanges();
 
+    // Undo changes of special text "*"
+    if (ui_->spinBox_roundNumber->minimum() == 0)
+    {
+        ui_->spinBox_roundNumber->setMinimum(1);
+        ui_->spinBox_roundNumber->setSpecialValueText("");
+    }
+
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
         if (mdata->type() == rfcommon::Metadata::GAME)
@@ -147,6 +154,13 @@ void MetadataEditWidget_Game::onSpinBoxGameNumberChanged(int value)
     PROFILE(MetadataEditWidget_Game, onSpinBoxGameNumberChanged);
 
     model_->setPendingChanges();
+
+    // Undo changes of special text "*"
+    if (ui_->spinBox_gameNumber->minimum() == 0)
+    {
+        ui_->spinBox_gameNumber->setMinimum(1);
+        ui_->spinBox_gameNumber->setSpecialValueText("");
+    }
 
     int leftScore = ui_->label_leftScore->text().toInt();
     int rightScore = ui_->label_rightScore->text().toInt();
@@ -542,7 +556,6 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
 {
     PROFILE(MetadataEditWidget_Game, onAdoptMetadata);
 
-    rfcommon::TimeStamp::Type timeStartedEpoch = 0, timeEndedEpoch = 0;
     QString stageName, leftName, rightName;
     int stageID = -1, roundTypeIdx = -1, roundNumber = -1, setFormatIdx = -1, gameNumber = -1, lScore = -1, rScore = -1;
     QStringList names, sponsors, socials, pronouns;
@@ -557,8 +570,6 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
 
                 if (first)
                 {
-                    timeStartedEpoch = g->timeStarted().millisSinceEpoch();
-                    timeEndedEpoch = g->timeEnded().millisSinceEpoch();
                     stageID = g->stageID().value();
                     stageName = QString::fromUtf8(map[i]->stage.toName(g->stageID()));
                     roundTypeIdx = g->round().index();
@@ -583,10 +594,6 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
                 }
                 else
                 {
-                    if (timeStartedEpoch != g->timeStarted().millisSinceEpoch())
-                        timeStartedEpoch = 0;
-                    if (timeEndedEpoch != g->timeEnded().millisSinceEpoch())
-                        timeEndedEpoch = 0;
                     if (stageID != g->stageID().value())
                     {
                         stageID = -1;
@@ -653,19 +660,24 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
     const QSignalBlocker blockRSocial(ui_->lineEdit_rightSocial);
     const QSignalBlocker blockRPronouns(ui_->lineEdit_rightPronouns);
 
-    ui_->dateTimeEdit_started->setMinimumDateTime(QDateTime::fromMSecsSinceEpoch(0));
-    ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
-    if (timeStartedEpoch == 0)
+    // Editing the start and end dates on multiple replays makes no sense
+    if (mdata.count() == 1)
+    {
+        ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(mdata[0]->timeStarted().millisSinceEpoch()));
+        ui_->dateTimeEdit_ended->setDateTime(QDateTime::fromMSecsSinceEpoch(mdata[0]->timeEnded().millisSinceEpoch()));
+    }
+    else
+    {
+        ui_->dateTimeEdit_started->setMinimumDateTime(QDateTime::fromMSecsSinceEpoch(0));
+        ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
         ui_->dateTimeEdit_started->setSpecialValueText("*");
-    else
-        ui_->dateTimeEdit_started->setDateTime(QDateTime::fromMSecsSinceEpoch(timeStartedEpoch));
 
-    ui_->dateTimeEdit_ended->setMinimumDateTime(QDateTime::fromMSecsSinceEpoch(0));
-    ui_->dateTimeEdit_ended->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
-    if (timeEndedEpoch == 0)
+        ui_->dateTimeEdit_ended->setMinimumDateTime(QDateTime::fromMSecsSinceEpoch(0));
+        ui_->dateTimeEdit_ended->setDateTime(QDateTime::fromMSecsSinceEpoch(0));
         ui_->dateTimeEdit_ended->setSpecialValueText("*");
-    else
-        ui_->dateTimeEdit_ended->setDateTime(QDateTime::fromMSecsSinceEpoch(timeEndedEpoch));
+
+        ui_->dateTimeEdit_started->setReadOnly(true);
+    }
 
     if (stageID == -1)
     {
@@ -692,6 +704,7 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
     if (roundNumber == -1)
     {
         ui_->spinBox_roundNumber->setMinimum(0);
+        ui_->spinBox_roundNumber->setValue(0);
         ui_->spinBox_roundNumber->setSpecialValueText("*");
     }
     else
@@ -708,18 +721,19 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
     if (gameNumber == -1)
     {
         ui_->spinBox_gameNumber->setMinimum(0);
+        ui_->spinBox_gameNumber->setValue(0);
         ui_->spinBox_gameNumber->setSpecialValueText("*");
     }
     else
         ui_->spinBox_gameNumber->setValue(gameNumber);
 
     if (lScore == -1)
-        ui_->label_leftScore->setText("*");
+        ui_->label_leftScore->setText("-");
     else
         ui_->label_leftScore->setText(QString::number(lScore));
 
     if (rScore == -1)
-        ui_->label_rightScore->setText("*");
+        ui_->label_rightScore->setText("-");
     else
         ui_->label_rightScore->setText(QString::number(rScore));
 
