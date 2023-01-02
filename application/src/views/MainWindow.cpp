@@ -45,8 +45,8 @@ MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings
     , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
     , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
     , replayManager_(new ReplayManager(config_.get()))
-    , activeSessionManager_(new ActiveSessionManager(protocol_.get(), replayManager_.get(), pluginManager_.get()))
-    , categoryTabsView_(new CategoryTabsView(replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), playerDetails_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
+    , activeSessionManager_(new ActiveSessionManager(config_.get(), protocol_.get(), replayManager_.get(), pluginManager_.get()))
+    , categoryTabsView_(new CategoryTabsView(config_.get(), replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), playerDetails_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
@@ -101,7 +101,7 @@ MainWindow::~MainWindow()
     // will try to unregister as a listener of RunningGameSessionManager. The central widget
     // would ordinarily be deleted in the base class of this class, after we've deleted the
     // RunningGameSessionManager which gets deleted in this destructor.
-    delete takeCentralWidget();
+    delete centralWidget();
     delete statusBar();
 
     delete ui_;
