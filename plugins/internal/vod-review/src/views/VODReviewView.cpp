@@ -240,48 +240,64 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
     }
     timelineWidgets_.clear();
 
+    int row = 0;
     for (int i = 0; i != vodReviewModel_->visualizerSourceCount(); ++i)
     {
-        TimelineWidget* timeline = new TimelineWidget;
-        if (videoPlayer_->isVideoOpen())
+        for (const auto& intervalSetIt : vodReviewModel_->visualizerData(i).timeIntervalSets)
         {
-            auto frameCount = videoPlayer_->videoGameFrameCount();
-            if (frameCount.index() == 0)
+            TimelineWidget* timeline = new TimelineWidget;
+            if (videoPlayer_->isVideoOpen())
             {
-                if (auto fdata = vodReviewModel_->session()->tryGetFrameData())
-                    frameCount = rfcommon::FrameIndex::fromValue(fdata->frameCount());
-                else
-                    frameCount = rfcommon::FrameIndex::fromValue(1);
-            }
-            timeline->setExtents(0, frameCount.index());
-        }
-        for (const auto& interval : vodReviewModel_->visualizerData(i).timeIntervals)
-            timeline->addInterval(interval.start.index(), interval.end.index());
-        timelineWidgets_.push_back(timeline);
-
-        QLabel* timelineName = new QLabel(QString::fromUtf8(vodReviewModel_->visualizerName(i)));
-        QPushButton* jumpPrev = new QPushButton;
-        jumpPrev->setIcon(QIcon::fromTheme("jump-left"));
-        QPushButton* jumpNext = new QPushButton;
-        jumpNext->setIcon(QIcon::fromTheme("jump-right"));
-
-        QHBoxLayout* timelineControlsLayout = new QHBoxLayout;
-        timelineControlsLayout->addWidget(timelineName);
-        timelineControlsLayout->addWidget(jumpPrev);
-        timelineControlsLayout->addWidget(jumpNext);
-
-        ui_->layout_controls->addLayout(timelineControlsLayout, i, 0);
-        ui_->layout_controls->addWidget(timeline, i, 1);
-
-        connect(jumpPrev, &QPushButton::released, [this, i] {
-            if (videoPlayer_->isVideoOpen() == false)
-                return;
-
-            const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
-            const auto& intervals = vodReviewModel_->visualizerData(i).timeIntervals;
-            for (int n = 1; n < intervals.count(); ++n)
-                if (frame < intervals[n].start)
+                auto frameCount = videoPlayer_->videoGameFrameCount();
+                if (frameCount.index() == 0)
                 {
+                    if (auto fdata = vodReviewModel_->session()->tryGetFrameData())
+                        frameCount = rfcommon::FrameIndex::fromValue(fdata->frameCount());
+                    else
+                        frameCount = rfcommon::FrameIndex::fromValue(1);
+                }
+                timeline->setExtents(0, frameCount.index());
+            }
+            for (const auto& interval : intervalSetIt.value())
+                timeline->addInterval(interval.start.index(), interval.end.index());
+            timelineWidgets_.push_back(timeline);
+
+            QLabel* timelineName = new QLabel(QString::fromUtf8(intervalSetIt.key().cStr()));
+            QPushButton* jumpPrev = new QPushButton;
+            jumpPrev->setIcon(QIcon::fromTheme("jump-left"));
+            QPushButton* jumpNext = new QPushButton;
+            jumpNext->setIcon(QIcon::fromTheme("jump-right"));
+
+            QHBoxLayout* timelineControlsLayout = new QHBoxLayout;
+            timelineControlsLayout->addWidget(timelineName);
+            timelineControlsLayout->addWidget(jumpPrev);
+            timelineControlsLayout->addWidget(jumpNext);
+
+            ui_->layout_controls->addLayout(timelineControlsLayout, row, 0);
+            ui_->layout_controls->addWidget(timeline, row, 1);
+
+            connect(jumpPrev, &QPushButton::released, [this, intervalSetIt] {
+                if (videoPlayer_->isVideoOpen() == false)
+                    return;
+
+                const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
+                const auto& intervals = intervalSetIt.value();
+                for (int n = 1; n < intervals.count(); ++n)
+                    if (frame < intervals[n].start)
+                    {
+                        if (videoPlayer_->isVideoPlaying() && n > 1 && frame >= intervals[n-1].start && frame < intervals[n-1].end)
+                            videoPlayer_->seekVideoToGameFrame(intervals[n-2].start + vodReviewModel_->vmeta()->frameOffset());
+                        else if (videoPlayer_->isVideoPlaying() == false && n > 1 && frame == intervals[n-1].start)
+                            videoPlayer_->seekVideoToGameFrame(intervals[n-2].start + vodReviewModel_->vmeta()->frameOffset());
+                        else
+                            videoPlayer_->seekVideoToGameFrame(intervals[n-1].start + vodReviewModel_->vmeta()->frameOffset());
+                        onUpdateUI();
+                        return;
+                    }
+
+                if (intervals.count() > 0)
+                {
+                    int n = intervals.count();
                     if (videoPlayer_->isVideoPlaying() && n > 1 && frame >= intervals[n-1].start && frame < intervals[n-1].end)
                         videoPlayer_->seekVideoToGameFrame(intervals[n-2].start + vodReviewModel_->vmeta()->frameOffset());
                     else if (videoPlayer_->isVideoPlaying() == false && n > 1 && frame == intervals[n-1].start)
@@ -289,44 +305,34 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
                     else
                         videoPlayer_->seekVideoToGameFrame(intervals[n-1].start + vodReviewModel_->vmeta()->frameOffset());
                     onUpdateUI();
-                    return;
                 }
+            });
 
-            if (intervals.count() > 0)
-            {
-                int n = intervals.count();
-                if (videoPlayer_->isVideoPlaying() && n > 1 && frame >= intervals[n-1].start && frame < intervals[n-1].end)
-                    videoPlayer_->seekVideoToGameFrame(intervals[n-2].start + vodReviewModel_->vmeta()->frameOffset());
-                else if (videoPlayer_->isVideoPlaying() == false && n > 1 && frame == intervals[n-1].start)
-                    videoPlayer_->seekVideoToGameFrame(intervals[n-2].start + vodReviewModel_->vmeta()->frameOffset());
-                else
-                    videoPlayer_->seekVideoToGameFrame(intervals[n-1].start + vodReviewModel_->vmeta()->frameOffset());
-                onUpdateUI();
-            }
-        });
+            connect(jumpNext, &QPushButton::released, [this, intervalSetIt] {
+                if (videoPlayer_->isVideoOpen() == false)
+                    return;
 
-        connect(jumpNext, &QPushButton::released, [this, i] {
-            if (videoPlayer_->isVideoOpen() == false)
-                return;
+                const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
+                const auto& intervals = intervalSetIt.value();
+                for (int n = intervals.count() - 2; n >= 0; --n)
+                    if (frame >= intervals[n].start)
+                    {
+                        videoPlayer_->seekVideoToGameFrame(intervals[n+1].start + vodReviewModel_->vmeta()->frameOffset());
+                        onUpdateUI();
+                        return;
+                    }
 
-            const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
-            const auto& intervals = vodReviewModel_->visualizerData(i).timeIntervals;
-            for (int n = intervals.count() - 2; n >= 0; --n)
-                if (frame >= intervals[n].start)
+                if (intervals.count() > 0)
                 {
-                    videoPlayer_->seekVideoToGameFrame(intervals[n+1].start + vodReviewModel_->vmeta()->frameOffset());
+                    videoPlayer_->seekVideoToGameFrame(intervals[0].start + vodReviewModel_->vmeta()->frameOffset());
                     onUpdateUI();
-                    return;
                 }
+            });
 
-            if (intervals.count() > 0)
-            {
-                videoPlayer_->seekVideoToGameFrame(intervals[0].start + vodReviewModel_->vmeta()->frameOffset());
-                onUpdateUI();
-            }
-        });
+            row++;
+        }
     }
 
-    ui_->layout_controls->addItem(controlsItem, vodReviewModel_->visualizerSourceCount(), 0);
-    ui_->layout_controls->addItem(sliderItem, vodReviewModel_->visualizerSourceCount(), 1);
+    ui_->layout_controls->addItem(controlsItem, row, 0);
+    ui_->layout_controls->addItem(sliderItem, row, 1);
 }

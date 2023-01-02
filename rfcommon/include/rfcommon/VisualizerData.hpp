@@ -4,6 +4,7 @@
 #include "rfcommon/String.hpp"
 #include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/Vector.hpp"
+#include "rfcommon/HashMap.hpp"
 
 namespace rfcommon {
 
@@ -21,7 +22,7 @@ public:
         const FrameIndex end;
     };
 
-    Vector<TimeInterval> timeIntervals;
+    HashMap<String, Vector<TimeInterval>> timeIntervalSets;
 };
 
 }
