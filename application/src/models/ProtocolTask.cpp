@@ -134,7 +134,7 @@ bool ProtocolTask::connectAndCheckVersion()
 
                 // Protocol version matches ours
                 const char major = 0x01;
-                const char minor = 0x00;
+                const char minor = 0x01;
                 if (buf[0] == major && buf[1] == minor)
                 {
                     log_->info("Protocol version is %d.%d, we support %d.%d. Accepting", buf[0], buf[1], major, minor);
@@ -415,7 +415,6 @@ void ProtocolTask::handleProtocol()
 
         switch (msg)
         {
-
             case TrainingStart:
             case TrainingResume: {
                 log_->beginDropdown("Training Session");
@@ -485,40 +484,28 @@ void ProtocolTask::handleProtocol()
                     goto disconnect;
                 }
 
-#define stageH buf[0]
-#define stageL buf[1]
-#define playerCount buf[2]
-                const auto stageID = rfcommon::StageID::fromValue((stageH << 8) | (stageL << 0));
-                auto fighterIDValues = rfcommon::SmallVector<uint8_t, 2>::makeResized(playerCount);
-                auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(playerCount);
+                const auto stageID = rfcommon::StageID::fromValue((buf[0] << 8) | (buf[1] << 0));
+                auto fighterIDs = rfcommon::SmallVector<rfcommon::FighterID, 2>::makeReserved(buf[2]);
+                auto costumes = rfcommon::SmallVector<rfcommon::Costume, 2>::makeReserved(buf[2]);
+                auto tags = rfcommon::SmallVector<rfcommon::String, 2>::makeReserved(buf[2]);
 
-                log_->info("stageID: %d, player count: %d", stageID.value(), playerCount);
+                log_->info("stageID: %d, player count: %d", stageID.value(), buf[2]);
 
-                fighterSlots.resize(playerCount);
-                if (tcp_socket_read_exact(&socket, fighterSlots.data(), playerCount) != playerCount)
-                {
-                    log_->error("Failed to read fighter slots");
-                    goto disconnect;
-                }
+                fighterSlots.resize(buf[2]);
                 for (int i = 0; i != fighterSlots.count(); ++i)
-                    log_->info("idx %d -> slot %d", i, fighterSlots[i]);
-
-                if (tcp_socket_read_exact(&socket, fighterIDValues.data(), playerCount) != playerCount)
                 {
-                    log_->error("Failed to read fighter ID values");
-                    goto disconnect;
+                    if (tcp_socket_read_exact(&socket, buf, 3) != 3)
+                    {
+                        log_->error("Failed to read fighter slots");
+                        goto disconnect;
+                    }
+
+                    fighterSlots[i] = buf[0];
+                    fighterIDs.push(rfcommon::FighterID::fromValue(buf[1]));
+                    costumes.push(rfcommon::Costume::fromValue(buf[2]));
                 }
 
-                auto fighterIDs = rfcommon::SmallVector<rfcommon::FighterID, 2>::makeReserved(playerCount);
-                auto costumes = rfcommon::SmallVector<rfcommon::Costume, 2>::makeReserved(playerCount);
-                for (int i = 0; i != fighterIDValues.count(); ++i)
-                {
-                    log_->info("idx %d: FighterID: %d", i, fighterIDValues[i]);
-                    fighterIDs.push(rfcommon::FighterID::fromValue(fighterIDValues[i]));
-                    costumes.push(rfcommon::Costume::makeDefault());
-                }
-
-                for (int i = 0; i < playerCount; ++i)
+                for (int i = 0; i < fighterSlots.count(); ++i)
                 {
                     // TODO Tags on switch are stored as UTF-16. Have to update
                     // protocol at some point
@@ -527,12 +514,9 @@ void ProtocolTask::handleProtocol()
                     if (tcp_socket_read_exact(&socket, tag, len) != len) { log_->error("Failed to player tag string"); goto disconnect; }
                     tag[static_cast<int>(len)] = '\0';
                     tags.push(tag);
-
-                    log_->info("idx %d: Tag: %s", i, tags[i].cStr());
                 }
-#undef stageH
-#undef stageL
-#undef playerCount
+                for (int i = 0; i != fighterSlots.count(); ++i)
+                    log_->info("idx %d -> slot %d, FighterID: %d, Costume: %d, Tag: %s", i, fighterSlots[i], fighterIDs[i].value(), costumes[i].value(), tags[i].cStr());
 
                 rfcommon::Metadata* meta = rfcommon::Metadata::newActiveGameSession(
                         stageID,
@@ -555,6 +539,7 @@ void ProtocolTask::handleProtocol()
 
             case FighterState: {
                 uint8_t buf[29];
+                log_->beginDropdown("Fighter State");
 #define frame0 buf[0]
 #define frame1 buf[1]
 #define frame2 buf[2]
