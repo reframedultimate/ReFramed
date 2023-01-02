@@ -12,7 +12,6 @@
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VisualizerContext.hpp"
-#include "rfcommon/Utf8.hpp"
 
 #include <QDir>
 #include <QFileInfo>
@@ -25,6 +24,7 @@
 #   include <Windows.h>
 #   include "rfcommon/LastWindowsError.hpp"
 #   include "rfcommon/time.h"
+#   include "rfcommon/Utf8.hpp"
 #elif defined(RFCOMMON_PLATFORM_LINUX)
 #   include <sys/stat.h>
 #   include <time.h>

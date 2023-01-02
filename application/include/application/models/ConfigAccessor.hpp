@@ -21,7 +21,8 @@ class ConfigAccessor
 {
 protected:
     ConfigAccessor(Config* config);
-    nlohmann::basic_json<>& getConfig() const;
+    Config* config() const;
+    nlohmann::basic_json<>& configRoot() const;
     void saveConfig() const;
 
 private:

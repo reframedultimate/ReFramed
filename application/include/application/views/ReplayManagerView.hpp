@@ -1,5 +1,6 @@
 #pragma once
 
+#include "application/models/ConfigAccessor.hpp"
 #include <QWidget>
 #include <memory>
 
@@ -28,12 +29,15 @@ class UserMotionLabelsManager;
  * and the dockable plugins view. This is where the user organizes and views all
  * of their replay files.
  */
-class ReplayManagerView : public QWidget
+class ReplayManagerView
+        : public QWidget
+        , public ConfigAccessor
 {
     Q_OBJECT
 
 public:
     explicit ReplayManagerView(
+            Config* config,
             ReplayManager* replayManager,
             PluginManager* pluginManager,
             PlayerDetails* playerDetails,

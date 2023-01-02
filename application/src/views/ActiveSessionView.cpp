@@ -22,6 +22,8 @@
 
 namespace rfapp {
 
+using nlohmann::json;
+
 // ----------------------------------------------------------------------------
 namespace {
 
@@ -35,29 +37,33 @@ public:
 
 // ----------------------------------------------------------------------------
 ActiveSessionView::ActiveSessionView(
+        Config* config,
         ActiveSessionManager* activeSessionManager,
         PluginManager* pluginManager,
         PlayerDetails* playerDetails,
         QWidget* parent)
     : QWidget(parent)
+    , ConfigAccessor(config)
     , activeSessionManager_(activeSessionManager)
     , metadataEditModel_(new MetadataEditModel)
 {
-    MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
-    MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
-    MetadataEditWidget_Event* event = new MetadataEditWidget_Event(metadataEditModel_.get());
-    MetadataEditWidget_Game* game = new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails);
-    MetadataEditWidget_AutoAssociateVideo* assocVideo = new MetadataEditWidget_AutoAssociateVideo(metadataEditModel_.get(), activeSessionManager_);
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Tournament(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Commentators(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Event(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_AutoAssociateVideo(metadataEditModel_.get(), activeSessionManager_));
 
-    event->setExpanded(true);
-    game->setExpanded(true);
+    json& cfg = configRoot();
+    json& jActiveSessionView = cfg["activesessionview"];
+    json& jExpanded = jActiveSessionView["expanded"];
+    if (jExpanded.is_array())
+        for (int i = 0; i != jExpanded.size() && i < metadataEditWidgets_.size(); ++i)
+            if (jExpanded[i].is_boolean() && jExpanded[i].get<bool>())
+                metadataEditWidgets_[i]->setExpanded(true);
 
     QVBoxLayout* metadataEditLayout = new QVBoxLayout;
-    metadataEditLayout->addWidget(tournament);
-    metadataEditLayout->addWidget(commentators);
-    metadataEditLayout->addWidget(event);
-    metadataEditLayout->addWidget(game);
-    metadataEditLayout->addWidget(assocVideo);
+    for (MetadataEditWidget* w : metadataEditWidgets_)
+        metadataEditLayout->addWidget(w);
     metadataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metadataEditContents = new QWidget;
@@ -83,6 +89,13 @@ ActiveSessionView::ActiveSessionView(
 // ----------------------------------------------------------------------------
 ActiveSessionView::~ActiveSessionView()
 {
+    json& cfg = configRoot();
+    json& jActiveSessionView = cfg["activesessionview"];
+    json jExpanded = json::array();
+    for (MetadataEditWidget* w : metadataEditWidgets_)
+        jExpanded.push_back(w->isExpanded());
+    jActiveSessionView["expanded"] = jExpanded;
+
     // Scroll area contains widgets that are registered as listeners to
     // metadataEditModel_. Have to delete them explicitly, otherwise the model
     // is deleted before the widgets are deleted.

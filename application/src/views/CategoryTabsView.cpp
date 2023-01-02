@@ -8,6 +8,8 @@
 
 namespace rfapp {
 
+using nlohmann::json;
+
 class CustomTabStyle : public QProxyStyle
 {
 public:
@@ -41,6 +43,7 @@ public:
 
 // ----------------------------------------------------------------------------
 CategoryTabsView::CategoryTabsView(
+        Config* config,
         ReplayManager* replayManager,
         PluginManager* pluginManager,
         ActiveSessionManager* activeSessionManager,
@@ -49,8 +52,9 @@ CategoryTabsView::CategoryTabsView(
         rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QTabWidget(parent)
-    , replayManagerView_(new ReplayManagerView(replayManager, pluginManager, playerDetails, userMotionLabelsManager, hash40Strings))
-    , activeSessionView_(new ActiveSessionView(activeSessionManager, pluginManager, playerDetails))
+    , ConfigAccessor(config)
+    , replayManagerView_(new ReplayManagerView(config, replayManager, pluginManager, playerDetails, userMotionLabelsManager, hash40Strings))
+    , activeSessionView_(new ActiveSessionView(config, activeSessionManager, pluginManager, playerDetails))
 {
     setTabPosition(QTabWidget::West);
     //tabBar()->setStyle(new CustomTabStyle);
@@ -60,7 +64,12 @@ CategoryTabsView::CategoryTabsView(
     addTab(replayManagerView_, QIcon::fromTheme("replay"), "Replays");
     addTab(new QWidget, QIcon::fromTheme("compare"), "Compare");
     addTab(new QWidget, QIcon::fromTheme("globe"), "Get Plugins");
-    setCurrentIndex(1);
+
+    json& cfg = configRoot();
+    json& jCategoryTabsView = cfg["categorytabsview"];
+    json& jCurrentTab = jCategoryTabsView["currenttab"];
+    if (jCurrentTab.is_number_unsigned())
+        setCurrentIndex(jCurrentTab.get<unsigned int>());
 
     setStyleSheet(
                 /*
@@ -91,7 +100,11 @@ CategoryTabsView::CategoryTabsView(
 
 // ----------------------------------------------------------------------------
 CategoryTabsView::~CategoryTabsView()
-{}
+{
+    json& cfg = configRoot();
+    json& jCategoryTabsView = cfg["categorytabsview"];
+    jCategoryTabsView["currenttab"] = currentIndex();
+}
 
 // ----------------------------------------------------------------------------
 void CategoryTabsView::onTabBarClicked(int index)

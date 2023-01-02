@@ -601,6 +601,32 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>dateTimeEdit_started</tabstop>
+  <tabstop>dateTimeEdit_ended</tabstop>
+  <tabstop>pushButton_resetTimeStarted</tabstop>
+  <tabstop>lineEdit_stageID</tabstop>
+  <tabstop>lineEdit_stageName</tabstop>
+  <tabstop>comboBox_roundType</tabstop>
+  <tabstop>spinBox_roundNumber</tabstop>
+  <tabstop>comboBox_setFormat</tabstop>
+  <tabstop>spinBox_gameNumber</tabstop>
+  <tabstop>checkBox_leftL</tabstop>
+  <tabstop>checkBox_rightL</tabstop>
+  <tabstop>lineEdit_leftSponsor</tabstop>
+  <tabstop>lineEdit_leftName</tabstop>
+  <tabstop>lineEdit_leftSocial</tabstop>
+  <tabstop>lineEdit_leftPronouns</tabstop>
+  <tabstop>lineEdit_rightSponsor</tabstop>
+  <tabstop>lineEdit_rightName</tabstop>
+  <tabstop>lineEdit_rightSocial</tabstop>
+  <tabstop>lineEdit_rightPronouns</tabstop>
+  <tabstop>pushButton_resetScore</tabstop>
+  <tabstop>toolButton_incLeftScore</tabstop>
+  <tabstop>toolButton_decLeftScore</tabstop>
+  <tabstop>toolButton_decRightScore</tabstop>
+  <tabstop>toolButton_incRightScore</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

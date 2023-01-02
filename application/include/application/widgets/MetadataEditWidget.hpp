@@ -48,6 +48,8 @@ public:
      */
     virtual QVector<QWidget*> scrollIgnoreWidgets() = 0;
 
+    bool isExpanded() const;
+
 public slots:
     void setExpanded(bool expanded);
     void onToggleButtonClicked(bool checked);

@@ -22,33 +22,38 @@
 
 namespace rfapp {
 
+using nlohmann::json;
+
 // ----------------------------------------------------------------------------
 ReplayEditorDialog::ReplayEditorDialog(
+        Config* config,
         ReplayManager* replayManager,
         PlayerDetails* playerDetails,
         const QStringList& replayFileNames,
         QWidget* parent)
     : QDialog(parent)
+    , ConfigAccessor(config)
     , metadataEditModel_(new MetadataEditModel)
     , replayManager_(replayManager)
 {
     setWindowTitle("Edit Replay Metadata");
 
-    MetadataEditWidget_Tournament* tournament = new MetadataEditWidget_Tournament(metadataEditModel_.get());
-    MetadataEditWidget_Commentators* commentators = new MetadataEditWidget_Commentators(metadataEditModel_.get());
-    MetadataEditWidget_Event* event = new MetadataEditWidget_Event(metadataEditModel_.get());
-    MetadataEditWidget_Game* game = new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails);
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Tournament(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Commentators(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Event(metadataEditModel_.get()));
+    metadataEditWidgets_.push_back(new MetadataEditWidget_Game(metadataEditModel_.get(), playerDetails));
 
-    tournament->setExpanded(true);
-    commentators->setExpanded(true);
-    event->setExpanded(true);
-    game->setExpanded(true);
+    json& cfg = configRoot();
+    json& jReplayEditorDialog = cfg["replayeditordialog"];
+    json& jExpanded = jReplayEditorDialog["expanded"];
+    if (jExpanded.is_array())
+        for (int i = 0; i != jExpanded.size() && i < metadataEditWidgets_.size(); ++i)
+            if (jExpanded[i].is_boolean() && jExpanded[i].get<bool>())
+                metadataEditWidgets_[i]->setExpanded(true);
 
     QVBoxLayout* metadataEditLayout = new QVBoxLayout;
-    metadataEditLayout->addWidget(tournament);
-    metadataEditLayout->addWidget(commentators);
-    metadataEditLayout->addWidget(event);
-    metadataEditLayout->addWidget(game);
+    for (MetadataEditWidget* w : metadataEditWidgets_)
+        metadataEditLayout->addWidget(w);
     metadataEditLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget* metadataEditContents = new QWidget;
@@ -131,6 +136,13 @@ ReplayEditorDialog::ReplayEditorDialog(
 // ----------------------------------------------------------------------------
 ReplayEditorDialog::~ReplayEditorDialog()
 {
+    json& cfg = configRoot();
+    json& jReplayEditorDialog = cfg["replayeditordialog"];
+    json jExpanded = json::array();
+    for (MetadataEditWidget* w : metadataEditWidgets_)
+        jExpanded.push_back(w->isExpanded());
+    jReplayEditorDialog["expanded"] = jExpanded;
+
     // We have to make sure that the UI elements registered to the metadataEditModel_
     // get deleted before the model itself is deleted
     delete layout()->itemAt(0)->widget();  // this is the scroll area widget

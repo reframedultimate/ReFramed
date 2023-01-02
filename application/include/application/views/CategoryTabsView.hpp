@@ -1,5 +1,6 @@
 #pragma once
 
+#include "application/models/ConfigAccessor.hpp"
 #include <QTabWidget>
 
 namespace rfcommon {
@@ -16,11 +17,14 @@ class ReplayManager;
 class ReplayManagerView;
 class UserMotionLabelsManager;
 
-class CategoryTabsView : public QTabWidget
+class CategoryTabsView
+        : public QTabWidget
+        , public ConfigAccessor
 {
     Q_OBJECT
 public:
     explicit CategoryTabsView(
+            Config* config,
             ReplayManager* replayManager,
             PluginManager* pluginManager,
             ActiveSessionManager* activeSessionManager,

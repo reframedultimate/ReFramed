@@ -11,11 +11,17 @@ ConfigAccessor::ConfigAccessor(Config* config)
 }
 
 // ----------------------------------------------------------------------------
-nlohmann::json& ConfigAccessor::getConfig() const
+nlohmann::json& ConfigAccessor::configRoot() const
 {
     PROFILE(ConfigAccessor, getConfig);
 
     return config_->root;
+}
+
+// ----------------------------------------------------------------------------
+Config* ConfigAccessor::config() const
+{
+    return config_;
 }
 
 // ----------------------------------------------------------------------------

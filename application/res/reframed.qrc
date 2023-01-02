@@ -8,13 +8,15 @@
         <file>icons/feather-light/apps/scalable/arrow-right.svg</file>
         <file>icons/feather-light/apps/scalable/chevron-left.svg</file>
 		<file>icons/feather-light/apps/scalable/chevron-right.svg</file>
-        <file>icons/feather-light/apps/scalable/compare.svg</file>
         <file>icons/feather-light/apps/scalable/columns.svg</file>
+        <file>icons/feather-light/apps/scalable/compare.svg</file>
         <file>icons/feather-light/apps/scalable/download-cloud.svg</file>
         <file>icons/feather-light/apps/scalable/edit.svg</file>
         <file>icons/feather-light/apps/scalable/file-text.svg</file>
         <file>icons/feather-light/apps/scalable/film.svg</file>
         <file>icons/feather-light/apps/scalable/globe.svg</file>
+        <file>icons/feather-light/apps/scalable/jump-left.svg</file>
+        <file>icons/feather-light/apps/scalable/jump-right.svg</file>
         <file>icons/feather-light/apps/scalable/mic.svg</file>
 		<file>icons/feather-light/apps/scalable/more-horizontal.svg</file>
         <file>icons/feather-light/apps/scalable/package.svg</file>
@@ -31,6 +33,8 @@
 		
         <file>icons/feather-dark/index.theme</file>
         <file>icons/feather-dark/apps/scalable/arrow-right.svg</file>
+        <file>icons/feather-dark/apps/scalable/chevron-left.svg</file>
+        <file>icons/feather-dark/apps/scalable/chevron-right.svg</file>
         <file>icons/feather-dark/apps/scalable/columns.svg</file>
         <file>icons/feather-dark/apps/scalable/compare.svg</file>
         <file>icons/feather-dark/apps/scalable/download-cloud.svg</file>
@@ -38,9 +42,13 @@
         <file>icons/feather-dark/apps/scalable/file-text.svg</file>
         <file>icons/feather-dark/apps/scalable/film.svg</file>
         <file>icons/feather-dark/apps/scalable/globe.svg</file>
+        <file>icons/feather-dark/apps/scalable/jump-left.svg</file>
+        <file>icons/feather-dark/apps/scalable/jump-right.svg</file>
         <file>icons/feather-dark/apps/scalable/mic.svg</file>
         <file>icons/feather-dark/apps/scalable/more-horizontal.svg</file>
         <file>icons/feather-dark/apps/scalable/package.svg</file>
+        <file>icons/feather-dark/apps/scalable/pause.svg</file>
+        <file>icons/feather-dark/apps/scalable/play.svg</file>
         <file>icons/feather-dark/apps/scalable/plus.svg</file>
         <file>icons/feather-dark/apps/scalable/power.svg</file>
         <file>icons/feather-dark/apps/scalable/replay.svg</file>

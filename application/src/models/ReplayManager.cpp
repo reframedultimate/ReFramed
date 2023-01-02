@@ -26,7 +26,7 @@ using namespace nlohmann;
 ReplayManager::ReplayManager(Config* config)
     : ConfigAccessor(config)
 {
-    json& cfg = getConfig();
+    json& cfg = configRoot();
     json& jReplayManager = cfg["replaymanager"];
     json& jGamePaths = jReplayManager["gamepaths"];
     json& jTrainingPaths = jReplayManager["trainingpaths"];
@@ -567,7 +567,7 @@ void ReplayManager::updateConfig()
 {
     PROFILE(ReplayManager, updateConfig);
 
-    json& cfg = getConfig();
+    json& cfg = configRoot();
     json& jReplayManager = cfg["replaymanager"];
 
     jReplayManager["defaultgamepath"] = defaultGamePath_.absolutePath().toUtf8().constData();

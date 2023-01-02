@@ -4,6 +4,7 @@
 
 class QVBoxLayout;
 class QLineEdit;
+class QSpinBox;
 
 namespace rfapp {
 
@@ -22,6 +23,7 @@ public:
 private slots:
     void onCheckBoxEnableToggled(bool enable);
     void onToolButtonChooseDirectoryReleased();
+    void onSpinBoxFrameOffsetValueChanged(int value);
 
 private:
     void onAdoptMetadata(const MappingInfoList& map, const MetadataList& mdata) override;
@@ -44,6 +46,8 @@ private:
     QLabel* label_chooseDir;
     QToolButton* toolButton_chooseDir;
     QLineEdit* lineEdit_dir;
+    QLabel* label_frameOffset;
+    QSpinBox* spinBox_frameOffset;
 
     bool ignoreSelf_ = false;
 };

@@ -103,6 +103,12 @@ QWidget* MetadataEditWidget::contentWidget()
 }
 
 // ----------------------------------------------------------------------------
+bool MetadataEditWidget::isExpanded() const
+{
+    return toggleButton_->isChecked();
+}
+
+// ----------------------------------------------------------------------------
 void MetadataEditWidget::setExpanded(bool expanded)
 {
     PROFILE(MetadataEditWidget, setExpanded);

@@ -9,6 +9,7 @@
 #include <QLineEdit>
 #include <QToolButton>
 #include <QFileDialog>
+#include <QSpinBox>
 
 namespace rfapp {
 
@@ -19,34 +20,43 @@ MetadataEditWidget_AutoAssociateVideo::MetadataEditWidget_AutoAssociateVideo(Met
 {
     setTitle(QIcon::fromTheme("film"), "Auto-Associate Video");
 
-    const QString& vidDir = activeSessionManager_->autoAssociateVideoDirectory();
-
     QCheckBox* checkBox_enable = new QCheckBox("Search for video to auto-associate after each game");
-    checkBox_enable->setChecked(!vidDir.isEmpty());
+    checkBox_enable->setChecked(activeSessionManager_->autoAssociateVideoEnabled());
 
     label_chooseDir = new QLabel("Directory:");
-    label_chooseDir->setEnabled(!vidDir.isEmpty());
+    label_chooseDir->setEnabled(activeSessionManager_->autoAssociateVideoEnabled());
 
     lineEdit_dir = new QLineEdit;
     lineEdit_dir->setReadOnly(true);
-    lineEdit_dir->setText(vidDir);
-    lineEdit_dir->setEnabled(!vidDir.isEmpty());
+    lineEdit_dir->setText(activeSessionManager_->autoAssociateVideoDirectory());
+    lineEdit_dir->setEnabled(activeSessionManager_->autoAssociateVideoEnabled());
 
     toolButton_chooseDir = new QToolButton;
-    toolButton_chooseDir->setText("...");
-    toolButton_chooseDir->setEnabled(!vidDir.isEmpty());
+    toolButton_chooseDir->setIcon(QIcon::fromTheme("more-horizontal"));
+    toolButton_chooseDir->setEnabled(activeSessionManager_->autoAssociateVideoEnabled());
+
+    label_frameOffset = new QLabel("Frame offset correction:");
+    label_frameOffset->setEnabled(activeSessionManager_->autoAssociateVideoEnabled());
+    spinBox_frameOffset = new QSpinBox;
+    spinBox_frameOffset->setMinimum(-10000);
+    spinBox_frameOffset->setMaximum(10000);
+    spinBox_frameOffset->setValue(activeSessionManager_->autoAssociateVideoFrameOffset());
+    spinBox_frameOffset->setEnabled(activeSessionManager_->autoAssociateVideoEnabled());
 
     QGridLayout* layout = new QGridLayout;
     layout->addWidget(checkBox_enable, 0, 0, 1, 3);
     layout->addWidget(label_chooseDir, 1, 0);
     layout->addWidget(lineEdit_dir, 1, 1);
     layout->addWidget(toolButton_chooseDir, 1, 2);
+    layout->addWidget(label_frameOffset, 2, 0, 1, 1);
+    layout->addWidget(spinBox_frameOffset, 2, 1, 1, 2);
 
     contentWidget()->setLayout(layout);
     updateSize();
 
     connect(checkBox_enable, &QCheckBox::toggled, this, &MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled);
     connect(toolButton_chooseDir, &QToolButton::released, this, &MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased);
+    connect(spinBox_frameOffset, qOverload<int>(&QSpinBox::valueChanged), this, &MetadataEditWidget_AutoAssociateVideo::onSpinBoxFrameOffsetValueChanged);
 }
 
 // ----------------------------------------------------------------------------
@@ -61,9 +71,10 @@ void MetadataEditWidget_AutoAssociateVideo::onCheckBoxEnableToggled(bool enable)
     label_chooseDir->setEnabled(enable);
     lineEdit_dir->setEnabled(enable);
     toolButton_chooseDir->setEnabled(enable);
+    label_frameOffset->setEnabled(enable);
+    spinBox_frameOffset->setEnabled(enable);
 
-    activeSessionManager_->setAutoAssociateVideoDirectory(enable ?
-        lineEdit_dir->text() : "");
+    activeSessionManager_->setAutoAssociateVideoEnabled(enable);
 }
 
 // ----------------------------------------------------------------------------
@@ -77,6 +88,12 @@ void MetadataEditWidget_AutoAssociateVideo::onToolButtonChooseDirectoryReleased(
 
     lineEdit_dir->setText(vidDir);
     activeSessionManager_->setAutoAssociateVideoDirectory(vidDir);
+}
+
+// ----------------------------------------------------------------------------
+void MetadataEditWidget_AutoAssociateVideo::onSpinBoxFrameOffsetValueChanged(int value)
+{
+    activeSessionManager_->setAutoAssociateVideoFrameOffset(value);
 }
 
 // ----------------------------------------------------------------------------

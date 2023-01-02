@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include "application/listeners/ActiveSessionManagerListener.hpp"
+#include "application/models/ConfigAccessor.hpp"
 
 class QGroupBox;
 class QLabel;
@@ -16,17 +17,20 @@ namespace rfapp {
 class ActiveSessionManager;
 class CollapsibleSplitter;
 class MetadataEditModel;
+class MetadataEditWidget;
 class PlayerDetails;
 class PluginManager;
 class Protocol;
 
 class ActiveSessionView
-    : public QWidget
-    , public ActiveSessionManagerListener
+        : public QWidget
+        , public ActiveSessionManagerListener
+        , public ConfigAccessor
 {
     Q_OBJECT
 public:
     ActiveSessionView(
+            Config* config,
             ActiveSessionManager* activeSessionManager,
             PluginManager* pluginManager,
             PlayerDetails* playerDetails,
@@ -46,6 +50,7 @@ private:
     std::unique_ptr<MetadataEditModel> metadataEditModel_;
     QScrollArea* scrollArea_;
     CollapsibleSplitter* splitter_;
+    QVector<MetadataEditWidget*> metadataEditWidgets_;
     int size0_, size1_;
 };
 

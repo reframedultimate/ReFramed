@@ -2,6 +2,7 @@
 
 #include "application/listeners/ReplayManagerListener.hpp"
 #include "application/models/Protocol.hpp"  // MOC requires this because of smart pointers
+#include "application/models/ConfigAccessor.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/ProtocolListener.hpp"
@@ -30,24 +31,32 @@ class ReplayManager;
  * sessions to files as they come in.
  */
 class ActiveSessionManager
-    : public QObject
-    , public ReplayManagerListener
-    , public rfcommon::ProtocolListener
+        : public QObject
+        , public ReplayManagerListener
+        , public rfcommon::ProtocolListener
+        , public ConfigAccessor
 {
     Q_OBJECT
 
 public:
-    ActiveSessionManager(Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent=nullptr);
+    ActiveSessionManager(Config* config, Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent=nullptr);
     ~ActiveSessionManager();
 
     Protocol* protocol() const;
 
+    void setAutoAssociateVideoEnabled(bool enable);
+    bool autoAssociateVideoEnabled() const;
+
     void setAutoAssociateVideoDirectory(const QString& dir);
     const QString& autoAssociateVideoDirectory() const;
+
+    void setAutoAssociateVideoFrameOffset(int offset);
+    int autoAssociateVideoFrameOffset() const;
 
     rfcommon::ListenerDispatcher<ActiveSessionManagerListener> dispatcher;
 
 private:
+    void updateConfig();
     bool findFreeRoundAndGameNumbers(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata);
 
 private:
@@ -83,6 +92,8 @@ private:
     PluginManager* pluginManager_;
     QString autoAssociateVideoDir_;
     QVector<rfcommon::Reference<rfcommon::GameMetadata>> pastMetadata_;
+    int autoAssociateVideoFrameOffset_ = 0;
+    bool autoAssociateVideoEnabled_ = false;
 };
 
 }

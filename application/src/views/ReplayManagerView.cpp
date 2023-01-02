@@ -37,6 +37,7 @@ static const QKeySequence duplicateGroupShortcut("Shift+D");
 
 // ----------------------------------------------------------------------------
 ReplayManagerView::ReplayManagerView(
+        Config* config,
         ReplayManager* replayManager,
         PluginManager* pluginManager,
         PlayerDetails* playerDetails,
@@ -44,6 +45,7 @@ ReplayManagerView::ReplayManagerView(
         rfcommon::Hash40Strings* hash40Strings,
         QWidget* parent)
     : QWidget(parent)
+    , ConfigAccessor(config)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
     , playerDetails_(playerDetails)
@@ -391,7 +393,7 @@ void ReplayManagerView::doEditMetaData(const QStringList& selectedFileNames)
     if (selectedFileNames.size() == 0)
         return;
 
-    ReplayEditorDialog dialog(replayManager_, playerDetails_, selectedFileNames, this);
+    ReplayEditorDialog dialog(config(), replayManager_, playerDetails_, selectedFileNames, this);
     dialog.setGeometry(calculatePopupGeometryActiveScreen(900));
     dialog.exec();
 }

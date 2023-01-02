@@ -15,13 +15,29 @@
 
 namespace rfapp {
 
+using namespace nlohmann;
+
 // ----------------------------------------------------------------------------
-ActiveSessionManager::ActiveSessionManager(Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent)
+ActiveSessionManager::ActiveSessionManager(Config* config, Protocol* protocol, ReplayManager* replayManager, PluginManager* pluginManager, QObject* parent)
     : QObject(parent)
+    , ConfigAccessor(config)
     , protocol_(protocol)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
 {
+    json& cfg = configRoot();
+    json& jActiveSessionManager = cfg["activesessionmanager"];
+    json& jAutoAssociateVideos = jActiveSessionManager["autoassociatevideos"];
+    json& jEnable = jAutoAssociateVideos["enable"];
+    json& jDir = jAutoAssociateVideos["dir"];
+    json& jOffset = jAutoAssociateVideos["offset"];
+    if (jEnable.is_boolean())
+        autoAssociateVideoEnabled_ = jEnable.get<bool>();
+    if (jDir.is_string())
+        autoAssociateVideoDir_ = QString::fromUtf8(jDir.get<std::string>().c_str());
+    if (jOffset.is_number_integer())
+        autoAssociateVideoFrameOffset_ = jOffset.get<int>();
+
     protocol_->dispatcher.addListener(this);
     replayManager_->dispatcher.addListener(this);
 }
@@ -31,6 +47,13 @@ ActiveSessionManager::~ActiveSessionManager()
 {
     replayManager_->dispatcher.removeListener(this);
     protocol_->dispatcher.removeListener(this);
+
+    json& cfg = configRoot();
+    json& jActiveSessionManager = cfg["activesessionmanager"];
+    json& jAutoAssociateVideos = jActiveSessionManager["autoassociatevideos"];
+    jAutoAssociateVideos["enable"] = autoAssociateVideoEnabled_;
+    jAutoAssociateVideos["dir"] = autoAssociateVideoDir_.toUtf8().constData();
+    jAutoAssociateVideos["offset"] = autoAssociateVideoFrameOffset_;
 }
 
 // ----------------------------------------------------------------------------
@@ -39,6 +62,20 @@ Protocol* ActiveSessionManager::protocol() const
     PROFILE(ActiveSessionManager, protocol);
 
     return protocol_;
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::setAutoAssociateVideoEnabled(bool enable)
+{
+    PROFILE(ActiveSessionManager, setAutoAssociateVideoEnabled);
+
+    autoAssociateVideoEnabled_ = enable;
+}
+
+// ----------------------------------------------------------------------------
+bool ActiveSessionManager::autoAssociateVideoEnabled() const
+{
+    return autoAssociateVideoEnabled_;
 }
 
 // ----------------------------------------------------------------------------
@@ -55,6 +92,18 @@ const QString& ActiveSessionManager::autoAssociateVideoDirectory() const
     PROFILE(ActiveSessionManager, autoAssociateVideoDirectory);
 
     return autoAssociateVideoDir_;
+}
+
+// ----------------------------------------------------------------------------
+void ActiveSessionManager::setAutoAssociateVideoFrameOffset(int offset)
+{
+    autoAssociateVideoFrameOffset_ = offset;
+}
+
+// ----------------------------------------------------------------------------
+int ActiveSessionManager::autoAssociateVideoFrameOffset() const
+{
+    return autoAssociateVideoFrameOffset_;
 }
 
 // ----------------------------------------------------------------------------
@@ -129,7 +178,7 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
         }
     };
 
-    if (autoAssociateVideoDir_.isEmpty())
+    if (autoAssociateVideoEnabled_ == false || autoAssociateVideoDir_.isEmpty())
     {
         saveGame();
     }
@@ -153,57 +202,12 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
 
         task->start();
     }
-
-    /*
-    // In between sessions (when players are in the menu) there is no active
-    // session, but it's still possible to edit the names/format/game number/etc
-    // so copy the data out of the session here so it can be edited, and when
-    // a new session starts again we copy the data into the session.
-    auto meta = static_cast<rfcommon::GameMetadata*>(activeMetadata_.get());
-    format_ = meta->setFormat();
-    gameNumber_ = meta->gameNumber();
-    setNumber_ = meta->setNumber();
-    if (meta->fighterCount() == 2)
-    {
-        p1Name_ = meta->name(0).cStr();
-        p2Name_ = meta->name(1).cStr();
-    }
-
-    activeFrameData_->dispatcher.removeListener(this);
-    activeMetadata_->dispatcher.removeListener(this);
-    pastGameMetadata_.push_back(meta);
-    activeMappingInfo_.drop();
-    activeMetadata_.drop();
-
-    dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameEnded, game);*/
 }
 
 // ----------------------------------------------------------------------------
 void ActiveSessionManager::onReplayManagerDefaultGamePathChanged(const QDir& path)
 {
     PROFILE(ActiveSessionManager, onReplayManagerDefaultGamePathChanged);
-/*
-    (void)path;
-    if (activeMetadata_.isNull())
-        return;
-
-    switch (activeMetadata_->type())
-    {
-        case rfcommon::Metadata::GAME: {
-            auto meta = static_cast<rfcommon::GameMetadata*>(activeMetadata_.get());
-            replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
-
-            dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerSetNumberChanged, meta->setNumber());
-            dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerGameNumberChanged, meta->gameNumber());
-        } break;
-
-        case rfcommon::Metadata::TRAINING: {
-            auto meta = static_cast<rfcommon::TrainingMetadata*>(activeMetadata_.get());
-            replayManager_->findFreeSetAndGameNumbers(activeMappingInfo_, meta);
-
-            dispatcher.dispatch(&ActiveSessionManagerListener::onActiveSessionManagerTrainingSessionNumberChanged, meta->sessionNumber());
-        } break;
-    }*/
 }
 
 void ActiveSessionManager::onReplayManagerGroupAdded(ReplayGroup* group) {}

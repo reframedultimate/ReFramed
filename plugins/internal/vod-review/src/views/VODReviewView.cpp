@@ -84,6 +84,9 @@ void VODReviewView::onPlayPauseReleased()
 {
     PROFILE(VODReviewView, onPlayPauseReleased);
 
+    if (videoPlayer_->isVideoOpen() == false)
+        return;
+
     if (videoPlayer_->isVideoPlaying())
     {
         updateUITimer_.stop();
@@ -101,6 +104,9 @@ void VODReviewView::onStepForwardsReleased()
 {
     PROFILE(VODReviewView, onStepForwardsReleased);
 
+    if (videoPlayer_->isVideoOpen() == false)
+        return;
+
     updateUITimer_.stop();
     videoPlayer_->pauseVideo();
     videoPlayer_->stepVideo(1);
@@ -112,6 +118,9 @@ void VODReviewView::onStepBackwardsReleased()
 {
     PROFILE(VODReviewView, onStepBackwardsReleased);
 
+    if (videoPlayer_->isVideoOpen() == false)
+        return;
+
     updateUITimer_.stop();
     videoPlayer_->pauseVideo();
     videoPlayer_->stepVideo(-1);
@@ -122,6 +131,9 @@ void VODReviewView::onStepBackwardsReleased()
 void VODReviewView::onSliderValueChanged(int index)
 {
     PROFILE(VODReviewView, onSliderValueChanged);
+
+    if (videoPlayer_->isVideoOpen() == false)
+        return;
 
     auto frame = rfcommon::FrameIndex::fromValue(index);
     videoPlayer_->seekVideoToGameFrame(frame + vodReviewModel_->vmeta()->frameOffset());
@@ -251,7 +263,7 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
         QPushButton* jumpPrev = new QPushButton;
         jumpPrev->setIcon(QIcon::fromTheme("jump-left"));
         QPushButton* jumpNext = new QPushButton;
-        jumpPrev->setIcon(QIcon::fromTheme("jump-right"));
+        jumpNext->setIcon(QIcon::fromTheme("jump-right"));
 
         QHBoxLayout* timelineControlsLayout = new QHBoxLayout;
         timelineControlsLayout->addWidget(timelineName);
@@ -264,7 +276,7 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
         connect(jumpPrev, &QPushButton::released, [this, i] {
             if (videoPlayer_->isVideoOpen() == false)
                 return;
-            
+
             const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
             const auto& intervals = vodReviewModel_->visualizerData(i).timeIntervals;
             for (int n = 1; n < intervals.count(); ++n)
@@ -279,7 +291,7 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
                     onUpdateUI();
                     return;
                 }
-            
+
             if (intervals.count() > 0)
             {
                 int n = intervals.count();
@@ -296,7 +308,7 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
         connect(jumpNext, &QPushButton::released, [this, i] {
             if (videoPlayer_->isVideoOpen() == false)
                 return;
-            
+
             const auto frame = videoPlayer_->currentVideoGameFrame() - vodReviewModel_->vmeta()->frameOffset();
             const auto& intervals = vodReviewModel_->visualizerData(i).timeIntervals;
             for (int n = intervals.count() - 2; n >= 0; --n)

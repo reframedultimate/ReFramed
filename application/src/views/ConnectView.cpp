@@ -21,7 +21,7 @@ ConnectView::ConnectView(Config* config, Protocol* protocol, QWidget* parent)
 
     setWindowTitle("Connect to Nintendo Switch");
 
-    json& cfg = getConfig();
+    json& cfg = configRoot();
     json& jConnectView = cfg["connectview"];
     json& jLastIP = jConnectView["lastip"];
     json& jLastPort = jConnectView["lastport"];
@@ -79,7 +79,7 @@ void ConnectView::onConnectButtonReleased()
         return;
     }
 
-    json& cfg = getConfig();
+    json& cfg = configRoot();
     json& jConnect = cfg["connectview"];
     jConnect["lastip"] = ui_->lineEdit_address->text().toUtf8().constData();
     jConnect["lastport"] = port;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "application/models/ConfigAccessor.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Vector.hpp"
 #include <QDialog>
@@ -11,14 +12,18 @@ namespace rfcommon {
 namespace rfapp {
 
 class MetadataEditModel;
+class MetadataEditWidget;
 class PlayerDetails;
 class ReplayManager;
 
-class ReplayEditorDialog : public QDialog
+class ReplayEditorDialog
+        : public QDialog
+        , public ConfigAccessor
 {
     Q_OBJECT
 public:
     explicit ReplayEditorDialog(
+            Config* config,
             ReplayManager* replayManager,
             PlayerDetails* playerDetails,
             const QStringList& replayFileNames,
@@ -33,6 +38,7 @@ private:
     ReplayManager* replayManager_;
     rfcommon::SmallVector<rfcommon::Reference<rfcommon::Session>, 1> loadedSessions_;
     QStringList loadedSessionFileNames_;
+    QVector<MetadataEditWidget*> metadataEditWidgets_;
 };
 
 }
