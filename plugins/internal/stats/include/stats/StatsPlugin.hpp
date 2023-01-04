@@ -49,6 +49,8 @@ public:
      */
     void exportOBSStats() const;
 
+    void exportToOtherPlugins() const;
+
     void sendWebSocketStats(bool gameStarted, bool gameEnded) const;
 
 private:

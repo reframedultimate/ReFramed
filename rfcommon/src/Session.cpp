@@ -344,6 +344,11 @@ static bool loadLegacy_1_3(
     json jSetNumber = jGameInfo["set"];
     json jWinner = jGameInfo["winner"];
 
+    int winner = jWinner.is_number_unsigned() ?
+        jWinner.get<int>() : 0;
+    if (winner < 0 || winner > playerFighterIDs.count())
+        winner = 0;
+
     Reference<Metadata> metadata = Metadata::newSavedGameSession(
         TimeStamp::fromMillisSinceEpoch(0),
         TimeStamp::fromMillisSinceEpoch(0),
@@ -351,7 +356,7 @@ static bool loadLegacy_1_3(
         std::move(playerFighterIDs),
         std::move(playerCostumes),
         std::move(playerTags),
-        jWinner.get<int>());
+        winner);
 
     metadata->asGame()->setBracketType(BracketType::fromType(BracketType::FRIENDLIES));
     metadata->asGame()->setRound(Round::fromSessionNumber(SessionNumber::fromValue(jSetNumber.get<SessionNumber::Type>())));
@@ -620,9 +625,9 @@ static bool loadLegacy_1_4(
     const auto format = jSetFormat.is_string() ?
         SetFormat::fromDescription(jSetFormat.get<std::string>().c_str()) : SetFormat::fromType(SetFormat::FREE);
     int winner = jWinner.is_number_unsigned() ?
-        jWinner.get<int>() : -1;
-    if (winner > fighterCount)
-        winner = -1;
+        jWinner.get<int>() : 0;
+    if (winner < 0 || winner > fighterCount)
+        winner = 0;
 
     Reference<Metadata> metadata = Metadata::newSavedGameSession(
         timeStarted,
@@ -1234,9 +1239,8 @@ VideoMeta* Session::tryGetVideoMeta()
 {
     PROFILE(Session, tryGetVideoMeta);
 
-    if (videoMeta_.isNull())
+    if (videoMeta_.isNull() && file_.notNull())
     {
-        assert(file_.notNull());
         for (const auto& entry : contentTable_)
             if (memcmp(entry.type, blobTypeVideoMeta, 4) == 0)
             {
@@ -1253,9 +1257,8 @@ VideoEmbed* Session::tryGetVideoEmbed()
 {
     PROFILE(Session, tryGetVideoEmbed);
 
-    if (videoEmbed_.isNull())
+    if (videoEmbed_.isNull() && file_.notNull())
     {
-        assert(file_.notNull());
         for (const auto& entry : contentTable_)
             if (memcmp(entry.type, blobTypeVideoEmbed, 4) == 0)
             {

@@ -114,6 +114,22 @@ void StatsPlugin::exportOBSEmptyStats() const
 }
 
 // ----------------------------------------------------------------------------
+void StatsPlugin::exportToOtherPlugins() const
+{
+    PROFILE(StatsPlugin, exportOBSStats);
+
+    if (settingsModel_->obsEnabled())
+    {
+        OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
+        exporter.setPlayerTag(0, playerMeta_->name(0));
+        exporter.setPlayerTag(1, playerMeta_->name(1));
+        exporter.setPlayerCharacter(0, playerMeta_->character(0));
+        exporter.setPlayerCharacter(1, playerMeta_->character(1));
+        exporter.exportStatistics();
+    }
+}
+
+// ----------------------------------------------------------------------------
 void StatsPlugin::exportOBSStats() const
 {
     PROFILE(StatsPlugin, exportOBSStats);
@@ -247,6 +263,7 @@ void StatsPlugin::onGameSessionLoaded(rfcommon::Session* game)
     if (addSession(game))
     {
         exportOBSStats();
+        exportToOtherPlugins();
         sendWebSocketStats(false, false);
     }
 }

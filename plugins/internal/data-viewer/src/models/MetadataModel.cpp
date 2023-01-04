@@ -36,6 +36,7 @@ enum Game
         PlayerNode,
             PlayerName,
             PlayerFighter,
+            PlayerCostume,
             PlayerSocial,
             PlayerPronouns
 };
@@ -131,8 +132,9 @@ QModelIndex MetadataModel::index(int row, int column, const QModelIndex& parent)
             {
                 case 0: return createIndex(row, column, quint16(Game::PlayerName) | (quint16(parent.row()) << 16));
                 case 1: return createIndex(row, column, quint16(Game::PlayerFighter) | (quint16(parent.row()) << 16));
-                case 2: return createIndex(row, column, quint16(Game::PlayerSocial) | (quint16(parent.row()) << 16));
-                case 3: return createIndex(row, column, quint16(Game::PlayerPronouns) | (quint16(parent.row()) << 16));
+                case 2: return createIndex(row, column, quint16(Game::PlayerCostume) | (quint16(parent.row()) << 16));
+                case 3: return createIndex(row, column, quint16(Game::PlayerSocial) | (quint16(parent.row()) << 16));
+                case 4: return createIndex(row, column, quint16(Game::PlayerPronouns) | (quint16(parent.row()) << 16));
             }
             break;
     }
@@ -175,6 +177,7 @@ QModelIndex MetadataModel::parent(const QModelIndex& index) const
 
         case Game::PlayerName: return createIndex((index.internalId() >> 16) & 0xFFFF, 0, Game::PlayerNode);
         case Game::PlayerFighter: return createIndex((index.internalId() >> 16) & 0xFFFF, 0, Game::PlayerNode);
+        case Game::PlayerCostume: return createIndex((index.internalId() >> 16) & 0xFFFF, 0, Game::PlayerNode);
         case Game::PlayerSocial: return createIndex((index.internalId() >> 16) & 0xFFFF, 0, Game::PlayerNode);
         case Game::PlayerPronouns: return createIndex((index.internalId() >> 16) & 0xFFFF, 0, Game::PlayerNode);
     }
@@ -234,7 +237,7 @@ int MetadataModel::gameRowCount(const rfcommon::GameMetadata* meta, const QModel
         case Game::EventNode: return bracketTypeHasURL(meta->bracketType()) ? 2 : 1;
         case Game::GameNode: return 9;
         case Game::PlayersNode: return meta->fighterCount();
-        case Game::PlayerNode: return 4;
+        case Game::PlayerNode: return 5;
     }
 
     return 0;
@@ -443,6 +446,15 @@ QVariant MetadataModel::gameData(const rfcommon::GameMetadata* meta, const QMode
                         return QString::number(fighterID.value()) + " (" + QString::fromUtf8(fighterName) + ")";
                     }
                     break;
+
+                case Game::PlayerCostume:
+                    if (index.column() == 0) return "Costume";
+                    if (index.column() == 1)
+                    {
+                        int fighterIdx = (index.internalId() >> 16) & 0xFFFF;
+                        const auto costume = meta->playerCostume(fighterIdx);
+                        return QString::number(costume.value());
+                    }
 
                 case Game::PlayerSocial:
                     if (index.column() == 0) return "Social";

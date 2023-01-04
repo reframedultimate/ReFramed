@@ -32,7 +32,7 @@ Metadata* Metadata::newActiveGameSession(
             std::move(fighterIDs),
             std::move(costumes),
             std::move(tags),
-            -1);  // winner
+            0);  // winner
 }
 
 // ----------------------------------------------------------------------------
@@ -217,9 +217,9 @@ static Metadata* load_1_5(json& j)
     {
         json jWinner = jGameInfo["winner"];
         int winner = jWinner.is_number_unsigned() ?
-            jWinner.get<int>() : -1;
-        if (winner > fighterCount)
-            winner = -1;
+            jWinner.get<int>() : 0;
+        if (winner < 0 || winner > fighterCount)
+            winner = 0;
 
         GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted, timeEnded,
@@ -316,9 +316,9 @@ static Metadata* load_1_6(json& j)
     {
         json jWinner = jGameInfo["winner"];
         int winner = jWinner.is_number_unsigned() ?
-            jWinner.get<int>() : -1;
-        if (winner > fighterCount)
-            winner = -1;
+            jWinner.get<int>() : 0;
+        if (winner < 0 || winner > fighterCount)
+            winner = 0;
 
         GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted,
@@ -462,9 +462,9 @@ static Metadata* load_1_7(json& j)
     {
         json jWinner = jGameInfo["winner"];
         int winner = jWinner.is_number_unsigned() ?
-                    jWinner.get<int>() : -1;
-        if (winner > fighterCount)
-            winner = -1;
+                    jWinner.get<int>() : 0;
+        if (winner < 0 || winner > fighterCount)
+            winner = 0;
 
         GameMetadata* g = Metadata::newSavedGameSession(
             timeStarted,
