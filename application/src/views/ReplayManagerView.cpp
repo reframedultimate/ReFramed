@@ -62,7 +62,7 @@ ReplayManagerView::ReplayManagerView(
         replayGroupListView_->addItem(replayManager_->replayGroup(i)->name());
     replayGroupListView_->setCurrentItem(replayGroupListView_->item(0));
     replayGroupListView_->setContextMenuPolicy(Qt::CustomContextMenu);
-
+    
     replayListModel_->setReplayGroup(replayManager_->allReplayGroup());
     replayListSortFilterModel_->setSourceModel(replayListModel_.get());
     replayListSortFilterModel_->setDynamicSortFilter(true);

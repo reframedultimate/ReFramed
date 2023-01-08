@@ -118,7 +118,9 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             }
             else
             {
-                const auto& r = days_[index.internalId()].replays[index.row()];
+                const auto& day = days_[index.internalId()];
+                const auto& r = day.replays[index.row()];
+
                 if (r.hasMissingInfo())
                 {
                     if (index.column() == 0)
@@ -151,7 +153,8 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             if (index.internalId() == quintptr(-1))
                 break;
 
-            const auto& r = days_[index.internalId()].replays[index.row()];
+            const auto& day = days_[index.internalId()];
+            const auto& r = day.replays[index.row()];
             if (r.playerCount() == 2)
             {
                 if (index.column() == P1)
@@ -165,7 +168,8 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             if (index.internalId() == quintptr(-1))
                 break;
 
-            const auto& r = days_[index.internalId()].replays[index.row()];
+            const auto& day = days_[index.internalId()];
+            const auto& r = day.replays[index.row()];
             if (r.hasMissingInfo())
                 return QBrush(QColor(Qt::red));
         }
@@ -246,12 +250,16 @@ void ReplayListModel::addReplay(const QString& fileName)
     {
         beginInsertRows(QModelIndex(), rootRow, rootRow);
         it = days_.insert(it, day);
+        it->replays.append(parts);
+        endInsertRows();
+    }
+    else
+    {
+        beginInsertRows(index(rootRow, 0), it->replays.size(), it->replays.size());
+        it->replays.append(parts);
         endInsertRows();
     }
 
-    beginInsertRows(index(rootRow, 0), it->replays.size(), it->replays.size());
-    it->replays.append(parts);
-    endInsertRows();
 }
 
 // ----------------------------------------------------------------------------
