@@ -103,14 +103,6 @@ VideoAssociatorDialog::VideoAssociatorDialog(
         ui_->timeEdit_timeOffset->setTime(QTime(0, 0).addMSecs(vmeta->frameOffset().secondsPassed() * 1000));
     }
 
-    // Load video if possible
-    if (videoView_)
-        if (auto video = session_->tryGetVideo())
-            if (auto i = videoPlugin_->videoPlayerInterface())
-                if (i->openVideoFromMemory(video->address(), video->size()))
-                    if (vmeta)
-                        i->seekVideoToGameFrame(vmeta->frameOffset());
-
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &VideoAssociatorDialog::close);
     connect(ui_->pushButton_save, &QPushButton::released, this, &VideoAssociatorDialog::onSaveReleased);
     connect(ui_->pushButton_chooseFile, &QPushButton::released, this, &VideoAssociatorDialog::onChooseFileReleased);
@@ -125,6 +117,22 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     // the video is playing
     timer_.setInterval(50);
     connect(&timer_, &QTimer::timeout, this, &VideoAssociatorDialog::updateUIOffsets);
+
+    // Load video if possible
+    if (videoView_)
+        if (auto i = videoPlugin_->videoPlayerInterface())
+        {
+            if (auto video = session_->tryGetVideo())
+            {
+                if (i->openVideoFromMemory(video->address(), video->size()))
+                    if (vmeta)
+                        i->seekVideoToGameFrame(vmeta->frameOffset());
+            }
+            else
+            {
+                QMetaObject::invokeMethod(this, "onChooseFileReleased", Qt::QueuedConnection);
+            }
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -200,7 +208,8 @@ void VideoAssociatorDialog::onChooseFileReleased()
             i->pauseVideo();
             updateUIVideoButtons();
 
-            i->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size());
+            if (i->openVideoFromMemory(currentVideoFile_->address(), currentVideoFile_->size()))
+                i->seekVideoToGameFrame(rfcommon::FrameIndex::fromValue(0));
             updateUIOffsets();
         }
 }
