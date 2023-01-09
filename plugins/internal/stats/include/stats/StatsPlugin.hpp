@@ -26,11 +26,12 @@ class StatsPlugin
         , public rfcommon::Plugin::UIInterface
         , public rfcommon::Plugin::RealtimeInterface
         , public rfcommon::Plugin::ReplayInterface
+        , public rfcommon::Plugin::VisualizerInterface
         , public rfcommon::FrameDataListener
         , public SettingsListener
 {
 public:
-    StatsPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
     ~StatsPlugin();
 
     void resetStatsIfAppropriate(rfcommon::Session* session);
@@ -49,7 +50,7 @@ public:
      */
     void exportOBSStats() const;
 
-    void exportToOtherPlugins() const;
+    void exportToOtherPlugins();
 
     void sendWebSocketStats(bool gameStarted, bool gameEnded) const;
 
@@ -110,6 +111,9 @@ private:
     // These get called whenever a new frame is received (during an active game)
     void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
+
+private:
+    void onVisualizerDataChanged() override {}
 
 private:
     // The export code is implemented in these callbacks

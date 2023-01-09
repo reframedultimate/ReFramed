@@ -19,7 +19,7 @@ static rfcommon::Plugin* createStatsPlugin(
 {
     PROFILE(PluginGlobal, createStatsPlugin);
 
-    return new StatsPlugin(factory, userLabels, hash40Strings);
+    return new StatsPlugin(visCtx, factory, userLabels, hash40Strings);
 }
 
 // Gets called when the main application removes your plugin from its

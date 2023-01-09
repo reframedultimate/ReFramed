@@ -26,7 +26,7 @@ SetFormat::SetFormat(const char* desc)
 // ----------------------------------------------------------------------------
 SetFormat SetFormat::fromDescription(const char* description) { return SetFormat(description); }
 SetFormat SetFormat::fromType(Type type) { return SetFormat(type); }
-SetFormat SetFormat::fromIndex(int index) { return SetFormat(static_cast<Type>(index)); }
+SetFormat SetFormat::fromIndex(int index) { assert(index >= 0 && index <= SetFormat::FREE); return SetFormat(static_cast<Type>(index)); }
 
 // ----------------------------------------------------------------------------
 const char* SetFormat::shortDescription() const

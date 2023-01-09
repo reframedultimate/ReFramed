@@ -14,10 +14,13 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
+#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/VisualizerData.hpp"
 
 // ----------------------------------------------------------------------------
-StatsPlugin::StatsPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+StatsPlugin::StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
     : Plugin(factory)
+    , VisualizerInterface(visCtx, factory)
     , playerMeta_(new PlayerMeta(userLabels, hash40Strings))
     , statsCalculator_(new StatsCalculator)
     , settingsModel_(new SettingsModel(dataDir().absoluteFilePath("settings.json")))
@@ -114,7 +117,7 @@ void StatsPlugin::exportOBSEmptyStats() const
 }
 
 // ----------------------------------------------------------------------------
-void StatsPlugin::exportToOtherPlugins() const
+void StatsPlugin::exportOBSStats() const
 {
     PROFILE(StatsPlugin, exportOBSStats);
 
@@ -130,19 +133,20 @@ void StatsPlugin::exportToOtherPlugins() const
 }
 
 // ----------------------------------------------------------------------------
-void StatsPlugin::exportOBSStats() const
+void StatsPlugin::exportToOtherPlugins()
 {
-    PROFILE(StatsPlugin, exportOBSStats);
+    PROFILE(StatsPlugin, exportToOtherPlugins);
 
-    if (settingsModel_->obsEnabled())
+    rfcommon::VisualizerData data;
+    for (int p = 0; p != playerMeta_->playerCount(); ++p)
     {
-        OBSExporter exporter(playerMeta_.get(), statsCalculator_.get(), settingsModel_.get());
-        exporter.setPlayerTag(0, playerMeta_->name(0));
-        exporter.setPlayerTag(1, playerMeta_->name(1));
-        exporter.setPlayerCharacter(0, playerMeta_->character(0));
-        exporter.setPlayerCharacter(1, playerMeta_->character(1));
-        exporter.exportStatistics();
+        rfcommon::Vector<rfcommon::VisualizerData::TimeInterval> timeIntervals;
+        for (const auto& interval : statsCalculator_->advantageStateTimeIntervals(p))
+            timeIntervals.emplace("String", interval.start, interval.end);
+        auto name = playerMeta_->name(p) + " Strings";
+        data.timeIntervalSets.insertAlways(name.toUtf8().constData(), std::move(timeIntervals));
     }
+    setVisualizerData(std::move(data));
 }
 
 // ----------------------------------------------------------------------------
@@ -344,6 +348,7 @@ void StatsPlugin::onSettingsStatsChanged()
     {
         exportOBSStats();
         sendWebSocketStats(false, false);
+        exportToOtherPlugins();
     }
     else
         exportOBSEmptyStats();

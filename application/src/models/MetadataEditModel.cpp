@@ -28,10 +28,10 @@ void MetadataEditModel::setAndAdopt(MappingInfoList&& map, MetadataList&& mdata)
 
     map_ = map;
     mdata_ = mdata;
+    dispatcher.dispatch(&MetadataEditListener::onAdoptMetadata, map, mdata);
+
     for (auto& m : mdata_)
         m->dispatcher.addListener(this);
-
-    dispatcher.dispatch(&MetadataEditListener::onAdoptMetadata, map, mdata);
 }
 
 // ----------------------------------------------------------------------------
@@ -43,10 +43,10 @@ void MetadataEditModel::setAndOverwrite(MappingInfoList&& map, MetadataList&& md
 
     map_ = map;
     mdata_ = mdata;
+    dispatcher.dispatch(&MetadataEditListener::onOverwriteMetadata, map, mdata);
+
     for (auto& m : mdata_)
         m->dispatcher.addListener(this);
-
-    dispatcher.dispatch(&MetadataEditListener::onOverwriteMetadata, map, mdata);
 }
 
 // ----------------------------------------------------------------------------

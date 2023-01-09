@@ -3,6 +3,7 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/FighterMotion.hpp"
 #include "rfcommon/FighterStatus.hpp"
+#include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/Vector.hpp"
 
 namespace rfcommon {
@@ -18,6 +19,12 @@ class StatsCalculator
 {
 public:
     static const int MAX_FIGHTERS = 2;
+
+    struct TimeInterval
+    {
+        rfcommon::FrameIndex start = rfcommon::FrameIndex::fromValue(0);
+        rfcommon::FrameIndex end = rfcommon::FrameIndex::fromValue(0);
+    };
 
     StatsCalculator();
 
@@ -77,6 +84,9 @@ public:
     rfcommon::FighterMotion mostCommonNeutralOpeningMove(int fighterIdx) const;
     rfcommon::FighterMotion mostCommonKillMove(int fighterIdx) const;
     rfcommon::FighterMotion mostCommonNeutralOpenerIntoKillMove(int fighterIdx) const;
+
+    rfcommon::Vector<TimeInterval> advantageStateTimeIntervals(int fighterIdx) const;
+    rfcommon::Vector<TimeInterval> ledgeTimeIntervals(int fighterIdx) const;
 
     rfcommon::ListenerDispatcher<StatsCalculatorListener> dispatcher;
 
@@ -146,6 +156,7 @@ private:
 
         struct String {
             rfcommon::Vector<rfcommon::FighterMotion> moves;  // List of all moves in the string/combo
+            TimeInterval timeInterval;   // Start and end frame of the string
             double damageAtStart = 0.0;  // Damage before the first hit connected
             double damageAtEnd = 0.0;    // Damage after the last hit connected
             bool killed = false;  // Whether the string/combo killed
@@ -155,5 +166,6 @@ private:
 
         double oldDamage_[MAX_FIGHTERS];
         int beingCombodByIdx_[MAX_FIGHTERS];  // Stores the index of the fighter that's doing the combo on me
+        int hitstunCounter_[MAX_FIGHTERS];    // We use some leniency between hits. This is used to find the end of the string.
     } stringFinder;
 };

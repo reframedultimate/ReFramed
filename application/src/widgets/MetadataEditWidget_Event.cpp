@@ -143,7 +143,6 @@ void MetadataEditWidget_Event::onAdoptMetadata(const MappingInfoList& map, const
                     otherName = QString::fromUtf8(g->bracketType().description());
 
                     updateUIVisibility(g->bracketType());
-                    model_->dispatcher.dispatch(&MetadataEditListener::onBracketTypeChangedUI, g->bracketType());
                 }
                 else
                 {

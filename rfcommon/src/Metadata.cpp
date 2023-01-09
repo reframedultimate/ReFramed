@@ -422,15 +422,15 @@ static Metadata* load_1_7(json& j)
 {
     PROFILE(MetadataGlobal, load_1_7);
 
-    json jType = j["type"];
-    json jPlayerInfo = j["playerinfo"];
-    json jGameInfo = j["gameinfo"];
+    json& jType = j["type"];
+    json& jPlayerInfo = j["playerinfo"];
+    json& jGameInfo = j["gameinfo"];
 
     const std::string type = jType.is_string() ? jType.get<std::string>() : "";
 
-    json jTimeStarted = jGameInfo["timestampstart"];
-    json jTimeEnded = jGameInfo["timestampend"];
-    json jStageID = jGameInfo["stageid"];
+    json& jTimeStarted = jGameInfo["timestampstart"];
+    json& jTimeEnded = jGameInfo["timestampend"];
+    json& jStageID = jGameInfo["stageid"];
     const auto timeStarted = jTimeStarted.is_number_integer() ?
         TimeStamp::fromMillisSinceEpoch(jTimeStarted.get<TimeStamp::Type>()) : TimeStamp::makeInvalid();
     const auto timeEnded = jTimeEnded.is_number_integer() ?
@@ -444,9 +444,9 @@ static Metadata* load_1_7(json& j)
     int fighterCount = 0;
     for (auto& info : jPlayerInfo)
     {
-        json jTag = info["tag"];
-        json jFighterID = info["fighterid"];
-        json jCostume = info["costume"];
+        json& jTag = info["tag"];
+        json& jFighterID = info["fighterid"];
+        json& jCostume = info["costume"];
 
         fighterIDs.push(jFighterID.is_number_integer() ?
             FighterID::fromValue(jFighterID.get<FighterID::Type>()) : FighterID::makeInvalid());
@@ -460,7 +460,7 @@ static Metadata* load_1_7(json& j)
 
     if (type == "game")
     {
-        json jWinner = jGameInfo["winner"];
+        json& jWinner = jGameInfo["winner"];
         int winner = jWinner.is_number_unsigned() ?
                     jWinner.get<int>() : 0;
         if (winner < 0 || winner > fighterCount)
@@ -475,21 +475,21 @@ static Metadata* load_1_7(json& j)
             std::move(tags),
             winner)->asGame();
 
-        json jTournament = j["tournament"];
+        json& jTournament = j["tournament"];
 
-        json jTournamentName = jTournament["name"];
+        json& jTournamentName = jTournament["name"];
         if (jTournamentName.is_string())
             g->setTournamentName(jTournamentName.get<std::string>().c_str());
 
-        json jTournamentWebsite = jTournament["website"];
+        json& jTournamentWebsite = jTournament["website"];
         if (jTournamentWebsite.is_string())
             g->setTournamentWebsite(jTournamentWebsite.get<std::string>().c_str());
 
         for (auto& jOrganizer : jTournament["organizers"])
         {
-            json jName = jOrganizer["name"];
-            json jSocial = jOrganizer["social"];
-            json jPronouns = jOrganizer["pronouns"];
+            json& jName = jOrganizer["name"];
+            json& jSocial = jOrganizer["social"];
+            json& jPronouns = jOrganizer["pronouns"];
 
             const auto name = jName.is_string() ? jName.get<std::string>() : "";
             const auto social = jSocial.is_string() ? jSocial.get<std::string>() : "";
@@ -500,8 +500,8 @@ static Metadata* load_1_7(json& j)
 
         for (auto& jSponsor : jTournament["sponsors"])
         {
-            json jName = jSponsor["name"];
-            json jWebsite = jSponsor["website"];
+            json& jName = jSponsor["name"];
+            json& jWebsite = jSponsor["website"];
 
             const auto name = jName.is_string() ? jName.get<std::string>() : "";
             const auto website = jWebsite.is_string() ? jWebsite.get<std::string>() : "";
@@ -511,9 +511,9 @@ static Metadata* load_1_7(json& j)
 
         for (auto& jCommentator : j["commentators"])
         {
-            json jName = jCommentator["name"];
-            json jSocial = jCommentator["social"];
-            json jPronouns = jCommentator["pronouns"];
+            json& jName = jCommentator["name"];
+            json& jSocial = jCommentator["social"];
+            json& jPronouns = jCommentator["pronouns"];
 
             const auto name = jName.is_string() ? jName.get<std::string>() : "";
             const auto social = jSocial.is_string() ? jSocial.get<std::string>() : "";
@@ -522,9 +522,9 @@ static Metadata* load_1_7(json& j)
             g->addCommentator(name.c_str(), social.c_str(), pronouns.c_str());
         }
 
-        json jEvent = j["event"];
+        json& jEvent = j["event"];
 
-        json jBracketType = jEvent["type"];
+        json& jBracketType = jEvent["type"];
         const auto bracketType = jBracketType.is_string() ?
             BracketType::fromDescription(jBracketType.get<std::string>().c_str()) :
             BracketType::fromType(BracketType::FRIENDLIES);
@@ -535,7 +535,7 @@ static Metadata* load_1_7(json& j)
             case BracketType::DOUBLES:
             case BracketType::AMATEURS:
             case BracketType::SIDE: {
-                json jBracketURL = jEvent["url"];
+                json& jBracketURL = jEvent["url"];
                 if (jBracketURL.is_string())
                     g->setBracketURL(jBracketURL.get<std::string>().c_str());
             } break;
@@ -547,44 +547,46 @@ static Metadata* load_1_7(json& j)
                 break;
         }
 
-        json jRound = jGameInfo["round"];
+        json& jRound = jGameInfo["round"];
         const auto round = jRound.is_string() ?
             Round::fromDescription(jRound.get<std::string>().c_str()) :
             Round::makeFree();
         g->setRound(round);
 
-        json jFormat = jGameInfo["format"];
+        json& jFormat = jGameInfo["format"];
         const auto format = jFormat.is_string() ?
             SetFormat::fromDescription(jFormat.get<std::string>().c_str()) :
             SetFormat::fromType(SetFormat::FREE);
         g->setSetFormat(format);
 
-        json jScore1 = jGameInfo["score1"];
-        json jScore2 = jGameInfo["score2"];
-        const auto score = jScore1.is_number_unsigned() && jScore2.is_number_unsigned() ?
+        json& jScore1 = jGameInfo["score1"];
+        json& jScore2 = jGameInfo["score2"];
+        json& jGameNumber = jGameInfo["game"];
+        const auto score = jScore1.is_number_unsigned() && jScore2.is_number_unsigned() ? jGameNumber.is_number_unsigned() ?
+            ScoreCount::fromScoreAndGameNumber(jScore1.get<int>(), jScore2.get<int>(), GameNumber::fromValue(jGameNumber.get<int>())) :
             ScoreCount::fromScore(jScore1.get<int>(), jScore2.get<int>()) :
             ScoreCount::fromGameNumber(GameNumber::fromValue(1));
         g->setScore(score);
 
         for (int i = 0; i != jPlayerInfo.size(); ++i)
         {
-            json jName = jPlayerInfo[i]["name"];
+            json& jName = jPlayerInfo[i]["name"];
             if (jName.is_string())
                 g->setPlayerName(i, jName.get<std::string>().c_str());
 
-            json jSponsor = jPlayerInfo[i]["sponsor"];
+            json& jSponsor = jPlayerInfo[i]["sponsor"];
             if (jSponsor.is_string())
                 g->setPlayerSponsor(i, jSponsor.get<std::string>().c_str());
 
-            json jSocial = jPlayerInfo[i]["social"];
+            json& jSocial = jPlayerInfo[i]["social"];
             if (jSocial.is_string())
                 g->setPlayerSocial(i, jSocial.get<std::string>().c_str());
 
-            json jPronouns = jPlayerInfo[i]["pronouns"];
+            json& jPronouns = jPlayerInfo[i]["pronouns"];
             if (jPronouns.is_string())
                 g->setPlayerPronouns(i, jPronouns.get<std::string>().c_str());
 
-            json jLoserSide = jPlayerInfo[i]["loserside"];
+            json& jLoserSide = jPlayerInfo[i]["loserside"];
             if (jLoserSide.is_boolean())
                 g->setPlayerIsLoserSide(i, jLoserSide.get<bool>());
         }
@@ -601,7 +603,7 @@ static Metadata* load_1_7(json& j)
             std::move(costumes),
             std::move(tags))->asTraining();
 
-        json jNumber = jGameInfo["number"];
+        json& jNumber = jGameInfo["number"];
         if (jNumber.is_number_integer())
             t->setSessionNumber(SessionNumber::fromValue(jNumber.get<SessionNumber::Type>()));
 
@@ -654,6 +656,7 @@ uint32_t Metadata::save(FILE* fp) const
             jGameInfo["format"] = mdata->setFormat().shortDescription();
             jGameInfo["score1"] = mdata->score().left();
             jGameInfo["score2"] = mdata->score().right();
+            jGameInfo["game"] = mdata->score().gameNumber().value();
             jGameInfo["winner"] = mdata->winner();
         } break;
 

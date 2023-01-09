@@ -79,7 +79,13 @@ void MetadataEditWidget_Game::onDateTimeStartedChanged(const QDateTime& dateTime
 
     ignoreSelf_ = true;
     for (auto& mdata : model_->metadata())
+    {
+        QDateTime ended = dateTime.addMSecs(mdata->length().millis());
         mdata->setTimeStarted(rfcommon::TimeStamp::fromMillisSinceEpoch(dateTime.toMSecsSinceEpoch()));
+        mdata->setTimeEnded(rfcommon::TimeStamp::fromMillisSinceEpoch(ended.toMSecsSinceEpoch()));
+
+        ui_->dateTimeEdit_ended->setDateTime(ended);
+    }
     ignoreSelf_ = false;
 }
 
@@ -490,7 +496,8 @@ void MetadataEditWidget_Game::updateRoundTypeUI(int roundTypeIndex)
     enableRoundCounter(
             roundTypeIndex == rfcommon::Round::WINNERS_ROUND ||
             roundTypeIndex == rfcommon::Round::LOSERS_ROUND ||
-            roundTypeIndex == rfcommon::Round::POOLS);
+            roundTypeIndex == rfcommon::Round::POOLS ||
+            roundTypeIndex == rfcommon::Round::FREE);
 
     updateSize();
 }
@@ -530,7 +537,7 @@ void MetadataEditWidget_Game::enableFreePlayOption(bool enable)
 #define X(name, shortstr, longstr) if (rfcommon::SetFormat::name != rfcommon::SetFormat::FREE) cb->addItem(longstr);
         SET_FORMAT_LIST
 #undef X
-        cb->setCurrentIndex(saveIdx);
+        cb->setCurrentIndex(saveIdx == rfcommon::SetFormat::FREE ? 0 : saveIdx);
     }
 }
 
@@ -591,6 +598,8 @@ void MetadataEditWidget_Game::onAdoptMetadata(const MappingInfoList& map, const 
                             pronouns += QString::fromUtf8(g->playerPronouns(p).cStr());
                         }
                     }
+
+                    onBracketTypeChangedUI(g->bracketType());
                 }
                 else
                 {
@@ -788,7 +797,7 @@ void MetadataEditWidget_Game::onOverwriteMetadata(const MappingInfoList& map, co
                         ui_->comboBox_roundType->currentIndex(),
                         rfcommon::SessionNumber::fromValue(ui_->spinBox_roundNumber->value())));
                 g->setSetFormat(rfcommon::SetFormat::fromIndex(
-                        ui_->comboBox_setFormat->currentIndex()));
+                        ui_->comboBox_setFormat->currentIndex() >= 0 ? ui_->comboBox_setFormat->currentIndex() : 0));
 
                 if (mdata[i]->fighterCount() == 2)  // 1v1
                 {
@@ -1063,14 +1072,17 @@ void MetadataEditWidget_Game::onBracketTypeChangedUI(rfcommon::BracketType brack
         case rfcommon::BracketType::AMATEURS:
             enableFreePlayOption(false);
             enableRoundTypeSelection(true);
-            enableGrandFinalOptions(ui_->comboBox_roundType->currentIndex() == rfcommon::Round::GRAND_FINALS);
-            enableRoundCounter(
-                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::WINNERS_ROUND ||
-                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::LOSERS_ROUND ||
-                        ui_->comboBox_roundType->currentIndex() == rfcommon::Round::POOLS);
+            ui_->comboBox_roundType->setCurrentIndex(rfcommon::Round::WINNERS_ROUND);
+            updateRoundTypeUI(rfcommon::Round::WINNERS_ROUND);
             break;
 
         case rfcommon::BracketType::MONEYMATCH:
+            enableFreePlayOption(false);
+            enableRoundTypeSelection(false);
+            enableGrandFinalOptions(false);
+            enableRoundCounter(true);
+            break;
+
         case rfcommon::BracketType::PRACTICE:
         case rfcommon::BracketType::FRIENDLIES:
         case rfcommon::BracketType::OTHER:

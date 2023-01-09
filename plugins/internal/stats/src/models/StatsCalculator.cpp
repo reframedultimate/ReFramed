@@ -20,6 +20,9 @@ static const auto FIGHTER_STATUS_KIND_DASH = rfcommon::FighterStatus::fromValue(
 static const auto FIGHTER_STATUS_KIND_REBIRTH = rfcommon::FighterStatus::fromValue(182);
 static const auto FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY = rfcommon::FighterStatus::fromValue(92);
 static const auto FIGHTER_STATUS_KIND_DEAD = rfcommon::FighterStatus::fromValue(181);
+static const auto FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WAIT = rfcommon::FighterStatus::fromValue(494);
+static const auto FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WALK = rfcommon::FighterStatus::fromValue(495);
+static const auto FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WALK_BACK = rfcommon::FighterStatus::fromValue(496);
 
 // ----------------------------------------------------------------------------
 static bool isTouchingGround(const rfcommon::FighterState& state)
@@ -37,9 +40,22 @@ static bool isTouchingGround(const rfcommon::FighterState& state)
         FIGHTER_STATUS_KIND_DASH
     };
 
-    for (int i = 0; i != sizeof(landStates) / sizeof(*landStates); ++i)
-        if (state.status() == landStates[i])
+    for (const auto landState : landStates)
+        if (state.status() == landState)
             return true;
+
+    // Steve
+    /*
+    if (fighter == rfcommon::FighterID::fromValue(88))
+    {
+        for (const auto landState : {
+                FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WAIT,
+                FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WALK,
+                FIGHTER_PICKEL_STATUS_KIND_SPECIAL_N1_WALK_BACK
+            })
+            if (state.status() == landState)
+                return true;
+    }*/
 
     return false;
 }
@@ -136,7 +152,7 @@ void StatsCalculator::Helpers::update(const rfcommon::Frame<4>& frame)
         if (frame[i].hitstun() > 0.0 || frame[i].status() == FIGHTER_STATUS_KIND_SHIELD_BREAK_FLY)
         {
             isInNeutralState[i] = 0;
-            neutralStateResetCounter_[i] = 45;  // Some arbitrary value to make sure we don't reset
+            neutralStateResetCounter_[i] = 30;  // Some arbitrary value to make sure we don't reset
                                                 // back to neutral state too early
         }
 
@@ -303,6 +319,7 @@ void StatsCalculator::StringFinder::reset()
     {
         strings[i].clearCompact();
         beingCombodByIdx_[i] = -1;
+        hitstunCounter_[i] = 0;
     }
 }
 void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommon::Frame<4>& frame)
@@ -312,35 +329,42 @@ void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommo
     // getting combo'd is "them"
     for (int them = 0; them != frame.count(); ++them)
     {
-        if (helpers.isInNeutralState[them] == 0)
+        // This is the first time they got hit in neutral. We set up some counters so we can
+        // follow the string and see how much damage it does/whether it kills
+        if (hitstunCounter_[them] == 0 && frame[them].hitstun() > 0.0)
         {
-            // This is the first time they got hit in neutral. We set up some counters so we can
-            // follow the string and see how much damage it does/whether it kills
-            if (helpers.wasInNeutralState[them])
-            {
-                // Figure out which player started the combo.
-                // XXX: Currently we only support 1v1
-                if (frame.count() != 2)
-                    return;
-                int me = beingCombodByIdx_[them] = 1 - them;  // Simply the other player
+            // Figure out which player started the combo.
+            // XXX: Currently we only support 1v1
+            if (frame.count() != 2)
+                return;
+            int me = beingCombodByIdx_[them] = 1 - them;  // Simply the other player
 
-                strings[me].emplace();
+            // We use hitstun and a counter to detect when the string is over
+            hitstunCounter_[them] = 45;  // Some arbitrary value, might need tweeking
 
-                // Store the opening move that started the combo
+            strings[me].emplace();
+
+            // Store the opening move that started the combo
+            strings[me].back().moves.push(frame[me].motion());
+            strings[me].back().damageAtStart = oldDamage_[them];  // Store damage before the hit
+            strings[me].back().damageAtEnd = frame[them].damage();
+            strings[me].back().timeInterval.start = frame[me].frameIndex();
+            strings[me].back().timeInterval.end = frame[me].frameIndex();
+        }
+        // The string is being continued
+        else if (beingCombodByIdx_[them] >= 0)
+        {
+            int me = beingCombodByIdx_[them];
+
+            // We use hitstun and a counter to detect when the string is over
+            if (frame[them].hitstun() > 0.0)
+                hitstunCounter_[them] = 60;  // Some arbitrary value, might need tweeking
+
+            // Add move to list if it is different
+            if (strings[me].back().moves.back() != frame[me].motion())
                 strings[me].back().moves.push(frame[me].motion());
-                strings[me].back().damageAtStart = oldDamage_[them];  // Store damage before the hit
-                strings[me].back().damageAtEnd = frame[them].damage();
-            }
-            // The string is being continued
-            else if (beingCombodByIdx_[them] >= 0)
-            {
-                int me = beingCombodByIdx_[them];
-
-                // Add move to list if it is different
-                if (strings[me].back().moves.back() != frame[me].motion())
-                    strings[me].back().moves.push(frame[me].motion());
-                strings[me].back().damageAtEnd = frame[them].damage();
-            }
+            strings[me].back().damageAtEnd = frame[them].damage();
+            strings[me].back().timeInterval.end = frame[me].frameIndex();
         }
     }
 
@@ -353,10 +377,19 @@ void StatsCalculator::StringFinder::update(const Helpers& helpers, const rfcommo
             beingCombodByIdx_[i] = -1;
         }
 
-    // If player players returns to neutral state, end the string
+    // If player returns to neutral state, end the string
     for (int i = 0; i != frame.count(); ++i)
         if (helpers.isInNeutralState[i])
             beingCombodByIdx_[i] = -1;
+
+    // If hitstun counter expires, end the string
+    for (int i = 0; i != frame.count(); ++i)
+        if (frame[i].hitstun() == 0.0 && hitstunCounter_[i] > 0)
+        {
+            hitstunCounter_[i]--;
+            if (hitstunCounter_[i] == 0)
+                beingCombodByIdx_[i] = -1;
+        }
 
     // Have to update old vars
     for (int i = 0; i != frame.count(); ++i)
@@ -710,4 +743,20 @@ rfcommon::FighterMotion StatsCalculator::mostCommonNeutralOpenerIntoKillMove(int
         }
 
     return mostUsed;
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::Vector<StatsCalculator::TimeInterval> StatsCalculator::advantageStateTimeIntervals(int fighterIdx) const
+{
+    rfcommon::Vector<TimeInterval> intervals;
+    for (const auto& string : stringFinder.strings[fighterIdx])
+        intervals.push(string.timeInterval);
+    return intervals;
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::Vector<StatsCalculator::TimeInterval> StatsCalculator::ledgeTimeIntervals(int fighterIdx) const
+{
+    rfcommon::Vector<TimeInterval> intervals;
+    return intervals;
 }

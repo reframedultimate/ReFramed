@@ -34,7 +34,8 @@ ProtocolTask::~ProtocolTask()
         if (tcpSocketHandle_)
         {
             tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
-            tcp_socket_shutdown(&socket);
+            tcp_socket_close(&socket);  // XXX used to be shutdown(), but on Windows, recv() takes 30 seconds before it returns, even after shutdown. close() causes it to return immediately.
+                                        //     This does mean we are calling close() twice on the same socket fd but the OS can handle that, so whatever
         }
 
         requestShutdown_ = true;

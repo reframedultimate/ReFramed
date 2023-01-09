@@ -26,6 +26,6 @@ private:
     };
 
     QVector<Interval> intervals_;
-    QColor color_ = QColor(Qt::blue);
+    QColor color_ = QColor(50, 128, 255);
     int start_ = 0, end_ = 100;
 };
