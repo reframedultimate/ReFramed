@@ -50,6 +50,8 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
     QShortcut* togglePlayShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
     QShortcut* nextFrameShortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
     QShortcut* prevFrameShortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    QShortcut* nextNFramesShortcut = new QShortcut(QKeySequence("Ctrl+Right"), this);
+    QShortcut* prevNFramesShortcut = new QShortcut(QKeySequence("Ctrl+Left"), this);
 
     /*QwtScaleWidget* scaleWidget = new QwtScaleWidget(QwtScaleDraw::BottomScale);
     ui_->horizontalLayout->addWidget(scaleWidget);*/
@@ -62,12 +64,14 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
     videoPlayer_->dispatcher.addListener(this);
 
     connect(ui_->pushButton_playPause, &QPushButton::released, this, &VODReviewView::onPlayPauseReleased);
-    connect(ui_->pushButton_stepForwards, &QPushButton::released, this, &VODReviewView::onStepForwardsReleased);
-    connect(ui_->pushButton_stepBackwards, &QPushButton::released, this, &VODReviewView::onStepBackwardsReleased);
+    connect(ui_->pushButton_stepForwards, &QPushButton::released, [this] { onStepVideo(1); });
+    connect(ui_->pushButton_stepBackwards, &QPushButton::released, [this] { onStepVideo(-1); });
     connect(ui_->slider_videoPos, &QSlider::valueChanged, this, &VODReviewView::onSliderValueChanged);
     connect(togglePlayShortcut, &QShortcut::activated, this, &VODReviewView::onPlayPauseReleased);
-    connect(nextFrameShortcut, &QShortcut::activated, this, &VODReviewView::onStepForwardsReleased);
-    connect(prevFrameShortcut, &QShortcut::activated, this, &VODReviewView::onStepBackwardsReleased);
+    connect(nextFrameShortcut, &QShortcut::activated, [this] { onStepVideo(1); });
+    connect(prevFrameShortcut, &QShortcut::activated, [this] { onStepVideo(-1); });
+    connect(nextNFramesShortcut, &QShortcut::activated, this, [this] { onStepVideo(20); });
+    connect(prevNFramesShortcut, &QShortcut::activated, this, [this] { onStepVideo(-20); });
     connect(&updateUITimer_, &QTimer::timeout, this, &VODReviewView::onUpdateUI);
 }
 
@@ -100,7 +104,7 @@ void VODReviewView::onPlayPauseReleased()
 }
 
 // ----------------------------------------------------------------------------
-void VODReviewView::onStepForwardsReleased()
+void VODReviewView::onStepVideo(int frames)
 {
     PROFILE(VODReviewView, onStepForwardsReleased);
 
@@ -109,21 +113,7 @@ void VODReviewView::onStepForwardsReleased()
 
     updateUITimer_.stop();
     videoPlayer_->pauseVideo();
-    videoPlayer_->stepVideo(1);
-    onUpdateUI();
-}
-
-// ----------------------------------------------------------------------------
-void VODReviewView::onStepBackwardsReleased()
-{
-    PROFILE(VODReviewView, onStepBackwardsReleased);
-
-    if (videoPlayer_->isVideoOpen() == false)
-        return;
-
-    updateUITimer_.stop();
-    videoPlayer_->pauseVideo();
-    videoPlayer_->stepVideo(-1);
+    videoPlayer_->stepVideo(frames);
     onUpdateUI();
 }
 

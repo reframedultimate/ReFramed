@@ -27,8 +27,7 @@ public:
 
 private slots:
     void onPlayPauseReleased();
-    void onStepForwardsReleased();
-    void onStepBackwardsReleased();
+    void onStepVideo(int frames);
     void onSliderValueChanged(int value);
     void onUpdateUI();
 
