@@ -1,0 +1,36 @@
+Enhancements
+- Dark mode and light mode can be set in the Tools menu
+- New icons
+- New replay list with character icons and metadata
+- Tools -> Path Manager lets you search for replay files and search for missing videos
+- Search now works in replay list
+- Docking system for plugins
+- Tabs instead of tree view on left side of app
+- Side pane can be completely hidden by clicking on tabs on the very left
+- New Metadata
+  + Added fields for tournament name and website
+  + Added fields for TOs and Sponsors
+  + Added fields for commentators
+  + Added socials and pronouns for players, commentators and TOs
+  + Added fields for bracket type, round, score, and socials
+  + Added field for skin slot
+- New metadata editor
+- Videos can be automatically detected and associated with replays if you record both at the same time
+- Player tags are automatically read from the game and used to load player details
+- Plugins can export timestamps for other plugins to process
+- VOD review plugin shows timestamps from other plugins and has controls to jump between them
+- Added keyboard shortcuts
+- Improved statistics plugin string finder to be more accurate
+- ReFramed-server
+  + Read player tags and skin slot
+  + Added more stage names (but still not all)
+  
+Bugfixes
+  + App no longer freezes when disconnecting
+  + Fixed HashMap::rehash() bug -> Kazuya and Sora correctly appear now
+  + Fixed issue where progress dialog wouldn't appear
+
+Known Bugs
+- Video player is very slow when seeking backwards
+- Occasional crash when the first replay of the day is saved. Not sure what the cause is yet.
+- Slow startup times when you have a lot of replays

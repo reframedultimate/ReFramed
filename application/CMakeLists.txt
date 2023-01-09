@@ -128,7 +128,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     set (APPLICATION_WIN32_EXE "")
 endif ()
 
-add_executable (application #${APPLICATION_WIN32_EXE}
+add_executable (application ${APPLICATION_WIN32_EXE}
     ${APPLICATION_SOURCES}
     ${APPLICATION_SOURCES_MOC}
     ${APPLICATION_HEADERS}
