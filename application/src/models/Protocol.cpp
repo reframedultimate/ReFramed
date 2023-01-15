@@ -188,8 +188,14 @@ void Protocol::onTrainingStartedProxy(rfcommon::Metadata* trainingMeta)
         trainingEndedProxyWasCalled_ = false;
         if (activeSession_.notNull())
         {
+            // We create a new session object to hold the data of the data after reset
             rfcommon::Reference<rfcommon::Session> oldSession = activeSession_;
             activeSession_ = rfcommon::Session::newActiveSession(globalMappingInfo_, trainingMeta);
+
+            // Reset state buffer
+            stateBuffer_.clearCompact();
+            stateBuffer_.resize(trainingMeta->fighterCount());
+
             dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolTrainingReset, oldSession, activeSession_);
         }
         else
@@ -355,6 +361,21 @@ void Protocol::onFighterState(
             rfcommon::FighterStocks::fromValue(stocks),
             rfcommon::FighterFlags::fromFlags(attackConnected, facingDirection, opponentInHitlag));
 
+    // In training mode, when a reset occurs, we recieve a single state from the
+    // CPU before receiving the next matching pair of states from player + CPU.
+    // It seems that deleting this state is the only way to sync up the states
+    // in training mode
+    assert(activeSession_->tryGetMetadata() != nullptr);
+    if (activeSession_->tryGetMetadata()->type() == rfcommon::Metadata::TRAINING)
+    {
+        if (stateBuffer_[0].count() == 0)
+        {
+            for (int i = 1; i < stateBuffer_.count(); ++i)
+                stateBuffer_[i].clear();
+            return;
+        }
+    }
+
     const auto haveAtLeast = [this](int value) -> bool
     {
         for (const auto& states : stateBuffer_)
@@ -371,6 +392,7 @@ void Protocol::onFighterState(
         return true;
     };
 
+    // Wait until we have collected at least 1 state from all players
     if (haveAtLeast(1) == false)
         return;
 
@@ -413,6 +435,9 @@ void Protocol::onFighterState(
     // make this decision.
     if (haveAtLeast(2) && stateBuffer_[0][0].framesLeft().count() != 0)
     {
+        assert(activeSession_->tryGetMetadata() != nullptr);
+        assert(activeSession_->tryGetMetadata()->type() == rfcommon::Metadata::GAME);
+
         const auto findHighestFramesLeftValue = [this]() -> rfcommon::FramesLeft::Type
         {
             rfcommon::FramesLeft::Type framesLeft = stateBuffer_[0][0].framesLeft().count();

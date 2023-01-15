@@ -34,8 +34,11 @@ ProtocolTask::~ProtocolTask()
         if (tcpSocketHandle_)
         {
             tcp_socket socket = tcp_socket_from_handle(tcpSocketHandle_);
-            tcp_socket_close(&socket);  // XXX used to be shutdown(), but on Windows, recv() takes 30 seconds before it returns, even after shutdown. close() causes it to return immediately.
+            tcp_socket_shutdown(&socket);
+#if defined(RFCOMMON_PLATFORM_WINDOWS)
+            tcp_socket_close(&socket);  // XXX On Windows, recv() takes 30 seconds before it returns, even after shutdown. close() causes it to return immediately.
                                         //     This does mean we are calling close() twice on the same socket fd but the OS can handle that, so whatever
+#endif
         }
 
         requestShutdown_ = true;
@@ -541,10 +544,10 @@ void ProtocolTask::handleProtocol()
             case FighterState: {
                 uint8_t buf[29];
                 log_->beginDropdown("Fighter State");
-#define frame0 buf[0]
-#define frame1 buf[1]
-#define frame2 buf[2]
-#define frame3 buf[3]
+#define framesLeft0 buf[0]
+#define framesLeft1 buf[1]
+#define framesLeft2 buf[2]
+#define framesLeft3 buf[3]
 #define slotIdx buf[4]
 #define posx0 buf[5]
 #define posx1 buf[6]
@@ -596,10 +599,10 @@ void ProtocolTask::handleProtocol()
                 if (tcp_socket_read_exact(&socket, buf, sizeof(buf)) != sizeof(buf))
                     break;
 
-                quint32 frame = (frame0 << 24)
-                            | (frame1 << 16)
-                            | (frame2 << 8)
-                            | (frame3 << 0);
+                quint32 framesLeft = (framesLeft0 << 24)
+                                   | (framesLeft1 << 16)
+                                   | (framesLeft2 << 8)
+                                   | (framesLeft3 << 0);
                 quint32 posx_le = ((quint32)posx0 << 24)
                                 | ((quint32)posx1 << 16)
                                 | ((quint32)posx2 << 8)
@@ -633,7 +636,7 @@ void ProtocolTask::handleProtocol()
                     {
                         emit fighterState(
                                     frameTimeStamp,
-                                    frame,
+                                    framesLeft,
                                     i,
                                     posx, posy,
                                     damage,

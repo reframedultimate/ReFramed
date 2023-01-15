@@ -20,7 +20,7 @@
 // ----------------------------------------------------------------------------
 StatsPlugin::StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
     : Plugin(factory)
-    , VisualizerInterface(visCtx, factory)
+    , Plugin::VisualizerInterface(visCtx, factory)
     , playerMeta_(new PlayerMeta(userLabels, hash40Strings))
     , statsCalculator_(new StatsCalculator)
     , settingsModel_(new SettingsModel(dataDir().absoluteFilePath("settings.json")))

@@ -56,7 +56,7 @@ signals:
     void gameEnded();
     void fighterState(
             quint64 frameTimeStamp,
-            quint32 frame,
+            quint32 framesLeft,
             quint8 playerIdx,
             float posx,
             float posy,
