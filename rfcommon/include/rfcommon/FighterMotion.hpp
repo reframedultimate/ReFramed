@@ -10,6 +10,7 @@ class RFCOMMON_PUBLIC_API FighterMotion
 public:
     typedef uint64_t Type;
 
+    static FighterMotion fromHexString(const char* hex);
     static FighterMotion fromValue(Type value);
     static FighterMotion fromParts(uint8_t upper, uint32_t lower);
     static FighterMotion makeInvalid();

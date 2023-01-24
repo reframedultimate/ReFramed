@@ -250,7 +250,7 @@ void UserMotionLabels::removeLayer(int layerIdx)
 
     // Have to remove all entries in the hashmaps before removing the layer
     for (auto& fighter : fighters_)
-        for (const auto motion : fighter.motions)
+        for (const auto& motion : fighter.motions)
         {
             // This must exist or something is wrong
             auto motionIt = fighter.motionMap.find(motion);
@@ -297,10 +297,10 @@ bool UserMotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motio
 
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::addEntry(
-        FighterID fighterID, 
+        FighterID fighterID,
         int layerIdx,
-        FighterMotion motion, 
-        const char* userLabel, 
+        FighterMotion motion,
+        const char* userLabel,
         UserMotionLabelsCategory category)
 {
     PROFILE(UserMotionLabels, addEntry);
@@ -363,9 +363,9 @@ bool UserMotionLabels::addEntry(
 
 // ----------------------------------------------------------------------------
 bool UserMotionLabels::changeUserLabel(
-        FighterID fighterID, 
-        int layerIdx, 
-        FighterMotion motion, 
+        FighterID fighterID,
+        int layerIdx,
+        FighterMotion motion,
         const char* newUserLabel)
 {
     PROFILE(UserMotionLabels, changeUserLabel);
@@ -456,8 +456,8 @@ SmallVector<FighterMotion, 4> UserMotionLabels::toMotion(FighterID fighterID, co
 
     // A user label can map to multiple motion values. Additionally, there
     // can be multiple layers of user labels. What makes the most sense is
-    // to prioritize layers with higher indices (layers that were added later), 
-    // and only if we don't find anything in those layers, we search in the next 
+    // to prioritize layers with higher indices (layers that were added later),
+    // and only if we don't find anything in those layers, we search in the next
     // layer down for a match.
     SmallVector<FighterMotion, 4> motions;
 
@@ -487,7 +487,7 @@ const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterM
 const char* UserMotionLabels::toStringHighestLayer(FighterID fighterID, FighterMotion motion, const char* fallback) const
 {
     PROFILE(UserMotionLabels, toStringHighestLayer);
-    
+
     if (motion.isValid() == false)
         return fallback;
 

@@ -10,35 +10,6 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-static uint64_t hexStringToValue(const char* hex, int* error)
-{
-    NOPROFILE();
-
-    uint64_t value = 0;
-
-    if (hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X'))
-        hex += 2;
-
-    for (; *hex; ++hex)
-    {
-        value <<= 4;
-        if (*hex >= '0' && *hex <= '9')
-            value |= *hex - '0';
-        else if (*hex >= 'A' && *hex <= 'F')
-            value |= *hex - 'A' + 10;
-        else if (*hex >= 'a' && *hex <= 'f')
-            value |= *hex - 'a' + 10;
-        else
-        {
-            *error = 1;
-            return 0;
-        }
-    }
-
-    return value;
-}
-
-// ----------------------------------------------------------------------------
 Hash40Strings::Hash40Strings()
 {}
 
@@ -77,14 +48,10 @@ Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
             continue;
         }
 
-        int error = 0;
-        const auto motion = FighterMotion::fromValue(hexStringToValue(line, &error));
-        if (motion.value() == 0)
+        const auto motion = FighterMotion::fromHexString(line);
+        if (motion.isValid() == false)
         {
-            if (error)
-                Log::root()->error("Failed to parse \"%s\" into hex value\n", line);
-            else
-                Log::root()->warning("Invalid hex value \"%s\"\n", line);
+            Log::root()->warning("Invalid hex value \"%s\"\n", line);
             continue;
         }
 
