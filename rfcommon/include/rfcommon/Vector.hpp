@@ -187,27 +187,31 @@ public:
         }
         else if (first.capacity_ <= N)
         {
+            // Move elements in small buffer from first into second
             T* firstPtr = first.begin_;
             T* secondPtr = reinterpret_cast<T*>(second.buffer_);
             while (firstPtr != first.end())
             {
-                new (secondPtr) T(std::move(*firstPtr));
+                new (secondPtr++) T(std::move(*firstPtr));
                 firstPtr++->~T();
             }
 
+            // Move heap buffer to first and update begin pointers
             first.begin_ = second.begin_;
             second.begin_ = reinterpret_cast<T*>(second.buffer_);
         }
         else if (second.capacity_ <= N)
         {
+            // Move elements in small buffer from second into first
             T* firstPtr = reinterpret_cast<T*>(first.buffer_);
             T* secondPtr = second.begin_;
             while (secondPtr != second.end())
             {
-                new (firstPtr) T(std::move(*secondPtr));
+                new (firstPtr++) T(std::move(*secondPtr));
                 secondPtr++->~T();
             }
 
+            // Move heap buffer to second and update begin pointers
             second.begin_ = first.begin_;
             first.begin_ = reinterpret_cast<T*>(first.buffer_);
         }
