@@ -17,6 +17,8 @@
 
 #include <qwt_scale_widget.h>
 
+// Makes it possible to click on the slider at any position and the slider
+// will jump to that position
 class SliderJumpDirectStyle : public QProxyStyle
 {
 public:
@@ -40,8 +42,11 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
     , videoPlayer_(videoPlayer)
 {
     ui_->setupUi(this);
-    ui_->layout_videoSurface->addWidget(new VideoPlayerView(videoPlayer_));
-    ui_->slider_videoPos->setStyle(new SliderJumpDirectStyle(ui_->slider_videoPos->style()));
+    //ui_->layout_videoSurface->addWidget(new VideoPlayerView(videoPlayer_));
+
+    QStyle* proxyStyle = new SliderJumpDirectStyle;
+    proxyStyle->setParent(this);  // setStyle does not take ownership so we set the parent so it gets freed
+    ui_->slider_videoPos->setStyle(proxyStyle);
 
     ui_->pushButton_playPause->setIcon(QIcon::fromTheme("play"));
     ui_->pushButton_stepBackwards->setIcon(QIcon::fromTheme("chevron-left"));
@@ -52,9 +57,6 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
     QShortcut* prevFrameShortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
     QShortcut* nextNFramesShortcut = new QShortcut(QKeySequence("Ctrl+Right"), this);
     QShortcut* prevNFramesShortcut = new QShortcut(QKeySequence("Ctrl+Left"), this);
-
-    /*QwtScaleWidget* scaleWidget = new QwtScaleWidget(QwtScaleDraw::BottomScale);
-    ui_->horizontalLayout->addWidget(scaleWidget);*/
 
     updateUITimer_.setInterval(200);
 
@@ -78,7 +80,7 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
 // ----------------------------------------------------------------------------
 VODReviewView::~VODReviewView()
 {
-    vodReviewModel_->dispatcher.removeListener(this);
+    videoPlayer_->dispatcher.removeListener(this);
     vodReviewModel_->dispatcher.removeListener(this);
     delete ui_;
 }

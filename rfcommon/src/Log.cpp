@@ -248,11 +248,10 @@ Log::Log() :
 // ----------------------------------------------------------------------------
 Log::~Log()
 {
-    info("Closing log");
-
     for (auto child : d_->children)
         delete child;
 
+    info("Closing log \"%s\"", d_->name.cStr());
     fprintf(d_->fp, "</pre></body></html>");
     if (d_->fp != stderr)
         fclose(d_->fp);

@@ -60,16 +60,17 @@ PluginManager::~PluginManager()
     auto log = rfcommon::Log::root();
 
     log->beginDropdown("Stopping plugins");
-    for (const auto& plugin : plugins_)
-        if (plugin.started)
-            if (plugin.iface->stop)
+    for (int i = plugins_.count() - 1; i >= 0; --i)
+        if (plugins_[i].started)
+            if (plugins_[i].iface->stop)
             {
-                log->info("Calling stop() for plugin factory \"%s\"", plugin.iface->factories[0].info.name ? plugin.iface->factories[0].info.name : "");
-                plugin.iface->stop();
+                log->info("Calling stop() for plugin factory \"%s\"", plugins_[i].iface->factories[0].info.name ? plugins_[i].iface->factories[0].info.name : "");
+                plugins_[i].iface->stop();
             }
     log->endDropdown();
 
-    // Destructors take care of unloading libs
+    while (plugins_.count() > 0)
+        plugins_.pop();
 }
 
 // ----------------------------------------------------------------------------
