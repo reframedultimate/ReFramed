@@ -42,7 +42,7 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
     , videoPlayer_(videoPlayer)
 {
     ui_->setupUi(this);
-    //ui_->layout_videoSurface->addWidget(new VideoPlayerView(videoPlayer_));
+    ui_->layout_videoSurface->addWidget(new VideoPlayerView(videoPlayer_));
 
     QStyle* proxyStyle = new SliderJumpDirectStyle;
     proxyStyle->setParent(this);  // setStyle does not take ownership so we set the parent so it gets freed
