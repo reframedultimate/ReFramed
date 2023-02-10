@@ -271,3 +271,73 @@ TEST(NAME, front_and_back_is_correct)
     EXPECT_THAT(v.front().x, Eq(1));
     EXPECT_THAT(v.back().x, Eq(3));
 }
+
+TEST(NAME, retain_empty_vec)
+{
+    Vector<Obj> v;
+    v.retain([](const Obj& o) { return true; });
+}
+
+TEST(NAME, retain_no_values)
+{
+    Vector<Obj> v;
+    v.reserve(4);
+    Obj& o1 = v.emplace(1);
+    Obj& o2 = v.emplace(2);
+    Obj& o3 = v.emplace(3);
+    Obj& o4 = v.emplace(4);
+    v.retain([](const Obj& o) { return false; });
+    EXPECT_THAT(v.count(), Eq(0));
+    EXPECT_THAT(o1.x, Eq(DESTRUCTED));
+    EXPECT_THAT(o2.x, Eq(DESTRUCTED));
+    EXPECT_THAT(o3.x, Eq(DESTRUCTED));
+    EXPECT_THAT(o4.x, Eq(DESTRUCTED));
+}
+
+TEST(NAME, retain_even_values)
+{
+    Vector<Obj> v;
+    v.reserve(4);
+    Obj& o1 = v.emplace(1);
+    Obj& o2 = v.emplace(2);
+    Obj& o3 = v.emplace(3);
+    Obj& o4 = v.emplace(4);
+    v.retain([](const Obj& o) { return o.x % 2 == 0; });
+    EXPECT_THAT(v.count(), Eq(2));
+    EXPECT_THAT(v[0].x, Eq(2));
+    EXPECT_THAT(v[1].x, Eq(4));
+    EXPECT_THAT(v[2].x, Eq(DESTRUCTED));
+    EXPECT_THAT(v[3].x, Eq(DESTRUCTED));
+}
+
+TEST(NAME, retain_odd_values)
+{
+    Vector<Obj> v;
+    v.reserve(4);
+    Obj& o1 = v.emplace(1);
+    Obj& o2 = v.emplace(2);
+    Obj& o3 = v.emplace(3);
+    Obj& o4 = v.emplace(4);
+    v.retain([](const Obj& o) { return o.x % 2; });
+    EXPECT_THAT(v.count(), Eq(2));
+    EXPECT_THAT(v[0].x, Eq(1));
+    EXPECT_THAT(v[1].x, Eq(3));
+    EXPECT_THAT(v[2].x, Eq(DESTRUCTED));
+    EXPECT_THAT(v[3].x, Eq(DESTRUCTED));
+}
+
+TEST(NAME, retain_all_values)
+{
+    Vector<Obj> v;
+    v.reserve(4);
+    Obj& o1 = v.emplace(1);
+    Obj& o2 = v.emplace(2);
+    Obj& o3 = v.emplace(3);
+    Obj& o4 = v.emplace(4);
+    v.retain([](const Obj& o) { return true; });
+    EXPECT_THAT(v.count(), Eq(4));
+    EXPECT_THAT(v[0].x, Eq(1));
+    EXPECT_THAT(v[1].x, Eq(2));
+    EXPECT_THAT(v[2].x, Eq(3));
+    EXPECT_THAT(v[3].x, Eq(4));
+}

@@ -1,6 +1,7 @@
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 set (REFRAMED_PLUGIN_TEMPLATE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/templates")
 
+# Required so external plugins can make use of our build tree
 configure_file ("cmake/modules/ReFramedPlugin.cmake" "${REFRAMED_BUILD_CMAKEDIR}/modules/ReFramedPlugin.cmake" COPYONLY)
 configure_file ("cmake/templates/PluginConfig.hpp.in" "${REFRAMED_BUILD_CMAKEDIR}/templates/PluginConfig.hpp.in" COPYONLY)
 

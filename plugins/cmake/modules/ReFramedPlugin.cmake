@@ -61,7 +61,9 @@ macro (reframed_add_plugin PLUGIN)
                 RUNTIME_OUTPUT_DIRECTORY "${REFRAMED_BUILD_PLUGINDIR}"
                 RUNTIME_OUTPUT_DIRECTORY_DEBUG "${REFRAMED_BUILD_PLUGINDIR}"
                 RUNTIME_OUTPUT_DIRECTORY_RELEASE "${REFRAMED_BUILD_PLUGINDIR}"
-                INSTALL_RPATH "${REFRAMED_INSTALL_LIBDIR}")
+                INSTALL_RPATH "${REFRAMED_INSTALL_LIBDIR}"
+                VS_DEBUGGER_WORKING_DIRECTORY "${REFRAMED_BUILD_BINDIR}"
+                VS_DEBUGGER_COMMAND "${REFRAMED_BUILD_BINDIR}/ReFramed.exe")
         if (${PLUGIN}_DATA)
             foreach (DATAFILE ${${PLUGIN}_DATA})
                 add_custom_command (TARGET ${PLUGIN} POST_BUILD
@@ -74,6 +76,9 @@ macro (reframed_add_plugin PLUGIN)
                 FILES ${${PLUGIN}_DATA}
                 DESTINATION "${REFRAMED_INSTALL_DATADIR}/${PLUGIN}")
         endif ()
+        set_property (
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY VS_STARTUP_PROJECT ${PLUGIN})
         install (
             TARGETS ${PLUGIN}
             LIBRARY DESTINATION "${REFRAMED_INSTALL_PLUGINDIR}"

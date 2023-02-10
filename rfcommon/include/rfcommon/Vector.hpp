@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cassert>
+#include <functional>
 #include <utility>
 #include <new>
 
@@ -37,6 +38,30 @@ public:
     S capacity() const { return capacity_; }
     S indexOf(const T& value) { return static_cast<S>(&value - begin_); }
     S indexOf(const T* value) { return static_cast<S>(value - begin_); }
+
+    void retain(std::function<bool(const T&)> f)
+    {
+        T* readPtr = begin();
+        T* writePtr = begin();
+        const T* endPtr = end();
+        for (; readPtr != endPtr; ++readPtr, ++writePtr)
+        {
+            if (f(*readPtr) == false)
+            {
+                readPtr++->~T();
+                this->count_--;
+                break;
+            }
+        }
+        for (; readPtr != endPtr; ++readPtr)
+        {
+            if (f(*readPtr))
+                new (writePtr++) T(std::move(*readPtr));
+            else
+                this->count_--;
+            readPtr->~T();
+        }
+    }
 
     T& operator[](S i) { return begin_[i]; }
     const T& operator[](S i) const { return begin_[i]; }

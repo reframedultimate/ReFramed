@@ -3,6 +3,9 @@
 #include "overextension/views/OverextensionView.hpp"
 
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/Session.hpp"
+#include "rfcommon/Metadata.hpp"
+
 #include <QWidget>
 
 // ----------------------------------------------------------------------------
@@ -56,10 +59,41 @@ void OverextensionPlugin::onProtocolGameResumed(rfcommon::Session* match) {}
 void OverextensionPlugin::onProtocolGameEnded(rfcommon::Session* match) {}
 
 // ----------------------------------------------------------------------------
-void OverextensionPlugin::onGameSessionLoaded(rfcommon::Session* session) {}
-void OverextensionPlugin::onGameSessionUnloaded(rfcommon::Session* session) {}
+void OverextensionPlugin::onGameSessionLoaded(rfcommon::Session* session)
+{
+    model_->clearAll();
+
+    auto map = session->tryGetMappingInfo();
+    auto mdata = session->tryGetMetadata();
+    if (mdata->fighterCount() != 2)
+        return;
+    auto fdata = session->tryGetFrameData();
+
+    model_->startNewSession(map, mdata->asGame());
+    model_->addAllFrames(fdata);
+}
+void OverextensionPlugin::onGameSessionUnloaded(rfcommon::Session* session)
+{
+    model_->clearAll();
+}
 void OverextensionPlugin::onTrainingSessionLoaded(rfcommon::Session* training) {}
 void OverextensionPlugin::onTrainingSessionUnloaded(rfcommon::Session* training) {}
 
-void OverextensionPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames) {}
+// ----------------------------------------------------------------------------
+void OverextensionPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int numGames)
+{
+    model_->clearAll();
+
+    for (int i = 0; i != numGames; ++i)
+    {
+        auto map = games[i]->tryGetMappingInfo();
+        auto mdata = games[i]->tryGetMetadata();
+        if (mdata->fighterCount() != 2)
+            continue;
+        auto fdata = games[i]->tryGetFrameData();
+
+        model_->startNewSession(map, mdata->asGame());
+        model_->addAllFrames(fdata);
+    }
+}
 void OverextensionPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}

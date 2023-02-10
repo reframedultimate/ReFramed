@@ -16,8 +16,11 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "src/Plugin.cpp"
     HEADERS
         "include/${PLUGIN_NAME}/OverextensionPlugin.hpp"
+        "include/${PLUGIN_NAME}/listeners/OverextensionListener.hpp"
     MOC_HEADERS
         "include/${PLUGIN_NAME}/views/OverextensionView.hpp"
+    FORMS
+        "forms/OverextensionView.ui"
     INCLUDE_DIRECTORIES
         "include")
 

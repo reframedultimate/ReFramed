@@ -64,40 +64,10 @@ if (REFRAMED_TESTS)
     add_subdirectory ("tests")
 endif ()
 
-# set_target_properties (gmock
-#     PROPERTIES
-#         ARCHIVE_OUTPUT_DIRECTORY ${UH_BUILD_LIBDIR}
-#         ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${UH_BUILD_LIBDIR}
-#         ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${UH_BUILD_LIBDIR}
-#         LIBRARY_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         LIBRARY_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         LIBRARY_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR}
-#         RUNTIME_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR})
-#
-# # Why is this required (who knows), prevent PDB files from being written to a "Debug" folder
-# set_target_properties (gmock
-#     PROPERTIES
-#         PDB_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR})
-# set_target_properties (gtest
-#     PROPERTIES
-#         PDB_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR})
-# set_target_properties (gmock_main
-#     PROPERTIES
-#         PDB_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR})
-# set_target_properties (gtest_main
-#     PROPERTIES
-#         PDB_OUTPUT_DIRECTORY ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_DEBUG ${UH_INSTALL_BINDIR}
-#         PDB_OUTPUT_DIRECTORY_RELEASE ${UH_INSTALL_BINDIR})
-#
+# "application" target should be the startup project in VS
+set_property(
+	DIRECTORY "${PROJECT_SOURCE_DIR}"
+	PROPERTY VS_STARTUP_PROJECT application)
 
 # All subprojects have added targets to this export
 # group, so make sure to install it

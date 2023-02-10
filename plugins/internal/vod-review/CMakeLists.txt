@@ -15,7 +15,7 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
         "src/models/AVDecoder.cpp"
         "src/models/BufferedSeekableDecoder.cpp"
         "src/models/VideoPlayerModel.cpp"
-		"src/models/VODReviewModel.cpp"
+        "src/models/VODReviewModel.cpp"
         "src/views/VideoPlayerView.cpp"
         "src/views/VODReviewView.cpp"
         "src/VideoPlayerPlugin.cpp"
@@ -67,6 +67,7 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
             endif ()
 
             add_custom_command (TARGET plugin-${PLUGIN_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${REFRAMED_BUILD_PLUGINDEPSDIR}"
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DLL_FILENAME}" "${REFRAMED_BUILD_PLUGINDEPSDIR}"
                 COMMENT "Copying FFMPEG DLL ${DLL_FILENAME} to runtime dir ${REFRAMED_BUILD_PLUGINDEPSDIR}"
                 VERBATIM)
