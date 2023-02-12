@@ -10,6 +10,10 @@ namespace Ui {
     class OverextensionView;
 }
 
+namespace rfcommon {
+    class UserMotionLabels;
+}
+
 class OverextensionView
         : public QWidget
         , public OverextensionListener
@@ -17,7 +21,7 @@ class OverextensionView
     Q_OBJECT
 
 public:
-    OverextensionView(OverextensionModel* model);
+    OverextensionView(OverextensionModel* model, rfcommon::UserMotionLabels* userLabels);
     ~OverextensionView();
 
 private slots:
@@ -27,10 +31,12 @@ private slots:
 private:
     void onPlayersChanged() override;
     void onDataChanged() override;
+    void onCurrentFighterChanged(int fighterIdx) override;
 
 private:
     Ui::OverextensionView* ui_;
     OverextensionModel* model_;
+    rfcommon::UserMotionLabels* userLabels_;
     QPlainTextEdit* text_;
     QString lastFighterPOV_;
 };

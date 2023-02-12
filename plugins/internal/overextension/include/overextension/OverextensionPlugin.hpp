@@ -1,18 +1,25 @@
 #pragma once
 
+#include "overextension/listeners/OverextensionListener.hpp"
 #include "rfcommon/Plugin.hpp"
 #include <memory>
 
 class OverextensionModel;
+
+namespace rfcommon {
+    class UserMotionLabels;
+}
 
 class OverextensionPlugin
         : public rfcommon::Plugin
         , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::RealtimeInterface
         , private rfcommon::Plugin::ReplayInterface
+        , private rfcommon::Plugin::VisualizerInterface
+        , private OverextensionListener
 {
 public:
-    OverextensionPlugin(RFPluginFactory* factory);
+    OverextensionPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::UserMotionLabels* userLabels);
     ~OverextensionPlugin();
 
 private:
@@ -49,5 +56,15 @@ private:
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override;
 
 private:
+    void onVisualizerDataChanged() override;
+
+private:
+    void onPlayersChanged() override;
+    void onDataChanged() override;
+    void onCurrentFighterChanged(int fighterIdx) override;
+    void exportTimeIntervals();
+
+private:
     std::unique_ptr<OverextensionModel> model_;
+    rfcommon::UserMotionLabels* userLabels_;
 };

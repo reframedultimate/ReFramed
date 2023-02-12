@@ -6,8 +6,24 @@
 #include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
 
+// Shield
+static const auto FIGHTER_STATUS_KIND_GUARD_DAMAGE = rfcommon::FighterStatus::fromValue(30);
+
+// Grabs
 static const auto FIGHTER_STATUS_KIND_CAPTURE_PULLED = rfcommon::FighterStatus::fromValue(65);
 static const auto FIGHTER_STATUS_KIND_THROWN = rfcommon::FighterStatus::fromValue(70);
+
+// Tech/No Techs
+static const auto FIGHTER_STATUS_KIND_DOWN = rfcommon::FighterStatus::fromValue(80);
+static const auto FIGHTER_STATUS_KIND_DOWN_DAMAGE = rfcommon::FighterStatus::fromValue(90);
+static const auto FIGHTER_STATUS_KIND_PASSIVE = rfcommon::FighterStatus::fromValue(103);  // This occurs during teching?
+
+// Dodges
+static const auto FIGHTER_STATUS_KIND_ESCAPE_AIR = rfcommon::FighterStatus::fromValue(34);
+
+// Ledge
+static const auto FIGHTER_STATUS_KIND_CLIFF_CATCH = rfcommon::FighterStatus::fromValue(118);
+static const auto FIGHTER_STATUS_KIND_CLIFF_WAIT = rfcommon::FighterStatus::fromValue(119);
 
 // ----------------------------------------------------------------------------
 // Bury and grab moves don't influence hitstun so it's possible for a player to
@@ -17,9 +33,13 @@ static const auto FIGHTER_STATUS_KIND_THROWN = rfcommon::FighterStatus::fromValu
 static float modifiedHitstun(const rfcommon::FighterState& state)
 {
     for (auto status : {
+        FIGHTER_STATUS_KIND_GUARD_DAMAGE,
         FIGHTER_STATUS_KIND_CAPTURE_PULLED,
-        FIGHTER_STATUS_KIND_THROWN })
-    {
+        FIGHTER_STATUS_KIND_THROWN,
+        FIGHTER_STATUS_KIND_DOWN,
+        FIGHTER_STATUS_KIND_DOWN_DAMAGE,
+        FIGHTER_STATUS_KIND_PASSIVE
+    }){
         if (state.status() == status)
             return 1.0;  // Any value over 0.0 is fine, we choose 1 because some
                          // checks do before > after and this has the effect of
@@ -28,6 +48,37 @@ static float modifiedHitstun(const rfcommon::FighterState& state)
     }
 
     return state.hitstun();
+}
+
+// ----------------------------------------------------------------------------
+static bool canAct(const rfcommon::FighterState& state)
+{
+    for (auto status : {
+        FIGHTER_STATUS_KIND_GUARD_DAMAGE,
+        FIGHTER_STATUS_KIND_CAPTURE_PULLED,
+        FIGHTER_STATUS_KIND_THROWN,
+        FIGHTER_STATUS_KIND_DOWN,
+        FIGHTER_STATUS_KIND_DOWN_DAMAGE,
+        FIGHTER_STATUS_KIND_PASSIVE })
+    {
+        if (state.status() == status)
+            return false;
+    }
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+const char* OverextensionModel::categoryName(Category category)
+{
+    static const char* names[] = {
+        "True combos",
+        "Combos",
+        "Winning overextensions",
+        "Losing overextensions",
+        "Trading overextensions"
+    };
+    return names[category];
 }
 
 // ----------------------------------------------------------------------------
@@ -50,7 +101,9 @@ void OverextensionModel::startNewSession(const rfcommon::MappingInfo* map, const
         players_.emplace(
             mdata->playerName(i),
             mdata->playerTag(i),
+            mdata->playerFighterID(i),
             map->fighter.toName(mdata->playerFighterID(i)));
+        opponentEarliestEscapeOptions_.insertIfNew(players_.back().fighter, 3);
     skip_add:;
     }
 
@@ -104,16 +157,16 @@ void OverextensionModel::addFrameNoNotify(int frameIdx, const rfcommon::FrameDat
                 if (modifiedHitstun(me) > 0.0)
                 {
                     if (modifiedHitstun(them) > 0.0)
-                        player.tradingOverextensions.push(player.moves.count());
+                        player.category[TRADING_OVEREXTENSION].push(player.moves.count());
                     else
-                        player.losingOverextensions.push(player.moves.count());
+                        player.category[LOSING_OVEREXTENSION].push(player.moves.count());
                 }
                 else if (gap == 0)
-                    player.trueCombos.push(player.moves.count());
-                else if (gap < player.opponentEarliestEscape)
-                    player.combos.push(player.moves.count());
+                    player.category[TRUE_COMBO].push(player.moves.count());
+                else if (gap < opponentEarliestEscapeOptions_.findKey(player.fighter)->value())
+                    player.category[COMBO].push(player.moves.count());
                 else
-                    player.winningOverextensions.push(player.moves.count());
+                    player.category[WINNING_OVEREXTENSION].push(player.moves.count());
 
                 players_[playerMap_[p]].moves.emplace(
                     fdata->stateAt(p, startFrame).motion(),
@@ -160,6 +213,19 @@ int OverextensionModel::fighterCount() const
 }
 
 // ----------------------------------------------------------------------------
+int OverextensionModel::currentFighter() const
+{
+    return currentFighter_;
+}
+
+// ----------------------------------------------------------------------------
+void OverextensionModel::setCurrentFighter(int fighterIdx)
+{
+    currentFighter_ = fighterIdx;
+    dispatcher.dispatch(&OverextensionListener::onCurrentFighterChanged, fighterIdx);
+}
+
+// ----------------------------------------------------------------------------
 const rfcommon::String& OverextensionModel::playerName(int fighterIdx) const
 {
     return players_[fighterIdx].name;
@@ -172,16 +238,22 @@ const rfcommon::String& OverextensionModel::fighterName(int fighterIdx) const
 }
 
 // ----------------------------------------------------------------------------
+rfcommon::FighterID OverextensionModel::fighterID(int fighterIdx) const
+{
+    return players_[fighterIdx].fighterID;
+}
+
+// ----------------------------------------------------------------------------
 void OverextensionModel::setOpponentEarliestEscape(int fighterIdx, int frame)
 {
-    players_[fighterIdx].opponentEarliestEscape = frame;
+    opponentEarliestEscapeOptions_.insertAlways(players_[fighterIdx].fighter, frame);
 
     // Any combos that are over the new earliest escape frame now count
     // as overextensions instead of combos
-    players_[fighterIdx].combos.retain([this, frame, fighterIdx](int i) -> bool {
+    players_[fighterIdx].category[COMBO].retain([this, frame, fighterIdx](int i) -> bool {
         if (players_[fighterIdx].moves[i].gap >= frame)
         {
-            players_[fighterIdx].winningOverextensions.push(i);
+            players_[fighterIdx].category[WINNING_OVEREXTENSION].push(i);
             return false;
         }
         return true;
@@ -189,10 +261,10 @@ void OverextensionModel::setOpponentEarliestEscape(int fighterIdx, int frame)
 
     // Any overextensions that are under the new earliest escape frame now
     // count as combos instead of overextensions
-    players_[fighterIdx].winningOverextensions.retain([this, frame, fighterIdx](int i) -> bool {
+    players_[fighterIdx].category[WINNING_OVEREXTENSION].retain([this, frame, fighterIdx](int i) -> bool {
         if (players_[fighterIdx].moves[i].gap < frame)
         {
-            players_[fighterIdx].combos.push(i);
+            players_[fighterIdx].category[COMBO].push(i);
             return false;
         }
         return true;
@@ -204,41 +276,7 @@ void OverextensionModel::setOpponentEarliestEscape(int fighterIdx, int frame)
 // ----------------------------------------------------------------------------
 int OverextensionModel::opponentEarliestEscape(int fighterIdx) const
 {
-    return players_[fighterIdx].opponentEarliestEscape;
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numTotal(int fighterIdx) const
-{
-    return players_[fighterIdx].moves.count();
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numTrueCombos(int fighterIdx) const
-{
-    return players_[fighterIdx].trueCombos.count();
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numCombos(int fighterIdx) const
-{
-    return players_[fighterIdx].combos.count();
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numWinningOverextensions(int fighterIdx) const
-{
-    return players_[fighterIdx].winningOverextensions.count();
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numLosingOverextensions(int fighterIdx) const
-{
-    return players_[fighterIdx].losingOverextensions.count();
-}
-
-// ----------------------------------------------------------------------------
-int OverextensionModel::numTradingOverextensions(int fighterIdx) const
-{
-    return players_[fighterIdx].tradingOverextensions.count();
+    auto it = opponentEarliestEscapeOptions_.findKey(players_[fighterIdx].fighter);
+    assert (it != opponentEarliestEscapeOptions_.end());
+    return it->value();
 }

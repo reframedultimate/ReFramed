@@ -9,22 +9,26 @@
 #include <QWidget>
 
 // ----------------------------------------------------------------------------
-OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory)
+OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::UserMotionLabels* userLabels)
     : Plugin(factory)
+    , Plugin::VisualizerInterface(visCtx, factory)
     , model_(new OverextensionModel)
+    , userLabels_(userLabels)
 {
+    model_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
 OverextensionPlugin::~OverextensionPlugin()
 {
+    model_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::Plugin::UIInterface* OverextensionPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* OverextensionPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* OverextensionPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* OverextensionPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::VisualizerInterface* OverextensionPlugin::visualizerInterface() { return this; }
 rfcommon::Plugin::VideoPlayerInterface* OverextensionPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
@@ -32,7 +36,7 @@ QWidget* OverextensionPlugin::createView()
 {
     PROFILE(OverextensionPlugin, createView);
 
-    return new OverextensionView(model_.get());
+    return new OverextensionView(model_.get(), userLabels_);
 }
 
 // ----------------------------------------------------------------------------
@@ -97,3 +101,32 @@ void OverextensionPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int 
     }
 }
 void OverextensionPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
+
+// ----------------------------------------------------------------------------
+void OverextensionPlugin::onVisualizerDataChanged() {}
+
+// ----------------------------------------------------------------------------
+void OverextensionPlugin::onPlayersChanged() {}
+void OverextensionPlugin::onDataChanged() { exportTimeIntervals(); }
+void OverextensionPlugin::onCurrentFighterChanged(int fighterIdx) { exportTimeIntervals(); }
+void OverextensionPlugin::exportTimeIntervals()
+{
+    rfcommon::VisualizerData data;
+    if (model_->fighterCount() > 0)
+    {
+        int fighterIdx = model_->currentFighter();
+        for (auto cat : {
+             OverextensionModel::TRUE_COMBO,
+             OverextensionModel::COMBO,
+             OverextensionModel::WINNING_OVEREXTENSION,
+             OverextensionModel::LOSING_OVEREXTENSION,
+             OverextensionModel::TRADING_OVEREXTENSION
+        }){
+            rfcommon::Vector<rfcommon::VisualizerData::TimeInterval> intervals;
+            for (int moveIdx = 0; moveIdx != model_->moveCount(fighterIdx, cat); ++moveIdx)
+                intervals.emplace("", model_->moveStart(fighterIdx, moveIdx, cat), model_->moveEnd(fighterIdx, moveIdx, cat));
+            data.timeIntervalSets.insertAlways(OverextensionModel::categoryName(cat), intervals);
+        }
+    }
+    setVisualizerData(std::move(data));
+}

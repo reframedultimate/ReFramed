@@ -12,7 +12,7 @@ static rfcommon::Plugin* createOverextensionPlugin(
 {
     PROFILE(PluginGlobal, createOverextensionPlugin);
 
-    return new OverextensionPlugin(factory);
+    return new OverextensionPlugin(factory, visCtx, userLabels);
 }
 
 static void destroyOverextensionPlugin(rfcommon::Plugin* plugin)

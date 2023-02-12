@@ -1,6 +1,5 @@
 #pragma once
 
-#include "rfcommon/config.hpp"
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/MapIterators.hpp"
 #include <algorithm>
@@ -44,25 +43,45 @@ public:
         swap(first.values_, second.values_);
     }
 
-    Iterator insertIfNew(const K& key, const V& value)
+    template <typename KK, typename VV>
+    Iterator insertAlways(KK&& key, VV&& value)
     {
         S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
         if (offset == keys_.count() || keys_[offset] != key)
         {
-            keys_.insert(offset, key);
-            values_.insert(offset, value);
+            keys_.insert(offset, std::forward<KK&&>(key));
+            values_.insert(offset, std::forward<VV&&>(value));
+        }
+        else
+        {
+            keys_[offset] = std::forward<KK&&>(key);
+            values_[offset] = std::forward<VV&&>(value);
+        }
+
+        return Iterator(keys_, values_, offset);
+    }
+
+    template <typename KK, typename VV>
+    Iterator insertIfNew(KK&& key, VV&& value)
+    {
+        S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
+        if (offset == keys_.count() || keys_[offset] != key)
+        {
+            keys_.insert(offset, std::forward<KK&&>(key));
+            values_.insert(offset, std::forward<VV&&>(value));
         }
 
         return end();
     }
 
-    Iterator insertOrGet(const K& key, const V& value)
+    template <typename KK, typename VV>
+    Iterator insertOrGet(KK&& key, VV&& value)
     {
         S offset = static_cast<S>(std::lower_bound(keys_.begin(), keys_.end(), key) - keys_.begin());
         if (offset == keys_.count() || keys_[offset] != key)
         {
-            keys_.insert(offset, key);
-            values_.insert(offset, value);
+            keys_.insert(offset, std::forward<KK&&>(key));
+            values_.insert(offset, std::forward<VV&&>(value));
         }
 
         return Iterator(keys_, values_, offset);
