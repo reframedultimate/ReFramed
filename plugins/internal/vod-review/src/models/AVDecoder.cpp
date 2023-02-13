@@ -28,7 +28,12 @@ static int read_callback(void* opaque, uint8_t* buf, int buf_size)
     PROFILE(AVDecoderGlobal, read_callback);
 
     auto ioChunkReader = reinterpret_cast<rfcommon::Deserializer*>(opaque);
-    return ioChunkReader->read(buf, buf_size);
+
+    // read() can return 0, but documentation says you must return a proper
+    // AVERROR code and never return 0 from this callback.
+    if (uint64_t bytes = ioChunkReader->read(buf, buf_size))
+        return bytes;
+    return AVERROR_EOF;
 }
 
 static int64_t seek_callback(void* opaque, int64_t offset, int whence)
