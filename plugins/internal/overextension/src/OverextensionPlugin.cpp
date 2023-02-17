@@ -9,9 +9,9 @@
 #include <QWidget>
 
 // ----------------------------------------------------------------------------
-OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::UserMotionLabels* userLabels)
+OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::UserMotionLabels* userLabels)
     : Plugin(factory)
-    , Plugin::VisualizerInterface(visCtx, factory)
+    , Plugin::SharedDataInterface(pluginCtx, factory)
     , model_(new OverextensionModel)
     , userLabels_(userLabels)
 {
@@ -28,7 +28,7 @@ OverextensionPlugin::~OverextensionPlugin()
 rfcommon::Plugin::UIInterface* OverextensionPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* OverextensionPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* OverextensionPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* OverextensionPlugin::visualizerInterface() { return this; }
+rfcommon::Plugin::SharedDataInterface* OverextensionPlugin::visualizerInterface() { return this; }
 rfcommon::Plugin::VideoPlayerInterface* OverextensionPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ void OverextensionPlugin::onGameSessionSetLoaded(rfcommon::Session** games, int 
 void OverextensionPlugin::onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) {}
 
 // ----------------------------------------------------------------------------
-void OverextensionPlugin::onVisualizerDataChanged() {}
+void OverextensionPlugin::onSharedDataChanged() {}
 
 // ----------------------------------------------------------------------------
 void OverextensionPlugin::onPlayersChanged() {}
@@ -111,7 +111,7 @@ void OverextensionPlugin::onDataChanged() { exportTimeIntervals(); }
 void OverextensionPlugin::onCurrentFighterChanged(int fighterIdx) { exportTimeIntervals(); }
 void OverextensionPlugin::exportTimeIntervals()
 {
-    rfcommon::VisualizerData data;
+    rfcommon::PluginSharedData data;
     if (model_->fighterCount() > 0)
     {
         int fighterIdx = model_->currentFighter();
@@ -122,11 +122,11 @@ void OverextensionPlugin::exportTimeIntervals()
              OverextensionModel::LOSING_OVEREXTENSION,
              OverextensionModel::TRADING_OVEREXTENSION
         }){
-            rfcommon::Vector<rfcommon::VisualizerData::TimeInterval> intervals;
+            rfcommon::Vector<rfcommon::PluginSharedData::TimeInterval> intervals;
             for (int moveIdx = 0; moveIdx != model_->moveCount(fighterIdx, cat); ++moveIdx)
                 intervals.emplace("", model_->moveStart(fighterIdx, moveIdx, cat), model_->moveEnd(fighterIdx, moveIdx, cat));
             data.timeIntervalSets.insertAlways(OverextensionModel::categoryName(cat), intervals);
         }
     }
-    setVisualizerData(std::move(data));
+    setSharedData(std::move(data));
 }

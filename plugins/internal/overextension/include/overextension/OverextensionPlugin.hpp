@@ -15,11 +15,11 @@ class OverextensionPlugin
         , private rfcommon::Plugin::UIInterface
         , private rfcommon::Plugin::RealtimeInterface
         , private rfcommon::Plugin::ReplayInterface
-        , private rfcommon::Plugin::VisualizerInterface
+        , private rfcommon::Plugin::SharedDataInterface
         , private OverextensionListener
 {
 public:
-    OverextensionPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::UserMotionLabels* userLabels);
+    OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::UserMotionLabels* userLabels);
     ~OverextensionPlugin();
 
 private:
@@ -28,7 +28,7 @@ private:
 
     Plugin::UIInterface* uiInterface() override final;
     Plugin::ReplayInterface* replayInterface() override final;
-    Plugin::VisualizerInterface* visualizerInterface() override final;
+    Plugin::SharedDataInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
     Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
@@ -56,7 +56,7 @@ private:
     void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) override;
 
 private:
-    void onVisualizerDataChanged() override;
+    void onSharedDataChanged() override;
 
 private:
     void onPlayersChanged() override;

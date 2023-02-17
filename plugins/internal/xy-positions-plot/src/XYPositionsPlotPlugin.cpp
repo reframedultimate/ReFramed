@@ -19,7 +19,7 @@ XYPositionsPlotPlugin::~XYPositionsPlotPlugin()
 rfcommon::Plugin::UIInterface* XYPositionsPlotPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* XYPositionsPlotPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* XYPositionsPlotPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* XYPositionsPlotPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* XYPositionsPlotPlugin::visualizerInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* XYPositionsPlotPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

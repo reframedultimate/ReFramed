@@ -1,16 +1,16 @@
-#include "rfcommon/VisualizerData.hpp"
+#include "rfcommon/PluginSharedData.hpp"
 
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-VisualizerData::TimeInterval::TimeInterval(const char* name, FrameIndex start, FrameIndex end)
+PluginSharedData::TimeInterval::TimeInterval(const char* name, FrameIndex start, FrameIndex end)
     : name(name)
     , start(start)
     , end(end)
 {}
 
 // ----------------------------------------------------------------------------
-VisualizerData::TimeInterval::~TimeInterval()
+PluginSharedData::TimeInterval::~TimeInterval()
 {}
 
 }

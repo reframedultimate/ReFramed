@@ -38,7 +38,7 @@ public:
 private:
     Plugin::UIInterface* uiInterface() override { return this; }
     Plugin::ReplayInterface* replayInterface() override { return this; }
-    Plugin::VisualizerInterface* visualizerInterface() override { return nullptr; }
+    Plugin::SharedDataInterface* visualizerInterface() override { return nullptr; }
     Plugin::RealtimeInterface* realtimeInterface() override { return this; }
     Plugin::VideoPlayerInterface* videoPlayerInterface() override { return nullptr; }
 
@@ -181,7 +181,7 @@ private:
 
 static rfcommon::Plugin* createPlugin(
         RFPluginFactory* factory,
-        rfcommon::VisualizerContext* visCtx,
+        rfcommon::PluginContext* pluginCtx,
         rfcommon::Log* log,
         rfcommon::UserMotionLabels* userLabels,
         rfcommon::Hash40Strings* hash40Strings)

@@ -9,6 +9,7 @@ class QListWidgetItem;
 
 namespace rfcommon {
     class Hash40Strings;
+    class ReplayMetadataCache;
 }
 
 namespace rfapp {
@@ -17,10 +18,11 @@ class CollapsibleSplitter;
 class PlayerDetails;
 class PluginDockView;
 class PluginManager;
+class ReplayGroupListView;
 class ReplayListModel;
 class ReplayListSortFilterModel;
 class ReplayListView;
-class ReplayGroupListView;
+class ReplayMetadataCache;
 class ReplayManager;
 class UserMotionLabelsManager;
 
@@ -76,6 +78,7 @@ private:
     UserMotionLabelsManager* userMotionLabelsManager_;
     rfcommon::Hash40Strings* hash40Strings_;
 
+    std::unique_ptr<ReplayMetadataCache> replayMetadataCache_;
     std::unique_ptr<ReplayListModel> replayListModel_;
     std::unique_ptr<ReplayListSortFilterModel> replayListSortFilterModel_;
     ReplayListView* replayListView_;

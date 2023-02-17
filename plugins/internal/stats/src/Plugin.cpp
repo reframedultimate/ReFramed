@@ -12,14 +12,14 @@
 // Gets called when the main application wants to create your plugin
 static rfcommon::Plugin* createStatsPlugin(
     RFPluginFactory* factory,
-    rfcommon::VisualizerContext* visCtx,
+    rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
     rfcommon::UserMotionLabels* userLabels,
     rfcommon::Hash40Strings* hash40Strings)
 {
     PROFILE(PluginGlobal, createStatsPlugin);
 
-    return new StatsPlugin(visCtx, factory, userLabels, hash40Strings);
+    return new StatsPlugin(pluginCtx, factory, userLabels, hash40Strings);
 }
 
 // Gets called when the main application removes your plugin from its

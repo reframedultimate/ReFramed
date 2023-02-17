@@ -44,6 +44,7 @@ public:
      * nullptr. Otherwise, a valid string is returned.
      */
     const char* toString(FighterMotion motion) const;
+    //! \brief Same as above but will return fallback instead of nullptr on failure.
     const char* toString(FighterMotion motion, const char* fallback) const;
 
     /*!

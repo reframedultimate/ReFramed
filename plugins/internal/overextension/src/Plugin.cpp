@@ -5,14 +5,14 @@
 
 static rfcommon::Plugin* createOverextensionPlugin(
     RFPluginFactory* factory,
-    rfcommon::VisualizerContext* visCtx,
+    rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
     rfcommon::UserMotionLabels* userLabels,
     rfcommon::Hash40Strings* hash40Strings)
 {
     PROFILE(PluginGlobal, createOverextensionPlugin);
 
-    return new OverextensionPlugin(factory, visCtx, userLabels);
+    return new OverextensionPlugin(factory, pluginCtx, userLabels);
 }
 
 static void destroyOverextensionPlugin(rfcommon::Plugin* plugin)

@@ -164,9 +164,11 @@ void VideoPlayerModel::stepVideo(int videoFrames)
 
     if (currentFrame_ == nullptr)
         dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
-
-    QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
-    dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);
+    else
+    {
+        QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
+        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -206,13 +208,12 @@ void VideoPlayerModel::seekVideoToGameFrame(rfcommon::FrameIndex frameNumber)
     }
 
     if (currentFrame_ == nullptr)
-    {
         dispatcher.dispatch(&VideoPlayerListener::onPresentImage, QImage());
-        return;
+    else
+    {
+        QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
+        dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);
     }
-
-    QImage image(currentFrame_->data[0], currentFrame_->width, currentFrame_->height, currentFrame_->linesize[0], QImage::Format_RGB888);
-    dispatcher.dispatch(&VideoPlayerListener::onPresentImage, image);
 }
 
 // ----------------------------------------------------------------------------

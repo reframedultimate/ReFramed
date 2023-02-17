@@ -1,6 +1,6 @@
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/PluginContext.hpp"
 #include "rfcommon/PluginInterface.hpp"
 
 namespace rfcommon {
@@ -25,50 +25,50 @@ const RFPluginFactory* Plugin::factory() const
 }
 
 // ----------------------------------------------------------------------------
-Plugin::VisualizerInterface::VisualizerInterface(VisualizerContext* visCtx, const RFPluginFactory* factory)
-    : visCtx_(visCtx)
+Plugin::SharedDataInterface::SharedDataInterface(PluginContext* pluginCtx, const RFPluginFactory* factory)
+    : pluginCtx_(pluginCtx)
     , name_(factory->info.name)
 {
-    visCtx_->dispatcher.addListener(this);
+    pluginCtx_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-Plugin::VisualizerInterface::~VisualizerInterface()
+Plugin::SharedDataInterface::~SharedDataInterface()
 {
-    visCtx_->dispatcher.removeListener(this);
-    clearVisualizerData();
+    pluginCtx_->dispatcher.removeListener(this);
+    clearSharedData();
 }
 
 // ----------------------------------------------------------------------------
-int Plugin::VisualizerInterface::visualizerSourceCount() const
+int Plugin::SharedDataInterface::sharedDataSourceCount() const
 {
-    return visCtx_->sources.count();
+    return pluginCtx_->sources.count();
 }
 
 // ----------------------------------------------------------------------------
-const char* Plugin::VisualizerInterface::visualizerName(int sourceIdx) const
+const char* Plugin::SharedDataInterface::sharedDataName(int sourceIdx) const
 {
-    return (visCtx_->sources.begin() + sourceIdx)->key().cStr();
+    return (pluginCtx_->sources.begin() + sourceIdx)->key().cStr();
 }
 
 // ----------------------------------------------------------------------------
-const VisualizerData& Plugin::VisualizerInterface::visualizerData(int sourceIdx) const
+const PluginSharedData& Plugin::SharedDataInterface::sharedData(int sourceIdx) const
 {
-    return (visCtx_->sources.begin() + sourceIdx)->value();
+    return (pluginCtx_->sources.begin() + sourceIdx)->value();
 }
 
 // ----------------------------------------------------------------------------
-void Plugin::VisualizerInterface::setVisualizerData(VisualizerData&& data)
+void Plugin::SharedDataInterface::setSharedData(PluginSharedData&& data)
 {
-    visCtx_->sources.insertAlways(name_, std::move(data));
-    visCtx_->dispatcher.dispatch(&VisualizerInterface::onVisualizerDataChanged);
+    pluginCtx_->sources.insertAlways(name_, std::move(data));
+    pluginCtx_->dispatcher.dispatch(&SharedDataInterface::onSharedDataChanged);
 }
 
 // ----------------------------------------------------------------------------
-void Plugin::VisualizerInterface::clearVisualizerData()
+void Plugin::SharedDataInterface::clearSharedData()
 {
-    if (visCtx_->sources.erase(name_))
-        visCtx_->dispatcher.dispatch(&VisualizerInterface::onVisualizerDataChanged);
+    if (pluginCtx_->sources.erase(name_))
+        pluginCtx_->dispatcher.dispatch(&SharedDataInterface::onSharedDataChanged);
 }
 
 }

@@ -52,7 +52,7 @@ bool ReplayListSortFilterModel::filterAcceptsRow(int row, const QModelIndex& par
         ReplayListModel::P2,
         ReplayListModel::P1Char,
         ReplayListModel::P2Char,
-        ReplayListModel::SetFormat,
+        ReplayListModel::Format,
         ReplayListModel::Stage,
     };
 
@@ -95,13 +95,14 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
     }
 
     static int sortOrder[] = {
+        ReplayListModel::Time,
         ReplayListModel::P1,
         ReplayListModel::P2,
         ReplayListModel::P1Char,
         ReplayListModel::P2Char,
-        ReplayListModel::SetFormat,
-        ReplayListModel::SetNumber,
-        ReplayListModel::GameNumber,
+        ReplayListModel::Format,
+        ReplayListModel::Round,
+        ReplayListModel::Game,
     };
 
     for (auto col : sortOrder)
@@ -111,11 +112,12 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
 
         switch (col)
         {
+            case ReplayListModel::Time:
             case ReplayListModel::P1:
             case ReplayListModel::P2:
             case ReplayListModel::P1Char:
             case ReplayListModel::P2Char:
-            case ReplayListModel::SetFormat: {
+            case ReplayListModel::Format: {
                 QString a = sourceModel()->data(leftIdx).toString();
                 QString b = sourceModel()->data(rightIdx).toString();
                 int comp = QString::localeAwareCompare(a, b);
@@ -123,8 +125,8 @@ bool ReplayListSortFilterModel::lessThan(const QModelIndex& left, const QModelIn
                     return comp < 0;
             } break;
 
-            case ReplayListModel::SetNumber:
-            case ReplayListModel::GameNumber: {
+            case ReplayListModel::Round:
+            case ReplayListModel::Game: {
                 int a = sourceModel()->data(leftIdx).toInt();
                 int b = sourceModel()->data(rightIdx).toInt();
                 if (a > b) return false;

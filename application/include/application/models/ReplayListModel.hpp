@@ -1,15 +1,14 @@
 #pragma once
 
 #include "application/listeners/ReplayGroupListener.hpp"
-#include "rfcommon/ReplayFileParts.hpp"
+#include "application/models/ReplayMetadataCache.hpp"
+
 #include <QAbstractItemModel>
 #include <QDate>
 
-namespace rfcommon {
-    class FilePathResolver;
-}
-
 namespace rfapp {
+
+class ReplayMetadataCache;
 
 class ReplayListModel
         : public QAbstractItemModel
@@ -20,9 +19,10 @@ public:
     {
         Time,
         P1, P2,
-        SetFormat,
-        SetNumber,
-        GameNumber,
+        Round,
+        Format,
+        Score,
+        Game,
         Stage,
 
         ColumnCount,
@@ -30,7 +30,7 @@ public:
         P1Char, P2Char
     };
 
-    ReplayListModel(rfcommon::FilePathResolver* filePathResolver);
+    ReplayListModel(ReplayMetadataCache* metadataCache);
     ~ReplayListModel();
 
     /*!
@@ -64,13 +64,18 @@ private:
     void onReplayGroupFileRemoved(ReplayGroup* group, const QString& file) override;
 
 private:
+    struct Replay
+    {
+        QString fileName;
+        ReplayMetadataCache::Entry cache;
+    };
     struct ReplaysOnDay
     {
         QString date;
-        QVector<rfcommon::ReplayFileParts> replays;
+        QVector<Replay> replays;
     };
 
-    rfcommon::FilePathResolver* replayPathResolver_;
+    ReplayMetadataCache* metadataCache_;
     QVector<ReplaysOnDay> days_;
     ReplayGroup* currentGroup_ = nullptr;
 };

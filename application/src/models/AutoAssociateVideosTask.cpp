@@ -11,7 +11,7 @@
 #include "rfcommon/TimeStamp.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
-#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/PluginContext.hpp"
 
 #include <QDir>
 #include <QFileInfo>
@@ -46,10 +46,10 @@ AutoAssociateVideoTask::AutoAssociateVideoTask(
     , session_(session)
     , vidDir_(vidDir)
 {
-    rfcommon::Reference<rfcommon::VisualizerContext> visCtx(new rfcommon::VisualizerContext);
+    rfcommon::Reference<rfcommon::PluginContext> pluginCtx(new rfcommon::PluginContext);
     for (const auto& factoryName : pluginManager_->availableFactoryNames(RFPluginType::VIDEO_PLAYER))
     {
-        videoPlugin_ = pluginManager_->create(factoryName, visCtx);
+        videoPlugin_ = pluginManager_->create(factoryName, pluginCtx);
         if (videoPlugin_)
         {
             if (videoPlugin_->videoPlayerInterface())

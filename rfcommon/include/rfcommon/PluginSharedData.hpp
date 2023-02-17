@@ -8,7 +8,7 @@
 
 namespace rfcommon {
 
-class RFCOMMON_PUBLIC_API VisualizerData
+class RFCOMMON_PUBLIC_API PluginSharedData
 {
 public:
     class RFCOMMON_PUBLIC_API TimeInterval

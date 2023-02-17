@@ -12,13 +12,13 @@
 #include "rfcommon/FrameData.hpp"
 
 // ----------------------------------------------------------------------------
-VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::VisualizerContext* visCtx, rfcommon::Log* log)
+VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::Log* log)
     : Plugin(factory)
     , log_(log)
     , decoder_(new AVDecoder(log))
     , seekableDecoder_(new BufferedSeekableDecoder(decoder_.get()))
     , videoPlayer_(new VideoPlayerModel(decoder_.get(), log))
-    , vodReviewModel_(new VODReviewModel(videoPlayer_.get(), visCtx, factory))
+    , vodReviewModel_(new VODReviewModel(videoPlayer_.get(), pluginCtx, factory))
 {
 }
 
@@ -31,7 +31,7 @@ VODReviewPlugin::~VODReviewPlugin()
 rfcommon::Plugin::UIInterface* VODReviewPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* VODReviewPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* VODReviewPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* VODReviewPlugin::visualizerInterface() { return vodReviewModel_.get(); }
+rfcommon::Plugin::SharedDataInterface* VODReviewPlugin::visualizerInterface() { return vodReviewModel_.get(); }
 rfcommon::Plugin::VideoPlayerInterface* VODReviewPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

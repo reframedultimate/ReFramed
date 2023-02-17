@@ -22,7 +22,7 @@ StageStatsPlugin::~StageStatsPlugin()
 rfcommon::Plugin::UIInterface* StageStatsPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* StageStatsPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* StageStatsPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* StageStatsPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* StageStatsPlugin::visualizerInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* StageStatsPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

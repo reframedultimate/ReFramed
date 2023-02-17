@@ -25,7 +25,7 @@ Costume::~Costume()
 
 // ----------------------------------------------------------------------------
 Costume::Costume(Type value)
-    : value_(value)
+    : value_(value < 8 ? value : 0)  // Handle extended slots mods
 {}
 
 }

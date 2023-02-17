@@ -26,12 +26,12 @@ class StatsPlugin
         , public rfcommon::Plugin::UIInterface
         , public rfcommon::Plugin::RealtimeInterface
         , public rfcommon::Plugin::ReplayInterface
-        , public rfcommon::Plugin::VisualizerInterface
+        , public rfcommon::Plugin::SharedDataInterface
         , public rfcommon::FrameDataListener
         , public SettingsListener
 {
 public:
-    StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
     ~StatsPlugin();
 
     void resetStatsIfAppropriate(rfcommon::Session* session);
@@ -57,7 +57,7 @@ public:
 private:
     Plugin::UIInterface* uiInterface() override final;
     Plugin::ReplayInterface* replayInterface() override final;
-    Plugin::VisualizerInterface* visualizerInterface() override final;
+    Plugin::SharedDataInterface* visualizerInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
     Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
@@ -113,7 +113,7 @@ private:
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
-    void onVisualizerDataChanged() override {}
+    void onSharedDataChanged() override {}
 
 private:
     // The export code is implemented in these callbacks

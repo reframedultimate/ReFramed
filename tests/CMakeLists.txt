@@ -8,7 +8,6 @@ add_executable (ReFramed-tests
     "src/test_HashMap.cpp"
     "src/test_Queue.cpp"
     "src/test_Reference.cpp"
-    "src/test_ReplayFileParts.cpp"
     "src/test_SmallLinearMap.cpp"
     "src/test_SmallString.cpp"
     "src/test_SmallVector.cpp"

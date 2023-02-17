@@ -22,7 +22,7 @@ namespace rfcommon {
     class RealtimePlugin;
     class StandalonePlugin;
     class UserMotionLabels;
-    class VisualizerContext;
+    class PluginContext;
     class VisualizerPlugin;
 }
 
@@ -68,7 +68,7 @@ public:
      */
     const RFPluginFactoryInfo* getFactoryInfo(const QString& name) const;
 
-    rfcommon::Plugin* create(const QString& name, rfcommon::VisualizerContext* visCtx);
+    rfcommon::Plugin* create(const QString& name, rfcommon::PluginContext* pluginCtx);
     void destroy(rfcommon::Plugin* plugin);
 
 private:

@@ -103,7 +103,7 @@ static const char* files[] = {
 };
     
 // ----------------------------------------------------------------------------
-QPixmap FighterIcon::fromFighterName(const char* name, int skin)
+QPixmap FighterIcon::fromFighterName(const char* name, rfcommon::Costume costume)
 {
     PROFILE(FighterIcon, fromFighterName);
 
@@ -209,10 +209,13 @@ QPixmap FighterIcon::fromFighterName(const char* name, int skin)
     if (it == map.end())
         return QPixmap();
 
-    rfcommon::FighterID fighterID = it.value();
-    QString fileName = QString(":/ssbu_icons/chara_2_") + files[fighterID.value()] + "_0" + QString::number(skin) + ".png";
+    return fromFighterID(it.value(), costume);
+}
 
-    return QPixmap(fileName);
+// ---------------------------------------------------------------------------- 
+QPixmap FighterIcon::fromFighterID(rfcommon::FighterID fighterID, rfcommon::Costume costume)
+{
+    return QString(":/ssbu_icons/chara_2_") + files[fighterID.value()] + "_0" + QString::number(costume.value()) + ".png";
 }
 
 }
