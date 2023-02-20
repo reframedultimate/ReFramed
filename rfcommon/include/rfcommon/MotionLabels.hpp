@@ -26,11 +26,11 @@ namespace rfcommon {
 /*!
  * \brief This class handles everything to do with converting hash40 motion
  * values to strings and back, including managing user-defined labels.
- * 
+ *
  * Some notes on design decisions:
  *   - We use our own binary file format for the param labels instead of loading
  *     the official CSV file, as it cuts down on startup times by almost a second.
- *   - We categorize 
+ *   - We categorize
  */
 class RFCOMMON_PUBLIC_API MotionLabels
 {
@@ -53,21 +53,21 @@ public:
     MotionLabels();
     ~MotionLabels();
 
+    bool load(const char* fileNameUtf8);
+    bool save(const char* fileNameUtf8);
+
     /*!
-     * \brief Load all hash40 strings from the specified file.
-     * 
+     * \brief Load all hash40 strings from the specified CSV file.
+     *
      * The official CSV file "ParamLabels.csv" is updated periodically
      * (https://github.com/ultimate-research/param-labels).
      * This function loads all labels from the CSV and then updates our
-     * binary file "ParamLabels.bin" with the new data.
-     * 
+     * binary file with the new data.
+     *
      * \param[in] fileName Path to the paramLabels.csv file.
      * \return Returns true if all labels were loaded successfully.
      */
-    bool loadCSV(const char* fileNameUtf8);
-
-    bool loadBinary(const char* fileNameUtf8);
-    bool saveBinary(const char* fileNameUtf8);
+    bool updateHash40FromCSV(const char* fileNameUtf8);
 
     /*!
      * \brief Does a reverse-lookup for the original hash40 string.
@@ -84,7 +84,7 @@ public:
      * \param[in] motion The motion value to convert.
      * \param[in] layerIdx The layer to search. If you specify a value of -1
      * then this method will always fail. This makes it possible to write:
-     *     toString(motion, layerIndex("English"))
+     *      toString(motion, layerIndex("English"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
@@ -96,9 +96,10 @@ public:
      * NOTATION. You can use layerIndex() to find a layer for the preferred
      * notation.
      * \param[in] motion The motion value to convert.
-     * \param[in] preferredLayerIdx The layer to search initially.If you specify
+     * \param[in] preferredLayerIdx The layer to search initially. If you specify
      * a value of -1 then all layers marked as NOTATION will be searched. This
-     * makes it possible to write:  toNotation(motion, layerIndex("Pikacord"))
+     * makes it possible to write:
+     *      toNotation(motion, layerIndex("Pikacord"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
@@ -124,6 +125,52 @@ public:
      * matching values are returned. If none are found the list will be empty.
      */
     SmallVector<FighterMotion, 4> toMotion(FighterID fighterID, const char* label) const;
+
+    int importLayer(const char* fileNameUtf8);
+    bool exportLayer(int layerIdx, const char* fileNameUtf8);
+    bool exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8);
+
+    //! Returns the total number of layers
+    int layerCount() const;
+
+    //! Returns the name of the specified layer
+    const char* layerName(int layerIdx) const;
+
+    Usage layerUsage(int layerIdx) const;
+
+    /*!
+     * \brief Creates a new layer with the specified name.
+     * \param[in] nameUtf8 Name of the layer. The name doesn't have to be unique.
+     * \param[in] usage Categorizes how the new layer will be used.
+     * \return Returns the index of the newly created layer, or -1 if creation
+     * failed.
+     */
+    int newLayer(const char* nameUtf8, Usage usage);
+
+    //! Deletes the specified layer
+    void removeLayer(int layerIdx);
+
+    //! Gives the specified layer a new name. The name doesn't have to be unique.
+    bool renameLayer(int layerIdx, const char* newNameUtf8);
+
+    /*!
+     * \brief Attempts to merge all entries of the source layer into the target
+     * layer. The source and target layers must share the same "Usage".
+     * \param[in] targetLayerIdx
+     * \param[in] sourceLayerIdx
+     * \return Returns 0 if successful, or
+     */
+    int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
+
+    int entryCount(FighterID fighterID) const;
+    Category categoryAt(FighterID, int entryIdx) const;
+    FighterMotion motionAt(FighterID, int entryIdx) const;
+    const char* labelAt(FighterID, int entryIdx) const;
+
+    bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
+    bool addEntry(FighterID fighterID, int layerIdx, FighterMotion motion, const char* label, Category category);
+    bool changeLabel(FighterID fighterID, int layerIdx, FighterMotion motion, const char* newUserLabel);
+    bool changeCategory(FighterID fighterID, FighterMotion motion, Category newCategory);
 };
 
 }

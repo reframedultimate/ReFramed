@@ -1,7 +1,7 @@
 #include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/Replayfilename.hpp"
+#include "rfcommon/ReplayFilename.hpp"
 #include "rfcommon/TrainingMetadata.hpp"
 #include <cctype>
 #include <ctime>

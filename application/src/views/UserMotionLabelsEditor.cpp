@@ -68,7 +68,7 @@ public:
 
     void setFighter(rfcommon::FighterID fighterID)
     {
-    PROFILE(UserMotionLabelsEditorGlobal, setFighter);
+        PROFILE(UserMotionLabelsEditorGlobal, setFighter);
 
         beginResetModel();
             fighterID_ = fighterID;
@@ -78,7 +78,7 @@ public:
 
     void setCategory(const QModelIndexList& indexes, rfcommon::UserMotionLabelsCategory category)
     {
-    PROFILE(UserMotionLabelsEditorGlobal, setCategory);
+        PROFILE(UserMotionLabelsEditorGlobal, setCategory);
 
         // Create a list of unique entry indices, as changing categories is comparitively expensive
         QSet<int> entryIndices;
@@ -332,6 +332,8 @@ class TableView : public QTableView
 public:
     void keyPressEvent(QKeyEvent* event) override
     {
+        PROFILE(TableView, keyPressEvent);
+
         // If Ctrl-C typed
         // Or use event->matches(QKeySequence::Copy)
         if (event->key() == Qt::Key_C && (event->modifiers() & Qt::ControlModifier))
@@ -342,7 +344,6 @@ public:
             QString text;
             int currentRow = 0; // To determine when to insert newlines
             foreach(const QModelIndex & cell, cells) {
-    PROFILE(UserMotionLabelsEditorGlobal, foreach);
 
                 if (text.length() == 0) {
                     // First item
