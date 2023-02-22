@@ -3,6 +3,9 @@
 #include "rfcommon/config.hpp"
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/FighterMotion.hpp"
+#include "rfcommon/HashMap.hpp"
+#include "rfcommon/String.hpp"
+#include "rfcommon/Vector.hpp"
 
 /*!
  * \brief Every user defined label is associated with one of the following
@@ -44,10 +47,10 @@ public:
 
     enum Usage
     {
-        HASH40   = 0x01,
-        READABLE = 0x02,
-        NOTATION = 0x04,
-        GROUP    = 0x08
+        HASH40,
+        READABLE,
+        NOTATION,
+        GROUP
     };
 
     MotionLabels();
@@ -92,19 +95,19 @@ public:
     const char* toString(FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
 
     /*!
-     * \brief Converts a motion value into a string from any layer marked as
-     * NOTATION. You can use layerIndex() to find a layer for the preferred
-     * notation.
+     * \brief Converts a motion value into a string from any layer marked with
+     * the specified "usage". You can use layerIndex() to find the index for a
+     * preferred layer.
      * \param[in] motion The motion value to convert.
      * \param[in] preferredLayerIdx The layer to search initially. If you specify
-     * a value of -1 then all layers marked as NOTATION will be searched. This
-     * makes it possible to write:
-     *      toNotation(motion, layerIndex("Pikacord"))
+     * a value of -1 then all layers marked with the specified usage will be
+     * searched. This makes it possible to write:
+     *      toString(motion, NOTATION, layerIndex("Pikacord"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* toNotation(FighterMotion motion, int preferredLayerIdx, const char* fallback=nullptr) const;
+    const char* toString(FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback=nullptr) const;
 
     /*!
      * \brief Runs the string through @see hash40(), but only returns the
@@ -153,6 +156,10 @@ public:
     //! Gives the specified layer a new name. The name doesn't have to be unique.
     bool renameLayer(int layerIdx, const char* newNameUtf8);
 
+    int changeUsage(int layerIdx, Usage newUsage);
+
+    int shuffleLayers(int layerIdx, int insertIdx);
+
     /*!
      * \brief Attempts to merge all entries of the source layer into the target
      * layer. The source and target layers must share the same "Usage".
@@ -163,14 +170,35 @@ public:
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
     int entryCount(FighterID fighterID) const;
-    Category categoryAt(FighterID, int entryIdx) const;
-    FighterMotion motionAt(FighterID, int entryIdx) const;
-    const char* labelAt(FighterID, int entryIdx) const;
+    Category categoryAt(FighterID fighterID, int entryIdx) const;
+    FighterMotion motionAt(FighterID fighterID, int entryIdx) const;
+    const char* labelAt(FighterID fighterID, int entryIdx, int layerIdx) const;
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
-    bool addEntry(FighterID fighterID, int layerIdx, FighterMotion motion, const char* label, Category category);
-    bool changeLabel(FighterID fighterID, int layerIdx, FighterMotion motion, const char* newUserLabel);
-    bool changeCategory(FighterID fighterID, FighterMotion motion, Category newCategory);
+    int addEntry(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
+    void changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
+    void changeCategory(FighterID fighterID, int entryIdx, Category newCategory);
+    void propagatePreserve(FighterID fighterID, int entryIdx, int layerIdx);
+    void propagateReplace(FighterID fighterID, int entryIdx, int layerIdx);
+
+private:
+    struct Layer
+    {
+        Vector<String> labels;
+        Vector<Usage> usages;
+    };
+
+    struct Fighter
+    {
+        Vector<FighterMotion> motions;
+        Vector<Category> categories;
+        Vector<String> hash40s;
+        SmallVector<Layer, 8> layers;
+
+        HashMap<FighterMotion, int, FighterMotion::Hasher> motionMap;
+    };
+
+    Vector<Fighter> fighters_;
 };
 
 }
