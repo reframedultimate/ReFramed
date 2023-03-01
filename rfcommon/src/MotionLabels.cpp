@@ -59,6 +59,13 @@ bool MotionLabels::load(const char* fileNameUtf8)
                 SmallString<31>(static_cast<const char*>(d.readFromPtr(labelLen)), labelLen));
     }
 
+    const int layerCount = d.readLU16();
+    for (int i = 0; i != layerCount; ++i)
+    {
+        int len = d.readU8();
+        layerNames_.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
+    }
+
     const int fighterCount = d.readU8();
     for (int fighterIdx = 0; fighterIdx != fighterCount; ++fighterIdx)
     {
@@ -124,6 +131,20 @@ bool MotionLabels::save(const char* fileNameUtf8)
         s.writeU8(it.value().length());
         fwrite(s.data(), s.bytesWritten(), 1, fp);
         fwrite(it.value().cStr(), it.value().length(), 1, fp);
+    }
+
+    // Save layer names
+    {
+        Serializer s1(scratch, sizeof *scratch);
+        s1.writeLU16(layerNames_.count());
+        fwrite(s1.data(), s1.bytesWritten(), 1, fp);
+        for (const String& name : layerNames_)
+        {
+            Serializer s2(scratch, sizeof *scratch);
+            s2.writeU8(name.length());
+            fwrite(s2.data(), s2.bytesWritten(), 1, fp);
+            fwrite(name.cStr(), name.length(), 1, fp);
+        }
     }
 
     // Save fighter layers
@@ -210,6 +231,7 @@ bool MotionLabels::updateHash40FromCSV(const char* fileNameUtf8)
             log->warning("Expected delimiter '[\\r\\n]' was not encountered in string \"%s\", skipping to next line...", hex);
             goto skip_to_next_line;
         }
+        label[i] = '\0';
 
         // label can be empty sometimes
         if (label[0] == '\0')
