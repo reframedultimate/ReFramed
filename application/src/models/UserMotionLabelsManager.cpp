@@ -116,7 +116,7 @@ bool UserMotionLabelsManager::saveAllLayers()
         QString layerName = QString::fromUtf8(userMotionLabels_->layerName(layerIdx));
         QString fileName = dir.absoluteFilePath(QString::number(layerIdx + 1) + "_" + layerName + ".json");
         QByteArray fileNameUtf8 = fileName.toUtf8();
-        FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
+        FILE* fp = rfcommon::utf8_fopen_wb(fileNameUtf8.constData(), fileNameUtf8.size());
         if (fp == nullptr)
         {
             success = false;
@@ -134,7 +134,7 @@ bool UserMotionLabelsManager::saveAllLayers()
 
     QString fileName = dir.absoluteFilePath("unlabeled.json");
     QByteArray fileNameUtf8 = fileName.toUtf8();
-    FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
+    FILE* fp = rfcommon::utf8_fopen_wb(fileNameUtf8.constData(), fileNameUtf8.size());
     if (fp == nullptr)
         success = false;
     else

@@ -124,7 +124,7 @@ void ExportReplayPackDialog::onExport()
     progress.setPercent(5);
 
     QByteArray fileNameUtf8 = ui_->lineEdit_packFileName->text().toUtf8();
-    FILE* fp = rfcommon::utf8_fopen_write(fileNameUtf8.constData(), fileNameUtf8.size());
+    FILE* fp = rfcommon::utf8_fopen_wb(fileNameUtf8.constData(), fileNameUtf8.size());
     if (fp == nullptr)
     {
         QMessageBox::critical(this, "Failed to open file", "Failed to open file \"" + ui_->lineEdit_packFileName->text() + "\" for writing\n\n" + strerror(errno));

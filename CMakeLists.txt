@@ -23,8 +23,11 @@ project ("ReFramed"
 set (REFRAMED_VERSION "0.0.13")
 set (REFRAMED_VERSION_RC "alpha")
 
+# Some modules need to know where the root source directory is located
+set (REFRAMED_SOURCE_ROOT ${PROJECT_SOURCE_DIR})
+
 # Configure build and install directory structures
-set (REFRAMED_BUILD_BINDIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+set (REFRAMED_BUILD_BINDIR "${PROJECT_BINARY_DIR}/bin")
 set (REFRAMED_BUILD_LIBDIR "${REFRAMED_BUILD_BINDIR}/lib")
 set (REFRAMED_BUILD_DATADIR "${REFRAMED_BUILD_BINDIR}/share/reframed/data")
 set (REFRAMED_BUILD_PLUGINDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugins")
@@ -53,10 +56,12 @@ add_subdirectory ("thirdparty/zlib-1.2.11")
 add_subdirectory ("thirdparty/qwt-6.2.0")
 add_subdirectory ("thirdparty/cpp-base64")
 add_subdirectory ("thirdparty/ads")
+add_subdirectory ("thirdparty/htv")
 add_subdirectory ("rfcommon")
 add_subdirectory ("rfplot")
 add_subdirectory ("application")
 add_subdirectory ("plugins")
+add_subdirectory ("doc/gen-readme")
 
 option (REFRAMED_TESTS "Enable building unit tests" ON)
 if (REFRAMED_TESTS)
@@ -64,10 +69,16 @@ if (REFRAMED_TESTS)
     add_subdirectory ("tests")
 endif ()
 
+option (REFRAMED_LINT "Run the 'lint.py' script as part of the build process" ON)
+if (REFRAMED_LINT)
+    include (ReFramedLintTarget)
+    reframed_lint_target()
+endif ()
+
 # "application" target should be the startup project in VS
 set_property(
-	DIRECTORY "${PROJECT_SOURCE_DIR}"
-	PROPERTY VS_STARTUP_PROJECT application)
+    DIRECTORY "${PROJECT_SOURCE_DIR}"
+    PROPERTY VS_STARTUP_PROJECT application)
 
 # All subprojects have added targets to this export
 # group, so make sure to install it

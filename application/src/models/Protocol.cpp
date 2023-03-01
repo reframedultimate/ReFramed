@@ -550,7 +550,7 @@ void Protocol::saveGlobalMappingInfo()
 
     QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
     QByteArray ba = dir.absoluteFilePath("mappingInfo.json").toUtf8();
-    FILE* fp = rfcommon::utf8_fopen_write(ba.constData(), ba.size());
+    FILE* fp = rfcommon::utf8_fopen_wb(ba.constData(), ba.size());
     if (fp == nullptr)
         return;
 

@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include <cstdint>
+#include <cstdio>
 
 namespace rfcommon {
 

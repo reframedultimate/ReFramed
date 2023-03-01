@@ -7,6 +7,7 @@
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Log.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QApplication>
 #include <QStyleFactory>
@@ -106,7 +107,7 @@ int main(int argc, char** argv)
     {
         NOPROFILE();
 
-        FILE* fp = fopen("profile.dot", "w");
+        FILE* fp = rfcommon::utf8_fopen_wb("profile.dot", sizeof("profile.dot"));
         if (fp)
             rfcommon::profiler->exportGraph(fp, rfcommon::Profiler::DOT);
     }

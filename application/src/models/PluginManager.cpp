@@ -2,7 +2,7 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "rfcommon/Hash40Strings.hpp"
-#include "rfcommon/LastWindowsError.hpp"
+#include "rfcommon/LastError.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/Plugin.hpp"
@@ -48,7 +48,7 @@ PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::H
             *p = '\\';
     log->info("Adding DLL search path: %s", buf);
     if (!SetDllDirectoryA(buf))
-        log->error("Failed to add DLL search path: %s: %s", buf, rfcommon::LastWindowsError().cStr());
+        log->error("Failed to add DLL search path: %s: %s", buf, rfcommon::LastError().cStr());
 #endif
 
     scanForPlugins();

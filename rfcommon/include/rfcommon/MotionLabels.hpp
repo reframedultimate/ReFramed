@@ -72,6 +72,10 @@ public:
      */
     bool updateHash40FromCSV(const char* fileNameUtf8);
 
+    int importLayer(const char* fileNameUtf8);
+    bool exportLayer(int layerIdx, const char* fileNameUtf8);
+    bool exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8);
+
     /*!
      * \brief Does a reverse-lookup for the original hash40 string.
      * \param[in] motion The motion value to convert.
@@ -129,10 +133,6 @@ public:
      */
     SmallVector<FighterMotion, 4> toMotion(FighterID fighterID, const char* label) const;
 
-    int importLayer(const char* fileNameUtf8);
-    bool exportLayer(int layerIdx, const char* fileNameUtf8);
-    bool exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8);
-
     //! Returns the total number of layers
     int layerCount() const;
 
@@ -144,14 +144,16 @@ public:
     /*!
      * \brief Creates a new layer with the specified name.
      * \param[in] nameUtf8 Name of the layer. The name doesn't have to be unique.
-     * \param[in] usage Categorizes how the new layer will be used.
+     * \param[in] usage Categorizes how the new layer will be used. This affects
+     * where the layer will be inserted, and can possibly shift around other
+     * existing layers.
      * \return Returns the index of the newly created layer, or -1 if creation
      * failed.
      */
     int newLayer(const char* nameUtf8, Usage usage);
 
     //! Deletes the specified layer
-    void removeLayer(int layerIdx);
+    void deleteLayer(int layerIdx);
 
     //! Gives the specified layer a new name. The name doesn't have to be unique.
     bool renameLayer(int layerIdx, const char* newNameUtf8);
@@ -169,36 +171,64 @@ public:
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
-    int entryCount(FighterID fighterID) const;
+    int labelCount(FighterID fighterID) const;
     Category categoryAt(FighterID fighterID, int entryIdx) const;
     FighterMotion motionAt(FighterID fighterID, int entryIdx) const;
     const char* labelAt(FighterID fighterID, int entryIdx, int layerIdx) const;
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
-    int addEntry(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
-    void changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
-    void changeCategory(FighterID fighterID, int entryIdx, Category newCategory);
-    void propagatePreserve(FighterID fighterID, int entryIdx, int layerIdx);
-    void propagateReplace(FighterID fighterID, int entryIdx, int layerIdx);
+    bool addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
+    bool changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
+    bool changeCategory(FighterID fighterID, int entryIdx, Category newCategory);
+    bool propagatePreserve(FighterID fighterID, int entryIdx, int layerIdx);
+    bool propagateReplace(FighterID fighterID, int entryIdx, int layerIdx);
 
 private:
+    void populateMissingFighters(FighterID fighterID);
+
+private:
+    // The structures below hold the entire table of each fighter. The table
+    // consists of rows and columns. If a row is added or deleted, then it is
+    // added/removed from all columns, guaranteeing that "colMotionValue",
+    // "colCategory", "colLayer[x].labels" and "colLayer[x].usages" vectors
+    // will always have the same size as each other.
+    //
+    // The hashmap "motionToColumn" maps a given motion value to a row index
+    // in the table. This is simple enough, since all motion values are unique
+    // and map 1:1.
+    //
+    // Each hashmap in "layerMaps" corresponds to one layer. Each "labelToColumn"
+    // hashmap maps a user label to a set of rows in the table. Since user labels
+    // don't have to be unique, the same label can return more than 1 row.
+    //
+    // Note that layers actually span over all fighters, and are not specific
+    // to any particular fighter. This is why layer names are stored in an
+    // outside vector "layerNames_". The UI can choose to hide layers who's
+    // columns are all empty, if needed.
     struct Layer
     {
-        Vector<String> labels;
-        Vector<Usage> usages;
+        Vector<SmallString<15, int8_t>> labels;  // Contains all rows of this layer column's labels in the table
+        Vector<Usage>                   usages;  // Contains all rows of this layer's usages in the table
     };
 
     struct Fighter
     {
-        Vector<FighterMotion> motions;
-        Vector<Category> categories;
-        Vector<String> hash40s;
-        SmallVector<Layer, 8> layers;
+        Vector<FighterMotion> colMotionValue;    // Contains all rows of the "motion value" column in the table
+        Vector<Category>      colCategory;       // Contains all rows of the "category" column in the table
+        SmallVector<Layer, 8> colLayer;          // Contains all rows of each layer in the table
 
-        HashMap<FighterMotion, int, FighterMotion::Hasher> motionMap;
+        struct LayerMap
+        {
+            HashMap<String, SmallVector<int, 4>> labelToColumn;
+        };
+
+        HashMap<FighterMotion, int, FighterMotion::Hasher> motionToColumn;
+        SmallVector<LayerMap, 8> layerMaps;
     };
 
-    Vector<Fighter> fighters_;
+    Vector<Fighter, int8_t> fighters_;
+    Vector<String, int16_t> layerNames_;
+    HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> hash40s_;
 };
 
 }

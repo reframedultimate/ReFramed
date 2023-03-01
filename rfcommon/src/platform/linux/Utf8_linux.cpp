@@ -9,7 +9,10 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 wchar_t* utf8_to_utf16(const char* utf8, int utf8_bytes)
 {
-    PROFILE(Utf8_linuxGlobal, utf8_to_utf16);
+    NOPROFILE();
+
+    (void)utf8;
+    (void)utf8_bytes;
 
     return nullptr;
 }
@@ -17,15 +20,17 @@ wchar_t* utf8_to_utf16(const char* utf8, int utf8_bytes)
 // ----------------------------------------------------------------------------
 void utf16_free(wchar_t* utf16)
 {
-    PROFILE(Utf8_linuxGlobal, utf16_free);
+    NOPROFILE();
+
+    (void)utf16;
 
     assert(false);
 }
 
 // ----------------------------------------------------------------------------
-FILE* utf8_fopen_write(const char* utf8_filename, int utf8_filename_bytes)
+FILE* utf8_fopen_wb(const char* utf8_filename, int utf8_filename_bytes)
 {
-    PROFILE(Utf8_linuxGlobal, utf8_fopen_write);
+    NOPROFILE();
 
     (void)utf8_filename_bytes;
     return fopen(utf8_filename, "wb");
@@ -34,7 +39,7 @@ FILE* utf8_fopen_write(const char* utf8_filename, int utf8_filename_bytes)
 // ----------------------------------------------------------------------------
 int utf8_remove(const char* utf8_filename, int utf8_filename_bytes)
 {
-    PROFILE(Utf8_linuxGlobal, utf8_remove);
+    NOPROFILE();
 
     (void)utf8_filename_bytes;
     return remove(utf8_filename);

@@ -22,7 +22,8 @@ Hash40Strings* Hash40Strings::loadCSV(const char* fileName)
 {
     PROFILE(Hash40Strings, loadCSV);
 
-    FILE* fp = fopen(fileName, "rb");
+#define fopen_nolint fopen
+    FILE* fp = fopen_nolint(fileName, "rb");
     if (fp == nullptr)
         return nullptr;
 

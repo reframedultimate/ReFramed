@@ -1,0 +1,6 @@
+Enhancements
+  - Optimized startup time
+    + Replay metadata is cached instead of parsing every replay on startup
+    + Hash40 strings are loaded from a binary format instead of parsing CSV each time
+    + User motion labels are loaded from a binary format
+

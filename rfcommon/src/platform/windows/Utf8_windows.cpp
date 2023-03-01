@@ -11,7 +11,7 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 wchar_t* utf8_to_utf16(const char* utf8, int utf8_bytes)
 {
-    PROFILE(Utf8_windowsGlobal, utf8_to_utf16);
+    NOPROFILE();
 
     int utf16_bytes = MultiByteToWideChar(CP_UTF8, 0, utf8, utf8_bytes, NULL, 0);
     if (utf16_bytes == 0)
@@ -35,15 +35,15 @@ wchar_t* utf8_to_utf16(const char* utf8, int utf8_bytes)
 // ----------------------------------------------------------------------------
 void utf16_free(wchar_t* utf16)
 {
-    PROFILE(Utf8_windowsGlobal, utf16_free);
+    NOPROFILE();
 
     free(utf16);
 }
 
 // ----------------------------------------------------------------------------
-FILE* utf8_fopen_write(const char* utf8_filename, int utf8_filename_bytes)
+FILE* utf8_fopen_wb(const char* utf8_filename, int utf8_filename_bytes)
 {
-    PROFILE(Utf8_windowsGlobal, utf8_fopen_write);
+    NOPROFILE();
 
     wchar_t* utf16_filename = utf8_to_utf16(utf8_filename, utf8_filename_bytes);
     if (utf16_filename == nullptr)
@@ -58,7 +58,7 @@ FILE* utf8_fopen_write(const char* utf8_filename, int utf8_filename_bytes)
 // ----------------------------------------------------------------------------
 int utf8_remove(const char* utf8_filename, int utf8_filename_bytes)
 {
-    PROFILE(Utf8_windowsGlobal, utf8_remove);
+    NOPROFILE();
 
     wchar_t* utf16_filename = utf8_to_utf16(utf8_filename, utf8_filename_bytes);
     if (utf16_filename == nullptr)

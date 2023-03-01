@@ -109,14 +109,14 @@ void ImportReplayPackDialog::onSelectReplayPack()
         return;
     }
 
-    uint32_t numFiles = deserializer.readLU32();
+    int numFiles = (int)deserializer.readLU32();
     bool hasVideos = false;
     for (int i = 0; i != numFiles; ++i)
     {
         char type[4];
         memcpy(type, deserializer.readFromPtr(4), 4);
-        uint64_t offset = deserializer.readLU64();
-        uint64_t size = deserializer.readLU64();
+        /*uint64_t offset = */deserializer.readLU64();
+        /*uint64_t size = */deserializer.readLU64();
         uint8_t fileNameLen = deserializer.readU8();
         deserializer.readFromPtr(fileNameLen);
 
@@ -241,7 +241,7 @@ void ImportReplayPackDialog::onImport()
     bool videoWasExtracted = false;
     bool overwriteAll = false;
     bool skipAll = false;
-    uint32_t numFiles = deserializer.readLU32();
+    int numFiles = (int)deserializer.readLU32();
     for (int i = 0; i != numFiles; ++i)
     {
         char type[4];
@@ -303,7 +303,7 @@ void ImportReplayPackDialog::onImport()
 
         QString filePath = dir.absoluteFilePath(fileName);
         QByteArray filePathUtf8 = filePath.toUtf8();
-        FILE* fp = rfcommon::utf8_fopen_write(filePathUtf8.constData(), filePathUtf8.length());
+        FILE* fp = rfcommon::utf8_fopen_wb(filePathUtf8.constData(), filePathUtf8.length());
         if (fp == nullptr)
         {
             QMessageBox::critical(this,
@@ -318,7 +318,7 @@ void ImportReplayPackDialog::onImport()
                 "Write Error",
                 "Failed to write data to file \"" + fileName + "\"\n\n" + strerror(errno));
             fclose(fp);
-            remove(fileName.toUtf8().constData());
+            dir.remove(fileName);
             return;
         }
 
