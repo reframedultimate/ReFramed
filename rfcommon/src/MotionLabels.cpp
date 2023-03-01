@@ -349,13 +349,13 @@ int MotionLabels::importLayer(const char* fileNameUtf8)
 // ----------------------------------------------------------------------------
 bool MotionLabels::exportLayer(int layerIdx, const char* fileNameUtf8)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -373,19 +373,19 @@ const char* MotionLabels::toString(FighterMotion motion, Usage usage, int prefer
 // ----------------------------------------------------------------------------
 FighterMotion MotionLabels::toMotion(const char* hash40Str) const
 {
-
+    return FighterMotion::makeInvalid();
 }
 
 // ----------------------------------------------------------------------------
 SmallVector<FighterMotion, 4> MotionLabels::toMotion(FighterID fighterID, const char* label) const
 {
-
+    return SmallVector<FighterMotion, 4>();
 }
 
 // ----------------------------------------------------------------------------
 int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
 {
-
+    return -1;
 }
 
 // ----------------------------------------------------------------------------
@@ -397,43 +397,42 @@ void MotionLabels::deleteLayer(int layerIdx)
 // ----------------------------------------------------------------------------
 bool MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
 {
-
+    return -1;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::changeCategory(FighterID fighterID, int entryIdx, Category newCategory)
 {
-
+    return false;
 }
 
 // ----------------------------------------------------------------------------
 void MotionLabels::populateMissingFighters(FighterID fighterID)
 {
-
 }
 
 }

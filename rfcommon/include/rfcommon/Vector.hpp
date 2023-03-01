@@ -513,7 +513,7 @@ public:
     Vector(const Vector& other)
         : Vector()
     {
-        insertCopy(0, other.begin_, other.end());
+        insertCopy(S(0), other.begin_, other.end());
     }
 
     Vector(Vector&& other) noexcept

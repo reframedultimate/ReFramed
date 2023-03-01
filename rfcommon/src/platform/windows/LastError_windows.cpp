@@ -1,4 +1,4 @@
-#include "rfcommon/LastWindowsError.hpp"
+#include "rfcommon/LastError.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -6,7 +6,7 @@
 namespace rfcommon {
 
 // ----------------------------------------------------------------------------
-LastWindowsError::LastWindowsError()
+LastError::LastError()
     : str_(nullptr)
 {
     FormatMessage(
@@ -20,7 +20,7 @@ LastWindowsError::LastWindowsError()
 }
 
 // ----------------------------------------------------------------------------
-LastWindowsError::~LastWindowsError()
+LastError::~LastError()
 {
     if (str_)
         LocalFree(str_);

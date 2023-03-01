@@ -1,4 +1,4 @@
-#include "rfcommon/LastWindowsError.hpp"
+#include "rfcommon/LastError.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/SharedLibrary.hpp"
@@ -14,7 +14,7 @@ SharedLibrary::SharedLibrary(const char* fileName)
 {
     HMODULE hModule = LoadLibraryA(fileName);
     if (hModule == NULL)
-        Log::root()->error("Failed to load DLL: %s: %s", fileName, LastWindowsError().cStr());
+        Log::root()->error("Failed to load DLL: %s: %s", fileName, LastError().cStr());
 
     handle_ = static_cast<void*>(hModule);
 }

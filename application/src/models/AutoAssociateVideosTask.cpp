@@ -22,7 +22,7 @@
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
 #   define WIN32_LEAN_AND_MEAN
 #   include <Windows.h>
-#   include "rfcommon/LastWindowsError.hpp"
+#   include "rfcommon/LastError.hpp"
 #   include "rfcommon/time.h"
 #   include "rfcommon/Utf8.hpp"
 #elif defined(RFCOMMON_PLATFORM_LINUX)
@@ -99,7 +99,7 @@ void AutoAssociateVideoTask::run()
         WIN32_FILE_ATTRIBUTE_DATA fileAttributes;
         if (GetFileAttributesExW(utf16FilePath, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
         {
-            log_->error("Failed to get file attributes for file \"%s\": %s", utf8FilePath, rfcommon::LastWindowsError().cStr());
+            log_->error("Failed to get file attributes for file \"%s\": %s", utf8FilePath, rfcommon::LastError().cStr());
             rfcommon::utf16_free(utf16FilePath);
             continue;
         }
