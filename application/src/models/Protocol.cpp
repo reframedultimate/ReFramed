@@ -81,7 +81,7 @@ void Protocol::connectToSSB64Process()
 
     disconnectFromServer();
 
-    uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
+    //uint32_t mappingInfoChecksum = globalMappingInfo_.notNull() ? globalMappingInfo_->checksum() : 0;
     ssb64Task_.reset(new ProtocolTaskSSB64(rfcommon::Log::root()->child("protocol")));
 
     dispatcher.dispatch(&rfcommon::ProtocolListener::onProtocolAttemptConnectToServer, "N64 Emulator", 0);

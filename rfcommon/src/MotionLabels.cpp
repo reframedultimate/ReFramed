@@ -70,24 +70,29 @@ bool MotionLabels::load(const char* fileNameUtf8)
     for (int fighterIdx = 0; fighterIdx != fighterCount; ++fighterIdx)
     {
         const int rowCount = d.readLU16();
+        Fighter& fighter = fighters_.emplace();
+        fighter.colLayer.resize(layerCount);
+
         for (int row = 0; row != rowCount; ++row)
         {
             const uint32_t lower = d.readLU32();
             const uint8_t upper = d.readU8();
             const Category category = static_cast<Category>(d.readU8());
-            const int layerCount = d.readLU16();
-
             const auto motion = FighterMotion::fromParts(upper, lower);
-            if (motion.isValid() == false)
-            {
-                log->notice("Found invalid motion value in file, ignoring...");
-                continue;
-            }
 
+            fighter.colMotionValue.emplace(motion);
+            fighter.colCategory.emplace(category);
             for (int layerIdx = 0; layerIdx != layerCount; ++layerIdx)
             {
-
+                fighter.colLayer[layerIdx].usages.emplace(static_cast<Usage>(d.readU8()));
+                const int len = d.readU8();
+                fighter.colLayer[layerIdx].labels.emplace(d.readFromPtr(len), len);
             }
+
+            if (motion.isValid() == false)
+                log->warning("Found invalid motion value in file");
+            if (fighter.motionToRow.insertIfNew(motion, row) != fighter.motionToRow.end())
+                log->warning("Found duplicate motion value 0x%lx in file", motion.value());
         }
     }
 
@@ -152,21 +157,18 @@ bool MotionLabels::save(const char* fileNameUtf8)
         // Write number of fighters and number of layers
         Serializer s(scratch, sizeof *scratch);
         s.writeU8(fighters_.count());
-        s.writeLU16(layerNames_.count());
         fwrite(s.data(), s.bytesWritten(), 1, fp);
     }
     for (const Fighter& fighter : fighters_)
     {
-        // Write number of rows and columns in table for this fighter
+        // Write number of rows in table for this fighter. The number of
+        // columns remains constant for all fighters
         Serializer s1(scratch, sizeof *scratch);
         s1.writeLU16(fighter.colMotionValue.count());
         fwrite(s1.data(), s1.bytesWritten(), 1, fp);
 
         for (int row = 0; row != fighter.colMotionValue.count(); ++row)
         {
-            // Even if fighter has 0 layers, there can still be rows. These
-            // occur when the motion is not yet labeled by the user, so it is
-            // entered into the table as UNLABELED (by default)
             Serializer s2(scratch, sizeof *scratch);
             s2.writeLU32(fighter.colMotionValue[row].lower());
             s2.writeU8(fighter.colMotionValue[row].upper());

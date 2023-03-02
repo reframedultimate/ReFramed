@@ -193,11 +193,11 @@ private:
     // "colCategory", "colLayer[x].labels" and "colLayer[x].usages" vectors
     // will always have the same size as each other.
     //
-    // The hashmap "motionToColumn" maps a given motion value to a row index
+    // The hashmap "motionToRow" maps a given motion value to a row index
     // in the table. This is simple enough, since all motion values are unique
     // and map 1:1.
     //
-    // Each hashmap in "layerMaps" corresponds to one layer. Each "labelToColumn"
+    // Each hashmap in "layerMaps" corresponds to one layer. Each "labelToRow"
     // hashmap maps a user label to a set of rows in the table. Since user labels
     // don't have to be unique, the same label can return more than 1 row.
     //
@@ -219,10 +219,10 @@ private:
 
         struct LayerMap
         {
-            HashMap<String, SmallVector<int, 4>> labelToColumn;
+            HashMap<SmallString<15, int8_t>, SmallVector<int, 4>> labelToRow;
         };
 
-        HashMap<FighterMotion, int, FighterMotion::Hasher> motionToColumn;
+        HashMap<FighterMotion, int, FighterMotion::Hasher> motionToRow;
         SmallVector<LayerMap, 8> layerMaps;
     };
 

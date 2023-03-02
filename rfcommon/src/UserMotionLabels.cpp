@@ -62,7 +62,7 @@ bool UserMotionLabels::loadLayer(const void* address, uint32_t size)
         if (jMotions.size() != jLabels.size() || jMotions.size() != jCategories.size())
             continue;
 
-        for (int i = 0; i != jMotions.size(); ++i)
+        for (int i = 0; i != (int)jMotions.size(); ++i)
         {
             if (jMotions[i].is_number_integer() == false)
                 continue;
@@ -116,7 +116,7 @@ bool UserMotionLabels::loadUnlabeled(const void* address, uint32_t size)
         if (jMotions.is_array() == false)
             continue;
 
-        for (int i = 0; i != jMotions.size(); ++i)
+        for (int i = 0; i != (int)jMotions.size(); ++i)
         {
             if (jMotions[i].is_number_integer() == false)
                 continue;

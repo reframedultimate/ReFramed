@@ -47,7 +47,7 @@ ReplayEditorDialog::ReplayEditorDialog(
     json& jReplayEditorDialog = cfg["replayeditordialog"];
     json& jExpanded = jReplayEditorDialog["expanded"];
     if (jExpanded.is_array())
-        for (int i = 0; i != jExpanded.size() && i < metadataEditWidgets_.size(); ++i)
+        for (int i = 0; i != (int)jExpanded.size() && i < metadataEditWidgets_.size(); ++i)
             if (jExpanded[i].is_boolean() && jExpanded[i].get<bool>())
                 metadataEditWidgets_[i]->setExpanded(true);
 

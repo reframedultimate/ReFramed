@@ -141,7 +141,7 @@ uint32_t FrameData::save(FILE* fp) const
             serializer.writeU8(frame.stocks().count());
             serializer.writeU8(frame.flags().value());
         }
-    assert(serializer.bytesWritten() == uncompressed.size());
+    assert(serializer.bytesWritten() == (uint64_t)uncompressed.size());
 
     uLongf compressedSize = compressBound(uncompressed.size());
     MemoryBuffer compressed(compressedSize + 6);
