@@ -47,10 +47,9 @@ public:
 
     enum Usage
     {
-        HASH40,
         READABLE,
         NOTATION,
-        GROUP
+        CATEGORIZATION
     };
 
     MotionLabels();
@@ -83,7 +82,16 @@ public:
      * \return If the motion value is unknown, then this method will return
      * the fallback parameter, which defaults to nullptr.
      */
-    const char* toHash40String(FighterMotion motion, const char* fallback=nullptr) const;
+    const char* lookupHash40(FighterMotion motion, const char* fallback=nullptr) const;
+
+    /*!
+     * \brief Runs the string through @see hash40(), but only returns the
+     * motion value if it exists in the list of known values. If you need
+     * to hash unknown values, use @see hash40().
+     * \return If not found, FighterMotion::makeInvalid() is returned. You
+     * can check the validity with motion.isValid().
+     */
+    FighterMotion toMotion(const char* hash40Str) const;
 
     /*!
      * \brief Converts a motion value into a string from a specific layer. You
@@ -96,12 +104,15 @@ public:
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* toString(FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
+    const char* lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
 
     /*!
      * \brief Converts a motion value into a string from any layer marked with
      * the specified "usage". You can use layerIndex() to find the index for a
-     * preferred layer.
+     * preferred layer. If the preferred layer contains an empty string, then
+     * the search continues to the other layers that share the same usage, until
+     * a non-empty entry is found. If all layers are empty, then the fallback
+     * parameter is returned.
      * \param[in] motion The motion value to convert.
      * \param[in] preferredLayerIdx The layer to search initially. If you specify
      * a value of -1 then all layers marked with the specified usage will be
@@ -111,16 +122,7 @@ public:
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* toString(FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback=nullptr) const;
-
-    /*!
-     * \brief Runs the string through @see hash40(), but only returns the
-     * motion value if it exists in the list of known values. If you need
-     * to hash unknown values, use @see hash40().
-     * \return If not found, FighterMotion::makeInvalid() is returned. You
-     * can check the validity with motion.isValid().
-     */
-    FighterMotion toMotion(const char* hash40Str) const;
+    const char* lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback=nullptr) const;
 
     /*!
      * \brief Looks up all user labels matching the specified string for the
@@ -131,14 +133,19 @@ public:
      * \return It's possible for a label to match multiple motion values. All
      * matching values are returned. If none are found the list will be empty.
      */
-    SmallVector<FighterMotion, 4> toMotion(FighterID fighterID, const char* label) const;
+    SmallVector<FighterMotion, 4> toMotions(FighterID fighterID, const char* label) const;
 
     //! Returns the total number of layers
-    int layerCount() const;
+    int layerCount() const
+        { return layerNames_.count(); }
+
+    //! Returns the first layer index matching the specified name, or -1 if none is found
+    int layerIndex(const char* layerName) const;
 
     //! Returns the name of the specified layer
     const char* layerName(int layerIdx) const;
 
+    //! Returns the layer's usage
     Usage layerUsage(int layerIdx) const;
 
     /*!
@@ -147,8 +154,8 @@ public:
      * \param[in] usage Categorizes how the new layer will be used. This affects
      * where the layer will be inserted, and can possibly shift around other
      * existing layers.
-     * \return Returns the index of the newly created layer, or -1 if creation
-     * failed.
+     * \return Returns the index of the newly created layer. Operation will
+     * never fail.
      */
     int newLayer(const char* nameUtf8, Usage usage);
 
@@ -160,21 +167,33 @@ public:
 
     int changeUsage(int layerIdx, Usage newUsage);
 
-    int shuffleLayers(int layerIdx, int insertIdx);
+    int moveLayer(int layerIdx, int insertIdx);
 
     /*!
      * \brief Attempts to merge all entries of the source layer into the target
      * layer. The source and target layers must share the same "Usage".
+     * 
+     * Merge is implemented by first creating a third layer, then merging the
+     * first and second layer values into the third. If any conflicts occur,
+     * they will appear as "a | b" inside each row, indicating that merging
+     * was not successful. The third layer's index is then returned from this
+     * function. If merging is successful, then the target layer is replaced
+     * with the third layer, and a value of "0" is returned. NOTE: Even though
+     * "0" is a valid layer index as well, it could never be the index of an
+     * unmerged layer because there must be at least 2 layers in order to
+     * perform a merge in the first place, and returning -1 for success seems
+     * wrong.
      * \param[in] targetLayerIdx
      * \param[in] sourceLayerIdx
-     * \return Returns 0 if successful, or
+     * \return Returns 0 if successful, or the layer index of the partially
+     * merged layer if conflicts occurred.
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
-    int labelCount(FighterID fighterID) const;
-    Category categoryAt(FighterID fighterID, int entryIdx) const;
-    FighterMotion motionAt(FighterID fighterID, int entryIdx) const;
-    const char* labelAt(FighterID fighterID, int entryIdx, int layerIdx) const;
+    int rowCount(FighterID fighterID) const;
+    Category categoryAt(FighterID fighterID, int row) const;
+    FighterMotion motionAt(FighterID fighterID, int row) const;
+    const char* labelAt(FighterID fighterID, int row, int layerIdx) const;
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
     bool addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
@@ -219,7 +238,7 @@ private:
 
         struct LayerMap
         {
-            HashMap<SmallString<15, int8_t>, SmallVector<int, 4>> labelToRow;
+            HashMap<SmallString<15, int8_t>, SmallVector<int, 4>> labelToRows;
         };
 
         HashMap<FighterMotion, int, FighterMotion::Hasher> motionToRow;
