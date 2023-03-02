@@ -33,6 +33,7 @@ set (REFRAMED_BUILD_DATADIR "${REFRAMED_BUILD_BINDIR}/share/reframed/data")
 set (REFRAMED_BUILD_PLUGINDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugins")
 set (REFRAMED_BUILD_PLUGINDEPSDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/plugindeps")
 set (REFRAMED_BUILD_CMAKEDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/cmake")
+set (REFRAMED_BUILD_DOCDIR "${REFRAMED_BUILD_BINDIR}/doc")
 
 set (REFRAMED_INSTALL_BINDIR ".")
 set (REFRAMED_INSTALL_LIBDIR "lib")
@@ -41,6 +42,7 @@ set (REFRAMED_INSTALL_DATADIR "share/reframed/data")
 set (REFRAMED_INSTALL_PLUGINDIR "share/reframed/plugins")
 set (REFRAMED_INSTALL_PLUGINDEPSDIR "share/reframed/plugindeps")
 set (REFRAMED_INSTALL_CMAKEDIR "share/reframed/cmake")
+set (REFRAMED_INSTALL_DOCDIR "doc")
 
 # Need to compile static libraries with position independent code on because
 # rfcommon is a shared library
@@ -62,6 +64,7 @@ add_subdirectory ("rfplot")
 add_subdirectory ("application")
 add_subdirectory ("plugins")
 add_subdirectory ("doc/gen-readme")
+add_subdirectory ("doc/user-manual")
 
 option (REFRAMED_TESTS "Enable building unit tests" ON)
 if (REFRAMED_TESTS)
