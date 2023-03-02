@@ -44,6 +44,14 @@ void Serializer::writeU8(uint8_t value)
 }
 
 // ----------------------------------------------------------------------------
+void Serializer::writeI8(int8_t value)
+{
+    NOPROFILE();
+    assert(writePtr_ + 1 <= end_);
+    *static_cast<int8_t*>(static_cast<void*>(writePtr_++)) = value;
+}
+
+// ----------------------------------------------------------------------------
 void Serializer::writeLU16(uint16_t value)
 {
     NOPROFILE();

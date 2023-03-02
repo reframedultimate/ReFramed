@@ -10,6 +10,7 @@ class RFCOMMON_PUBLIC_API Deserializer
 public:
     Deserializer(const void* data, uint64_t size);
 
+    int8_t readI8();
     uint8_t readU8();
 
     uint16_t readLU16();

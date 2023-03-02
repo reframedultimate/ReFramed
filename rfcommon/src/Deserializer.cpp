@@ -15,6 +15,17 @@ Deserializer::Deserializer(const void* data, uint64_t size)
 }
 
 // ----------------------------------------------------------------------------
+int8_t Deserializer::readI8()
+{
+    NOPROFILE();
+
+    if (readPtr_ + 1 > end_)
+        return 0;
+
+    return *static_cast<const int8_t*>(static_cast<const void*>(readPtr_++));
+}
+
+// ----------------------------------------------------------------------------
 uint8_t Deserializer::readU8()
 {
     NOPROFILE();

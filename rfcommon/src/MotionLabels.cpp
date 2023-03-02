@@ -85,8 +85,8 @@ bool MotionLabels::load(const char* fileNameUtf8)
             for (int layerIdx = 0; layerIdx != layerCount; ++layerIdx)
             {
                 fighter.colLayer[layerIdx].usages.emplace(static_cast<Usage>(d.readU8()));
-                const int len = d.readU8();
-                fighter.colLayer[layerIdx].labels.emplace(d.readFromPtr(len), len);
+                const int8_t len = d.readI8();
+                fighter.colLayer[layerIdx].labels.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
             }
 
             if (motion.isValid() == false)
@@ -179,7 +179,7 @@ bool MotionLabels::save(const char* fileNameUtf8)
             {
                 Serializer s3(scratch, sizeof *scratch);
                 s3.writeU8(layer.usages[row]);
-                s3.writeU8(layer.labels[row].length());
+                s3.writeI8(layer.labels[row].length());
                 fwrite(s3.data(), s3.bytesWritten(), 1, fp);
                 fwrite(layer.labels[row].cStr(), layer.labels[row].length(), 1, fp);
             }
