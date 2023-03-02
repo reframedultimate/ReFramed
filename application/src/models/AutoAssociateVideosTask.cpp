@@ -36,6 +36,7 @@ namespace rfapp {
 AutoAssociateVideoTask::AutoAssociateVideoTask(
         rfcommon::Session* session,
         const QString& vidDir,
+        int frameOffsetCorrection,
         PluginManager* pluginManager,
         rfcommon::Log* log,
         QObject* parent)
@@ -45,6 +46,7 @@ AutoAssociateVideoTask::AutoAssociateVideoTask(
     , log_(log)
     , session_(session)
     , vidDir_(vidDir)
+    , frameCorrection_(frameOffsetCorrection)
 {
     rfcommon::Reference<rfcommon::VisualizerContext> visCtx(new rfcommon::VisualizerContext);
     for (const auto& factoryName : pluginManager_->availableFactoryNames(RFPluginType::VIDEO_PLAYER))
@@ -157,6 +159,7 @@ void AutoAssociateVideoTask::run()
         if (gameStarted < videoEnd)
         {
             auto frameOffset = rfcommon::FrameIndex::fromSeconds(offset.seconds());
+            frameOffset += frameCorrection_;
             log_->info("Associating file \"%s\" with replay, offset=%d frames", utf8FileName, frameOffset.index());
             rfcommon::VideoMeta* vmeta = new rfcommon::VideoMeta(utf8FileName, frameOffset, false);
             session_->setNewVideo(vmeta, nullptr);

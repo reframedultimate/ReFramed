@@ -22,6 +22,7 @@ public:
     explicit AutoAssociateVideoTask(
             rfcommon::Session* session,
             const QString& vidDir,
+            int frameOffsetCorrection,
             PluginManager* pluginManager,
             rfcommon::Log* log,
             QObject* parent=nullptr);
@@ -40,6 +41,7 @@ private:
     rfcommon::Log* log_;
     rfcommon::Reference<rfcommon::Session> session_;
     QString vidDir_;
+    const int frameCorrection_;
 };
 
 }

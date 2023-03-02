@@ -185,7 +185,7 @@ void ActiveSessionManager::onProtocolGameEnded(rfcommon::Session* game)
     else
     {
         AutoAssociateVideoTask* task = new AutoAssociateVideoTask(
-                    game, autoAssociateVideoDir_,
+                    game, autoAssociateVideoDir_, autoAssociateVideoFrameOffset_,
                     pluginManager_,
                     rfcommon::Log::root()->child("AutoAssociateVideoTask"));
 
