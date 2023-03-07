@@ -4,6 +4,7 @@
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/FighterMotion.hpp"
 #include "rfcommon/HashMap.hpp"
+#include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/String.hpp"
 #include "rfcommon/Vector.hpp"
 
@@ -30,9 +31,12 @@ class MotionLabelsListener
 {
 public:
     virtual void onMotionLabelsLayerCountChanged() = 0;
-    virtual void onMotionLabelsNewLabel(FighterID fighterID, int labelIdx) = 0;
-    virtual void onMotionLabelsLabelChanged(FighterID fighterID, int labelIdx, const char* oldLabel, const char* newLabel) = 0;
-    virtual void onMotionLabelsCategoryChanged(FighterID fighterID, int labelIdx) = 0;
+    virtual void onMotionLabelsLayerNameChanged(int layerIdx) = 0;
+
+    virtual void onMotionLabelsNewLabel(FighterID fighterID, int row, int layerIdx) = 0;
+    virtual void onMotionLabelsLabelChanged(FighterID fighterID, int row, int layerIdx) = 0;
+    virtual void onMotionLabelsLayerUsageChanged(FighterID fighterID, int layerIdx) = 0;
+    virtual void onMotionLabelsCategoryChanged(FighterID fighterID, int row) = 0;
 };
 
 /*!
@@ -173,7 +177,7 @@ public:
     void deleteLayer(int layerIdx);
 
     //! Gives the specified layer a new name. The name doesn't have to be unique.
-    bool renameLayer(int layerIdx, const char* newNameUtf8);
+    void renameLayer(int layerIdx, const char* newNameUtf8);
 
     int changeUsage(int layerIdx, Usage newUsage);
 
@@ -182,7 +186,7 @@ public:
     /*!
      * \brief Attempts to merge all entries of the source layer into the target
      * layer. The source and target layers must share the same "Usage".
-     * 
+     *
      * Merge is implemented by first creating a third layer, then merging the
      * first and second layer values into the third. If any conflicts occur,
      * they will appear as "a | b" inside each row, indicating that merging
@@ -191,12 +195,12 @@ public:
      * with the third layer, and a value of "0" is returned. NOTE: Even though
      * "0" is a valid layer index as well, it could never be the index of an
      * unmerged layer because there must be at least 2 layers in order to
-     * perform a merge in the first place, and returning -1 for success seems
-     * wrong.
+     * perform a merge in the first place.
      * \param[in] targetLayerIdx
      * \param[in] sourceLayerIdx
-     * \return Returns 0 if successful, or the layer index of the partially
-     * merged layer if conflicts occurred.
+     * \return Returns 0 if successful. Returns the layer index of the partially
+     * merged layer if conflicts occurred. Returns -1 if an error occurred, such
+     * as the layers having different usages.
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
@@ -207,10 +211,12 @@ public:
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
     bool addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
-    bool changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
-    bool changeCategory(FighterID fighterID, int entryIdx, Category newCategory);
-    bool propagatePreserve(FighterID fighterID, int entryIdx, int layerIdx);
-    bool propagateReplace(FighterID fighterID, int entryIdx, int layerIdx);
+    void changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
+    bool changeCategory(FighterID fighterID, int row, Category newCategory);
+    bool propagatePreserve(FighterID fighterID, int row, int layerIdx);
+    bool propagateReplace(FighterID fighterID, int row, int layerIdx);
+
+    ListenerDispatcher<MotionLabelsListener> dispatcher;
 
 private:
     void populateMissingFighters(FighterID fighterID);

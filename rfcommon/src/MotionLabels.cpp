@@ -61,13 +61,15 @@ bool MotionLabels::load(const char* fileNameUtf8)
                 SmallString<31>(static_cast<const char*>(d.readFromPtr(labelLen)), labelLen));
     }
 
-    // Load all layer names
+    // Load all layer names and usages
     const int layerCount = d.readLU16();
     for (int i = 0; i != layerCount; ++i)
     {
         int len = d.readU8();
         layerNames_.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
     }
+    for (int i = 0; i != layerCount; ++i)
+        layerUsages_.emplace(static_cast<Usage>(d.readU8()));
 
     // Load layers
     const int fighterCount = d.readU8();
@@ -88,7 +90,6 @@ bool MotionLabels::load(const char* fileNameUtf8)
             fighter.colCategory.emplace(category);
             for (int layerIdx = 0; layerIdx != layerCount; ++layerIdx)
             {
-                fighter.colLayer[layerIdx].usages.emplace(static_cast<Usage>(d.readU8()));
                 const int8_t len = d.readI8();
                 fighter.colLayer[layerIdx].labels.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
             }
@@ -142,7 +143,7 @@ bool MotionLabels::save(const char* fileNameUtf8)
         fwrite(it.value().cStr(), it.value().length(), 1, fp);
     }
 
-    // Save layer names
+    // Save layer names and usages
     {
         Serializer s1(scratch, sizeof *scratch);
         s1.writeLU16(layerNames_.count());
@@ -153,6 +154,12 @@ bool MotionLabels::save(const char* fileNameUtf8)
             s2.writeU8(name.length());
             fwrite(s2.data(), s2.bytesWritten(), 1, fp);
             fwrite(name.cStr(), name.length(), 1, fp);
+        }
+        for (Usage usage : layerUsages_)
+        {
+            Serializer s2(scratch, sizeof *scratch);
+            s2.writeU8(usage);
+            fwrite(s2.data(), s2.bytesWritten(), 1, fp);
         }
     }
 
@@ -182,7 +189,6 @@ bool MotionLabels::save(const char* fileNameUtf8)
             for (const Layer& layer : fighter.colLayer)
             {
                 Serializer s3(scratch, sizeof *scratch);
-                s3.writeU8(layer.usages[row]);
                 s3.writeI8(layer.labels[row].length());
                 fwrite(s3.data(), s3.bytesWritten(), 1, fp);
                 fwrite(layer.labels[row].cStr(), layer.labels[row].length(), 1, fp);
@@ -272,77 +278,6 @@ skip_to_next_line:
     log->info("Updated %d hash40 labels\n", numInserted);
 
     return true;
-}
-
-// ----------------------------------------------------------------------------
-const char* MotionLabels::lookupHash40(FighterMotion motion, const char* fallback) const
-{
-    if (auto it = hash40s_.find(motion); it != hash40s_.end())
-        return it->value().cStr();
-    return fallback;
-}
-
-// ----------------------------------------------------------------------------
-FighterMotion MotionLabels::toMotion(const char* hash40Str) const
-{
-    FighterMotion motion = hash40(hash40Str);
-    if (hash40s_.find(motion) != hash40s_.end())
-        return motion;
-    return FighterMotion::makeInvalid();
-}
-
-// ----------------------------------------------------------------------------
-const char* MotionLabels::lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback) const
-{
-    if (layerIdx < 0)
-        return fallback;
-
-    const Fighter& fighter = fighters_[fighterID.value()];
-    const auto it = fighter.motionToRow.find(motion);
-    if (it == fighter.motionToRow.end())
-        return fallback;
-    const int row = it->value();
-
-    return fighter.colLayer[layerIdx].labels[row].cStr();
-}
-
-// ----------------------------------------------------------------------------
-const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback) const
-{
-    const Fighter& fighter = fighters_[fighterID.value()];
-    const auto it = fighter.motionToRow.find(motion);
-    if (it == fighter.motionToRow.end())
-        return fallback;
-    const int row = it->value();
-
-    if (preferredLayerIdx >= 0)
-        if (fighter.colLayer[preferredLayerIdx].labels[row].length() > 0)
-            return fighter.colLayer[preferredLayerIdx].labels[row].cStr();
-
-    for (int i = 0; i != layerCount(); ++i)
-        if (fighter.colLayer[i].labels[row].length() > 0)
-            return fighter.colLayer[i].labels[row].cStr();
-
-    return fallback;
-}
-
-// ----------------------------------------------------------------------------
-SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const char* label) const
-{
-    const Fighter& fighter = fighters_[fighterID.value()];
-
-    SmallVector<FighterMotion, 4> result;
-    for (int i = 0; i != layerCount(); ++i)
-        fighter.layerMaps[i].labelToRows.find(label)
-}
-
-// ----------------------------------------------------------------------------
-int MotionLabels::layerIndex(const char* layerName) const
-{
-    for (int i = 0; i != layerNames_.count(); ++i)
-        if (layerNames_[i] == layerName)
-            return i;
-    return -1;
 }
 
 // ----------------------------------------------------------------------------
@@ -542,8 +477,19 @@ SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const
 }
 
 // ----------------------------------------------------------------------------
+int MotionLabels::layerIndex(const char* layerName) const
+{
+    for (int i = 0; i != layerNames_.count(); ++i)
+        if (layerNames_[i] == layerName)
+            return i;
+    return -1;
+}
+
+// ----------------------------------------------------------------------------
 int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
 {
+    const int layerIdx = layerNames_.count();
+
     layerNames_.push(nameUtf8);
     layerUsages_.push(usage);
 
@@ -551,26 +497,62 @@ int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
     {
         const int rowCount = fighter.colMotionValue.count();
         Layer& layer = fighter.colLayer.emplace();
-        layer.labels.resize()
+        layer.labels.resize(rowCount);
+
+        fighter.layerMaps.emplace();
     }
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
+
+    return layerIdx;
 }
 
 // ----------------------------------------------------------------------------
 void MotionLabels::deleteLayer(int layerIdx)
 {
+    for (Fighter& fighter : fighters_)
+    {
+        fighter.layerMaps.erase(layerIdx);
+        fighter.colLayer.erase(layerIdx);
+    }
 
+    layerUsages_.erase(layerIdx);
+    layerNames_.erase(layerIdx);
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
+void MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
 {
-    return false;
+    layerNames_[layerIdx] = newNameUtf8;
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerNameChanged, layerIdx);
+}
+
+// ----------------------------------------------------------------------------
+int MotionLabels::changeUsage(int layerIdx, Usage newUsage)
+{
+    layerUsages_[layerIdx] = newUsage;
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerUsageChanged, layerIdx);
+}
+
+// ----------------------------------------------------------------------------
+int MotionLabels::moveLayer(int layerIdx, int insertIdx)
+{
+    return -1;
 }
 
 // ----------------------------------------------------------------------------
 int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
 {
-    return -1;
+    if (layerUsages_[targetLayerIdx] != layerUsages_[sourceLayerIdx])
+        return -1;
+
+    int mergeLayerIdx = newLayer(
+                (layerNames_[targetLayerIdx] + " | " + layerNames_[sourceLayerIdx]).cStr(),
+                layerUsages_[targetLayerIdx]);
+
+
 }
 
 // ----------------------------------------------------------------------------
@@ -582,24 +564,108 @@ bool MotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 // ----------------------------------------------------------------------------
 bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
 {
-    return false;
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
+    populateMissingFighters(fighterID);
+
+    // If this motion doesn't exist yet, we create a new entry at the end of the table
+    Fighter& fighter = fighters_[fighterID.value()];
+    const int rows = rowCount(fighterID);
+    const int row = fighter.motionToRow.insertOrGet(motion, rows)->value();
+    if (row == rows)
+    {
+        // Create row at end of table
+        fighter.colMotionValue.push(motion);
+        fighter.colCategory.push(category);
+        for (Layer& layer : fighter.colLayer)
+            layer.labels.emplace();
+
+        // Store new label on the appropriate layer
+        fighter.colLayer[layerIdx].labels[row] = label;
+
+        // Create entry in layer map so label -> motion lookup works
+        if (fighter.colLayer[layerIdx].labels[row].notEmpty())
+        {
+            auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+            labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+        }
+
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsNewLabel, fighterID, int(row));
+    }
+    else
+    {
+        // The motion exists in the table, but maybe the label is still empty.
+        // If not then we fail, because the label already exists.
+        if (fighter.colLayer[layerIdx].labels[row].notEmpty())
+            return false;
+
+        // Set user label for this layer
+        fighter.colLayer[layerIdx].labels[row] = label;
+
+        // Create entry in layer map so label -> motion lookup works
+        if (fighter.colLayer[layerIdx].labels[row].notEmpty())
+        {
+            auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+            labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+        }
+
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, int(row), "", label);
+    }
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel)
+void MotionLabels::changeLabel(FighterID fighterID, int row, int layerIdx, const char* newLabel)
 {
-    return false;
+    assert(fighterID.isValid());
+
+    Fighter& fighter = fighters_[fighterID.value()];
+    auto& label = fighter.colLayer[layerIdx].labels[row];
+    auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+
+    auto it = labelToRows.find(label);
+    if (it != labelToRows.end())
+    {
+        auto& matchingRows = it->value();
+        matchingRows.erase(matchingRows.findFirst(row));
+        if (matchingRows.count() == 0)
+            labelToRows.erase(it);
+    }
+
+    label = newLabel;
+
+    if (label.notEmpty())
+        labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, row, layerIdx);
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::changeCategory(FighterID fighterID, int entryIdx, Category newCategory)
+bool MotionLabels::changeCategory(FighterID fighterID, int row, Category newCategory)
 {
-    return false;
+    assert(fighterID.isValid());
+
+    Fighter& fighter = fighters_[fighterID.value()];
+    fighter.colCategory[row] = newCategory;
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, row);
 }
 
 // ----------------------------------------------------------------------------
 void MotionLabels::populateMissingFighters(FighterID fighterID)
 {
+    assert(fighterID.isValid());
+
+    while (fighters_.count() < fighterID.value() + 1)
+    {
+        Fighter& fighter = fighters_.emplace();
+        while (fighter.colLayer.count() < layerCount())
+            fighter.colLayer.emplace();
+        while (fighter.layerMaps.count() < layerCount())
+            fighter.layerMaps.emplace();
+    }
 }
 
 }

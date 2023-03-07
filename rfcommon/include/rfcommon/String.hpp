@@ -119,6 +119,12 @@ public:
         return false;
     }
 
+    SmallString swapWith(SmallString other)
+    {
+        swap(*this, other);
+        return other;
+    }
+
     SmallString copy() const
     {
         return *this;
