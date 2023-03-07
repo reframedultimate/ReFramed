@@ -337,6 +337,15 @@ SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const
 }
 
 // ----------------------------------------------------------------------------
+int MotionLabels::layerIndex(const char* layerName) const
+{
+    for (int i = 0; i != layerNames_.count(); ++i)
+        if (layerNames_[i] == layerName)
+            return i;
+    return -1;
+}
+
+// ----------------------------------------------------------------------------
 int MotionLabels::importLayer(const char* fileNameUtf8)
 {
     Log* log = Log::root();
@@ -385,7 +394,7 @@ int MotionLabels::importLayer(const char* fileNameUtf8)
         if (jUsage == "notation")
             return Usage::NOTATION;
         if (jUsage == "group")
-            return Usage::GROUP;
+            return Usage::CATEGORIZATION;
 
         log->notice("Usage \"%s\" is invalid. Using default.", jUsage.get<std::string>().c_str());
         return Usage::NOTATION;
@@ -443,33 +452,107 @@ bool MotionLabels::exportLayer(int layerIdx, FighterID fighterID, const char* fi
 }
 
 // ----------------------------------------------------------------------------
-const char* MotionLabels::toString(FighterMotion motion, int layerIdx, const char* fallback) const
+const char* MotionLabels::lookupHash40(FighterMotion motion, const char* fallback) const
 {
-    return nullptr;
-}
-
-// ----------------------------------------------------------------------------
-const char* MotionLabels::toString(FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback) const
-{
-    return nullptr;
+    if (const auto it = hash40s_.find(motion); it != hash40s_.end())
+        return it->value().cStr();
+    return fallback;
 }
 
 // ----------------------------------------------------------------------------
 FighterMotion MotionLabels::toMotion(const char* hash40Str) const
 {
-    return FighterMotion::makeInvalid();
+    FighterMotion motion = hash40(hash40Str);
+    if (hash40s_.find(motion) == hash40s_.end())
+        return FighterMotion::makeInvalid();
+    return motion;
 }
 
 // ----------------------------------------------------------------------------
-SmallVector<FighterMotion, 4> MotionLabels::toMotion(FighterID fighterID, const char* label) const
+const char* MotionLabels::lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback) const
 {
-    return SmallVector<FighterMotion, 4>();
+    if (layerIdx < 0)
+        return fallback;
+
+    // Look up row for specified fighter
+    const Fighter& fighter = fighters_[fighterID.value()];
+    const auto it = fighter.motionToRow.find(motion);
+    if (it == fighter.motionToRow.end())
+        return fallback;
+    const int row = it->value();
+
+    // Cell could contain an empty string
+    const Layer& layer = fighter.colLayer[layerIdx];
+    if (layer.labels[row].isEmpty())
+        return fallback;
+
+    return layer.labels[row].cStr();
+}
+
+// ----------------------------------------------------------------------------
+const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback) const
+{
+    // Look up row for specified fighter
+    const Fighter& fighter = fighters_[fighterID.value()];
+    const auto it = fighter.motionToRow.find(motion);
+    if (it == fighter.motionToRow.end())
+        return fallback;
+    const int row = it->value();
+
+    if (preferredLayerIdx >= 0)
+    {
+        const Layer& layer = fighter.colLayer[preferredLayerIdx];
+        if (layer.labels[row].notEmpty())
+            return layer.labels[row].cStr();
+    }
+
+    for (int layerIdx = 0; layerIdx != layerUsages_.count(); ++layerIdx)
+    {
+        if (layerUsages_[layerIdx] != usage)
+            continue;
+
+        const Layer& layer = fighter.colLayer[layerIdx];
+        if (layer.labels[row].notEmpty())
+            return layer.labels[row].cStr();
+    }
+
+    return fallback;
+
+}
+
+// ----------------------------------------------------------------------------
+SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const char* label) const
+{
+    SmallVector<FighterMotion, 4> result;
+
+    const Fighter& fighter = fighters_[fighterID.value()];
+    for (int layerIdx = 0; layerIdx != fighter.layerMaps.count(); ++layerIdx)
+    {
+        const auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+        const auto it = labelToRows.find(label);
+        if (it == labelToRows.end())
+            continue;
+
+        for (int row : it->value())
+            result.push(fighter.colMotionValue[row]);
+        break;
+    }
+
+    return result;
 }
 
 // ----------------------------------------------------------------------------
 int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
 {
-    return -1;
+    layerNames_.push(nameUtf8);
+    layerUsages_.push(usage);
+
+    for (Fighter& fighter : fighters_)
+    {
+        const int rowCount = fighter.colMotionValue.count();
+        Layer& layer = fighter.colLayer.emplace();
+        layer.labels.resize()
+    }
 }
 
 // ----------------------------------------------------------------------------

@@ -20,6 +20,8 @@ public:
     const char* data() const { return this->begin_; }
     const char* cStr() const { return this->begin_; }
     const S length() const { return this->count_ - 1; }
+    bool isEmpty() const { return this->count_ == 1; }
+    bool notEmpty() const { return this->count_ > 1; }
     S capacity() const { return this->capacity_ - 1; }
 
     char& operator[](S i) { return this->begin_[i]; }

@@ -26,6 +26,15 @@
 
 namespace rfcommon {
 
+class MotionLabelsListener
+{
+public:
+    virtual void onMotionLabelsLayerCountChanged() = 0;
+    virtual void onMotionLabelsNewLabel(FighterID fighterID, int labelIdx) = 0;
+    virtual void onMotionLabelsLabelChanged(FighterID fighterID, int labelIdx, const char* oldLabel, const char* newLabel) = 0;
+    virtual void onMotionLabelsCategoryChanged(FighterID fighterID, int labelIdx) = 0;
+};
+
 /*!
  * \brief This class handles everything to do with converting hash40 motion
  * values to strings and back, including managing user-defined labels.
@@ -33,7 +42,6 @@ namespace rfcommon {
  * Some notes on design decisions:
  *   - We use our own binary file format for the param labels instead of loading
  *     the official CSV file, as it cuts down on startup times by almost a second.
- *   - We categorize
  */
 class RFCOMMON_PUBLIC_API MotionLabels
 {
@@ -143,10 +151,12 @@ public:
     int layerIndex(const char* layerName) const;
 
     //! Returns the name of the specified layer
-    const char* layerName(int layerIdx) const;
+    const char* layerName(int layerIdx) const
+        { return layerNames_[layerIdx].cStr(); }
 
     //! Returns the layer's usage
-    Usage layerUsage(int layerIdx) const;
+    Usage layerUsage(int layerIdx) const
+        { return layerUsages_[layerIdx]; }
 
     /*!
      * \brief Creates a new layer with the specified name.
@@ -227,7 +237,6 @@ private:
     struct Layer
     {
         Vector<SmallString<15, int8_t>> labels;  // Contains all rows of this layer column's labels in the table
-        Vector<Usage>                   usages;  // Contains all rows of this layer's usages in the table
     };
 
     struct Fighter
@@ -247,6 +256,7 @@ private:
 
     Vector<Fighter, int8_t> fighters_;
     Vector<String, int16_t> layerNames_;
+    Vector<Usage, int16_t> layerUsages_;
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> hash40s_;
 };
 
