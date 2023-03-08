@@ -530,7 +530,7 @@ void MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
 }
 
 // ----------------------------------------------------------------------------
-int MotionLabels::changeUsage(int layerIdx, Usage newUsage)
+void MotionLabels::changeUsage(int layerIdx, Usage newUsage)
 {
     layerUsages_[layerIdx] = newUsage;
     dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerUsageChanged, layerIdx);
@@ -548,11 +548,91 @@ int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
     if (layerUsages_[targetLayerIdx] != layerUsages_[sourceLayerIdx])
         return -1;
 
-    int mergeLayerIdx = newLayer(
-                (layerNames_[targetLayerIdx] + " | " + layerNames_[sourceLayerIdx]).cStr(),
-                layerUsages_[targetLayerIdx]);
+    // Create new temporary "merge" layer
+    const int mergeLayerIdx = layerNames_.count();
+    for (Fighter& fighter : fighters_)
+    {
+        const int rowCount = fighter.colMotionValue.count();
+        Layer& layer = fighter.colLayer.emplace();
+        layer.labels.resize(rowCount);
+        //fighter.layerMaps.emplace();  // no lookups are required in the merge layer
+    }
 
+    // Go through each row for each fighter and copy data over to the "merge"
+    // layer. If two cells are found that contain different strings, we
+    // annotate it as "x|y" in the merge layer and set the success flag to
+    // false.
+    bool successfulMerge = true;
+    for (Fighter& fighter : fighters_)
+    {
+        for (int row = 0; row != fighter.colMotionValue.count(); ++row)
+        {
+            const auto& target = fighter.colLayer[targetLayerIdx].labels[row];
+            const auto& source = fighter.colLayer[sourceLayerIdx].labels[row];
+            auto& merge = fighter.colLayer[mergeLayerIdx].labels[row];
+            if (source.isEmpty())
+                merge = target;
+            else if (target.isEmpty())
+                merge = source;
+            else if (source == target)
+                merge = source;
+            else
+            {
+                merge = target + "|" + source;
+                successfulMerge = false;
+            }
+        }
+    }
 
+    if (successfulMerge == false)
+    {
+        // Have to build layer map for merge layer since now it becomes a "real"
+        // layer.
+        for (Fighter& fighter : fighters_)
+        {
+            auto& labelToRows = fighter.layerMaps.emplace().labelToRows;
+            for (int row = 0; row != fighter.colMotionValue.count(); ++row)
+            {
+                const auto& label = fighter.colLayer[mergeLayerIdx].labels[row];
+                if (label.notEmpty())
+                    labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+            }
+        }
+
+        // Create layer name and usage too
+        layerNames_.push(layerNames_[targetLayerIdx] + "|" + layerNames_[sourceLayerIdx]);
+        layerUsages_.push(layerUsages_[targetLayerIdx]);
+
+        return mergeLayerIdx;
+    }
+
+    // Replace the target layer with the merge layer, and erase the merge layer
+    for (Fighter& fighter : fighters_)
+    {
+        std::swap(fighter.colLayer[targetLayerIdx], fighter.colLayer[mergeLayerIdx]);
+        fighter.colLayer.erase(mergeLayerIdx);
+
+        // Rebuild layer map since it now contains new strings
+        auto& labelToRows = fighter.layerMaps[targetLayerIdx].labelToRows;
+        labelToRows.clear();
+        for (int row = 0; row != fighter.colMotionValue.count(); ++row)
+        {
+            const auto& label = fighter.colLayer[targetLayerIdx].labels[row];
+            if (label.notEmpty())
+                labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+        }
+    }
+
+    // Erase the source layer
+    layerUsages_.erase(sourceLayerIdx);
+    layerNames_.erase(sourceLayerIdx);
+    for (Fighter& fighter : fighters_)
+    {
+        fighter.layerMaps.erase(sourceLayerIdx);
+        fighter.colLayer.erase(sourceLayerIdx);
+    }
+
+    return 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -591,7 +671,7 @@ bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Catego
             labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
         }
 
-        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsNewLabel, fighterID, int(row));
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsNewLabel, fighterID, int(row), layerIdx);
     }
     else
     {
@@ -610,7 +690,7 @@ bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Catego
             labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
         }
 
-        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, int(row), "", label);
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, int(row), layerIdx);
     }
 
     return true;
@@ -639,18 +719,18 @@ void MotionLabels::changeLabel(FighterID fighterID, int row, int layerIdx, const
     if (label.notEmpty())
         labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, row, layerIdx);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, row, layerIdx);
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::changeCategory(FighterID fighterID, int row, Category newCategory)
+void MotionLabels::changeCategory(FighterID fighterID, int row, Category newCategory)
 {
     assert(fighterID.isValid());
 
     Fighter& fighter = fighters_[fighterID.value()];
     fighter.colCategory[row] = newCategory;
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, row);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, fighterID, row);
 }
 
 // ----------------------------------------------------------------------------

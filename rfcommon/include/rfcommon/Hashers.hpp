@@ -90,11 +90,11 @@ struct Hasher<int, uint32_t>
     }
 };
 
-template <int N>
-struct Hasher<SmallString<N>, uint32_t>
+template <int N, typename S>
+struct Hasher<SmallString<N, S>, uint32_t>
 {
     typedef uint32_t HashType;
-    uint32_t operator()(const SmallString<N>& s) const {
+    uint32_t operator()(const SmallString<N, S>& s) const {
         return hash32_jenkins_oaat(s.data(), s.length());
     }
 };

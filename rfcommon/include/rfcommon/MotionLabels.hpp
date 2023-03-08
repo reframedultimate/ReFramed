@@ -35,7 +35,7 @@ public:
 
     virtual void onMotionLabelsNewLabel(FighterID fighterID, int row, int layerIdx) = 0;
     virtual void onMotionLabelsLabelChanged(FighterID fighterID, int row, int layerIdx) = 0;
-    virtual void onMotionLabelsLayerUsageChanged(FighterID fighterID, int layerIdx) = 0;
+    virtual void onMotionLabelsLayerUsageChanged(int layerIdx) = 0;
     virtual void onMotionLabelsCategoryChanged(FighterID fighterID, int row) = 0;
 };
 
@@ -179,7 +179,7 @@ public:
     //! Gives the specified layer a new name. The name doesn't have to be unique.
     void renameLayer(int layerIdx, const char* newNameUtf8);
 
-    int changeUsage(int layerIdx, Usage newUsage);
+    void changeUsage(int layerIdx, Usage newUsage);
 
     int moveLayer(int layerIdx, int insertIdx);
 
@@ -189,13 +189,14 @@ public:
      *
      * Merge is implemented by first creating a third layer, then merging the
      * first and second layer values into the third. If any conflicts occur,
-     * they will appear as "a | b" inside each row, indicating that merging
+     * they will appear as "a|b" inside each row, indicating that merging
      * was not successful. The third layer's index is then returned from this
      * function. If merging is successful, then the target layer is replaced
-     * with the third layer, and a value of "0" is returned. NOTE: Even though
-     * "0" is a valid layer index as well, it could never be the index of an
-     * unmerged layer because there must be at least 2 layers in order to
-     * perform a merge in the first place.
+     * with the third merge layer, and the source layer is deleted. A value of
+     * "0" is returned to indicate success. NOTE: Even though "0" is a valid
+     * layer index as well, it could never be the index of an unmerged layer
+     * because there must be at least 2 layers in order to perform a merge in
+     * the first place.
      * \param[in] targetLayerIdx
      * \param[in] sourceLayerIdx
      * \return Returns 0 if successful. Returns the layer index of the partially
@@ -204,17 +205,21 @@ public:
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
-    int rowCount(FighterID fighterID) const;
-    Category categoryAt(FighterID fighterID, int row) const;
-    FighterMotion motionAt(FighterID fighterID, int row) const;
-    const char* labelAt(FighterID fighterID, int row, int layerIdx) const;
+    int rowCount(FighterID fighterID) const
+        { return fighters_[fighterID.value()].colMotionValue.count(); }
+    Category categoryAt(FighterID fighterID, int row) const
+        { return fighters_[fighterID.value()].colCategory[row]; }
+    FighterMotion motionAt(FighterID fighterID, int row) const
+        { return fighters_[fighterID.value()].colMotionValue[row]; }
+    const char* labelAt(FighterID fighterID, int row, int layerIdx) const
+        { return fighters_[fighterID.value()].colLayer[layerIdx].labels[row].cStr(); }
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
     bool addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
     void changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
-    bool changeCategory(FighterID fighterID, int row, Category newCategory);
-    bool propagatePreserve(FighterID fighterID, int row, int layerIdx);
-    bool propagateReplace(FighterID fighterID, int row, int layerIdx);
+    void changeCategory(FighterID fighterID, int row, Category newCategory);
+    //bool propagatePreserve(FighterID fighterID, int row, int layerIdx);
+    //bool propagateReplace(FighterID fighterID, int row, int layerIdx);
 
     ListenerDispatcher<MotionLabelsListener> dispatcher;
 
