@@ -4,6 +4,7 @@
 
 #include "rfcommon/init.h"
 #include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Log.hpp"
@@ -34,12 +35,12 @@ int main(int argc, char** argv)
 #endif
 
     QApplication app(argc, argv);
+    QDir appLocalDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
 #if defined(RFCOMMON_LOGGING)
-    QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    if (logPath.exists("logs") == false)
-        logPath.mkdir("logs");
-    QByteArray logPathUtf8 = logPath.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
+    if (appLocalDir.exists("logs") == false)
+        appLocalDir.mkdir("logs");
+    QByteArray logPathUtf8 = appLocalDir.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
     const char* logPathUtf8CStr = logPathUtf8.constData();
 #else
     const char* logPathUtf8CStr = "";
@@ -94,7 +95,10 @@ int main(int argc, char** argv)
         }
     }
 
-    rfapp::MainWindow mainWindow(std::move(config), hash40Strings);
+    rfcommon::Reference<rfcommon::MotionLabels> motionLabels(
+                new rfcommon::MotionLabels(appLocalDir.absoluteFilePath("motionLabels.dat").toUtf8().constData()));
+
+    rfapp::MainWindow mainWindow(std::move(config), hash40Strings, motionLabels);
 
     // Make the main window as large as possible when not maximized
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());

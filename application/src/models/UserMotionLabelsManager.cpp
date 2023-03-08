@@ -6,6 +6,7 @@
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/Metadata.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/UserMotionLabels.hpp"
@@ -17,8 +18,9 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-UserMotionLabelsManager::UserMotionLabelsManager(Protocol* protocol)
-    : protocol_(protocol)
+UserMotionLabelsManager::UserMotionLabelsManager(rfcommon::MotionLabels* motionLabels, Protocol* protocol)
+    : motionLabels_(motionLabels)
+    , protocol_(protocol)
     , userMotionLabels_(new rfcommon::UserMotionLabels)
 {
     loadAllLayers();
@@ -99,64 +101,23 @@ bool UserMotionLabelsManager::saveAllLayers()
     if (motionLabelsModified_ == false)
         return true;
 
-    bool success = true;
-
-    QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    if (dir.exists("motion") == false)
-        dir.mkdir("motion");
-    dir.cd("motion");
-
-    // Temporary backup of previous files
-    QStringList previousFiles = dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot);
-    for (const auto& f : previousFiles)
-        dir.rename(f, "." + f);
-
-    for (int layerIdx = 0; layerIdx != userMotionLabels_->layerCount(); ++layerIdx)
-    {
-        QString layerName = QString::fromUtf8(userMotionLabels_->layerName(layerIdx));
-        QString fileName = dir.absoluteFilePath(QString::number(layerIdx + 1) + "_" + layerName + ".json");
-        QByteArray fileNameUtf8 = fileName.toUtf8();
-        FILE* fp = rfcommon::utf8_fopen_wb(fileNameUtf8.constData(), fileNameUtf8.size());
-        if (fp == nullptr)
-        {
-            success = false;
-            continue;
-        }
-
-        int result = userMotionLabels_->saveLayer(fp, layerIdx);
-        fclose(fp);
-        if (result == 0)
-        {
-            success = false;
-            continue;
-        }
-    }
-
-    QString fileName = dir.absoluteFilePath("unlabeled.json");
-    QByteArray fileNameUtf8 = fileName.toUtf8();
-    FILE* fp = rfcommon::utf8_fopen_wb(fileNameUtf8.constData(), fileNameUtf8.size());
-    if (fp == nullptr)
-        success = false;
-    else
-    {
-        if (userMotionLabels_->saveUnlabeled(fp) == 0)
-            success = false;
-        fclose(fp);
-    }
-
-    // Remove previous files
-    for (const auto& f : previousFiles)
-        dir.remove("." + f);
-
-    return success;
+    return motionLabels_->save();
 }
 
 // ----------------------------------------------------------------------------
 rfcommon::UserMotionLabels* UserMotionLabelsManager::userMotionLabels() const
 {
-    PROFILE(UserMotionLabelsManager, userMotionLabels);
+    NOPROFILE();
 
     return userMotionLabels_;
+}
+
+// ----------------------------------------------------------------------------
+rfcommon::MotionLabels* UserMotionLabelsManager::motionLabels() const
+{
+    NOPROFILE();
+
+    return motionLabels_;
 }
 
 // ----------------------------------------------------------------------------

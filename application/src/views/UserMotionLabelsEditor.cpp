@@ -6,10 +6,10 @@
 #include "rfcommon/FrameData.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/UserMotionLabels.hpp"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -28,20 +28,18 @@
 #include <QClipboard>
 #include <QApplication>
 
-#include "rfcommon/hash40.hpp"
-
 namespace rfapp {
 
 namespace {
 
 class TableModel
     : public QAbstractTableModel
-    , public rfcommon::UserMotionLabelsListener
+    , public rfcommon::MotionLabelsListener
 {
 public:
     struct Entry
     {
-        int entryIdx;
+        int row;
         QString value;
         QString string;
         QVector<QString> labels;
@@ -49,10 +47,10 @@ public:
 
     TableModel(
             rfcommon::FighterID fighterID,
-            rfcommon::UserMotionLabels* userMotionLabels,
+            rfcommon::MotionLabels* motionLabels,
             rfcommon::Hash40Strings* hash40Strings,
-            rfcommon::UserMotionLabelsCategory category)
-        : labels_(userMotionLabels)
+            rfcommon::MotionLabels::Category category)
+        : labels_(motionLabels)
         , hash40Strings_(hash40Strings)
         , category_(category)
         , fighterID_(fighterID)
@@ -76,20 +74,20 @@ public:
         endResetModel();
     }
 
-    void setCategory(const QModelIndexList& indexes, rfcommon::UserMotionLabelsCategory category)
+    void setCategory(const QModelIndexList& indexes, rfcommon::MotionLabels::Category category)
     {
         PROFILE(UserMotionLabelsEditorGlobal, setCategory);
 
-        // Create a list of unique entry indices, as changing categories is comparitively expensive
-        QSet<int> entryIndices;
+        // Create a list of unique row indices, as changing categories is comparitively expensive
+        QSet<int> rows;
         for (const auto& index : indexes)
-            entryIndices.insert(table_[index.row()].entryIdx);
+            rows.insert(table_[index.row()].row);
 
         // Change categories
-        for (int entryIdx : entryIndices)
+        for (int row : rows)
         {
-            const auto motion = labels_->motionAt(fighterID_, entryIdx);
-            labels_->changeCategory(fighterID_, motion, category);
+            const auto motion = labels_->motionAt(fighterID_, row);
+            labels_->changeCategory(fighterID_, row, category);
         }
     }
 
@@ -159,20 +157,18 @@ public:
             case Qt::EditRole: {
                 const int tableIdx = mindex.row();
                 const int layerIdx = mindex.column() - 2;
-                const int entryIdx = table_[tableIdx].entryIdx;
+                const int row = table_[tableIdx].row;
                 if (layerIdx < 0)
                     return false;
 
                 QByteArray ba = value.toString().toUtf8();
-                const auto motion = labels_->motionAt(fighterID_, entryIdx);
+                const auto motion = labels_->motionAt(fighterID_, row);
                 const char* newLabel = ba.constData();
 
-                if (labels_->changeUserLabel(fighterID_, layerIdx, motion, newLabel))
-                {
-                    table_[tableIdx].labels[layerIdx] = newLabel;
-                    emit dataChanged(index(tableIdx, layerIdx + 2), index(tableIdx, layerIdx + 2));
-                    return true;
-                }
+                labels_->changeLabel(fighterID_, row, layerIdx, newLabel);
+                table_[tableIdx].labels[layerIdx] = newLabel;
+                emit dataChanged(index(tableIdx, layerIdx + 2), index(tableIdx, layerIdx + 2));
+                return true;
             } break;
         }
 
@@ -196,18 +192,18 @@ private:
         if (fighterID_.isValid() == false)
             return;
 
-        for (int entryIdx = 0; entryIdx != labels_->entryCount(fighterID_); ++entryIdx)
+        for (int row = 0; row != labels_->rowCount(fighterID_); ++row)
         {
-            if (labels_->categoryAt(fighterID_, entryIdx) != category_)
+            if (labels_->categoryAt(fighterID_, row) != category_)
                 continue;
 
-            auto motion = labels_->motionAt(fighterID_, entryIdx);
+            auto motion = labels_->motionAt(fighterID_, row);
             auto& entry = table_.emplace();
-            entry.entryIdx = entryIdx;
+            entry.row = row;
             entry.value = "0x" + QString::number(motion.value(), 16);
             entry.string = hash40Strings_->toString(motion);
             for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
-                entry.labels.push_back(labels_->userLabelAt(fighterID_, layerIdx, entryIdx));
+                entry.labels.push_back(labels_->labelAt(fighterID_, row, layerIdx));
         }
 
         sortTable();
@@ -221,9 +217,9 @@ private:
             return a.string < b.string;
         });
 
-        entryIdxToTableIdx_.resize(labels_->entryCount(fighterID_));
+        entryIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
         for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)
-            entryIdxToTableIdx_[table_[tableIdx].entryIdx] = tableIdx;
+            entryIdxToTableIdx_[table_[tableIdx].row] = tableIdx;
     }
 
     int findTableInsertIdx(const Entry& entry)
@@ -262,7 +258,7 @@ private:
             return;
 
         Entry entry;
-        entry.entryIdx = entryIdx;
+        entry.row = entryIdx;
         entry.value = "0x" + QString::number(labels_->motionAt(fighterID, entryIdx).value(), 16);
         entry.string = hash40Strings_->toString(labels_->motionAt(fighterID, entryIdx));
         for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
@@ -319,11 +315,11 @@ private:
     }
 
 private:
-    rfcommon::UserMotionLabels* labels_;
+    rfcommon::MotionLabels* labels_;
     rfcommon::Hash40Strings* hash40Strings_;
     rfcommon::Vector<Entry> table_;
     rfcommon::Vector<int> entryIdxToTableIdx_;
-    const rfcommon::UserMotionLabelsCategory category_;
+    const rfcommon::MotionLabels::Category category_;
     rfcommon::FighterID fighterID_;
 };
 

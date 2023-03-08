@@ -8,6 +8,7 @@
 namespace rfcommon {
     class Hash40Strings;
     class Metadata;
+    class MotionLabels;
     class Session;
     class UserMotionLabels;
 }
@@ -21,19 +22,20 @@ class Protocol;
  * to and from disk, as well as updating the "rfcommon::UserMotionLabels"
  * structure with new motion values from live sessions as the data comes in.
  */
-class UserMotionLabelsManager 
+class UserMotionLabelsManager
         : public rfcommon::UserMotionLabelsListener
         , public rfcommon::ProtocolListener
         , public rfcommon::FrameDataListener
 {
 public:
-    UserMotionLabelsManager(Protocol* protocol);
+    UserMotionLabelsManager(rfcommon::MotionLabels* motionLabels, Protocol* protocol);
     ~UserMotionLabelsManager();
 
     bool loadAllLayers();
     bool saveAllLayers();
 
     rfcommon::UserMotionLabels* userMotionLabels() const;
+    rfcommon::MotionLabels* motionLabels() const;
 
 private:
     void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
@@ -64,6 +66,7 @@ private:
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
+    rfcommon::Reference<rfcommon::MotionLabels> motionLabels_;
     Protocol* protocol_;
     rfcommon::Reference<rfcommon::UserMotionLabels> userMotionLabels_;
     rfcommon::Reference<rfcommon::Session> activeSession_;

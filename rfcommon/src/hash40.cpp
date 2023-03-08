@@ -8,17 +8,17 @@ namespace rfcommon {
 // ----------------------------------------------------------------------------
 FighterMotion hash40(const void* buf, uintptr_t len)
 {
-    PROFILE(hash40Global, hash40);
+    NOPROFILE();
 
     return FighterMotion::fromParts(
-        len, 
+        len,
         crc32_buf(buf, len, 0));
 }
 
 // ----------------------------------------------------------------------------
 FighterMotion hash40(const char* str)
 {
-    PROFILE(hash40Global, hash40);
+    NOPROFILE();
 
     return hash40(static_cast<const void*>(str), strlen(str));
 }

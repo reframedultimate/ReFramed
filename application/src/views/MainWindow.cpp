@@ -36,13 +36,13 @@ namespace rfapp {
 using namespace nlohmann;
 
 // ----------------------------------------------------------------------------
-MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
+MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, rfcommon::MotionLabels* motionLabels, QWidget* parent)
     : QMainWindow(parent)
     , hash40Strings_(hash40Strings)
     , config_(std::move(config))
     , playerDetails_(new PlayerDetails)
     , protocol_(new Protocol)
-    , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
+    , userMotionLabelsManager_(new UserMotionLabelsManager(motionLabels, protocol_.get()))
     , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(config_.get(), protocol_.get(), replayManager_.get(), pluginManager_.get()))

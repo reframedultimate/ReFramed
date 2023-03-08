@@ -17,26 +17,36 @@ using nlohmann::json;
 
 // ----------------------------------------------------------------------------
 MotionLabels::MotionLabels()
-{
+{}
 
+// ----------------------------------------------------------------------------
+MotionLabels::MotionLabels(const char* filePathUtf8)
+    : filePath_(filePathUtf8)
+{
+    load();
 }
 
 // ----------------------------------------------------------------------------
 MotionLabels::~MotionLabels()
 {
-
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::load(const char* fileNameUtf8)
+bool MotionLabels::load()
+{
+    if (filePath_.isEmpty())
+        return false;
+    return load(filePath_.cStr());
+}
+bool MotionLabels::load(const char* filePathUtf8)
 {
     Log* log = Log::root();
 
     MappedFile f;
-    log->info("Loading motion labels binary file \"%s\"", fileNameUtf8);
-    if (f.open(fileNameUtf8) == false)
+    log->info("Loading motion labels binary file \"%s\"", filePathUtf8);
+    if (f.open(filePathUtf8) == false)
     {
-        log->error("Failed to open file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
         return false;
     }
 
@@ -45,7 +55,7 @@ bool MotionLabels::load(const char* fileNameUtf8)
     const uint8_t minor = d.readU8();
     if (major != 1 || minor != 0)
     {
-        log->error("Failed to load file \"%s\": Unsupported version %d.%d", fileNameUtf8, (int)major, (int)minor);
+        log->error("Failed to load file \"%s\": Unsupported version %d.%d", filePathUtf8, (int)major, (int)minor);
         return false;
     }
 
@@ -78,6 +88,7 @@ bool MotionLabels::load(const char* fileNameUtf8)
         const int rowCount = d.readLU16();
         Fighter& fighter = fighters_.emplace();
         fighter.colLayer.resize(layerCount);
+        fighter.layerMaps.resize(layerCount);
 
         for (int row = 0; row != rowCount; ++row)
         {
@@ -91,12 +102,17 @@ bool MotionLabels::load(const char* fileNameUtf8)
             for (int layerIdx = 0; layerIdx != layerCount; ++layerIdx)
             {
                 const int8_t len = d.readI8();
-                fighter.colLayer[layerIdx].labels.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
+                auto& label = fighter.colLayer[layerIdx].labels.emplace(static_cast<const char*>(d.readFromPtr(len)), len);
+                if (label.notEmpty())
+                {
+                    auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+                    labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+                }
             }
 
             if (motion.isValid() == false)
                 log->warning("Found invalid motion value in file");
-            if (fighter.motionToRow.insertIfNew(motion, row) != fighter.motionToRow.end())
+            if (fighter.motionToRow.insertIfNew(motion, row) == fighter.motionToRow.end())
                 log->warning("Found duplicate motion value 0x%lx in file", motion.value());
         }
     }
@@ -105,23 +121,29 @@ bool MotionLabels::load(const char* fileNameUtf8)
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::save(const char* fileNameUtf8)
+bool MotionLabels::save() const
+{
+    if (filePath_.isEmpty())
+        return false;
+    return save(filePath_.cStr());
+}
+bool MotionLabels::save(const char* filePathUtf8) const
 {
     Log* log = Log::root();
 
-    log->info("Saving motion labels binary file \"%s\"", fileNameUtf8);
-    FILE* fp = utf8_fopen_wb(fileNameUtf8, strlen(fileNameUtf8));
+    log->info("Saving motion labels binary file \"%s\"", filePathUtf8);
+    FILE* fp = utf8_fopen_wb(filePathUtf8, strlen(filePathUtf8));
     if (fp == nullptr)
     {
-        log->error("Failed to open file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
         return false;
     }
 
-    char scratch[4096];
+    char scratch[8];
 
     // Write file version
     {
-        Serializer s(scratch, sizeof *scratch);
+        Serializer s(scratch, sizeof scratch);
         s.writeU8(1);  // major
         s.writeU8(0);  // minor
         fwrite(s.data(), s.bytesWritten(), 1, fp);
@@ -129,13 +151,13 @@ bool MotionLabels::save(const char* fileNameUtf8)
 
     // Save hash40 <-> string map
     {
-        Serializer s(scratch, sizeof *scratch);
+        Serializer s(scratch, sizeof scratch);
         s.writeLU32(hash40s_.count());
         fwrite(s.data(), s.bytesWritten(), 1, fp);
     }
     for (auto it : hash40s_)
     {
-        Serializer s(scratch, sizeof *scratch);
+        Serializer s(scratch, sizeof scratch);
         s.writeLU32(it.key().lower());
         s.writeU8(it.key().upper());
         s.writeU8(it.value().length());
@@ -145,19 +167,19 @@ bool MotionLabels::save(const char* fileNameUtf8)
 
     // Save layer names and usages
     {
-        Serializer s1(scratch, sizeof *scratch);
+        Serializer s1(scratch, sizeof scratch);
         s1.writeLU16(layerNames_.count());
         fwrite(s1.data(), s1.bytesWritten(), 1, fp);
         for (const String& name : layerNames_)
         {
-            Serializer s2(scratch, sizeof *scratch);
+            Serializer s2(scratch, sizeof scratch);
             s2.writeU8(name.length());
             fwrite(s2.data(), s2.bytesWritten(), 1, fp);
             fwrite(name.cStr(), name.length(), 1, fp);
         }
         for (Usage usage : layerUsages_)
         {
-            Serializer s2(scratch, sizeof *scratch);
+            Serializer s2(scratch, sizeof scratch);
             s2.writeU8(usage);
             fwrite(s2.data(), s2.bytesWritten(), 1, fp);
         }
@@ -166,7 +188,7 @@ bool MotionLabels::save(const char* fileNameUtf8)
     // Save fighter layers
     {
         // Write number of fighters and number of layers
-        Serializer s(scratch, sizeof *scratch);
+        Serializer s(scratch, sizeof scratch);
         s.writeU8(fighters_.count());
         fwrite(s.data(), s.bytesWritten(), 1, fp);
     }
@@ -174,13 +196,13 @@ bool MotionLabels::save(const char* fileNameUtf8)
     {
         // Write number of rows in table for this fighter. The number of
         // columns remains constant for all fighters
-        Serializer s1(scratch, sizeof *scratch);
+        Serializer s1(scratch, sizeof scratch);
         s1.writeLU16(fighter.colMotionValue.count());
         fwrite(s1.data(), s1.bytesWritten(), 1, fp);
 
         for (int row = 0; row != fighter.colMotionValue.count(); ++row)
         {
-            Serializer s2(scratch, sizeof *scratch);
+            Serializer s2(scratch, sizeof scratch);
             s2.writeLU32(fighter.colMotionValue[row].lower());
             s2.writeU8(fighter.colMotionValue[row].upper());
             s2.writeU8(fighter.colCategory[row]);
@@ -188,7 +210,7 @@ bool MotionLabels::save(const char* fileNameUtf8)
 
             for (const Layer& layer : fighter.colLayer)
             {
-                Serializer s3(scratch, sizeof *scratch);
+                Serializer s3(scratch, sizeof scratch);
                 s3.writeI8(layer.labels[row].length());
                 fwrite(s3.data(), s3.bytesWritten(), 1, fp);
                 fwrite(layer.labels[row].cStr(), layer.labels[row].length(), 1, fp);
@@ -196,19 +218,21 @@ bool MotionLabels::save(const char* fileNameUtf8)
         }
     }
 
+    fclose(fp);
+
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::updateHash40FromCSV(const char* fileNameUtf8)
+bool MotionLabels::updateHash40FromCSV(const char* filePathUtf8)
 {
     Log* log = Log::root();
 
     MappedFile f;
-    log->info("Updating hash40 strings from CSV file \"%s\"", fileNameUtf8);
-    if (f.open(fileNameUtf8) == false)
+    log->info("Updating hash40 strings from CSV file \"%s\"", filePathUtf8);
+    if (f.open(filePathUtf8) == false)
     {
-        log->error("Failed to open file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
         return false;
     }
 
@@ -267,12 +291,9 @@ bool MotionLabels::updateHash40FromCSV(const char* fileNameUtf8)
 
         // Find beginning of next line
 skip_to_next_line:
-        while (*p != '\n')
-            if (++p == pe)
-            {
-                log->notice("File ended with unexpected data");
-                return false;
-            }
+        for (; *p != '\n' && p != pe; ++p) {}
+        if (p == pe || ++p == pe)
+            break;
     }
 
     log->info("Updated %d hash40 labels\n", numInserted);
@@ -281,15 +302,15 @@ skip_to_next_line:
 }
 
 // ----------------------------------------------------------------------------
-int MotionLabels::importLayer(const char* fileNameUtf8)
+int MotionLabels::importLayers(const char* filePathUtf8)
 {
     Log* log = Log::root();
 
     MappedFile file;
-    log->info("Importing layer from file \"%s\"", fileNameUtf8);
-    if (file.open(fileNameUtf8) == false)
+    log->info("Importing layer from file \"%s\"", filePathUtf8);
+    if (file.open(filePathUtf8) == false)
     {
-        log->error("Failed to map file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        log->error("Failed to map file \"%s\": %s", filePathUtf8, LastError().cStr());
         return false;
     }
 
@@ -299,91 +320,318 @@ int MotionLabels::importLayer(const char* fileNameUtf8)
     json j = json::parse(begin, end, nullptr, false);
     if (j.is_discarded())
     {
-        log->error("Failed to parse json file: \"%s\"", fileNameUtf8);
+        log->error("Failed to parse json file: \"%s\"", filePathUtf8);
         return false;
     }
 
-    if (j["version"] != "1.0")
+    if (j["version"] == "1.0")
     {
-        log->error("Unsupported version \"%s\" while parsing file \"%s\"", j["version"].get<std::string>().c_str(), fileNameUtf8);
-        return false;
-    }
-
-    json jName = j["name"];
-    if (jName.is_string() == false)
-    {
-        log->notice("Missing property \"name\", setting default name");
-        jName = "Layer";
-    }
-
-    json jUsage = j["usage"];
-    if (jUsage.is_string() == false)
-    {
-        log->notice("Missing property \"usage\", setting to default");
-        jUsage = "notation";
-    }
-
-    Usage usage = [log, &jUsage] {
-        if (jUsage == "readable")
-            return Usage::READABLE;
-        if (jUsage == "notation")
-            return Usage::NOTATION;
-        if (jUsage == "group")
-            return Usage::CATEGORIZATION;
-
-        log->notice("Usage \"%s\" is invalid. Using default.", jUsage.get<std::string>().c_str());
-        return Usage::NOTATION;
-    }();
-
-    const int layerIdx = newLayer(jName.get<std::string>().c_str(), usage);
-
-    json jFighters = j["fighters"];
-    for (const auto& [fighterIDStr, jFighter] : jFighters.items())
-    {
-        std::size_t pos;
-        const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
-        if (pos != fighterIDStr.length())
-            continue;
-
-        json jMotions = jFighter["motions"];
-        json jLabels = jFighter["labels"];
-        json jCategories = jFighter["categories"];
-
-        if (jMotions.is_array() == false || jLabels.is_array() == false || jCategories.is_array() == false)
-            continue;
-        if (jMotions.size() != jLabels.size() || jMotions.size() != jCategories.size())
-            continue;
-
-        for (int i = 0; i != (int)jMotions.size(); ++i)
+        json jName = j["name"];
+        if (jName.is_string() == false)
         {
-            if (jMotions[i].is_number_integer() == false)
-                continue;
-            if (jLabels[i].is_string() == false)
-                continue;
-            if (jCategories[i].is_number_unsigned() == false)
+            log->notice("Missing property \"name\", setting default name");
+            jName = "Layer";
+        }
+
+        json jUsage = j["usage"];
+        if (jUsage.is_string() == false)
+        {
+            log->notice("Missing property \"usage\", setting to default");
+            jUsage = "notation";
+        }
+
+        Usage usage = [log, &jUsage] {
+            if (jUsage == "readable")
+                return Usage::READABLE;
+            if (jUsage == "notation")
+                return Usage::NOTATION;
+            if (jUsage == "group")
+                return Usage::CATEGORIZATION;
+
+            log->notice("Usage \"%s\" is invalid. Using default.", jUsage.get<std::string>().c_str());
+            return Usage::NOTATION;
+        }();
+
+        const int layerIdx = newLayerNoNotify(jName.get<std::string>().c_str(), usage);
+
+        json jFighters = j["fighters"];
+        for (const auto& [fighterIDStr, jFighter] : jFighters.items())
+        {
+            std::size_t pos;
+            const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+            if (pos != fighterIDStr.length())
                 continue;
 
-            const auto category = static_cast<Category>(jCategories[i].get<int>());
-            const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
-            const auto label = jLabels[i].get<std::string>();
+            json jMotions = jFighter["motions"];
+            json jLabels = jFighter["labels"];
+            json jCategories = jFighter["categories"];
 
-            addNewLabel(fighterID, motion, category, layerIdx, label.c_str());
+            if (jMotions.is_array() == false || jLabels.is_array() == false || jCategories.is_array() == false)
+                continue;
+            if (jMotions.size() != jLabels.size() || jMotions.size() != jCategories.size())
+                continue;
+
+            for (int i = 0; i != (int)jMotions.size(); ++i)
+            {
+                if (jMotions[i].is_number_integer() == false)
+                    continue;
+                if (jLabels[i].is_string() == false)
+                    continue;
+                if (jCategories[i].is_number_unsigned() == false)
+                    continue;
+
+                const auto category = static_cast<Category>(jCategories[i].get<int>());
+                const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
+                const auto label = jLabels[i].get<std::string>();
+
+                addNewLabelNoNotify(fighterID, motion, category, layerIdx, label.c_str());
+            }
         }
     }
+    else if (j["version"] == "1.1")
+    {
+        json jLayers = j["layers"];
+        if (jLayers.is_array() == false)
+        {
+            log->error("Property \"layers\" is not an array");
+            return false;
+        }
+
+        for (const auto& jLayer : jLayers)
+        {
+            json jName = jLayer["name"];
+            if (jName.is_string() == false)
+            {
+                log->notice("Missing property \"name\", setting default name");
+                jName = "Layer";
+            }
+
+            json jUsage = jLayer["usage"];
+            if (jUsage.is_string() == false)
+            {
+                log->notice("Missing property \"usage\", setting to default");
+                jUsage = "notation";
+            }
+
+            Usage usage = [log, &jUsage] {
+                if (jUsage == "readable")
+                    return Usage::READABLE;
+                if (jUsage == "notation")
+                    return Usage::NOTATION;
+                if (jUsage == "categorization")
+                    return Usage::CATEGORIZATION;
+
+                log->notice("Usage \"%s\" is invalid. Using default.", jUsage.get<std::string>().c_str());
+                return Usage::NOTATION;
+            }();
+
+            const int layerIdx = newLayerNoNotify(jName.get<std::string>().c_str(), usage);
+
+            json jFighters = jLayer["fighters"];
+            for (const auto& [fighterIDStr, jFighter] : jFighters.items())
+            {
+                std::size_t pos;
+                const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+                if (pos != fighterIDStr.length())
+                    continue;
+
+                json jMotions = jFighter["motions"];
+                json jLabels = jFighter["labels"];
+                json jCategories = jFighter["categories"];
+
+                if (jMotions.is_array() == false || jLabels.is_array() == false || jCategories.is_array() == false)
+                    continue;
+                if (jMotions.size() != jLabels.size() || jMotions.size() != jCategories.size())
+                    continue;
+
+                for (int i = 0; i != (int)jMotions.size(); ++i)
+                {
+                    if (jMotions[i].is_number_integer() == false)
+                        continue;
+                    if (jLabels[i].is_string() == false)
+                        continue;
+                    if (jCategories[i].is_number_unsigned() == false)
+                        continue;
+
+                    const auto category = static_cast<Category>(jCategories[i].get<int>());
+                    const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
+                    const auto label = jLabels[i].get<std::string>();
+
+                    addNewLabelNoNotify(fighterID, motion, category, layerIdx, label.c_str());
+                }
+            }
+        }
+    }
+    else
+    {
+        log->error("Unsupported version \"%s\" while parsing file \"%s\"", j["version"].get<std::string>().c_str(), filePathUtf8);
+        return false;
+    }
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
 
     return true;
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::exportLayer(int layerIdx, const char* fileNameUtf8)
+bool MotionLabels::exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const
 {
-    return false;
+    Log* log = Log::root();
+
+    json jLayers = json::array();
+    for (int layerIdx : layers)
+    {
+        json jFighters;
+        for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
+        {
+            const Fighter& fighter = fighters_[fighterIdx];
+            const Layer& layer = fighter.colLayer[layerIdx];
+
+            json jMotions = json::array();
+            json jLabels = json::array();
+            json jCategories = json::array();
+            for (int row = 0; row != fighter.colMotionValue.count(); ++row)
+            {
+                if (layer.labels[row].isEmpty())
+                    continue;
+                jMotions.push_back(fighter.colMotionValue[row].value());
+                jLabels.push_back(layer.labels[row].cStr());
+                jCategories.push_back(fighter.colCategory[row]);
+            }
+
+            if (jLabels.size() == 0)
+                continue;
+
+            jFighters[std::to_string(fighterIdx)] = {
+                {"motions", jMotions},
+                {"labels", jLabels},
+                {"categories", jCategories}
+            };
+        }
+
+        if (jFighters.size() == 0)
+            continue;
+
+        auto usageToStr = [](Usage usage) {
+            switch (usage)
+            {
+                case Usage::READABLE: return "readable";
+                case Usage::NOTATION: return "notation";
+                case Usage::CATEGORIZATION: return "categorization";
+            }
+            return "notation";
+        };
+
+        jLayers.push_back({
+            {"name", layerNames_[layerIdx].cStr()},
+            {"usage", usageToStr(layerUsages_[layerIdx])},
+            {"fighters", jFighters}
+        });
+    }
+
+    json j = {
+        {"version", "1.1"},
+        {"layers", jLayers}
+    };
+
+    const std::string jsonAsString = j.dump();
+    FILE* fp = utf8_fopen_wb(filePathUtf8, strlen(filePathUtf8));
+    if (fp == nullptr)
+    {
+        log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
+        return false;
+    }
+
+    if (fwrite(jsonAsString.data(), 1, jsonAsString.length(), fp) != jsonAsString.length())
+    {
+        log->error("Failed to write data to file \"%s\": %s", filePathUtf8, LastError().cStr());
+        return false;
+    }
+
+    fclose(fp);
+    log->info("Exported layers to file \"%s\"", filePathUtf8);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8)
+bool MotionLabels::exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* fileNameUtf8) const
 {
-    return false;
+    Log* log = Log::root();
+
+    json jLayers = json::array();
+    for (int layerIdx : layers)
+    {
+        json jFighters;
+
+        const Fighter& fighter = fighters_[fighterID.value()];
+        const Layer& layer = fighter.colLayer[layerIdx];
+
+        json jMotions = json::array();
+        json jLabels = json::array();
+        json jCategories = json::array();
+        for (int row = 0; row != fighter.colMotionValue.count(); ++row)
+        {
+            if (layer.labels[row].isEmpty())
+                continue;
+            jMotions.push_back(fighter.colMotionValue[row].value());
+            jLabels.push_back(layer.labels[row].cStr());
+            jCategories.push_back(fighter.colCategory[row]);
+        }
+
+        if (jLabels.size() == 0)
+            continue;
+
+        jFighters[std::to_string(fighterID.value())] = {
+            {"motions", jMotions},
+            {"labels", jLabels},
+            {"categories", jCategories}
+        };
+
+        auto usageToStr = [](Usage usage) {
+            switch (usage)
+            {
+                case Usage::READABLE: return "readable";
+                case Usage::NOTATION: return "notation";
+                case Usage::CATEGORIZATION: return "categorization";
+            }
+            return "notation";
+        };
+
+        jLayers.push_back({
+            {"name", layerNames_[layerIdx].cStr()},
+            {"usage", usageToStr(layerUsages_[layerIdx])},
+            {"fighters", {
+                 {std::to_string(fighterID.value()), {
+                      {"motions", jMotions},
+                      {"labels", jLabels},
+                      {"categories", jCategories}
+                 }}
+            }}
+        });
+    }
+
+    json j = {
+        {"version", "1.1"},
+        {"layers", jLayers}
+    };
+
+    const std::string jsonAsString = j.dump();
+    FILE* fp = utf8_fopen_wb(fileNameUtf8, strlen(fileNameUtf8));
+    if (fp == nullptr)
+    {
+        log->error("Failed to open file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        return false;
+    }
+
+    if (fwrite(jsonAsString.data(), 1, jsonAsString.length(), fp) != jsonAsString.length())
+    {
+        log->error("Failed to write data to file \"%s\": %s", fileNameUtf8, LastError().cStr());
+        return false;
+    }
+
+    fclose(fp);
+    log->info("Exported layers to file \"%s\"", fileNameUtf8);
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -477,7 +725,7 @@ SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const
 }
 
 // ----------------------------------------------------------------------------
-int MotionLabels::layerIndex(const char* layerName) const
+int MotionLabels::findLayer(const char* layerName) const
 {
     for (int i = 0; i != layerNames_.count(); ++i)
         if (layerNames_[i] == layerName)
@@ -487,6 +735,12 @@ int MotionLabels::layerIndex(const char* layerName) const
 
 // ----------------------------------------------------------------------------
 int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
+{
+    int layerIdx = newLayerNoNotify(nameUtf8, usage);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
+    return layerIdx;
+}
+int MotionLabels::newLayerNoNotify(const char* nameUtf8, Usage usage)
 {
     const int layerIdx = layerNames_.count();
 
@@ -501,8 +755,6 @@ int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
 
         fighter.layerMaps.emplace();
     }
-
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
 
     return layerIdx;
 }
@@ -638,11 +890,33 @@ int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
 // ----------------------------------------------------------------------------
 bool MotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 {
-    return false;
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
+    populateMissingFighters(fighterID);
+
+    Fighter& fighter = fighters_[fighterID.value()];
+    if (fighter.motionToRow.insertIfNew(motion, rowCount(fighterID)) == fighter.motionToRow.end())
+        return false;
+
+    fighter.colCategory.push(Category::UNLABELED);
+    fighter.colMotionValue.push(motion);
+    for (Layer& layer : fighter.colLayer)
+        layer.labels.emplace();
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
+int MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
+{
+    int row = addNewLabelNoNotify(fighterID, motion, category, layerIdx, label);
+    if (row < 0)
+        return row;
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, row, layerIdx);
+    return row;
+}
+int MotionLabels::addNewLabelNoNotify(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
@@ -660,40 +934,26 @@ bool MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Catego
         fighter.colCategory.push(category);
         for (Layer& layer : fighter.colLayer)
             layer.labels.emplace();
-
-        // Store new label on the appropriate layer
-        fighter.colLayer[layerIdx].labels[row] = label;
-
-        // Create entry in layer map so label -> motion lookup works
-        if (fighter.colLayer[layerIdx].labels[row].notEmpty())
-        {
-            auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
-            labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
-        }
-
-        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsNewLabel, fighterID, int(row), layerIdx);
     }
     else
     {
         // The motion exists in the table, but maybe the label is still empty.
         // If not then we fail, because the label already exists.
         if (fighter.colLayer[layerIdx].labels[row].notEmpty())
-            return false;
-
-        // Set user label for this layer
-        fighter.colLayer[layerIdx].labels[row] = label;
-
-        // Create entry in layer map so label -> motion lookup works
-        if (fighter.colLayer[layerIdx].labels[row].notEmpty())
-        {
-            auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
-            labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
-        }
-
-        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, int(row), layerIdx);
+            return -1;
     }
 
-    return true;
+    // Set user label for this layer
+    fighter.colLayer[layerIdx].labels[row] = label;
+
+    // Create entry in layer map so label -> motion lookup works
+    if (fighter.colLayer[layerIdx].labels[row].notEmpty())
+    {
+        auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+        labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+    }
+
+    return row;
 }
 
 // ----------------------------------------------------------------------------

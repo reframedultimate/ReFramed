@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include <cstdint>
+#include <cstring>
 #include <cstddef>
 #include <cassert>
 #include <functional>
@@ -63,14 +64,14 @@ public:
         }
     }
 
-    T& operator[](S i) { return begin_[i]; }
-    const T& operator[](S i) const { return begin_[i]; }
-    T& front() { return begin_[0]; }
-    const T& front() const { return begin_[0]; }
-    T& back(S offset=1) { return begin_[count_ - offset]; }
-    const T& back(S offset=1) const { return begin_[count_ - offset]; }
-    T& at(S pos) { return begin_[pos]; }
-    const T& at(S pos) const { return begin_[pos]; }
+    T& operator[](S i) { assert(i < this->count_); return begin_[i]; }
+    const T& operator[](S i) const { assert(i < this->count_); return begin_[i]; }
+    T& front() { assert(this->count_ > 0); return begin_[0]; }
+    const T& front() const { assert(this->count_ > 0); return begin_[0]; }
+    T& back(S offset=1) { assert(this->count_ > 0); return begin_[count_ - offset]; }
+    const T& back(S offset=1) const { assert(this->count_ > 0); return begin_[count_ - offset]; }
+    T& at(S pos) { assert(pos < this->count_); return begin_[pos]; }
+    const T& at(S pos) const { assert(pos < this->count_); return begin_[pos]; }
 
 protected:
     VectorBase()
@@ -121,6 +122,18 @@ protected:
     S count_;
     S capacity_;
 };
+
+// ----------------------------------------------------------------------------
+template <typename T, typename S1, typename S2>
+inline bool operator==(const VectorBase<T, S1>& v1, const VectorBase<T, S2>& v2)
+{
+    return v1.count() == v2.count() && memcmp(v1.begin(), v2.begin(), sizeof(T) * v1.count()) == 0;
+}
+template <typename T, typename S1, typename S2>
+inline bool operator!=(const VectorBase<T, S1>& v1, const VectorBase<T, S2>& v2)
+{
+    return !operator==(v1, v2);
+}
 
 // ----------------------------------------------------------------------------
 template <typename T, int N, typename S=int32_t>

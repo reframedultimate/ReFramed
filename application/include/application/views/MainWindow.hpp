@@ -14,6 +14,7 @@ namespace Ui {
 
 namespace rfcommon {
     class Hash40Strings;
+    class MotionLabels;
 }
 
 namespace rfapp {
@@ -35,7 +36,7 @@ class MainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, QWidget* parent=nullptr);
+    explicit MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, rfcommon::MotionLabels* motionLabels, QWidget* parent=nullptr);
     ~MainWindow();
 
 private slots:

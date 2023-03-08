@@ -5,6 +5,7 @@
 #include "rfcommon/FighterMotion.hpp"
 #include "rfcommon/HashMap.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
+#include "rfcommon/RefCounted.hpp"
 #include "rfcommon/String.hpp"
 #include "rfcommon/Vector.hpp"
 
@@ -47,7 +48,7 @@ public:
  *   - We use our own binary file format for the param labels instead of loading
  *     the official CSV file, as it cuts down on startup times by almost a second.
  */
-class RFCOMMON_PUBLIC_API MotionLabels
+class RFCOMMON_PUBLIC_API MotionLabels : public RefCounted
 {
 public:
     enum Category
@@ -65,10 +66,13 @@ public:
     };
 
     MotionLabels();
+    MotionLabels(const char* filePathUtf8);
     ~MotionLabels();
 
-    bool load(const char* fileNameUtf8);
-    bool save(const char* fileNameUtf8);
+    bool load();
+    bool load(const char* filePathUtf8);
+    bool save() const;
+    bool save(const char* filePathUtf8) const;
 
     /*!
      * \brief Load all hash40 strings from the specified CSV file.
@@ -81,11 +85,11 @@ public:
      * \param[in] fileName Path to the paramLabels.csv file.
      * \return Returns true if all labels were loaded successfully.
      */
-    bool updateHash40FromCSV(const char* fileNameUtf8);
+    bool updateHash40FromCSV(const char* filePathUtf8);
 
-    int importLayer(const char* fileNameUtf8);
-    bool exportLayer(int layerIdx, const char* fileNameUtf8);
-    bool exportLayer(int layerIdx, FighterID fighterID, const char* fileNameUtf8);
+    int importLayers(const char* filePathUtf8);
+    bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
+    bool exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* filePathUtf8) const;
 
     /*!
      * \brief Does a reverse-lookup for the original hash40 string.
@@ -107,11 +111,11 @@ public:
 
     /*!
      * \brief Converts a motion value into a string from a specific layer. You
-     * can use layerIndex() to find e.g. a layer for a specific language.
+     * can use findLayer() to find e.g. a layer for a specific language.
      * \param[in] motion The motion value to convert.
      * \param[in] layerIdx The layer to search. If you specify a value of -1
      * then this method will always fail. This makes it possible to write:
-     *      toString(motion, layerIndex("English"))
+     *      toString(motion, findLayer("English"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
@@ -120,7 +124,7 @@ public:
 
     /*!
      * \brief Converts a motion value into a string from any layer marked with
-     * the specified "usage". You can use layerIndex() to find the index for a
+     * the specified "usage". You can use findLayer() to find the index for a
      * preferred layer. If the preferred layer contains an empty string, then
      * the search continues to the other layers that share the same usage, until
      * a non-empty entry is found. If all layers are empty, then the fallback
@@ -129,7 +133,7 @@ public:
      * \param[in] preferredLayerIdx The layer to search initially. If you specify
      * a value of -1 then all layers marked with the specified usage will be
      * searched. This makes it possible to write:
-     *      toString(motion, NOTATION, layerIndex("Pikacord"))
+     *      toString(motion, NOTATION, findLayer("Pikacord"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
@@ -152,7 +156,7 @@ public:
         { return layerNames_.count(); }
 
     //! Returns the first layer index matching the specified name, or -1 if none is found
-    int layerIndex(const char* layerName) const;
+    int findLayer(const char* layerName) const;
 
     //! Returns the name of the specified layer
     const char* layerName(int layerIdx) const
@@ -172,6 +176,7 @@ public:
      * never fail.
      */
     int newLayer(const char* nameUtf8, Usage usage);
+    int newLayerNoNotify(const char* nameUtf8, Usage usage);
 
     //! Deletes the specified layer
     void deleteLayer(int layerIdx);
@@ -215,8 +220,9 @@ public:
         { return fighters_[fighterID.value()].colLayer[layerIdx].labels[row].cStr(); }
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
-    bool addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
-    void changeLabel(FighterID fighterID, int entryIdx, int layerIdx, const char* newLabel);
+    int addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
+    int addNewLabelNoNotify(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
+    void changeLabel(FighterID fighterID, int row, int layerIdx, const char* newLabel);
     void changeCategory(FighterID fighterID, int row, Category newCategory);
     //bool propagatePreserve(FighterID fighterID, int row, int layerIdx);
     //bool propagateReplace(FighterID fighterID, int row, int layerIdx);
@@ -227,6 +233,8 @@ private:
     void populateMissingFighters(FighterID fighterID);
 
 private:
+    rfcommon::String filePath_;
+
     // The structures below hold the entire table of each fighter. The table
     // consists of rows and columns. If a row is added or deleted, then it is
     // added/removed from all columns, guaranteeing that "colMotionValue",

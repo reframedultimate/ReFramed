@@ -28,6 +28,7 @@ set_target_properties (ReFramed-tests
 add_custom_command (TARGET ReFramed-tests POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${REFRAMED_BUILD_DATADIR}/tests"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/hash40_1.csv" "${REFRAMED_BUILD_DATADIR}/tests"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/hash40_2.csv" "${REFRAMED_BUILD_DATADIR}/tests"
     COMMENT "Copying test data files to ${REFRAMED_BUILD_DATADIR}/tests"
     VERBATIM)
     

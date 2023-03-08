@@ -1,15 +1,13 @@
 #pragma once
 
 #include "rfcommon/Vector.hpp"
-#include <cstring>
 #include <cstdlib>
-
 #include <cstdio>
 
 namespace rfcommon {
 
 template <int N, typename S=int32_t>
-class SmallString : protected SmallVector<char, N+1, S>
+class SmallString : public SmallVector<char, N+1, S>
 {
 public:
     char* begin() { return this->begin_; }
@@ -167,11 +165,12 @@ public:
         return *this;
     }
 
+    /*
     template <int N2, typename S2>
     friend inline bool operator==(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs)
     {
         return lhs.count_ == rhs.count_ && (memcmp(lhs.begin_, rhs.begin_, lhs.count_) == 0);
-    }
+    }*/
 
     friend inline bool operator==(const SmallString<N, S>& lhs, const char* rhs)
     {
