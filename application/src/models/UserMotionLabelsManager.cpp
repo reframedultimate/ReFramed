@@ -26,6 +26,7 @@ UserMotionLabelsManager::UserMotionLabelsManager(rfcommon::MotionLabels* motionL
     loadAllLayers();
 
     userMotionLabels_->dispatcher.addListener(this);
+    motionLabels_->dispatcher.addListener(this);
     protocol_->dispatcher.addListener(this);
 }
 
@@ -35,6 +36,7 @@ UserMotionLabelsManager::~UserMotionLabelsManager()
     clearActiveSession();
 
     protocol_->dispatcher.removeListener(this);
+    motionLabels_->dispatcher.addListener(this);
     userMotionLabels_->dispatcher.removeListener(this);
 
     saveAllLayers();
@@ -127,6 +129,21 @@ void UserMotionLabelsManager::onUserMotionLabelsLayerRemoved(int layerIdx, const
 void UserMotionLabelsManager::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { NOPROFILE(); motionLabelsModified_ = true; }
 void UserMotionLabelsManager::onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) { NOPROFILE(); motionLabelsModified_ = true; }
 void UserMotionLabelsManager::onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) { NOPROFILE(); motionLabelsModified_ = true; }
+
+// ----------------------------------------------------------------------------
+void UserMotionLabelsManager::onMotionLabelsLoaded() {}
+void UserMotionLabelsManager::onMotionLabelsHash40sUpdated() { NOPROFILE(); motionLabelsModified_ = true; }
+
+void UserMotionLabelsManager::onMotionLabelsLayerInserted(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLayerRemoved(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLayerNameChanged(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLayerMoved(int fromIdx, int toIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLayerMerged(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+
+void UserMotionLabelsManager::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void UserMotionLabelsManager::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) { NOPROFILE(); motionLabelsModified_ = true; }
 
 // ----------------------------------------------------------------------------
 void UserMotionLabelsManager::setActiveSession(rfcommon::Session* session)

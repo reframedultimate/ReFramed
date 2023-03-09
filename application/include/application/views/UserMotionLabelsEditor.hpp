@@ -3,7 +3,7 @@
 #include "rfcommon/Vector.hpp"
 #include "rfcommon/FighterID.hpp"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/UserMotionLabelsListener.hpp"
+#include "rfcommon/MotionLabelsListener.hpp"
 #include <QDialog>
 
 class QAbstractTableModel;
@@ -24,7 +24,7 @@ class UserMotionLabelsManager;
 
 class UserMotionLabelsEditor
         : public QDialog
-        , public rfcommon::UserMotionLabelsListener
+        , public rfcommon::MotionLabelsListener
 {
     Q_OBJECT
 
@@ -50,12 +50,19 @@ private:
     void updateFightersDropdown(rfcommon::FighterID fighterID);
 
 private:
-    void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
-    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
+    void onMotionLabelsLoaded() override;
+    void onMotionLabelsHash40sUpdated() override;
 
-    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
-    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
+    void onMotionLabelsLayerInserted(int layerIdx) override;
+    void onMotionLabelsLayerRemoved(int layerIdx) override;
+    void onMotionLabelsLayerNameChanged(int layerIdx) override;
+    void onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) override;
+    void onMotionLabelsLayerMoved(int fromIdx, int toIdx) override;
+    void onMotionLabelsLayerMerged(int layerIdx) override;
+
+    void onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) override;
+    void onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) override;
+    void onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) override;
 
 private:
     MainWindow* mainWindow_;

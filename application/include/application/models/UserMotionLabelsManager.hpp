@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rfcommon/FrameDataListener.hpp"
+#include "rfcommon/MotionLabelsListener.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/UserMotionLabelsListener.hpp"
@@ -24,6 +25,7 @@ class Protocol;
  */
 class UserMotionLabelsManager
         : public rfcommon::UserMotionLabelsListener
+        , public rfcommon::MotionLabelsListener
         , public rfcommon::ProtocolListener
         , public rfcommon::FrameDataListener
 {
@@ -44,6 +46,21 @@ private:
     void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
     void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
     void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
+
+private:
+    void onMotionLabelsLoaded() override;
+    void onMotionLabelsHash40sUpdated() override;
+
+    void onMotionLabelsLayerInserted(int layerIdx) override;
+    void onMotionLabelsLayerRemoved(int layerIdx) override;
+    void onMotionLabelsLayerNameChanged(int layerIdx) override;
+    void onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) override;
+    void onMotionLabelsLayerMoved(int fromIdx, int toIdx) override;
+    void onMotionLabelsLayerMerged(int layerIdx) override;
+
+    void onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) override;
+    void onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) override;
+    void onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) override;
 
 private:
     void setActiveSession(rfcommon::Session* session);

@@ -4,6 +4,7 @@
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MotionLabels.hpp"
+#include "rfcommon/MotionLabelsListener.hpp"
 #include "rfcommon/Serializer.hpp"
 #include "rfcommon/Utf8.hpp"
 
@@ -58,6 +59,11 @@ bool MotionLabels::load(const char* filePathUtf8)
         log->error("Failed to load file \"%s\": Unsupported version %d.%d", filePathUtf8, (int)major, (int)minor);
         return false;
     }
+
+    hash40s_.clear();
+    fighters_.clear();
+    layerNames_.clear();
+    layerUsages_.clear();
 
     // Load hash40 table
     const int hash40Count = d.readLU32();
@@ -116,6 +122,8 @@ bool MotionLabels::load(const char* filePathUtf8)
                 log->warning("Found duplicate motion value 0x%lx in file", motion.value());
         }
     }
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLoaded);
 
     return true;
 }
@@ -297,6 +305,7 @@ skip_to_next_line:
     }
 
     log->info("Updated %d hash40 labels\n", numInserted);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsHash40sUpdated);
 
     return true;
 }
@@ -324,7 +333,33 @@ int MotionLabels::importLayers(const char* filePathUtf8)
         return false;
     }
 
-    if (j["version"] == "1.0")
+    const int layerCountBeforeImport = layerCount();
+
+    if (j["version"] == "1.0" && j["name"] == "Unlabeled")
+    {
+        json jFighters = j["fighters"];
+        for (const auto& [fighterIDStr, jFighter] : jFighters.items())
+        {
+            std::size_t pos;
+            const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+            if (pos != fighterIDStr.length())
+                continue;
+
+            json jMotions = jFighter["motions"];
+            if (jMotions.is_array() == false)
+                continue;
+
+            for (int i = 0; i != (int)jMotions.size(); ++i)
+            {
+                if (jMotions[i].is_number_integer() == false)
+                    continue;
+
+                const auto motion = FighterMotion::fromValue(jMotions[i].get<FighterMotion::Type>());
+                addUnknownMotionNoNotify(fighterID, motion);
+            }
+        }
+    }
+    else if (j["version"] == "1.0")
     {
         json jName = j["name"];
         if (jName.is_string() == false)
@@ -468,7 +503,9 @@ int MotionLabels::importLayers(const char* filePathUtf8)
         return false;
     }
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
+    const int layerCountAfterImport = layerCount();
+    for (int layerIdx = layerCountBeforeImport; layerIdx != layerCountAfterImport; ++layerIdx)
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, layerIdx);
 
     return true;
 }
@@ -737,7 +774,7 @@ int MotionLabels::findLayer(const char* layerName) const
 int MotionLabels::newLayer(const char* nameUtf8, Usage usage)
 {
     int layerIdx = newLayerNoNotify(nameUtf8, usage);
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, layerIdx);
     return layerIdx;
 }
 int MotionLabels::newLayerNoNotify(const char* nameUtf8, Usage usage)
@@ -771,7 +808,7 @@ void MotionLabels::deleteLayer(int layerIdx)
     layerUsages_.erase(layerIdx);
     layerNames_.erase(layerIdx);
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerCountChanged);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerRemoved, layerIdx);
 }
 
 // ----------------------------------------------------------------------------
@@ -784,8 +821,9 @@ void MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
 // ----------------------------------------------------------------------------
 void MotionLabels::changeUsage(int layerIdx, Usage newUsage)
 {
+    Usage oldUsage = layerUsages_[layerIdx];
     layerUsages_[layerIdx] = newUsage;
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerUsageChanged, layerIdx);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerUsageChanged, layerIdx, oldUsage);
 }
 
 // ----------------------------------------------------------------------------
@@ -855,10 +893,12 @@ int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
         layerNames_.push(layerNames_[targetLayerIdx] + "|" + layerNames_[sourceLayerIdx]);
         layerUsages_.push(layerUsages_[targetLayerIdx]);
 
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, int(mergeLayerIdx));
+
         return mergeLayerIdx;
     }
 
-    // Replace the target layer with the merge layer, and erase the merge layer
+    // Replace the target layer with the merge layer
     for (Fighter& fighter : fighters_)
     {
         std::swap(fighter.colLayer[targetLayerIdx], fighter.colLayer[mergeLayerIdx]);
@@ -876,19 +916,26 @@ int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
     }
 
     // Erase the source layer
-    layerUsages_.erase(sourceLayerIdx);
-    layerNames_.erase(sourceLayerIdx);
-    for (Fighter& fighter : fighters_)
-    {
-        fighter.layerMaps.erase(sourceLayerIdx);
-        fighter.colLayer.erase(sourceLayerIdx);
-    }
+    deleteLayer(sourceLayerIdx);
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerMerged, targetLayerIdx);
 
     return 0;
 }
 
 // ----------------------------------------------------------------------------
 bool MotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
+{
+    assert(fighterID.isValid());
+    assert(motion.isValid());
+
+    if (addUnknownMotionNoNotify(fighterID, motion) == false)
+        return false;
+
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsRowInserted, fighterID, rowCount(fighterID) - 1);
+    return true;
+}
+bool MotionLabels::addUnknownMotionNoNotify(FighterID fighterID, FighterMotion motion)
 {
     assert(fighterID.isValid());
     assert(motion.isValid());
@@ -910,10 +957,14 @@ bool MotionLabels::addUnknownMotion(FighterID fighterID, FighterMotion motion)
 // ----------------------------------------------------------------------------
 int MotionLabels::addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
 {
+    const int rows = rowCount(fighterID);
     int row = addNewLabelNoNotify(fighterID, motion, category, layerIdx, label);
     if (row < 0)
         return row;
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, row, layerIdx);
+    if (row == rows)
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsRowInserted, fighterID, row);
+    else
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLabelChanged, fighterID, row, layerIdx);
     return row;
 }
 int MotionLabels::addNewLabelNoNotify(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label)
@@ -923,11 +974,10 @@ int MotionLabels::addNewLabelNoNotify(FighterID fighterID, FighterMotion motion,
 
     populateMissingFighters(fighterID);
 
-    // If this motion doesn't exist yet, we create a new entry at the end of the table
+    // If this motion doesn't exist yet, we create a new row at the end of the table
     Fighter& fighter = fighters_[fighterID.value()];
-    const int rows = rowCount(fighterID);
-    const int row = fighter.motionToRow.insertOrGet(motion, rows)->value();
-    if (row == rows)
+    const int row = fighter.motionToRow.insertOrGet(motion, rowCount(fighterID))->value();
+    if (row == rowCount(fighterID))
     {
         // Create row at end of table
         fighter.colMotionValue.push(motion);
@@ -988,9 +1038,10 @@ void MotionLabels::changeCategory(FighterID fighterID, int row, Category newCate
     assert(fighterID.isValid());
 
     Fighter& fighter = fighters_[fighterID.value()];
+    Category oldCategory = fighter.colCategory[row];
     fighter.colCategory[row] = newCategory;
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, fighterID, row);
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, fighterID, row, oldCategory);
 }
 
 // ----------------------------------------------------------------------------

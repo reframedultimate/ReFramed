@@ -171,6 +171,7 @@ add_library (rfcommon SHARED
     "include/rfcommon/Metadata.hpp"
     "include/rfcommon/MetadataListener.hpp"
     "include/rfcommon/MotionLabels.hpp"
+    "include/rfcommon/MotionLabelsListener.hpp"
     "include/rfcommon/Plugin.hpp"
     "include/rfcommon/PluginContext.hpp"
     "include/rfcommon/PluginInterface.hpp"

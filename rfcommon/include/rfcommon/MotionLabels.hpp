@@ -28,17 +28,7 @@
 
 namespace rfcommon {
 
-class MotionLabelsListener
-{
-public:
-    virtual void onMotionLabelsLayerCountChanged() = 0;
-    virtual void onMotionLabelsLayerNameChanged(int layerIdx) = 0;
-
-    virtual void onMotionLabelsNewLabel(FighterID fighterID, int row, int layerIdx) = 0;
-    virtual void onMotionLabelsLabelChanged(FighterID fighterID, int row, int layerIdx) = 0;
-    virtual void onMotionLabelsLayerUsageChanged(int layerIdx) = 0;
-    virtual void onMotionLabelsCategoryChanged(FighterID fighterID, int row) = 0;
-};
+class MotionLabelsListener;
 
 /*!
  * \brief This class handles everything to do with converting hash40 motion
@@ -211,15 +201,16 @@ public:
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
     int rowCount(FighterID fighterID) const
-        { return fighters_[fighterID.value()].colMotionValue.count(); }
+        { return fighterID.value() < fighters_.count() ? fighters_[fighterID.value()].colMotionValue.count() : 0; }
     Category categoryAt(FighterID fighterID, int row) const
         { return fighters_[fighterID.value()].colCategory[row]; }
     FighterMotion motionAt(FighterID fighterID, int row) const
         { return fighters_[fighterID.value()].colMotionValue[row]; }
-    const char* labelAt(FighterID fighterID, int row, int layerIdx) const
+    const char* labelAt(FighterID fighterID, int layerIdx, int row) const
         { return fighters_[fighterID.value()].colLayer[layerIdx].labels[row].cStr(); }
 
     bool addUnknownMotion(FighterID fighterID, FighterMotion motion);
+    bool addUnknownMotionNoNotify(FighterID fighterID, FighterMotion motion);
     int addNewLabel(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
     int addNewLabelNoNotify(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
     void changeLabel(FighterID fighterID, int row, int layerIdx, const char* newLabel);
@@ -233,7 +224,7 @@ private:
     void populateMissingFighters(FighterID fighterID);
 
 private:
-    rfcommon::String filePath_;
+    const rfcommon::String filePath_;
 
     // The structures below hold the entire table of each fighter. The table
     // consists of rows and columns. If a row is added or deleted, then it is
@@ -273,7 +264,7 @@ private:
         SmallVector<LayerMap, 8> layerMaps;
     };
 
-    Vector<Fighter, int8_t> fighters_;
+    Vector<Fighter, int16_t> fighters_;
     Vector<String, int16_t> layerNames_;
     Vector<Usage, int16_t> layerUsages_;
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> hash40s_;
