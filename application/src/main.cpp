@@ -97,11 +97,12 @@ int main(int argc, char** argv)
 
     rfcommon::Reference<rfcommon::MotionLabels> motionLabels(
                 new rfcommon::MotionLabels(appLocalDir.absoluteFilePath("motionLabels.dat").replace("/", QDir::separator()).toUtf8().constData()));
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/1_Specific.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/2_Pikacord.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/3_English.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/unlabeled.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->changeUsage(motionLabels->findLayer("English"), rfcommon::MotionLabels::READABLE);
+    motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/1_Specific.json").replace("/", QDir::separator()).toUtf8().constData());
+    motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/2_General.json").replace("/", QDir::separator()).toUtf8().constData());
+    motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/3_English.json").replace("/", QDir::separator()).toUtf8().constData());
+    motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/unlabeled.json").replace("/", QDir::separator()).toUtf8().constData());
+    motionLabels->changeUsage(motionLabels->findLayer("English"), rfcommon::MotionLabels::READABLE);
+    motionLabels->updateHash40FromCSV(appLocalDir.absoluteFilePath("motion/ParamLabels.csv").replace("/", QDir::separator()).toUtf8().constData());
 
     rfapp::MainWindow mainWindow(std::move(config), hash40Strings, motionLabels);
 

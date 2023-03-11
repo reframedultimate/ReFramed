@@ -101,7 +101,7 @@ public:
     {
         return table_.count();
     }
-    
+
     int columnCount(const QModelIndex& parent=QModelIndex()) const override
     {
         return labels_->layerCount() + 2;
@@ -161,8 +161,10 @@ public:
                 break;
 
             case Qt::BackgroundRole: {
-                const rfcommon::FighterMotion motion = 
-                if (highlightedMotions_.findKey(table_[index.row()].hash40))
+                const rfcommon::FighterMotion motion = labels_->motionAt(fighterID_, table_[index.row()].row);
+                if (highlightedMotions_.findKey(motion) != highlightedMotions_.end())
+                    return QBrush(QColor(240, 255, 240));
+
                 if (index.column() == 0) return QBrush(QColor(230, 230, 230));
                 if (index.column() == 1) return QBrush(QColor(230, 230, 230));
                 switch (labels_->layerUsage(index.column() - 2))
@@ -427,7 +429,6 @@ private:
 private:
     Protocol* protocol_;
     rfcommon::MotionLabels* labels_;
-    rfcommon::Hash40Strings* hash40Strings_;
     rfcommon::Vector<Entry> table_;
     rfcommon::Vector<int> rowIdxToTableIdx_;
     rfcommon::SmallLinearMap<rfcommon::FighterMotion, char, 4> highlightedMotions_;
@@ -480,6 +481,7 @@ UserMotionLabelsEditor::UserMotionLabelsEditor(
         MainWindow* mainWindow,
         UserMotionLabelsManager* manager,
         rfcommon::Hash40Strings* hash40Strings,
+        Protocol* protocol,
         rfcommon::MappingInfo* globalMappingInfo)
     : QDialog(mainWindow)
     , mainWindow_(mainWindow)
@@ -510,7 +512,7 @@ UserMotionLabelsEditor::UserMotionLabelsEditor(
     tabWidget_categories = new QTabWidget;
 #define X(category, name) \
         tableViews_.push(new TableView); \
-        tableModels_.push(new TableModel(rfcommon::FighterID::fromValue(0), manager_->motionLabels(), rfcommon::MotionLabels::category)); \
+        tableModels_.push(new TableModel(rfcommon::FighterID::fromValue(0), rfcommon::MotionLabels::category, manager_->motionLabels(), protocol)); \
         tableViews_.back()->setModel(tableModels_.back()); \
         tabWidget_categories->addTab(tableViews_.back(), name);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST

@@ -301,7 +301,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
     // NOTE: This editor manages its own deletion when it closes via deleteLater()
-    userMotionLabelsEditor_ = new UserMotionLabelsEditor(this, userMotionLabelsManager_.get(), hash40Strings_, map);
+    userMotionLabelsEditor_ = new UserMotionLabelsEditor(this, userMotionLabelsManager_.get(), hash40Strings_, protocol_.get(), map);
     userMotionLabelsEditor_->setGeometry(calculatePopupGeometryActiveScreen());
     userMotionLabelsEditor_->show();
     userMotionLabelsEditor_->raise();

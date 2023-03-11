@@ -20,6 +20,7 @@ namespace rfcommon {
 namespace rfapp {
 
 class MainWindow;
+class Protocol;
 class UserMotionLabelsManager;
 
 class UserMotionLabelsEditor
@@ -33,6 +34,7 @@ public:
             MainWindow* mainWindow,
             UserMotionLabelsManager* manager,
             rfcommon::Hash40Strings* hash40Strings,
+            Protocol* protocol,
             rfcommon::MappingInfo* globalMappingInfo=nullptr);
     ~UserMotionLabelsEditor();
 
