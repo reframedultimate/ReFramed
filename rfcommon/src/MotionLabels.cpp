@@ -689,6 +689,16 @@ FighterMotion MotionLabels::toMotion(const char* hash40Str) const
 }
 
 // ----------------------------------------------------------------------------
+int MotionLabels::lookupRow(FighterID fighterID, FighterMotion motion) const
+{
+    const Fighter& fighter = fighters_[fighterID.value()];
+    const auto it = fighter.motionToRow.find(motion);
+    if (it == fighter.motionToRow.end())
+        return -1;
+    return it->value();
+}
+
+// ----------------------------------------------------------------------------
 const char* MotionLabels::lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback) const
 {
     if (layerIdx < 0)

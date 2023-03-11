@@ -100,6 +100,12 @@ public:
     FighterMotion toMotion(const char* hash40Str) const;
 
     /*!
+     * \brief Searches the table for the specified motion and returns the row
+     * number where it was found, or -1 if not found.
+     */
+    int lookupRow(FighterID fighterID, FighterMotion motion) const;
+
+    /*!
      * \brief Converts a motion value into a string from a specific layer. You
      * can use findLayer() to find e.g. a layer for a specific language.
      * \param[in] motion The motion value to convert.

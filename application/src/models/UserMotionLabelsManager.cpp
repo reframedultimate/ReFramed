@@ -25,7 +25,6 @@ UserMotionLabelsManager::UserMotionLabelsManager(rfcommon::MotionLabels* motionL
 {
     loadAllLayers();
 
-    userMotionLabels_->dispatcher.addListener(this);
     motionLabels_->dispatcher.addListener(this);
     protocol_->dispatcher.addListener(this);
 }
@@ -36,8 +35,7 @@ UserMotionLabelsManager::~UserMotionLabelsManager()
     clearActiveSession();
 
     protocol_->dispatcher.removeListener(this);
-    motionLabels_->dispatcher.addListener(this);
-    userMotionLabels_->dispatcher.removeListener(this);
+    motionLabels_->dispatcher.removeListener(this);
 
     saveAllLayers();
 }
@@ -45,54 +43,7 @@ UserMotionLabelsManager::~UserMotionLabelsManager()
 // ----------------------------------------------------------------------------
 bool UserMotionLabelsManager::loadAllLayers()
 {
-    PROFILE(UserMotionLabelsManager, loadAllLayers);
-
-    bool success = true;
-
-    // Prepare "motion" dir in appdata
-    QDir dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    if (dir.exists("motion") == false)
-        dir.mkdir("motion");
-    dir.cd("motion");
-
-    // ReFramed ships with layers that are updated from version to version
-    QDir shipDir("share/reframed/data/motion");
-    QStringList shippedLayers = shipDir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
-    QStringList localLayers = dir.entryList({ "*.json" }, QDir::Files | QDir::NoDot | QDir::NoDotDot, QDir::Name);
-
-    // Only load a shipped layer if it does not exist yet
-    QStringList layers;
-    for (const auto& file : shippedLayers)
-    {
-        if (localLayers.contains(file))
-            continue;
-        layers.append(shipDir.absoluteFilePath(file));;
-    }
-    for (const auto& file : localLayers)
-    {
-        if (file == "unlabeled.json")
-            continue;
-        layers.append(dir.absoluteFilePath(file));
-    }
-
-    for (const auto& file : layers)
-    {
-        rfcommon::MappedFile f;
-        if (f.open(dir.absoluteFilePath(file).toUtf8().constData()) == false)
-        {
-            success = false;
-            continue;
-        }
-
-        userMotionLabels_->loadLayer(f.address(), f.size());
-    }
-
-    QString fileName = dir.absoluteFilePath("unlabeled.json");
-    rfcommon::MappedFile f;
-    if (f.open(fileName.toUtf8().constData()))
-        userMotionLabels_->loadUnlabeled(f.address(), f.size());
-
-    return success;
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -110,7 +61,6 @@ bool UserMotionLabelsManager::saveAllLayers()
 rfcommon::UserMotionLabels* UserMotionLabelsManager::userMotionLabels() const
 {
     NOPROFILE();
-
     return userMotionLabels_;
 }
 
@@ -118,20 +68,11 @@ rfcommon::UserMotionLabels* UserMotionLabelsManager::userMotionLabels() const
 rfcommon::MotionLabels* UserMotionLabelsManager::motionLabels() const
 {
     NOPROFILE();
-
     return motionLabels_;
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsManager::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { NOPROFILE(); motionLabelsModified_ = true; }
-void UserMotionLabelsManager::onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) { NOPROFILE(); motionLabelsModified_ = true; }
-
-void UserMotionLabelsManager::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void UserMotionLabelsManager::onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) { NOPROFILE(); motionLabelsModified_ = true; }
-void UserMotionLabelsManager::onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) { NOPROFILE(); motionLabelsModified_ = true; }
-
-// ----------------------------------------------------------------------------
-void UserMotionLabelsManager::onMotionLabelsLoaded() {}
+void UserMotionLabelsManager::onMotionLabelsLoaded() { NOPROFILE(); }
 void UserMotionLabelsManager::onMotionLabelsHash40sUpdated() { NOPROFILE(); motionLabelsModified_ = true; }
 
 void UserMotionLabelsManager::onMotionLabelsLayerInserted(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
@@ -173,49 +114,14 @@ void UserMotionLabelsManager::onProtocolFailedToConnectToServer(const char* erro
 void UserMotionLabelsManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) { NOPROFILE(); }
 void UserMotionLabelsManager::onProtocolDisconnectedFromServer() { NOPROFILE(); }
 
-// ----------------------------------------------------------------------------
-void UserMotionLabelsManager::onProtocolTrainingStarted(rfcommon::Session* training)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolTrainingStarted);
+void UserMotionLabelsManager::onProtocolTrainingStarted(rfcommon::Session* training) { NOPROFILE(); setActiveSession(training); }
+void UserMotionLabelsManager::onProtocolTrainingResumed(rfcommon::Session* training) { NOPROFILE(); setActiveSession(training); }
+void UserMotionLabelsManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) { NOPROFILE(); setActiveSession(newTraining); }
+void UserMotionLabelsManager::onProtocolTrainingEnded(rfcommon::Session* training) { NOPROFILE(); clearActiveSession(); }
 
-    setActiveSession(training);
-}
-void UserMotionLabelsManager::onProtocolTrainingResumed(rfcommon::Session* training)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolTrainingResumed);
-
-    setActiveSession(training);
-}
-void UserMotionLabelsManager::onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolTrainingReset);
-
-    setActiveSession(newTraining);
-}
-void UserMotionLabelsManager::onProtocolTrainingEnded(rfcommon::Session* training)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolTrainingEnded);
-
-    clearActiveSession();
-}
-void UserMotionLabelsManager::onProtocolGameStarted(rfcommon::Session* game)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolGameStarted);
-
-    setActiveSession(game);
-}
-void UserMotionLabelsManager::onProtocolGameResumed(rfcommon::Session* game)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolGameResumed);
-
-    setActiveSession(game);
-}
-void UserMotionLabelsManager::onProtocolGameEnded(rfcommon::Session* game)
-{
-    PROFILE(UserMotionLabelsManager, onProtocolGameEnded);
-
-    clearActiveSession();
-}
+void UserMotionLabelsManager::onProtocolGameStarted(rfcommon::Session* game) { NOPROFILE(); setActiveSession(game); }
+void UserMotionLabelsManager::onProtocolGameResumed(rfcommon::Session* game) { NOPROFILE(); setActiveSession(game); }
+void UserMotionLabelsManager::onProtocolGameEnded(rfcommon::Session* game) { NOPROFILE(); clearActiveSession(); }
 
 // ----------------------------------------------------------------------------
 void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
@@ -230,7 +136,7 @@ void UserMotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfco
     {
         auto fighterID = mdata->playerFighterID(fighterIdx);
         auto motion = frame[fighterIdx].motion();
-        userMotionLabels_->addUnknownMotion(fighterID, motion);
+        motionLabels_->addUnknownMotion(fighterID, motion);
     }
 }
 void UserMotionLabelsManager::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) { NOPROFILE(); }

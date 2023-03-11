@@ -1,9 +1,11 @@
+#include "application/models/Protocol.hpp"
 #include "application/models/UserMotionLabelsManager.hpp"
 #include "application/views/UserMotionLabelsEditor.hpp"
 #include "application/views/MainWindow.hpp"
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
+#include "rfcommon/Frame.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/MotionLabels.hpp"
@@ -35,6 +37,8 @@ namespace {
 class TableModel
     : public QAbstractTableModel
     , public rfcommon::MotionLabelsListener
+    , public rfcommon::ProtocolListener
+    , public rfcommon::FrameDataListener
 {
 public:
     struct Entry
@@ -47,19 +51,23 @@ public:
 
     TableModel(
             rfcommon::FighterID fighterID,
+            rfcommon::MotionLabels::Category category,
             rfcommon::MotionLabels* motionLabels,
-            rfcommon::MotionLabels::Category category)
-        : labels_(motionLabels)
+            Protocol* protocol)
+        : protocol_(protocol)
+        , labels_(motionLabels)
         , category_(category)
         , fighterID_(fighterID)
     {
         repopulateEntries();
+        protocol_->dispatcher.addListener(this);
         labels_->dispatcher.addListener(this);
     }
 
     ~TableModel()
     {
         labels_->dispatcher.removeListener(this);
+        protocol_->dispatcher.removeListener(this);
     }
 
     void setFighter(rfcommon::FighterID fighterID)
@@ -151,6 +159,19 @@ public:
             case Qt::WhatsThisRole:
             case Qt::SizeHintRole:
                 break;
+
+            case Qt::BackgroundRole: {
+                const rfcommon::FighterMotion motion = 
+                if (highlightedMotions_.findKey(table_[index.row()].hash40))
+                if (index.column() == 0) return QBrush(QColor(230, 230, 230));
+                if (index.column() == 1) return QBrush(QColor(230, 230, 230));
+                switch (labels_->layerUsage(index.column() - 2))
+                {
+                    case rfcommon::MotionLabels::NOTATION: return QBrush(QColor(240, 255, 240));
+                    case rfcommon::MotionLabels::READABLE: return QBrush(QColor(255, 240, 240));
+                    case rfcommon::MotionLabels::CATEGORIZATION: return QBrush(QColor(240, 240, 255));
+                }
+            } break;
         }
         return QVariant();
     }
@@ -353,10 +374,63 @@ private:
     }
 
 private:
+    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
+    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
+    void onProtocolDisconnectedFromServer() override {}
+
+    void onProtocolTrainingStarted(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.addListener(this); }
+    void onProtocolTrainingResumed(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.addListener(this); }
+    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override
+    {
+        oldTraining->tryGetFrameData()->dispatcher.removeListener(this);
+        newTraining->tryGetFrameData()->dispatcher.addListener(this);
+    }
+    void onProtocolTrainingEnded(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.removeListener(this); }
+    void onProtocolGameStarted(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.addListener(this); }
+    void onProtocolGameResumed(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.addListener(this); }
+    void onProtocolGameEnded(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.removeListener(this); }
+
+private:
+    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override
+    {
+        clearHighlightedMotions();
+        for (const auto& state : frame)
+            highlightedMotions_.insertIfNew(state.motion(), 0);
+        refreshHighlightedMotions();
+    }
+    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override {}
+
+    void clearHighlightedMotions()
+    {
+        rfcommon::SmallVector<int, 4> tableIdxs;
+        for (auto it : highlightedMotions_)
+            if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
+                tableIdxs.push(rowIdxToTableIdx_[row]);
+
+        highlightedMotions_.clear();
+
+        for (int tableIdx : tableIdxs)
+            emit dataChanged(index(tableIdx, 0), index(tableIdx, labels_->layerCount() + 2), { Qt::BackgroundRole });
+    }
+
+    void refreshHighlightedMotions()
+    {
+        for (auto it : highlightedMotions_)
+            if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
+            {
+                int tableIdx = rowIdxToTableIdx_[row];
+                emit dataChanged(index(tableIdx, 0), index(tableIdx, labels_->layerCount() + 2), { Qt::BackgroundRole });
+            }
+    }
+
+private:
+    Protocol* protocol_;
     rfcommon::MotionLabels* labels_;
     rfcommon::Hash40Strings* hash40Strings_;
     rfcommon::Vector<Entry> table_;
     rfcommon::Vector<int> rowIdxToTableIdx_;
+    rfcommon::SmallLinearMap<rfcommon::FighterMotion, char, 4> highlightedMotions_;
     const rfcommon::MotionLabels::Category category_;
     rfcommon::FighterID fighterID_;
 };

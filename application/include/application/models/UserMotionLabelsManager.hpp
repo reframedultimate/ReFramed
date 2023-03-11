@@ -24,8 +24,7 @@ class Protocol;
  * structure with new motion values from live sessions as the data comes in.
  */
 class UserMotionLabelsManager
-        : public rfcommon::UserMotionLabelsListener
-        , public rfcommon::MotionLabelsListener
+        : public rfcommon::MotionLabelsListener
         , public rfcommon::ProtocolListener
         , public rfcommon::FrameDataListener
 {
@@ -38,14 +37,6 @@ public:
 
     rfcommon::UserMotionLabels* userMotionLabels() const;
     rfcommon::MotionLabels* motionLabels() const;
-
-private:
-    void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
-    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
-
-    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
-    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
 
 private:
     void onMotionLabelsLoaded() override;
