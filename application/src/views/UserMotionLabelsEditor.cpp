@@ -376,29 +376,43 @@ private:
     }
 
 private:
+    void setActiveSession(rfcommon::Session* session)
+    {
+        session->tryGetFrameData()->dispatcher.addListener(this);
+        mdata_ = session->tryGetMetadata();
+    }
+    void clearActiveSession(rfcommon::Session* session)
+    {
+        mdata_.drop();
+        session->tryGetFrameData()->dispatcher.removeListener(this);
+
+        clearHighlightedMotions();
+    }
+
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
     void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
     void onProtocolDisconnectedFromServer() override {}
 
-    void onProtocolTrainingStarted(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.addListener(this); }
-    void onProtocolTrainingResumed(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.addListener(this); }
+    void onProtocolTrainingStarted(rfcommon::Session* training) override { setActiveSession(training); }
+    void onProtocolTrainingResumed(rfcommon::Session* training) override { setActiveSession(training); }
     void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override
     {
-        oldTraining->tryGetFrameData()->dispatcher.removeListener(this);
-        newTraining->tryGetFrameData()->dispatcher.addListener(this);
+        clearActiveSession(oldTraining);
+        setActiveSession(newTraining);
     }
-    void onProtocolTrainingEnded(rfcommon::Session* training) override { training->tryGetFrameData()->dispatcher.removeListener(this); }
-    void onProtocolGameStarted(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.addListener(this); }
-    void onProtocolGameResumed(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.addListener(this); }
-    void onProtocolGameEnded(rfcommon::Session* game) override { game->tryGetFrameData()->dispatcher.removeListener(this); }
+    void onProtocolTrainingEnded(rfcommon::Session* training) override { clearActiveSession(training); }
+    void onProtocolGameStarted(rfcommon::Session* game) override { setActiveSession(game); }
+    void onProtocolGameResumed(rfcommon::Session* game) override { setActiveSession(game); }
+    void onProtocolGameEnded(rfcommon::Session* game) override { clearActiveSession(game); }
 
 private:
     void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override
     {
         clearHighlightedMotions();
-        for (const auto& state : frame)
-            highlightedMotions_.insertIfNew(state.motion(), 0);
+        for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
+            if (mdata_->playerFighterID(fighterIdx) == fighterID_)
+                highlightedMotions_.insertIfNew(frame[fighterIdx].motion(), 0);
         refreshHighlightedMotions();
     }
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override {}
@@ -428,6 +442,7 @@ private:
 
 private:
     Protocol* protocol_;
+    rfcommon::Reference<rfcommon::Metadata> mdata_;
     rfcommon::MotionLabels* labels_;
     rfcommon::Vector<Entry> table_;
     rfcommon::Vector<int> rowIdxToTableIdx_;
