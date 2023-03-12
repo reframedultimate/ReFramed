@@ -1,10 +1,13 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
+
 #include "rfcommon/Log.hpp"
+#include "rfcommon/LastError.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/MotionLabels.hpp"
+
 #include <cassert>
 #include <QDebug>
 #include <QWidget>
