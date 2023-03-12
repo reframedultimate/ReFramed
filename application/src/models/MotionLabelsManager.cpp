@@ -97,8 +97,6 @@ void MotionLabelsManager::clearActiveSession()
 
     activeSession_.drop();
 }
-
-// ----------------------------------------------------------------------------
 void MotionLabelsManager::onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) { NOPROFILE(); }
 void MotionLabelsManager::onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) { NOPROFILE(); }
 void MotionLabelsManager::onProtocolConnectedToServer(const char* ipAddress, uint16_t port) { NOPROFILE(); }

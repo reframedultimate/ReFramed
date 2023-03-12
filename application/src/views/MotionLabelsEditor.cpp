@@ -79,20 +79,28 @@ public:
         endResetModel();
     }
 
-    void setCategory(const QModelIndexList& indexes, rfcommon::MotionLabels::Category category)
+    void setCategory(const QSet<int>& rows, rfcommon::MotionLabels::Category category)
     {
         PROFILE(MotionLabelsEditorGlobal, setCategory);
-
-        // Create a list of unique row indices, as changing categories is comparitively expensive
-        QSet<int> rows;
-        for (const auto& index : indexes)
-            rows.insert(table_[index.row()].row);
 
         // Change categories
         for (int row : rows)
         {
-            const auto motion = labels_->motionAt(fighterID_, row);
-            labels_->changeCategory(fighterID_, row, category);
+            // Have to map from table row to motion labels row
+            const int motionRow = table_[row].row;
+            const auto motion = labels_->motionAt(fighterID_, motionRow);
+            labels_->changeCategory(fighterID_, motionRow, category);
+        }
+    }
+
+    void setLabels(const QModelIndexList& indexes, const QString& label)
+    {
+        for (const QModelIndex& index : indexes)
+        {
+            const int row = table_[index.row()].row;
+            const int layerIdx = index.column() - 2;
+            const QByteArray labelUtf8 = label.toUtf8();
+            labels_->changeLabel(fighterID_, row, layerIdx, labelUtf8.constData());
         }
     }
 
@@ -160,17 +168,23 @@ public:
                 break;
 
             case Qt::BackgroundRole: {
+                const QColor rowHighlight(255, 255, 230);
+                const QColor notationColor(240, 255, 255);
+                const QColor readableColor(240, 240, 255);
+                const QColor categorizationColor(255, 250, 240);
+                const QColor hash40Color(230, 230, 230);
+
                 const rfcommon::FighterMotion motion = labels_->motionAt(fighterID_, table_[index.row()].row);
                 if (highlightedMotions_.findKey(motion) != highlightedMotions_.end())
-                    return QBrush(QColor(240, 255, 240));
+                    return QBrush(rowHighlight);
 
-                if (index.column() == 0) return QBrush(QColor(230, 230, 230));
-                if (index.column() == 1) return QBrush(QColor(230, 230, 230));
+                if (index.column() == 0) return QBrush(hash40Color);
+                if (index.column() == 1) return QBrush(hash40Color);
                 switch (labels_->layerUsage(index.column() - 2))
                 {
-                    case rfcommon::MotionLabels::NOTATION: return QBrush(QColor(240, 255, 240));
-                    case rfcommon::MotionLabels::READABLE: return QBrush(QColor(255, 240, 240));
-                    case rfcommon::MotionLabels::CATEGORIZATION: return QBrush(QColor(240, 240, 255));
+                    case rfcommon::MotionLabels::NOTATION: return QBrush(notationColor);
+                    case rfcommon::MotionLabels::READABLE: return QBrush(readableColor);
+                    case rfcommon::MotionLabels::CATEGORIZATION: return QBrush(categorizationColor);
                 }
             } break;
         }
@@ -295,7 +309,7 @@ private:
 
     void onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) override
     {
-
+        emit dataChanged(index(0, layerIdx + 2), index(table_.count(), layerIdx + 2));
     }
 
     void onMotionLabelsLayerMoved(int fromIdx, int toIdx) override
@@ -502,7 +516,7 @@ MotionLabelsEditor::MotionLabelsEditor(
     , globalMappingInfo_(globalMappingInfo)
     , comboBox_fighters(new QComboBox)
 {
-    setWindowTitle("User Motion Labels Editor");
+    setWindowTitle("Motion Labels Editor");
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
 
@@ -549,11 +563,11 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     // This causes models to update their data for the current fighter
-    comboBox_fighters->setCurrentIndex(0);
+    comboBox_fighters->setCurrentIndex(39);  // Pikachu
     if (comboBox_fighters->count() > 0)
     {
         for (int i = 0; i != tableModels_.count(); ++i)
-            static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[0]);
+            static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[39]);
     }
 
     for (int i = 0; i != tableViews_.count(); ++i)
@@ -678,30 +692,90 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
 
     // Submenu with all of the categories that are not the current category
     QMenu categoryMenu;
-#define X(category, name) \
-        QAction* cat##category = nullptr; \
-        if (rfcommon::MotionLabels::category != tabIdx) \
-            cat##category = categoryMenu.addAction(name);
+#define X(name, str) \
+        QAction* cat##name = nullptr; \
+        if (rfcommon::MotionLabels::name != tabIdx) \
+            cat##name = categoryMenu.addAction(str);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
+#undef X
+
+    // Submenu with all of the layer usages
+    QMenu usageMenu;
+#define X(name, str) \
+        QAction* usage##name = usageMenu.addAction(str);
+    RFCOMMON_MOTION_LABEL_USAGE_LIST
 #undef X
 
     // Main context menu
     QMenu menu;
-    QAction* newLayer = menu.addAction("Create New Layer");
-    QAction* changeCategory = menu.addAction("Change Category");
+    QAction* renameLayer = menu.addAction("Rename layers");
+    QAction* mergeLayers = menu.addAction("Merge layers");
+    QAction* changeUsage = menu.addAction("Change layer usage");
+    changeUsage->setMenu(&usageMenu);
+    menu.addSeparator();
+    QAction* newLayer = menu.addAction("Create new layer");
+    QAction* deleteLayer = menu.addAction("Delete layers");
+    QAction* importLayer = menu.addAction("Import layers");
+    QAction* exportLayer = menu.addAction("Export layers");
+    menu.addSeparator();
+    QAction* setLabel = menu.addAction("Set label");
+    QAction* changeCategory = menu.addAction("Change motion category");
     changeCategory->setMenu(&categoryMenu);
+    QAction* propagateLabel = menu.addAction("Copy labels to other fighters");
 
     // These are the cells we may be manipulating
     auto selectedIndexes = tableViews_[tabIdx]->selectionModel()->selectedIndexes();
+
+    QSet<int> selectedColumns;
+    for (const auto& index : selectedIndexes)
+        selectedColumns.insert(index.column());
+    QSet<int> selectedRows;
+    for (const auto& index : selectedIndexes)
+        selectedRows.insert(index.row());
+
+    // If nothing is selected, disable menu options accordingly
     if (selectedIndexes.size() == 0)
+    {
+        renameLayer->setEnabled(false);
+        mergeLayers->setEnabled(false);
+        changeUsage->setEnabled(false);
+        deleteLayer->setEnabled(false);
+        exportLayer->setEnabled(false);
+        setLabel->setEnabled(false);
         changeCategory->setEnabled(false);
+        propagateLabel->setEnabled(false);
+    }
+    if (selectedColumns.size() != 2)
+        mergeLayers->setEnabled(false);
 
     // Execute
     QAction* a = menu.exec(globalPos);
     if (a == nullptr)
         return;
 
-    if (a == newLayer)
+    if (a == renameLayer)
+    {
+        QString name = QInputDialog::getText(this, "Enter Name", "Layer Name:");
+        if (name.length() == 0)
+            return;
+        QByteArray ba = name.toUtf8();
+        for (int column : selectedColumns)
+            manager_->motionLabels()->renameLayer(column - 2, ba.constData());
+    }
+    else if (a == mergeLayers)
+    {
+        auto columns = selectedColumns.values();
+        int sourceIdx = columns[0] - 2;
+        int targetIdx = columns[1] - 2;
+        manager_->motionLabels()->mergeLayers(targetIdx, sourceIdx);
+    }
+#define X(name, str) \
+    else if (a == usage##name) \
+        for (int column : selectedColumns) \
+            manager_->motionLabels()->changeUsage(column - 2, rfcommon::MotionLabels::name);
+    RFCOMMON_MOTION_LABEL_USAGE_LIST
+#undef X
+    else if (a == newLayer)
     {
         QString name = QInputDialog::getText(this, "Enter Name", "Layer Name:");
         if (name.length() == 0)
@@ -709,9 +783,32 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         QByteArray ba = name.toUtf8();
         manager_->motionLabels()->newLayer(ba.constData(), rfcommon::MotionLabels::NOTATION);
     }
-#define X(category, name) \
-    else if (a == cat##category) \
-        static_cast<TableModel*>(tableModels_[tabIdx])->setCategory(selectedIndexes, rfcommon::MotionLabels::category);
+    else if (a == deleteLayer)
+    {
+
+    }
+    else if (a == importLayer)
+    {
+
+    }
+    else if (a == exportLayer)
+    {
+
+    }
+    else if (a == setLabel)
+    {
+        QString name = QInputDialog::getText(this, "Change selected labels", "Enter new label:");
+        if (name.length() == 0)
+            return;
+        static_cast<TableModel*>(tableModels_[tabIdx])->setLabels(selectedIndexes, name);
+    }
+    else if (a == propagateLabel)
+    {
+
+    }
+#define X(name, str) \
+    else if (a == cat##name) \
+        static_cast<TableModel*>(tableModels_[tabIdx])->setCategory(selectedRows, rfcommon::MotionLabels::name);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
 #undef X
 }

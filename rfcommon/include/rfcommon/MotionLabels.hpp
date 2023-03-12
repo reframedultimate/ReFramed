@@ -26,6 +26,11 @@
     X(MISC,            "Misc")                \
     X(UNLABELED,       "Unlabeled")
 
+#define RFCOMMON_MOTION_LABEL_USAGE_LIST      \
+    X(READABLE,        "Readable")            \
+    X(NOTATION,        "Notation")            \
+    X(CATEGORIZATION,  "Categorization")
+
 namespace rfcommon {
 
 class MotionLabelsListener;
@@ -50,9 +55,9 @@ public:
 
     enum Usage
     {
-        READABLE,
-        NOTATION,
-        CATEGORIZATION
+#define X(name, str) name,
+        RFCOMMON_MOTION_LABEL_USAGE_LIST
+#undef X
     };
 
     MotionLabels();
