@@ -10,8 +10,7 @@ static rfcommon::Plugin* createVideoPlayerPlugin(
         RFPluginFactory* factory,
         rfcommon::PluginContext* pluginCtx,
         rfcommon::Log* log,
-        rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings)
+        rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createVideoPlayerPlugin);
 
@@ -22,8 +21,7 @@ static rfcommon::Plugin* createVODReviewPlugin(
         RFPluginFactory* factory,
         rfcommon::PluginContext* pluginCtx,
         rfcommon::Log* log,
-        rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings)
+        rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createVODReviewPlugin);
 

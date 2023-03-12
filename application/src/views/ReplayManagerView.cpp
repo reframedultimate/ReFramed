@@ -42,16 +42,14 @@ ReplayManagerView::ReplayManagerView(
         ReplayManager* replayManager,
         PluginManager* pluginManager,
         PlayerDetails* playerDetails,
-        UserMotionLabelsManager* userMotionLabelsManager,
-        rfcommon::Hash40Strings* hash40Strings,
+        MotionLabelsManager* motionLabelsManager,
         QWidget* parent)
     : QWidget(parent)
     , ConfigAccessor(config)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
     , playerDetails_(playerDetails)
-    , userMotionLabelsManager_(userMotionLabelsManager)
-    , hash40Strings_(hash40Strings)
+    , motionLabelsManager_(motionLabelsManager)
     , replayMetadataCache_(new ReplayMetadataCache(replayManager_, replayManager_))
     , replayListModel_(new ReplayListModel(replayMetadataCache_.get()))
     , replayListSortFilterModel_(new ReplayListSortFilterModel)
@@ -64,7 +62,7 @@ ReplayManagerView::ReplayManagerView(
         replayGroupListView_->addItem(replayManager_->replayGroup(i)->name());
     replayGroupListView_->setCurrentItem(replayGroupListView_->item(0));
     replayGroupListView_->setContextMenuPolicy(Qt::CustomContextMenu);
-    
+
     replayListModel_->setReplayGroup(replayManager_->allReplayGroup());
     replayListSortFilterModel_->setSourceModel(replayListModel_.get());
     replayListSortFilterModel_->setDynamicSortFilter(true);

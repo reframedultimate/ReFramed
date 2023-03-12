@@ -720,7 +720,7 @@ const char* MotionLabels::lookupLayer(FighterID fighterID, FighterMotion motion,
 }
 
 // ----------------------------------------------------------------------------
-const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback) const
+const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, const char* layerName, const char* fallback) const
 {
     // Look up row for specified fighter
     const Fighter& fighter = fighters_[fighterID.value()];
@@ -729,16 +729,9 @@ const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion,
         return fallback;
     const int row = it->value();
 
-    if (preferredLayerIdx >= 0)
-    {
-        const Layer& layer = fighter.colLayer[preferredLayerIdx];
-        if (layer.labels[row].notEmpty())
-            return layer.labels[row].cStr();
-    }
-
     for (int layerIdx = 0; layerIdx != layerUsages_.count(); ++layerIdx)
     {
-        if (layerUsages_[layerIdx] != usage)
+        if (layerNames_[layerIdx] != layerName)
             continue;
 
         const Layer& layer = fighter.colLayer[layerIdx];

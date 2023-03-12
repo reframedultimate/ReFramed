@@ -9,11 +9,11 @@
 #include <QWidget>
 
 // ----------------------------------------------------------------------------
-OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::UserMotionLabels* userLabels)
+OverextensionPlugin::OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::MotionLabels* labels)
     : Plugin(factory)
     , Plugin::SharedDataInterface(pluginCtx, factory)
     , model_(new OverextensionModel)
-    , userLabels_(userLabels)
+    , labels_(labels)
 {
     model_->dispatcher.addListener(this);
 }
@@ -36,7 +36,7 @@ QWidget* OverextensionPlugin::createView()
 {
     PROFILE(OverextensionPlugin, createView);
 
-    return new OverextensionView(model_.get(), userLabels_);
+    return new OverextensionView(model_.get(), labels_);
 }
 
 // ----------------------------------------------------------------------------

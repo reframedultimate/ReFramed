@@ -2,8 +2,6 @@
 
 #include "stats/listeners/SettingsListener.hpp"
 #include "rfcommon/FrameDataListener.hpp"
-#include "rfcommon/MetadataListener.hpp"
-#include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Reference.hpp"
 #include <memory>
@@ -13,7 +11,7 @@ namespace rfcommon {
     class Hash40Strings;
     class MappingInfo;
     class Metadata;
-    class UserMotionLabels;
+    class MotionLabels;
 }
 
 class PlayerMeta;
@@ -31,7 +29,7 @@ class StatsPlugin
         , public SettingsListener
 {
 public:
-    StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::MotionLabels* labels);
     ~StatsPlugin();
 
     void resetStatsIfAppropriate(rfcommon::Session* session);

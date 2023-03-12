@@ -18,10 +18,10 @@
 #include "rfcommon/PluginSharedData.hpp"
 
 // ----------------------------------------------------------------------------
-StatsPlugin::StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+StatsPlugin::StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::MotionLabels* labels)
     : Plugin(factory)
     , Plugin::SharedDataInterface(pluginCtx, factory)
-    , playerMeta_(new PlayerMeta(userLabels, hash40Strings))
+    , playerMeta_(new PlayerMeta(labels))
     , statsCalculator_(new StatsCalculator)
     , settingsModel_(new SettingsModel(dataDir().absoluteFilePath("settings.json")))
     , wsServer_(new WebSocketServer)

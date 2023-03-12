@@ -7,8 +7,7 @@ static rfcommon::Plugin* createStreametaPlugin(
     RFPluginFactory* factory,
     rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
-    rfcommon::UserMotionLabels* userLabels,
-    rfcommon::Hash40Strings* hash40Strings)
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createStreametaPlugin);
 
@@ -33,7 +32,7 @@ static RFPluginFactory factories[] = {
      "TheComet",
      "TheComet#5387, @TheComet93",
      "Integrate with the streameta platform"}},
-     
+
     {nullptr}
 };
 

@@ -8,7 +8,6 @@ class QItemSelection;
 class QListWidgetItem;
 
 namespace rfcommon {
-    class Hash40Strings;
     class ReplayMetadataCache;
 }
 
@@ -24,7 +23,7 @@ class ReplayListSortFilterModel;
 class ReplayListView;
 class ReplayMetadataCache;
 class ReplayManager;
-class UserMotionLabelsManager;
+class MotionLabelsManager;
 
 /*!
  * \brief Contains the list of replay groups, the list of replays in each group,
@@ -43,8 +42,7 @@ public:
             ReplayManager* replayManager,
             PluginManager* pluginManager,
             PlayerDetails* playerDetails,
-            UserMotionLabelsManager* userMotionLabelsManager,
-            rfcommon::Hash40Strings* hash40Strings,
+            MotionLabelsManager* motionLabelsManager,
             QWidget* parent=nullptr);
     ~ReplayManagerView();
 
@@ -75,8 +73,7 @@ private:
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
     PlayerDetails* playerDetails_;
-    UserMotionLabelsManager* userMotionLabelsManager_;
-    rfcommon::Hash40Strings* hash40Strings_;
+    MotionLabelsManager* motionLabelsManager_;
 
     std::unique_ptr<ReplayMetadataCache> replayMetadataCache_;
     std::unique_ptr<ReplayListModel> replayListModel_;

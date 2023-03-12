@@ -1,15 +1,10 @@
 #include "application/config.hpp"
 #include "application/models/PluginManager.hpp"
-#include "application/models/Protocol.hpp"
-#include "rfcommon/Hash40Strings.hpp"
-#include "rfcommon/LastError.hpp"
 #include "rfcommon/Log.hpp"
-#include "rfcommon/Metadata.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/PluginInterface.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/Session.hpp"
-#include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include <cassert>
 #include <QDebug>
 #include <QWidget>
@@ -33,9 +28,8 @@ PluginManager::LoadedPlugin::LoadedPlugin(LoadedPlugin&& other)
 {}
 
 // ----------------------------------------------------------------------------
-PluginManager::PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
-    : userLabels_(userLabels)
-    , hash40Strings_(hash40Strings)
+PluginManager::PluginManager(rfcommon::MotionLabels* labels)
+    : labels_(labels)
 {
     // On Windows, add a directory to the search path so plugins
     // that depend on additional DLLs can load those from this "deps" directory
@@ -203,7 +197,7 @@ rfcommon::Plugin* PluginManager::create(const QString& name, rfcommon::PluginCon
                 // Instantiate object
                 rfcommon::Log::root()->info("Creating plugin \"%s\"", factory->info.name);
                 rfcommon::Log* pluginLog = rfcommon::Log::root()->child(factory->info.name);
-                rfcommon::Plugin* plugin = factory->create(factory, pluginCtx, pluginLog, userLabels_, hash40Strings_);
+                rfcommon::Plugin* plugin = factory->create(factory, pluginCtx, pluginLog, labels_);
                 if (plugin == nullptr)
                     log->error("Call to create() failed for plugin factory \"%s\"", factory->info.name);
                 return plugin;

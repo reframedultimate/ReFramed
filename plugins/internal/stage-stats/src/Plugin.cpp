@@ -7,8 +7,7 @@ static rfcommon::Plugin* createPlugin(
     RFPluginFactory* factory,
     rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
-    rfcommon::UserMotionLabels* userLabels,
-    rfcommon::Hash40Strings* hash40Strings)
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createPlugin);
 

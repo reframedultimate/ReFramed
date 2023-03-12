@@ -1,6 +1,6 @@
 #include "application/models/Protocol.hpp"
-#include "application/models/UserMotionLabelsManager.hpp"
-#include "application/views/UserMotionLabelsEditor.hpp"
+#include "application/models/MotionLabelsManager.hpp"
+#include "application/views/MotionLabelsEditor.hpp"
 #include "application/views/MainWindow.hpp"
 
 #include "rfcommon/FighterState.hpp"
@@ -9,7 +9,6 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/MotionLabels.hpp"
-#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
@@ -52,10 +51,10 @@ public:
     TableModel(
             rfcommon::FighterID fighterID,
             rfcommon::MotionLabels::Category category,
-            rfcommon::MotionLabels* motionLabels,
+            rfcommon::MotionLabels* labels,
             Protocol* protocol)
         : protocol_(protocol)
-        , labels_(motionLabels)
+        , labels_(labels)
         , category_(category)
         , fighterID_(fighterID)
     {
@@ -72,7 +71,7 @@ public:
 
     void setFighter(rfcommon::FighterID fighterID)
     {
-        PROFILE(UserMotionLabelsEditorGlobal, setFighter);
+        PROFILE(MotionLabelsEditorGlobal, setFighter);
 
         beginResetModel();
             fighterID_ = fighterID;
@@ -82,7 +81,7 @@ public:
 
     void setCategory(const QModelIndexList& indexes, rfcommon::MotionLabels::Category category)
     {
-        PROFILE(UserMotionLabelsEditorGlobal, setCategory);
+        PROFILE(MotionLabelsEditorGlobal, setCategory);
 
         // Create a list of unique row indices, as changing categories is comparitively expensive
         QSet<int> rows;
@@ -214,7 +213,7 @@ public:
 private:
     void repopulateEntries()
     {
-        PROFILE(UserMotionLabelsEditorGlobal, repopulateEntries);
+        PROFILE(MotionLabelsEditorGlobal, repopulateEntries);
 
         table_.clearCompact();
 
@@ -237,7 +236,7 @@ private:
 
     void sortTable()
     {
-        PROFILE(UserMotionLabelsEditorGlobal, sortTable);
+        PROFILE(MotionLabelsEditorGlobal, sortTable);
 
         std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b){
             return a.name < b.name;
@@ -250,7 +249,7 @@ private:
 
     int findTableInsertIdx(const Entry& entry)
     {
-        PROFILE(UserMotionLabelsEditorGlobal, findTableInsertIdx);
+        PROFILE(MotionLabelsEditorGlobal, findTableInsertIdx);
 
         auto insertIt = std::lower_bound(table_.begin(), table_.end(), entry, [](const Entry& a, const Entry& b){
             return a.name < b.name;
@@ -492,16 +491,14 @@ public:
 }
 
 // ----------------------------------------------------------------------------
-UserMotionLabelsEditor::UserMotionLabelsEditor(
+MotionLabelsEditor::MotionLabelsEditor(
         MainWindow* mainWindow,
-        UserMotionLabelsManager* manager,
-        rfcommon::Hash40Strings* hash40Strings,
+        MotionLabelsManager* manager,
         Protocol* protocol,
         rfcommon::MappingInfo* globalMappingInfo)
     : QDialog(mainWindow)
     , mainWindow_(mainWindow)
     , manager_(manager)
-    , hash40Strings_(hash40Strings)
     , globalMappingInfo_(globalMappingInfo)
     , comboBox_fighters(new QComboBox)
 {
@@ -567,22 +564,22 @@ UserMotionLabelsEditor::UserMotionLabelsEditor(
         });
     }
 
-    //connect(closeButton, &QPushButton::released, this, &UserMotionLabelsEditor::close);
-    connect(comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &UserMotionLabelsEditor::onFighterSelected);
+    //connect(closeButton, &QPushButton::released, this, &MotionLabelsEditor::close);
+    connect(comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
 
     manager_->motionLabels()->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
-UserMotionLabelsEditor::~UserMotionLabelsEditor()
+MotionLabelsEditor::~MotionLabelsEditor()
 {
     manager_->motionLabels()->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo)
+void MotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo)
 {
-    PROFILE(UserMotionLabelsEditor, populateFromGlobalData);
+    PROFILE(MotionLabelsEditor, populateFromGlobalData);
 
     // Create sorted list of all fighters
     struct FighterData {
@@ -610,9 +607,9 @@ void UserMotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globa
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount)
+void MotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount)
 {
-    PROFILE(UserMotionLabelsEditor, populateFromSessions);
+    PROFILE(MotionLabelsEditor, populateFromSessions);
 
     auto idAlreadyAdded = [this](rfcommon::FighterID fighterID) -> bool {
         for (auto entry : indexToFighterID_)
@@ -651,39 +648,39 @@ void UserMotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSess
                         manager_->motionLabels()->addUnknownMotion(mdata->playerFighterID(fighterIdx), motion);
                     }
 
-    auto model = static_cast<TableModel*>(tableModels_[rfcommon::UserMotionLabelsCategory::UNLABELED]);
+    auto model = static_cast<TableModel*>(tableModels_[rfcommon::MotionLabels::UNLABELED]);
     if (const auto mdata = loadedSessions[0]->tryGetMetadata())
         model->setFighter(mdata->playerFighterID(0));
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::closeEvent(QCloseEvent* event)
+void MotionLabelsEditor::closeEvent(QCloseEvent* event)
 {
-    PROFILE(UserMotionLabelsEditor, closeEvent);
+    PROFILE(MotionLabelsEditor, closeEvent);
 
-    mainWindow_->onUserMotionLabelsEditorClosed();
+    mainWindow_->onMotionLabelsEditorClosed();
     deleteLater();
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::onFighterSelected(int index)
+void MotionLabelsEditor::onFighterSelected(int index)
 {
-    PROFILE(UserMotionLabelsEditor, onFighterSelected);
+    PROFILE(MotionLabelsEditor, onFighterSelected);
 
     for (int i = 0; i != tableModels_.count(); ++i)
         static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[index]);
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos)
+void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos)
 {
-    PROFILE(UserMotionLabelsEditor, onCustomContextMenuRequested);
+    PROFILE(MotionLabelsEditor, onCustomContextMenuRequested);
 
     // Submenu with all of the categories that are not the current category
     QMenu categoryMenu;
 #define X(category, name) \
         QAction* cat##category = nullptr; \
-        if (rfcommon::UserMotionLabelsCategory::category != tabIdx) \
+        if (rfcommon::MotionLabels::category != tabIdx) \
             cat##category = categoryMenu.addAction(name);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
 #undef X
@@ -720,9 +717,9 @@ void UserMotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoi
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
+void MotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
 {
-    PROFILE(UserMotionLabelsEditor, updateFightersDropdown);
+    PROFILE(MotionLabelsEditor, updateFightersDropdown);
 
     // We update the dropdown of fighters if the fighter was previously unseen
     for (auto entry : indexToFighterID_)
@@ -744,18 +741,18 @@ void UserMotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterI
 }
 
 // ----------------------------------------------------------------------------
-void UserMotionLabelsEditor::onMotionLabelsLoaded() {}
-void UserMotionLabelsEditor::onMotionLabelsHash40sUpdated() {}
+void MotionLabelsEditor::onMotionLabelsLoaded() {}
+void MotionLabelsEditor::onMotionLabelsHash40sUpdated() {}
 
-void UserMotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx) {}
-void UserMotionLabelsEditor::onMotionLabelsLayerRemoved(int layerIdx) {}
-void UserMotionLabelsEditor::onMotionLabelsLayerNameChanged(int layerIdx) {}
-void UserMotionLabelsEditor::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}
-void UserMotionLabelsEditor::onMotionLabelsLayerMoved(int fromIdx, int toIdx) {}
-void UserMotionLabelsEditor::onMotionLabelsLayerMerged(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerRemoved(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerNameChanged(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}
+void MotionLabelsEditor::onMotionLabelsLayerMoved(int fromIdx, int toIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerMerged(int layerIdx) {}
 
-void UserMotionLabelsEditor::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { updateFightersDropdown(fighterID); }
-void UserMotionLabelsEditor::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) {}
-void UserMotionLabelsEditor::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) {}
+void MotionLabelsEditor::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { updateFightersDropdown(fighterID); }
+void MotionLabelsEditor::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) {}
 
 }

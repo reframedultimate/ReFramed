@@ -21,7 +21,7 @@ namespace rfcommon {
     class Plugin;
     class RealtimePlugin;
     class StandalonePlugin;
-    class UserMotionLabels;
+    class MotionLabels;
     class PluginContext;
     class VisualizerPlugin;
 }
@@ -38,7 +38,7 @@ class Protocol;
 class PluginManager
 {
 public:
-    PluginManager(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    PluginManager(rfcommon::MotionLabels* labels);
     ~PluginManager();
 
     /*!
@@ -72,8 +72,7 @@ public:
     void destroy(rfcommon::Plugin* plugin);
 
 private:
-    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+    rfcommon::Reference<rfcommon::MotionLabels> labels_;
 
     struct LoadedPlugin
     {

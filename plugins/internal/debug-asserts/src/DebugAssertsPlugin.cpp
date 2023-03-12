@@ -43,8 +43,8 @@ private:
     Plugin::VideoPlayerInterface* videoPlayerInterface() override { return nullptr; }
 
 private:
-    QWidget* createView() override { 
-        return widgets_.emplace(new QWidget); 
+    QWidget* createView() override {
+        return widgets_.emplace(new QWidget);
     }
     void destroyView(QWidget* view) override {
         auto it = widgets_.findFirst(view);
@@ -54,7 +54,7 @@ private:
     }
 
 private:
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override { 
+    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {
         assert(connectState_ == DISCONNECTED);
         assert(sessionState_ != LIVE_TRAINING && sessionState_ != LIVE_GAME);
         connectState_ = CONNECTING;
@@ -183,15 +183,17 @@ static rfcommon::Plugin* createPlugin(
         RFPluginFactory* factory,
         rfcommon::PluginContext* pluginCtx,
         rfcommon::Log* log,
-        rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings)
-    {
+        rfcommon::MotionLabels* labels)
+{
     PROFILE(DebugAssertsPluginGlobal, createPlugin);
- return new DebugAssertsPlugin(factory); }
+    return new DebugAssertsPlugin(factory);
+}
+
 static void destroyPlugin(rfcommon::Plugin* plugin)
-    {
+{
     PROFILE(DebugAssertsPluginGlobal, destroyPlugin);
- delete plugin; }
+    delete plugin;
+}
 
 static const RFPluginType pluginTypes =
     RFPluginType::UI |
@@ -205,7 +207,7 @@ static RFPluginFactory factories[] = {
      "TheComet",
      "TheComet#5387, @TheComet93",
      "Used to debug bugs in the plugin events system"}},
-     
+
     {nullptr}
 };
 

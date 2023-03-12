@@ -11,7 +11,7 @@ namespace Ui {
 }
 
 namespace rfcommon {
-    class UserMotionLabels;
+    class MotionLabels;
 }
 
 class OverextensionView
@@ -21,7 +21,7 @@ class OverextensionView
     Q_OBJECT
 
 public:
-    OverextensionView(OverextensionModel* model, rfcommon::UserMotionLabels* userLabels);
+    OverextensionView(OverextensionModel* model, rfcommon::MotionLabels* labels);
     ~OverextensionView();
 
 private slots:
@@ -36,7 +36,7 @@ private:
 private:
     Ui::OverextensionView* ui_;
     OverextensionModel* model_;
-    rfcommon::UserMotionLabels* userLabels_;
+    rfcommon::MotionLabels* labels_;
     QPlainTextEdit* text_;
     QString lastFighterPOV_;
 };

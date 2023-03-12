@@ -119,12 +119,11 @@ public:
     const char* lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
 
     /*!
-     * \brief Converts a motion value into a string from any layer marked with
-     * the specified "usage". You can use findLayer() to find the index for a
-     * preferred layer. If the preferred layer contains an empty string, then
-     * the search continues to the other layers that share the same usage, until
-     * a non-empty entry is found. If all layers are empty, then the fallback
-     * parameter is returned.
+     * \brief Converts a motion value into a string from any layer matching the
+     * specified name. If the a layer contains an empty string, then the search
+     * continues to the next layer with a matching name, until a non-empty
+     * entry is found. If all layers are empty, then the fallback parameter is
+     * returned.
      * \param[in] motion The motion value to convert.
      * \param[in] preferredLayerIdx The layer to search initially. If you specify
      * a value of -1 then all layers marked with the specified usage will be
@@ -134,7 +133,7 @@ public:
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, int preferredLayerIdx, const char* fallback=nullptr) const;
+    const char* lookupGroup(FighterID fighterID, FighterMotion motion, const char* layerName, const char* fallback=nullptr) const;
 
     /*!
      * \brief Looks up all user labels matching the specified string for the

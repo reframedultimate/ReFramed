@@ -4,9 +4,9 @@
 #include "data-viewer/views/DataViewerView.hpp"
 
 // ----------------------------------------------------------------------------
-DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory, rfcommon::MotionLabels* labels)
     : Plugin(factory)
-    , model_(new DataViewerModel(userLabels, hash40Strings))
+    , model_(new DataViewerModel(labels))
 {
 }
 

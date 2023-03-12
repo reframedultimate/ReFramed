@@ -11,8 +11,8 @@ namespace rfcommon {
     class Hash40Strings;
     class MappingInfo;
     class Metadata;
+    class MotionLabels;
     class Session;
-    class UserMotionLabels;
     class VideoMeta;
 }
 
@@ -32,7 +32,7 @@ class VideoMetadataModel;
 class DataViewerModel : public rfcommon::FrameDataListener
 {
 public:
-    DataViewerModel(rfcommon::UserMotionLabels* motionLabels, rfcommon::Hash40Strings* hash40Strings);
+    DataViewerModel(rfcommon::MotionLabels* labels);
     ~DataViewerModel();
 
     void setSession(rfcommon::Session* session);
@@ -61,8 +61,7 @@ private:
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
-    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+    rfcommon::Reference<rfcommon::MotionLabels> labels_;
 
     std::unique_ptr<BaseStatusIDModel> baseStatusIDModel_;
     std::unique_ptr<FighterIDModel> fighterIDModel_;

@@ -7,12 +7,11 @@ static rfcommon::Plugin* createOverextensionPlugin(
     RFPluginFactory* factory,
     rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
-    rfcommon::UserMotionLabels* userLabels,
-    rfcommon::Hash40Strings* hash40Strings)
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createOverextensionPlugin);
 
-    return new OverextensionPlugin(factory, pluginCtx, userLabels);
+    return new OverextensionPlugin(factory, pluginCtx, labels);
 }
 
 static void destroyOverextensionPlugin(rfcommon::Plugin* plugin)

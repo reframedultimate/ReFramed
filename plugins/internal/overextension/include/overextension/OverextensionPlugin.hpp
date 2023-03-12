@@ -7,7 +7,7 @@
 class OverextensionModel;
 
 namespace rfcommon {
-    class UserMotionLabels;
+    class MotionLabels;
 }
 
 class OverextensionPlugin
@@ -19,7 +19,7 @@ class OverextensionPlugin
         , private OverextensionListener
 {
 public:
-    OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::UserMotionLabels* userLabels);
+    OverextensionPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::MotionLabels* labels);
     ~OverextensionPlugin();
 
 private:
@@ -66,5 +66,5 @@ private:
 
 private:
     std::unique_ptr<OverextensionModel> model_;
-    rfcommon::UserMotionLabels* userLabels_;
+    rfcommon::MotionLabels* labels_;
 };

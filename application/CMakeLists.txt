@@ -25,7 +25,7 @@ set (APPLICATION_SOURCES
     "src/models/ReplayListSortFilterModel.cpp"
     "src/models/ReplayManager.cpp"
     "src/models/ReplayMetadataCache.cpp"
-    "src/models/UserMotionLabelsManager.cpp"
+    "src/models/MotionLabelsManager.cpp"
     "src/views/ActiveSessionView.cpp"
     "src/views/CategoryTabsView.cpp"
     "src/views/ConnectView.cpp"
@@ -37,7 +37,7 @@ set (APPLICATION_SOURCES
     "src/views/ReplayGroupListView.cpp"
     "src/views/ReplayListView.cpp"
     "src/views/ReplayManagerView.cpp"
-    "src/views/UserMotionLabelsEditor.cpp"
+    "src/views/MotionLabelsEditor.cpp"
     "src/views/VideoAssociatorDialog.cpp"
     "src/widgets/CollapsibleSplitter.cpp"
     "src/widgets/ConnectionStatusWidget.cpp"
@@ -74,7 +74,7 @@ set (APPLICATION_HEADERS
     "include/application/models/ReplayManager.hpp"
     "include/application/models/ReplayMetadataCache.hpp"
     "include/application/models/RunningGameSessionManager.hpp"
-    "include/application/models/UserMotionLabelsManager.hpp"
+    "include/application/models/MotionLabelsManager.hpp"
     "include/application/views/ReplayGroupListView.hpp"
     "include/application/views/RunningGameSessionView.hpp"
     "include/application/widgets/CollapsibleSplitter.hpp"
@@ -98,7 +98,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/views/ReplayEditorDialog.hpp"
     "include/application/views/ReplayListView.hpp"
     "include/application/views/ReplayManagerView.hpp"
-    "include/application/views/UserMotionLabelsEditor.hpp"
+    "include/application/views/MotionLabelsEditor.hpp"
     "include/application/views/VideoAssociatorDialog.hpp"
     "include/application/widgets/MetadataEditWidget.hpp"
     "include/application/widgets/MetadataEditWidget_AutoAssociateVideo.hpp"
@@ -107,7 +107,7 @@ set (APPLICATION_HEADERS_MOC
     "include/application/widgets/MetadataEditWidget_Game.hpp"
     "include/application/widgets/MetadataEditWidget_Tournament.hpp"
     "include/application/widgets/ProgressDialog.hpp"
-	"include/application/widgets/ReplaySearchBox.hpp")
+    "include/application/widgets/ReplaySearchBox.hpp")
 set (APPLICATION_FORMS
     "forms/ConnectView.ui"
     "forms/ExportReplayPackDialog.ui"
@@ -153,7 +153,7 @@ target_link_libraries (application
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
-		Qt5::Svg
+        Qt5::Svg
         ads::qtadvanceddocking
         ReFramed::rfcommon)
 set_target_properties (application
@@ -168,19 +168,6 @@ set_target_properties (application
 # and we want to include them from "application/ui_*.h"
 target_include_directories (application
     PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/../>)
-
-###############################################################################
-# Copy data files to bin directory
-###############################################################################
-
-add_custom_command (TARGET application POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${REFRAMED_BUILD_DATADIR}/motion"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/ParamLabels.dat" "${REFRAMED_BUILD_DATADIR}/motion/ParamLabels.dat"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/1_Specific.json" "${REFRAMED_BUILD_DATADIR}/motion/1_Specific.json"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/2_General.json" "${REFRAMED_BUILD_DATADIR}/motion/2_General.json"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/data/motion/3_English.json" "${REFRAMED_BUILD_DATADIR}/motion/3_English.json"
-    COMMENT "Copying data files to ${REFRAMED_BUILD_DATADIR}"
-    VERBATIM)
 
 ###############################################################################
 # DLLs need to be copied to the runtime directory on Windows
@@ -213,16 +200,16 @@ if (WIN32 OR CYGWIN)
         DESTINATION ${REFRAMED_INSTALL_BINDIR})
     install (
         FILES
-			${Qt5_DIR}/../../../plugins/iconengines/qsvgicon$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../plugins/iconengines/qsvgicon$<$<CONFIG:Debug>:d>.dll
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/iconengines")
     install (
         FILES
-			${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll
-			${Qt5_DIR}/../../../plugins/imageformats/qsvg$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../plugins/imageformats/qico$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../plugins/imageformats/qsvg$<$<CONFIG:Debug>:d>.dll
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/imageformats")
     install (
         FILES
-			${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
+            ${Qt5_DIR}/../../../plugins/platforms/qwindows$<$<CONFIG:Debug>:d>.dll
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
 endif ()
 

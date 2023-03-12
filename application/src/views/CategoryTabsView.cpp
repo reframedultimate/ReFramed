@@ -48,12 +48,11 @@ CategoryTabsView::CategoryTabsView(
         PluginManager* pluginManager,
         ActiveSessionManager* activeSessionManager,
         PlayerDetails* playerDetails,
-        UserMotionLabelsManager* userMotionLabelsManager,
-        rfcommon::Hash40Strings* hash40Strings,
+        MotionLabelsManager* motionLabelsManager,
         QWidget* parent)
     : QTabWidget(parent)
     , ConfigAccessor(config)
-    , replayManagerView_(new ReplayManagerView(config, replayManager, pluginManager, playerDetails, userMotionLabelsManager, hash40Strings))
+    , replayManagerView_(new ReplayManagerView(config, replayManager, pluginManager, playerDetails, motionLabelsManager))
     , activeSessionView_(new ActiveSessionView(config, activeSessionManager, pluginManager, playerDetails))
 {
     setTabPosition(QTabWidget::West);

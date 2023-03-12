@@ -21,22 +21,21 @@ namespace rfapp {
 
 class MainWindow;
 class Protocol;
-class UserMotionLabelsManager;
+class MotionLabelsManager;
 
-class UserMotionLabelsEditor
+class MotionLabelsEditor
         : public QDialog
         , public rfcommon::MotionLabelsListener
 {
     Q_OBJECT
 
 public:
-    explicit UserMotionLabelsEditor(
+    explicit MotionLabelsEditor(
             MainWindow* mainWindow,
-            UserMotionLabelsManager* manager,
-            rfcommon::Hash40Strings* hash40Strings,
+            MotionLabelsManager* manager,
             Protocol* protocol,
             rfcommon::MappingInfo* globalMappingInfo=nullptr);
-    ~UserMotionLabelsEditor();
+    ~MotionLabelsEditor();
 
     void populateFromGlobalData(rfcommon::MappingInfo* globalMappingInfo);
     void populateFromSessions(rfcommon::Session** loadedSessions, int sessionCount);
@@ -68,8 +67,7 @@ private:
 
 private:
     MainWindow* mainWindow_;
-    UserMotionLabelsManager* manager_;
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+    MotionLabelsManager* manager_;
     rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
     QComboBox* comboBox_fighters;
     QTabWidget* tabWidget_categories;

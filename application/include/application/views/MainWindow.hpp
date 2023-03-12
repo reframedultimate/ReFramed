@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rfcommon/ProtocolListener.hpp"
-#include "rfcommon/Reference.hpp"
 #include <QMainWindow>
 #include <QDir>
 #include <memory>
@@ -13,7 +12,6 @@ namespace Ui {
 }
 
 namespace rfcommon {
-    class Hash40Strings;
     class MotionLabels;
 }
 
@@ -26,8 +24,8 @@ class PluginManager;
 class Protocol;
 class ActiveSessionManager;
 class ReplayManager;
-class UserMotionLabelsManager;
-class UserMotionLabelsEditor;
+class MotionLabelsManager;
+class MotionLabelsEditor;
 
 class MainWindow
         : public QMainWindow
@@ -36,7 +34,7 @@ class MainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, rfcommon::MotionLabels* motionLabels, QWidget* parent=nullptr);
+    explicit MainWindow(std::unique_ptr<Config>&& config, rfcommon::MotionLabels* motionLabels, QWidget* parent=nullptr);
     ~MainWindow();
 
 private slots:
@@ -77,15 +75,14 @@ private:
 private:
     // Non-modal editors in separate windows will call the main window
     // to notify when they close, so menu items can be updated
-    friend class UserMotionLabelsEditor;
-    void onUserMotionLabelsEditorClosed();
+    friend class MotionLabelsEditor;
+    void onMotionLabelsEditorClosed();
 
 private:
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
     std::unique_ptr<Config> config_;
     std::unique_ptr<PlayerDetails> playerDetails_;
     std::unique_ptr<Protocol> protocol_;
-    std::unique_ptr<UserMotionLabelsManager> userMotionLabelsManager_;
+    std::unique_ptr<MotionLabelsManager> motionLabelsManager_;
     std::unique_ptr<PluginManager> pluginManager_;
     std::unique_ptr<ReplayManager> replayManager_;
     std::unique_ptr<ActiveSessionManager> activeSessionManager_;
@@ -93,7 +90,7 @@ private:
     Ui::MainWindow* ui_;
 
     // Non-modal views that appear in a separate window
-    UserMotionLabelsEditor* userMotionLabelsEditor_ = nullptr;
+    MotionLabelsEditor* userMotionLabelsEditor_ = nullptr;
 };
 
 }
