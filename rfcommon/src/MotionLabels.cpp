@@ -495,6 +495,8 @@ int MotionLabels::importLayers(const char* filePathUtf8)
                     addNewLabelNoNotify(fighterID, motion, category, layerIdx, label.c_str());
                 }
             }
+
+            dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, int(layerIdx));
         }
     }
     else
@@ -504,9 +506,6 @@ int MotionLabels::importLayers(const char* filePathUtf8)
     }
 
     const int layerCountAfterImport = layerCount();
-    for (int layerIdx = layerCountBeforeImport; layerIdx != layerCountAfterImport; ++layerIdx)
-        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, layerIdx);
-
     return layerCountAfterImport - layerCountBeforeImport;
 }
 

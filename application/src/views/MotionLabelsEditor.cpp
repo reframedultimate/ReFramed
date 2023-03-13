@@ -806,7 +806,10 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         int targetIdx = columns[1] - 2;
         if (targetIdx > sourceIdx)
             std::swap(targetIdx, sourceIdx);
-        manager_->motionLabels()->mergeLayers(targetIdx, sourceIdx);
+        if (manager_->motionLabels()->mergeLayers(targetIdx, sourceIdx) >= 0)
+            return;
+
+        QMessageBox::critical(this, "Error", "Can only merge layers that have the same usage. You can change a layer's usage with right-click -> \"Change layer usage\"");
     }
 #define X(name, str) \
     else if (a == usage##name) \

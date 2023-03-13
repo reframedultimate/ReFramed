@@ -206,8 +206,8 @@ public:
      * \param[in] targetLayerIdx
      * \param[in] sourceLayerIdx
      * \return Returns 0 if successful. Returns the layer index of the partially
-     * merged layer if conflicts occurred. Returns -1 if an error occurred, such
-     * as the layers having different usages.
+     * merged layer if conflicts occurred. Returns -1 if the layers having
+     * different usages.
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
 
