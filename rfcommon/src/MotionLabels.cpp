@@ -232,7 +232,7 @@ bool MotionLabels::save(const char* filePathUtf8) const
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::updateHash40FromCSV(const char* filePathUtf8)
+int MotionLabels::updateHash40FromCSV(const char* filePathUtf8)
 {
     Log* log = Log::root();
 
@@ -241,7 +241,7 @@ bool MotionLabels::updateHash40FromCSV(const char* filePathUtf8)
     if (f.open(filePathUtf8) == false)
     {
         log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
-        return false;
+        return -1;
     }
 
     char hex[32];
@@ -258,7 +258,7 @@ bool MotionLabels::updateHash40FromCSV(const char* filePathUtf8)
         if (p == pe || ++p == pe)  // Skip ','
         {
             log->warning("File ended with unexpected data");
-            return false;
+            return -1;
         }
         hex[i] = '\0';
         if (i >= (int)sizeof(hex) - 1)
@@ -307,7 +307,7 @@ skip_to_next_line:
     log->info("Updated %d hash40 labels\n", numInserted);
     dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsHash40sUpdated);
 
-    return true;
+    return numInserted;
 }
 
 // ----------------------------------------------------------------------------
@@ -320,7 +320,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
     if (file.open(filePathUtf8) == false)
     {
         log->error("Failed to map file \"%s\": %s", filePathUtf8, LastError().cStr());
-        return false;
+        return -1;
     }
 
     // Parse
@@ -330,7 +330,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
     if (j.is_discarded())
     {
         log->error("Failed to parse json file: \"%s\"", filePathUtf8);
-        return false;
+        return -1;
     }
 
     const int layerCountBeforeImport = layerCount();
@@ -429,7 +429,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
         if (jLayers.is_array() == false)
         {
             log->error("Property \"layers\" is not an array");
-            return false;
+            return -1;
         }
 
         for (const auto& jLayer : jLayers)
@@ -500,14 +500,14 @@ int MotionLabels::importLayers(const char* filePathUtf8)
     else
     {
         log->error("Unsupported version \"%s\" while parsing file \"%s\"", j["version"].get<std::string>().c_str(), filePathUtf8);
-        return false;
+        return -1;
     }
 
     const int layerCountAfterImport = layerCount();
     for (int layerIdx = layerCountBeforeImport; layerIdx != layerCountAfterImport; ++layerIdx)
         dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, layerIdx);
 
-    return true;
+    return layerCountAfterImport - layerCountBeforeImport;
 }
 
 // ----------------------------------------------------------------------------
@@ -815,6 +815,15 @@ void MotionLabels::deleteLayer(int layerIdx)
 }
 
 // ----------------------------------------------------------------------------
+void MotionLabels::deleteLayers(rfcommon::SmallVector<int, 4> layerIdxs)
+{
+    // Delete in descending order, otherwise the next index will be invalidated
+    std::sort(layerIdxs.begin(), layerIdxs.end(), std::greater<int>());
+    for (int layerIdx : layerIdxs)
+        deleteLayer(layerIdx);
+}
+
+// ----------------------------------------------------------------------------
 void MotionLabels::renameLayer(int layerIdx, const char* newNameUtf8)
 {
     layerNames_[layerIdx] = newNameUtf8;
@@ -918,12 +927,21 @@ int MotionLabels::mergeLayers(int targetLayerIdx, int sourceLayerIdx)
         }
     }
 
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerMerged, targetLayerIdx);
+
     // Erase the source layer
     deleteLayer(sourceLayerIdx);
 
-    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerMerged, targetLayerIdx);
-
     return 0;
+}
+
+// ----------------------------------------------------------------------------
+bool MotionLabels::isLayerEmpty(int layerIdx) const
+{
+    for (const Fighter& fighter : fighters_)
+        if (fighter.layerMaps[layerIdx].labelToRows.count() > 0)
+            return false;
+    return true;
 }
 
 // ----------------------------------------------------------------------------

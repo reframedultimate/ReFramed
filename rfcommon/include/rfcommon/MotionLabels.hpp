@@ -78,9 +78,9 @@ public:
      * binary file with the new data.
      *
      * \param[in] fileName Path to the paramLabels.csv file.
-     * \return Returns true if all labels were loaded successfully.
+     * \return Returns the number of values that were updated. Returns -1 if something went wrong.
      */
-    bool updateHash40FromCSV(const char* filePathUtf8);
+    int updateHash40FromCSV(const char* filePathUtf8);
 
     int importLayers(const char* filePathUtf8);
     bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
@@ -180,6 +180,7 @@ public:
 
     //! Deletes the specified layer
     void deleteLayer(int layerIdx);
+    void deleteLayers(rfcommon::SmallVector<int, 4> layerIdxs);
 
     //! Gives the specified layer a new name. The name doesn't have to be unique.
     void renameLayer(int layerIdx, const char* newNameUtf8);
@@ -209,6 +210,8 @@ public:
      * as the layers having different usages.
      */
     int mergeLayers(int targetLayerIdx, int sourceLayerIdx);
+
+    bool isLayerEmpty(int layerIdx) const;
 
     int rowCount(FighterID fighterID) const
         { return fighterID.value() < fighters_.count() ? fighters_[fighterID.value()].colMotionValue.count() : 0; }

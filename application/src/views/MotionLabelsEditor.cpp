@@ -28,6 +28,10 @@
 #include <QKeyEvent>
 #include <QClipboard>
 #include <QApplication>
+#include <QMessageBox>
+#include <QFileDialog>
+
+#include <QDebug>
 
 namespace rfapp {
 
@@ -114,7 +118,7 @@ public:
         return labels_->layerCount() + 2;
     }
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
+    QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override
     {
         switch (role)
         {
@@ -151,7 +155,7 @@ public:
                     case 0: return table_[index.row()].hash40;
                     case 1: return table_[index.row()].name;
                     default:
-                        return table_[index.row()].labels[index.column() - 2];
+                        return table_[index.row()].labels[index.column() - 2];  
                 }
                 break;
 
@@ -242,7 +246,7 @@ private:
             entry.hash40 = "0x" + QString::number(motion.value(), 16);
             entry.name = labels_->lookupHash40(motion);
             for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
-                entry.labels.push_back(labels_->labelAt(fighterID_, layerIdx, row));
+                entry.labels.push_back(QString::fromUtf8(labels_->labelAt(fighterID_, layerIdx, row)));
         }
 
         sortTable();
@@ -275,12 +279,14 @@ private:
 private:
     void onMotionLabelsLoaded() override
     {
-
+        beginResetModel();
+            repopulateEntries();
+        endResetModel();
     }
 
     void onMotionLabelsHash40sUpdated() override
     {
-
+        emit dataChanged(index(0, 1), index(table_.count(), 1));
     }
 
     void onMotionLabelsLayerInserted(int layerIdx) override
@@ -288,18 +294,26 @@ private:
         beginInsertColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
             for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
             {
+                if (labels_->categoryAt(fighterID_, rowIdx) != category_)
+                    continue;
+
                 const char* label = labels_->labelAt(fighterID_, layerIdx, rowIdx);
-                table_[rowIdxToTableIdx_[rowIdx]].labels.insert(layerIdx, label);
+                int tableIdx = rowIdxToTableIdx_[rowIdx];
+                table_[tableIdx].labels.insert(layerIdx, QString::fromUtf8(label));
             }
+            for (const Entry& entry : table_)
+                assert(entry.labels.size() == labels_->layerCount());
         endInsertColumns();
     }
 
     void onMotionLabelsLayerRemoved(int layerIdx) override
     {
-        beginRemoveColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
+        beginResetModel();
             for (auto& row : table_)
                 row.labels.erase(row.labels.begin() + layerIdx);
-        endRemoveColumns();
+            for (const Entry& entry : table_)
+                assert(entry.labels.size() == labels_->layerCount());
+        endResetModel();
     }
 
     void onMotionLabelsLayerNameChanged(int layerIdx) override
@@ -319,7 +333,7 @@ private:
 
     void onMotionLabelsLayerMerged(int layerIdx) override
     {
-
+        emit dataChanged(index(0, layerIdx + 2), index(table_.count(), layerIdx + 2));
     }
 
     void onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) override
@@ -349,6 +363,9 @@ private:
 
             rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
             rowIdxToTableIdx_[row] = tableIdx;
+
+            for (const Entry& entry : table_)
+                assert(entry.labels.size() == labels_->layerCount());
         endInsertRows();
     }
 
@@ -563,11 +580,11 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     // This causes models to update their data for the current fighter
-    comboBox_fighters->setCurrentIndex(39);  // Pikachu
+    comboBox_fighters->setCurrentIndex(62);  // Pikachu
     if (comboBox_fighters->count() > 0)
     {
         for (int i = 0; i != tableModels_.count(); ++i)
-            static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[39]);
+            static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[62]);
     }
 
     for (int i = 0; i != tableViews_.count(); ++i)
@@ -708,6 +725,11 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
 
     // Main context menu
     QMenu menu;
+    QAction* setLabel = menu.addAction("Set label");
+    QAction* changeCategory = menu.addAction("Change label category");
+    changeCategory->setMenu(&categoryMenu);
+    QAction* propagateLabel = menu.addAction("Copy labels to other fighters");
+    menu.addSeparator();
     QAction* renameLayer = menu.addAction("Rename layers");
     QAction* mergeLayers = menu.addAction("Merge layers");
     QAction* changeUsage = menu.addAction("Change layer usage");
@@ -718,10 +740,8 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     QAction* importLayer = menu.addAction("Import layers");
     QAction* exportLayer = menu.addAction("Export layers");
     menu.addSeparator();
-    QAction* setLabel = menu.addAction("Set label");
-    QAction* changeCategory = menu.addAction("Change motion category");
-    changeCategory->setMenu(&categoryMenu);
-    QAction* propagateLabel = menu.addAction("Copy labels to other fighters");
+    QAction* updateHash40 = menu.addAction("Load Hash40 CSV");
+    QAction* downloadHash40 = menu.addAction("Download latest ParamLabels.csv");
 
     // These are the cells we may be manipulating
     auto selectedIndexes = tableViews_[tabIdx]->selectionModel()->selectedIndexes();
@@ -736,14 +756,15 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     // If nothing is selected, disable menu options accordingly
     if (selectedIndexes.size() == 0)
     {
+        setLabel->setEnabled(false);
+        changeCategory->setEnabled(false);
+        propagateLabel->setEnabled(false);
+
         renameLayer->setEnabled(false);
         mergeLayers->setEnabled(false);
         changeUsage->setEnabled(false);
         deleteLayer->setEnabled(false);
         exportLayer->setEnabled(false);
-        setLabel->setEnabled(false);
-        changeCategory->setEnabled(false);
-        propagateLabel->setEnabled(false);
     }
     if (selectedColumns.size() != 2)
         mergeLayers->setEnabled(false);
@@ -753,7 +774,23 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     if (a == nullptr)
         return;
 
-    if (a == renameLayer)
+    if (a == setLabel)
+    {
+        QString name = QInputDialog::getText(this, "Change selected labels", "Enter new label:");
+        if (name.length() == 0)
+            return;
+        static_cast<TableModel*>(tableModels_[tabIdx])->setLabels(selectedIndexes, name);
+    }
+    else if (a == propagateLabel)
+    {
+        QMessageBox::critical(this, "Error", "Feature not implemented yet");
+    }
+#define X(name, str) \
+    else if (a == cat##name) \
+        static_cast<TableModel*>(tableModels_[tabIdx])->setCategory(selectedRows, rfcommon::MotionLabels::name);
+    RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
+#undef X
+    else if (a == renameLayer)
     {
         QString name = QInputDialog::getText(this, "Enter Name", "Layer Name:");
         if (name.length() == 0)
@@ -767,6 +804,8 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         auto columns = selectedColumns.values();
         int sourceIdx = columns[0] - 2;
         int targetIdx = columns[1] - 2;
+        if (targetIdx > sourceIdx)
+            std::swap(targetIdx, sourceIdx);
         manager_->motionLabels()->mergeLayers(targetIdx, sourceIdx);
     }
 #define X(name, str) \
@@ -785,32 +824,59 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     }
     else if (a == deleteLayer)
     {
+        QStringList nonEmptyLayerNames;
+        for (int column : selectedColumns)
+            if (manager_->motionLabels()->isLayerEmpty(column - 2) == false)
+                nonEmptyLayerNames.append(QString::fromUtf8(manager_->motionLabels()->layerName(column - 2)));
+        if (nonEmptyLayerNames.size() > 0)
+            if (QMessageBox::warning(this,
+                "Layers not empty",
+                "Layers " + nonEmptyLayerNames.join(", ") + " contain labels. Are you sure you want to delete them?",
+                QMessageBox::Yes | QMessageBox::Cancel) != QMessageBox::Yes)
+            {
+                return;
+            }
 
+        rfcommon::SmallVector<int, 4> layerIdxs;
+        for (int column : selectedColumns)
+            layerIdxs.push(column - 2);
+        manager_->motionLabels()->deleteLayers(layerIdxs);
     }
     else if (a == importLayer)
     {
+        QString filePath = QFileDialog::getOpenFileName(this, "Import layer", "", "Layers file (*.json)");
+        if (filePath.isEmpty())
+            return;
 
+        if (manager_->motionLabels()->importLayers(filePath.toUtf8().constData()) < 0)
+            QMessageBox::critical(this, "Error", "Failed to import layers");
     }
     else if (a == exportLayer)
     {
-
-    }
-    else if (a == setLabel)
-    {
-        QString name = QInputDialog::getText(this, "Change selected labels", "Enter new label:");
-        if (name.length() == 0)
+        QString filePath = QFileDialog::getSaveFileName(this, "Export layers", "", "Layers file (*.json)");
+        if (filePath.isEmpty())
             return;
-        static_cast<TableModel*>(tableModels_[tabIdx])->setLabels(selectedIndexes, name);
-    }
-    else if (a == propagateLabel)
-    {
 
+        rfcommon::SmallVector<int, 4> layerIdxs;
+        for (int column : selectedColumns)
+            layerIdxs.push(column - 2);
+        manager_->motionLabels()->exportLayers(layerIdxs, filePath.toUtf8().constData());
     }
-#define X(name, str) \
-    else if (a == cat##name) \
-        static_cast<TableModel*>(tableModels_[tabIdx])->setCategory(selectedRows, rfcommon::MotionLabels::name);
-    RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
-#undef X
+    else if (a == updateHash40)
+    {
+        QString filePath = QFileDialog::getOpenFileName(this, "Import Hash40", "", "ParamLabels file (*.csv)");
+        if (filePath.isEmpty())
+            return;
+
+        if (int updated = manager_->motionLabels()->updateHash40FromCSV(filePath.toUtf8().constData()) >= 0)
+            QMessageBox::information(this, "Success", "Updated " + QString::number(updated) + "Hash40 strings");
+        else
+            QMessageBox::critical(this, "Error", "Failed to load file \"" + filePath + "\"");
+    }
+    else if (a == downloadHash40)
+    {
+        QMessageBox::critical(this, "Error", "Feature not implemented yet");
+    }
 }
 
 // ----------------------------------------------------------------------------
