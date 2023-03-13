@@ -17,6 +17,10 @@ namespace rfcommon {
     class Session;
 }
 
+namespace Ui {
+    class MotionLabelsEditor;
+}
+
 namespace rfapp {
 
 class MainWindow;
@@ -66,11 +70,10 @@ private:
     void onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) override;
 
 private:
+    Ui::MotionLabelsEditor* ui_;
     MainWindow* mainWindow_;
     MotionLabelsManager* manager_;
     rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
-    QComboBox* comboBox_fighters;
-    QTabWidget* tabWidget_categories;
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;
     rfcommon::Vector<QAbstractTableModel*> tableModels_;
     rfcommon::Vector<QTableView*> tableViews_;

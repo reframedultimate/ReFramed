@@ -1,3 +1,4 @@
+#include "application/ui_MotionLabelsEditor.h"
 #include "application/models/Protocol.hpp"
 #include "application/models/MotionLabelsManager.hpp"
 #include "application/views/MotionLabelsEditor.hpp"
@@ -528,48 +529,23 @@ MotionLabelsEditor::MotionLabelsEditor(
         Protocol* protocol,
         rfcommon::MappingInfo* globalMappingInfo)
     : QDialog(mainWindow)
+    , ui_(new Ui::MotionLabelsEditor)
     , mainWindow_(mainWindow)
     , manager_(manager)
     , globalMappingInfo_(globalMappingInfo)
-    , comboBox_fighters(new QComboBox)
 {
+    ui_->setupUi(this);
+
     setWindowTitle("Motion Labels Editor");
 
-    QVBoxLayout* mainLayout = new QVBoxLayout;
-
-    // Search box
-    QLabel* fightersDropdownLabel = new QLabel("Fighter:");
-    QLabel* searchLabel = new QLabel("Search:");
-    QLineEdit* searchBox = new QLineEdit;
-
-    // Lay out fighter dropdown and search box
-    QHBoxLayout* fighterSelectLayout = new QHBoxLayout;
-    fighterSelectLayout->addWidget(fightersDropdownLabel);
-    fighterSelectLayout->addWidget(comboBox_fighters);
-    fighterSelectLayout->addWidget(searchLabel);
-    fighterSelectLayout->addWidget(searchBox);
-    fighterSelectLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding));
-    mainLayout->addLayout(fighterSelectLayout);
-
     // Tabs with different categories
-    tabWidget_categories = new QTabWidget;
 #define X(category, name) \
         tableViews_.push(new TableView); \
         tableModels_.push(new TableModel(rfcommon::FighterID::fromValue(0), rfcommon::MotionLabels::category, manager_->motionLabels(), protocol)); \
         tableViews_.back()->setModel(tableModels_.back()); \
-        tabWidget_categories->addTab(tableViews_.back(), name);
+        ui_->tabWidget_categories->addTab(tableViews_.back(), name);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
 #undef X
-    mainLayout->addWidget(tabWidget_categories);
-
-    // Create Close button
-    QPushButton* closeButton = new QPushButton("Close");
-    QHBoxLayout* closeLayout = new QHBoxLayout;
-    closeLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding));
-    closeLayout->addWidget(closeButton);
-    mainLayout->addLayout(closeLayout);
-
-    setLayout(mainLayout);
 
     // Fill dropdown with characters that have a non-zero amount of data
     for (auto fighterID : globalMappingInfo_->fighter.IDs())
@@ -580,8 +556,8 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     // This causes models to update their data for the current fighter
-    comboBox_fighters->setCurrentIndex(62);  // Pikachu
-    if (comboBox_fighters->count() > 0)
+    ui_->comboBox_fighters->setCurrentIndex(62);  // Pikachu
+    if (ui_->comboBox_fighters->count() > 0)
     {
         for (int i = 0; i != tableModels_.count(); ++i)
             static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[62]);
@@ -596,7 +572,7 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     //connect(closeButton, &QPushButton::released, this, &MotionLabelsEditor::close);
-    connect(comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
+    connect(ui_->comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
 
     manager_->motionLabels()->dispatcher.addListener(this);
 }
@@ -633,7 +609,7 @@ void MotionLabelsEditor::populateFromGlobalData(rfcommon::MappingInfo* globalMap
             continue;
 
         indexToFighterID_.push(fighter.id);
-        comboBox_fighters->addItem(fighter.name.cStr());
+        ui_->comboBox_fighters->addItem(fighter.name.cStr());
     }
 }
 
@@ -667,7 +643,7 @@ void MotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions
 
     // Add to dropdown
     for (const auto& name : fighterNames)
-        comboBox_fighters->addItem(name.cStr());
+        ui_->comboBox_fighters->addItem(name.cStr());
 
     for (int i = 0; i != sessionCount; ++i)
         if (const auto mdata = loadedSessions[i]->tryGetMetadata())
@@ -895,15 +871,15 @@ void MotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
     // Extract the list of fighters from the dropdown, which will be a list
     // of sorted fighter names
     QVector<QString> sortedNames;
-    for (int i = 0; i != comboBox_fighters->count(); ++i)
-        sortedNames.push_back(comboBox_fighters->itemText(i));
+    for (int i = 0; i != ui_->comboBox_fighters->count(); ++i)
+        sortedNames.push_back(ui_->comboBox_fighters->itemText(i));
 
     QString fighterName = globalMappingInfo_->fighter.toName(fighterID);
     auto insertIt = std::lower_bound(sortedNames.begin(), sortedNames.end(), fighterName);
     int insertPos = insertIt - sortedNames.begin();
 
     indexToFighterID_.insert(insertPos, fighterID);
-    comboBox_fighters->insertItem(insertPos, fighterName);
+    ui_->comboBox_fighters->insertItem(insertPos, fighterName);
 }
 
 // ----------------------------------------------------------------------------

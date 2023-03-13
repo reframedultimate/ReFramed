@@ -113,6 +113,7 @@ set (APPLICATION_FORMS
     "forms/ExportReplayPackDialog.ui"
     "forms/ImportReplayPackDialog.ui"
     "forms/MetadataEditWidget_Game.ui"
+    "forms/MotionLabelsEditor.ui"
     "forms/VideoAssociatorDialog.ui"
     "forms/MainWindow.ui")
 set (APPLICATION_RES
