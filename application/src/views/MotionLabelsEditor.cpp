@@ -109,6 +109,27 @@ public:
         }
     }
 
+    int findNextConflict(int tableIdx, int direction)
+    {
+        if (direction > 0)
+        {
+            for (int idx = tableIdx + 1; idx < table_.count(); ++idx)
+                for (const QString& label : table_[idx].labels)
+                    if (label.contains("|"))
+                        return idx;
+        }
+        else
+        {
+            if (tableIdx < 0)
+                tableIdx = table_.count();
+            for (int idx = tableIdx - 1; idx >= 0; --idx)
+                for (const QString& label : table_[idx].labels)
+                    if (label.contains("|"))
+                        return idx;
+        }
+        return -1;
+    }
+
     int rowCount(const QModelIndex& parent=QModelIndex()) const override
     {
         return table_.count();
@@ -563,6 +584,10 @@ MotionLabelsEditor::MotionLabelsEditor(
             static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[62]);
     }
 
+    // Check if there are any merge conflicts
+    if (highlightNextConflict(1) == false)
+        ui_->label_conflicts->setVisible(false);
+
     for (int i = 0; i != tableViews_.count(); ++i)
     {
         tableViews_[i]->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -573,6 +598,8 @@ MotionLabelsEditor::MotionLabelsEditor(
 
     //connect(closeButton, &QPushButton::released, this, &MotionLabelsEditor::close);
     connect(ui_->comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
+    connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
+    connect(ui_->pushButton_prevConflict, &QPushButton::released, [this] { highlightNextConflict(-1); });
 
     manager_->motionLabels()->dispatcher.addListener(this);
 }
@@ -783,7 +810,11 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         if (targetIdx > sourceIdx)
             std::swap(targetIdx, sourceIdx);
         if (manager_->motionLabels()->mergeLayers(targetIdx, sourceIdx) >= 0)
+        {
+            if (highlightNextConflict(1) == false)
+                ui_->label_conflicts->setVisible(false);
             return;
+        }
 
         QMessageBox::critical(this, "Error", "Can only merge layers that have the same usage. You can change a layer's usage with right-click -> \"Change layer usage\"");
     }
@@ -880,6 +911,68 @@ void MotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
 
     indexToFighterID_.insert(insertPos, fighterID);
     ui_->comboBox_fighters->insertItem(insertPos, fighterName);
+}
+
+// ----------------------------------------------------------------------------
+bool MotionLabelsEditor::highlightNextConflict(int direction)
+{
+    QSignalBlocker blockFighterChanges(ui_->comboBox_fighters);
+
+    const int firstFighterIdx = ui_->comboBox_fighters->currentIndex();
+    const int firstCategoryIdx = ui_->tabWidget_categories->currentIndex();
+
+    int fighterIdx = ui_->comboBox_fighters->currentIndex();
+    int categoryIdx = ui_->tabWidget_categories->currentIndex();
+
+    QModelIndexList selectedIndexes = tableViews_[categoryIdx]->selectionModel()->selectedIndexes();
+    if (selectedIndexes.size() > 0)
+        currentConflictTableIdx_ = selectedIndexes[0].row();
+
+    while (1)
+    {
+        auto view = static_cast<TableView*>(tableViews_[categoryIdx]);
+        auto model = static_cast<TableModel*>(view->model());
+
+        currentConflictTableIdx_ = model->findNextConflict(currentConflictTableIdx_, direction);
+        if (currentConflictTableIdx_ >= 0)
+        {
+            ui_->comboBox_fighters->setCurrentIndex(fighterIdx);
+            onFighterSelected(fighterIdx);
+            ui_->tabWidget_categories->setCurrentIndex(categoryIdx);
+            view->selectionModel()->select(model->index(currentConflictTableIdx_, 0), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            view->setFocus();
+
+            ui_->label_conflicts->setText("Merge conflicts found");
+            ui_->label_conflicts->setStyleSheet("color: red;");
+            ui_->label_conflicts->setVisible(true);
+
+            return true;
+        }
+
+        categoryIdx += direction;
+        if (categoryIdx < 0 || categoryIdx >= tableViews_.count())
+        {
+            categoryIdx = direction > 0 ? 0 : tableViews_.count() - 1;
+            fighterIdx += direction;
+            if (fighterIdx < 0 || fighterIdx >= ui_->comboBox_fighters->count())
+                fighterIdx = direction > 0 ? 0 : ui_->comboBox_fighters->count() - 1;
+            onFighterSelected(fighterIdx);  // Trigger a fighter change without updating the UI
+        }
+
+        model = static_cast<TableModel*>(tableViews_[categoryIdx]->model());
+        if (fighterIdx == firstFighterIdx &&
+            categoryIdx == firstCategoryIdx &&
+            model->findNextConflict(currentConflictTableIdx_, direction) < 0)
+        {
+            ui_->comboBox_fighters->setCurrentIndex(firstFighterIdx);
+            ui_->pushButton_nextConflict->setVisible(false);
+            ui_->pushButton_prevConflict->setVisible(false);
+
+            ui_->label_conflicts->setText("Conflicts resolved!");
+            ui_->label_conflicts->setStyleSheet("color: green;");
+            return false;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

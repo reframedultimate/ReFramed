@@ -54,6 +54,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QLabel" name="label_conflicts">
+       <property name="text">
+        <string>Merge confclits found</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButton_prevConflict">
        <property name="text">
         <string>Previous conflict</string>

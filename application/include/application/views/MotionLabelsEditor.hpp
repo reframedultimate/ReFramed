@@ -53,6 +53,7 @@ private slots:
 
 private:
     void updateFightersDropdown(rfcommon::FighterID fighterID);
+    bool highlightNextConflict(int direction);
 
 private:
     void onMotionLabelsLoaded() override;
@@ -77,6 +78,8 @@ private:
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;
     rfcommon::Vector<QAbstractTableModel*> tableModels_;
     rfcommon::Vector<QTableView*> tableViews_;
+
+    int currentConflictTableIdx_ = -1;
 };
 
 }
