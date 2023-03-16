@@ -228,8 +228,7 @@ public:
     int addNewLabelNoNotify(FighterID fighterID, FighterMotion motion, Category category, int layerIdx, const char* label);
     void changeLabel(FighterID fighterID, int row, int layerIdx, const char* newLabel);
     void changeCategory(FighterID fighterID, int row, Category newCategory);
-    //bool propagatePreserve(FighterID fighterID, int row, int layerIdx);
-    //bool propagateReplace(FighterID fighterID, int row, int layerIdx);
+    int propagateLabel(FighterID fighterID, int row, int layerIdx, bool replaceExisting=false, bool forceCreation=false);
 
     ListenerDispatcher<MotionLabelsListener> dispatcher;
 
@@ -237,7 +236,7 @@ private:
     void populateMissingFighters(FighterID fighterID);
 
 private:
-    const rfcommon::String filePath_;
+    rfcommon::String filePath_;
 
     // The structures below hold the entire table of each fighter. The table
     // consists of rows and columns. If a row is added or deleted, then it is

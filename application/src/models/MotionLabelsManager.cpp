@@ -20,8 +20,6 @@ MotionLabelsManager::MotionLabelsManager(Protocol* protocol, rfcommon::MotionLab
     : protocol_(protocol)
     , motionLabels_(labels)
 {
-    loadAllLayers();
-
     motionLabels_->dispatcher.addListener(this);
     protocol_->dispatcher.addListener(this);
 }
@@ -34,21 +32,22 @@ MotionLabelsManager::~MotionLabelsManager()
     protocol_->dispatcher.removeListener(this);
     motionLabels_->dispatcher.removeListener(this);
 
-    saveAllLayers();
+    saveChanges();
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabelsManager::loadAllLayers()
+void MotionLabelsManager::discardChanges()
 {
-    return true;
+    // Should reload the file and discard all changes
+    motionLabels_->load();
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabelsManager::saveAllLayers()
+bool MotionLabelsManager::saveChanges()
 {
-    PROFILE(MotionLabelsManager, saveAllLayers);
+    PROFILE(MotionLabelsManager, saveChanges);
 
-    if (motionLabelsModified_ == false)
+    if (pendingChanges_ == false)
         return true;
 
     return motionLabels_->save();
@@ -62,19 +61,19 @@ rfcommon::MotionLabels* MotionLabelsManager::motionLabels() const
 }
 
 // ----------------------------------------------------------------------------
-void MotionLabelsManager::onMotionLabelsLoaded() { NOPROFILE(); }
-void MotionLabelsManager::onMotionLabelsHash40sUpdated() { NOPROFILE(); motionLabelsModified_ = true; }
+void MotionLabelsManager::onMotionLabelsLoaded() { NOPROFILE(); pendingChanges_ = false; }
+void MotionLabelsManager::onMotionLabelsHash40sUpdated() { NOPROFILE(); pendingChanges_ = true; }
 
-void MotionLabelsManager::onMotionLabelsLayerInserted(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLayerRemoved(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLayerNameChanged(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLayerMoved(int fromIdx, int toIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLayerMerged(int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerInserted(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerRemoved(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerNameChanged(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerMoved(int fromIdx, int toIdx) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLayerMerged(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
 
-void MotionLabelsManager::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) { NOPROFILE(); motionLabelsModified_ = true; }
-void MotionLabelsManager::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) { NOPROFILE(); motionLabelsModified_ = true; }
+void MotionLabelsManager::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
+void MotionLabelsManager::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) { NOPROFILE(); pendingChanges_ = true; }
 
 // ----------------------------------------------------------------------------
 void MotionLabelsManager::setActiveSession(rfcommon::Session* session)
@@ -125,6 +124,7 @@ void MotionLabelsManager::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon
         auto fighterID = mdata->playerFighterID(fighterIdx);
         auto motion = frame[fighterIdx].motion();
         motionLabels_->addUnknownMotion(fighterID, motion);
+        pendingChanges_ = true;
     }
 }
 void MotionLabelsManager::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) { NOPROFILE(); }

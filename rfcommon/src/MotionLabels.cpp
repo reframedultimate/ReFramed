@@ -60,6 +60,8 @@ bool MotionLabels::load(const char* filePathUtf8)
         return false;
     }
 
+    filePath_ = filePathUtf8;
+
     hash40s_.clear();
     fighters_.clear();
     layerNames_.clear();
@@ -1062,6 +1064,76 @@ void MotionLabels::changeCategory(FighterID fighterID, int row, Category newCate
     fighter.colCategory[row] = newCategory;
 
     dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsCategoryChanged, fighterID, row, oldCategory);
+}
+
+// ----------------------------------------------------------------------------
+int MotionLabels::propagateLabel(FighterID fighterID, int row, int layerIdx, bool replaceExisting, bool forceCreation)
+{
+    const FighterMotion motion = fighters_[fighterID.value()].colMotionValue[row];
+    const auto& label = fighters_[fighterID.value()].colLayer[layerIdx].labels[row];
+    const Category category = fighters_[fighterID.value()].colCategory[row];
+
+    int updated = 0;
+
+    for (int fighterIdx = 0; fighterIdx != fighters_.count(); ++fighterIdx)
+    {
+        Fighter& fighter = fighters_[fighterIdx];
+
+        auto it = fighter.motionToRow.find(motion);
+        if (it == fighter.motionToRow.end())
+        {
+            if (forceCreation == false)
+                continue;
+
+            // Create row at end of table and insert label
+            row = rowCount(FighterID::fromValue(fighterIdx));
+            fighter.colMotionValue.push(motion);
+            fighter.colCategory.push(category);
+            for (Layer& layer : fighter.colLayer)
+                layer.labels.emplace();
+            fighter.colLayer[layerIdx].labels.back() = label;
+
+            // Update motion -> row map
+            fighter.motionToRow.insertAlways(motion, row);
+
+            // Create entry in layer map so label -> motion lookup works
+            if (label.notEmpty())
+            {
+                auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+                labelToRows.insertOrGet(label, SmallVector<int, 4>())->value().push(row);
+            }
+        }
+        else
+        {
+            row = it->value();
+            auto& currentLabel = fighter.colLayer[layerIdx].labels[row];
+
+            if (currentLabel.isEmpty() == false)
+                if (replaceExisting == false)
+                    continue;
+
+            // Remove current entry in layer map
+            auto& labelToRows = fighter.layerMaps[layerIdx].labelToRows;
+            auto it2 = labelToRows.find(currentLabel);
+            if (it2 != labelToRows.end())
+            {
+                auto& matchingRows = it2->value();
+                matchingRows.erase(matchingRows.findFirst(row));
+                if (matchingRows.count() == 0)
+                    labelToRows.erase(it2);
+            }
+
+            currentLabel = label;
+
+            // Create entry in layer map so label -> motion lookup works
+            if (currentLabel.notEmpty())
+                labelToRows.insertOrGet(currentLabel, SmallVector<int, 4>())->value().push(row);
+        }
+
+        updated++;
+    }
+
+    return updated;
 }
 
 // ----------------------------------------------------------------------------

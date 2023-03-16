@@ -1,8 +1,12 @@
 #include "application/ui_MotionLabelsEditor.h"
+#include "application/Util.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/MotionLabelsManager.hpp"
-#include "application/views/MotionLabelsEditor.hpp"
+#include "application/models/MotionLabelsTableModel.hpp"
 #include "application/views/MainWindow.hpp"
+#include "application/views/MotionLabelsEditor.hpp"
+#include "application/views/MotionLabelsTableView.hpp"
+#include "application/views/PropagateLabelsDialog.hpp"
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
@@ -13,535 +17,13 @@
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QTabWidget>
-#include <QTableView>
-#include <QAbstractTableModel>
-#include <QPushButton>
-#include <QComboBox>
-#include <QSpacerItem>
-#include <QLabel>
-#include <QLineEdit>
 #include <QMenu>
 #include <QAction>
 #include <QInputDialog>
-#include <QKeyEvent>
-#include <QClipboard>
-#include <QApplication>
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include <QDebug>
-
 namespace rfapp {
-
-namespace {
-
-class TableModel
-    : public QAbstractTableModel
-    , public rfcommon::MotionLabelsListener
-    , public rfcommon::ProtocolListener
-    , public rfcommon::FrameDataListener
-{
-public:
-    struct Entry
-    {
-        int row;
-        QString hash40;
-        QString name;
-        QVector<QString> labels;
-    };
-
-    TableModel(
-            rfcommon::FighterID fighterID,
-            rfcommon::MotionLabels::Category category,
-            rfcommon::MotionLabels* labels,
-            Protocol* protocol)
-        : protocol_(protocol)
-        , labels_(labels)
-        , category_(category)
-        , fighterID_(fighterID)
-    {
-        repopulateEntries();
-        protocol_->dispatcher.addListener(this);
-        labels_->dispatcher.addListener(this);
-    }
-
-    ~TableModel()
-    {
-        labels_->dispatcher.removeListener(this);
-        protocol_->dispatcher.removeListener(this);
-    }
-
-    void setFighter(rfcommon::FighterID fighterID)
-    {
-        PROFILE(MotionLabelsEditorGlobal, setFighter);
-
-        beginResetModel();
-            fighterID_ = fighterID;
-            repopulateEntries();
-        endResetModel();
-    }
-
-    void setCategory(const QSet<int>& rows, rfcommon::MotionLabels::Category category)
-    {
-        PROFILE(MotionLabelsEditorGlobal, setCategory);
-
-        // Change categories
-        for (int row : rows)
-        {
-            // Have to map from table row to motion labels row
-            const int motionRow = table_[row].row;
-            const auto motion = labels_->motionAt(fighterID_, motionRow);
-            labels_->changeCategory(fighterID_, motionRow, category);
-        }
-    }
-
-    void setLabels(const QModelIndexList& indexes, const QString& label)
-    {
-        for (const QModelIndex& index : indexes)
-        {
-            const int row = table_[index.row()].row;
-            const int layerIdx = index.column() - 2;
-            const QByteArray labelUtf8 = label.toUtf8();
-            labels_->changeLabel(fighterID_, row, layerIdx, labelUtf8.constData());
-        }
-    }
-
-    int findNextConflict(int tableIdx, int direction)
-    {
-        if (direction > 0)
-        {
-            for (int idx = tableIdx + 1; idx < table_.count(); ++idx)
-                for (const QString& label : table_[idx].labels)
-                    if (label.contains("|"))
-                        return idx;
-        }
-        else
-        {
-            if (tableIdx < 0)
-                tableIdx = table_.count();
-            for (int idx = tableIdx - 1; idx >= 0; --idx)
-                for (const QString& label : table_[idx].labels)
-                    if (label.contains("|"))
-                        return idx;
-        }
-        return -1;
-    }
-
-    int rowCount(const QModelIndex& parent=QModelIndex()) const override
-    {
-        return table_.count();
-    }
-
-    int columnCount(const QModelIndex& parent=QModelIndex()) const override
-    {
-        return labels_->layerCount() + 2;
-    }
-
-    QVariant headerData(int section, Qt::Orientation orientation, int role=Qt::DisplayRole) const override
-    {
-        switch (role)
-        {
-            case Qt::DisplayRole:
-                switch (orientation)
-                {
-                    case Qt::Horizontal:
-                        switch (section)
-                        {
-                            case 0: return "Hash40";
-                            case 1: return "String";
-                            default:
-                                return labels_->layerName(section - 2);
-                        }
-                        break;
-
-                    case Qt::Vertical:
-                        return QString::number(section + 1);
-                        break;
-                }
-                break;
-        }
-
-        return QVariant();
-    }
-
-    QVariant data(const QModelIndex& index, int role=Qt::DisplayRole) const override
-    {
-        switch (role)
-        {
-            case Qt::DisplayRole:
-                switch (index.column())
-                {
-                    case 0: return table_[index.row()].hash40;
-                    case 1: return table_[index.row()].name;
-                    default:
-                        return table_[index.row()].labels[index.column() - 2];  
-                }
-                break;
-
-            case Qt::TextAlignmentRole:
-                return Qt::AlignHCenter + Qt::AlignVCenter;
-
-            case Qt::CheckStateRole:
-            case Qt::DecorationRole:
-            case Qt::EditRole:
-            case Qt::ToolTipRole:
-            case Qt::StatusTipRole:
-            case Qt::WhatsThisRole:
-            case Qt::SizeHintRole:
-                break;
-
-            case Qt::BackgroundRole: {
-                const QColor rowHighlight(255, 255, 230);
-                const QColor notationColor(240, 255, 255);
-                const QColor readableColor(240, 240, 255);
-                const QColor categorizationColor(255, 250, 240);
-                const QColor hash40Color(230, 230, 230);
-
-                const rfcommon::FighterMotion motion = labels_->motionAt(fighterID_, table_[index.row()].row);
-                if (highlightedMotions_.findKey(motion) != highlightedMotions_.end())
-                    return QBrush(rowHighlight);
-
-                if (index.column() == 0) return QBrush(hash40Color);
-                if (index.column() == 1) return QBrush(hash40Color);
-                switch (labels_->layerUsage(index.column() - 2))
-                {
-                    case rfcommon::MotionLabels::NOTATION: return QBrush(notationColor);
-                    case rfcommon::MotionLabels::READABLE: return QBrush(readableColor);
-                    case rfcommon::MotionLabels::CATEGORIZATION: return QBrush(categorizationColor);
-                }
-            } break;
-        }
-        return QVariant();
-    }
-
-    bool setData(const QModelIndex& mindex, const QVariant& value, int role) override
-    {
-        switch (role)
-        {
-            case Qt::EditRole: {
-                const int tableIdx = mindex.row();
-                const int layerIdx = mindex.column() - 2;
-                const int row = table_[tableIdx].row;
-                if (layerIdx < 0)
-                    return false;
-
-                QByteArray ba = value.toString().toUtf8();
-                const auto motion = labels_->motionAt(fighterID_, row);
-                const char* newLabel = ba.constData();
-
-                labels_->changeLabel(fighterID_, row, layerIdx, newLabel);
-                table_[tableIdx].labels[layerIdx] = newLabel;
-                emit dataChanged(index(tableIdx, layerIdx + 2), index(tableIdx, layerIdx + 2));
-                return true;
-            } break;
-        }
-
-        return false;
-    }
-
-    Qt::ItemFlags flags(const QModelIndex& index) const override
-    {
-        if (index.column() < 2)
-            return QAbstractTableModel::flags(index);
-
-        return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
-    }
-
-private:
-    void repopulateEntries()
-    {
-        PROFILE(MotionLabelsEditorGlobal, repopulateEntries);
-
-        table_.clearCompact();
-
-        for (int row = 0; row != labels_->rowCount(fighterID_); ++row)
-        {
-            if (labels_->categoryAt(fighterID_, row) != category_)
-                continue;
-
-            auto motion = labels_->motionAt(fighterID_, row);
-            auto& entry = table_.emplace();
-            entry.row = row;
-            entry.hash40 = "0x" + QString::number(motion.value(), 16);
-            entry.name = labels_->lookupHash40(motion);
-            for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
-                entry.labels.push_back(QString::fromUtf8(labels_->labelAt(fighterID_, layerIdx, row)));
-        }
-
-        sortTable();
-    }
-
-    void sortTable()
-    {
-        PROFILE(MotionLabelsEditorGlobal, sortTable);
-
-        std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b){
-            return a.name < b.name;
-        });
-
-        rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
-        for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)
-            rowIdxToTableIdx_[table_[tableIdx].row] = tableIdx;
-    }
-
-    int findTableInsertIdx(const Entry& entry)
-    {
-        PROFILE(MotionLabelsEditorGlobal, findTableInsertIdx);
-
-        auto insertIt = std::lower_bound(table_.begin(), table_.end(), entry, [](const Entry& a, const Entry& b){
-            return a.name < b.name;
-        });
-
-        return insertIt - table_.begin();
-    }
-
-private:
-    void onMotionLabelsLoaded() override
-    {
-        beginResetModel();
-            repopulateEntries();
-        endResetModel();
-    }
-
-    void onMotionLabelsHash40sUpdated() override
-    {
-        emit dataChanged(index(0, 1), index(table_.count(), 1));
-    }
-
-    void onMotionLabelsLayerInserted(int layerIdx) override
-    {
-        beginInsertColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
-            for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
-            {
-                if (labels_->categoryAt(fighterID_, rowIdx) != category_)
-                    continue;
-
-                const char* label = labels_->labelAt(fighterID_, layerIdx, rowIdx);
-                int tableIdx = rowIdxToTableIdx_[rowIdx];
-                table_[tableIdx].labels.insert(layerIdx, QString::fromUtf8(label));
-            }
-            for (const Entry& entry : table_)
-                assert(entry.labels.size() == labels_->layerCount());
-        endInsertColumns();
-    }
-
-    void onMotionLabelsLayerRemoved(int layerIdx) override
-    {
-        beginResetModel();
-            for (auto& row : table_)
-                row.labels.erase(row.labels.begin() + layerIdx);
-            for (const Entry& entry : table_)
-                assert(entry.labels.size() == labels_->layerCount());
-        endResetModel();
-    }
-
-    void onMotionLabelsLayerNameChanged(int layerIdx) override
-    {
-        emit headerDataChanged(Qt::Horizontal, layerIdx, layerIdx);
-    }
-
-    void onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) override
-    {
-        emit dataChanged(index(0, layerIdx + 2), index(table_.count(), layerIdx + 2));
-    }
-
-    void onMotionLabelsLayerMoved(int fromIdx, int toIdx) override
-    {
-
-    }
-
-    void onMotionLabelsLayerMerged(int layerIdx) override
-    {
-        emit dataChanged(index(0, layerIdx + 2), index(table_.count(), layerIdx + 2));
-    }
-
-    void onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) override
-    {
-        if (fighterID_ != fighterID)
-            return;
-        if (labels_->categoryAt(fighterID_, row) != category_)
-            return;
-
-        rfcommon::FighterMotion motion = labels_->motionAt(fighterID, row);
-
-        Entry entry;
-        entry.row = row;
-        entry.hash40 = "0x" + QString::number(motion.value(), 16);
-        entry.name = labels_->lookupHash40(motion);
-        for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
-            entry.labels.push_back(labels_->labelAt(fighterID_, layerIdx, row));
-        const int tableIdx = findTableInsertIdx(entry);
-
-        beginInsertRows(QModelIndex(), tableIdx, tableIdx);
-            table_.insert(tableIdx, std::move(entry));
-
-            // All table indices above insertion point need to be increased
-            for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
-                if (rowIdxToTableIdx_[i] >= tableIdx)
-                    rowIdxToTableIdx_[i]++;
-
-            rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
-            rowIdxToTableIdx_[row] = tableIdx;
-
-            for (const Entry& entry : table_)
-                assert(entry.labels.size() == labels_->layerCount());
-        endInsertRows();
-    }
-
-    void onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) override
-    {
-        if (fighterID_ != fighterID)
-            return;
-        if (labels_->categoryAt(fighterID_, row) != category_)
-            return;
-
-        const int tableIdx = rowIdxToTableIdx_[row];
-        for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
-            table_[tableIdx].labels[layerIdx] = labels_->labelAt(fighterID_, layerIdx, row);
-        emit dataChanged(index(tableIdx, 2), index(tableIdx, labels_->layerCount() + 1));
-    }
-
-    void onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) override
-    {
-        if (fighterID_ != fighterID)
-            return;
-
-        if (oldCategory == category_)
-        {
-            const int tableIdx = rowIdxToTableIdx_[row];
-            beginRemoveRows(QModelIndex(), tableIdx, tableIdx);
-                table_.erase(tableIdx);
-
-                // All table indices above deletion point need to be decreased
-                for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
-                    if (rowIdxToTableIdx_[i] > tableIdx)
-                        rowIdxToTableIdx_[i]--;
-            endRemoveRows();
-        }
-        else if (labels_->categoryAt(fighterID_, row) == category_)
-        {
-            TableModel::onMotionLabelsRowInserted(fighterID, row);
-        }
-    }
-
-private:
-    void setActiveSession(rfcommon::Session* session)
-    {
-        session->tryGetFrameData()->dispatcher.addListener(this);
-        mdata_ = session->tryGetMetadata();
-    }
-    void clearActiveSession(rfcommon::Session* session)
-    {
-        mdata_.drop();
-        session->tryGetFrameData()->dispatcher.removeListener(this);
-
-        clearHighlightedMotions();
-    }
-
-    void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override {}
-    void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override {}
-    void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override {}
-    void onProtocolDisconnectedFromServer() override {}
-
-    void onProtocolTrainingStarted(rfcommon::Session* training) override { setActiveSession(training); }
-    void onProtocolTrainingResumed(rfcommon::Session* training) override { setActiveSession(training); }
-    void onProtocolTrainingReset(rfcommon::Session* oldTraining, rfcommon::Session* newTraining) override
-    {
-        clearActiveSession(oldTraining);
-        setActiveSession(newTraining);
-    }
-    void onProtocolTrainingEnded(rfcommon::Session* training) override { clearActiveSession(training); }
-    void onProtocolGameStarted(rfcommon::Session* game) override { setActiveSession(game); }
-    void onProtocolGameResumed(rfcommon::Session* game) override { setActiveSession(game); }
-    void onProtocolGameEnded(rfcommon::Session* game) override { clearActiveSession(game); }
-
-private:
-    void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override
-    {
-        clearHighlightedMotions();
-        for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
-            if (mdata_->playerFighterID(fighterIdx) == fighterID_)
-                highlightedMotions_.insertIfNew(frame[fighterIdx].motion(), 0);
-        refreshHighlightedMotions();
-    }
-    void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override {}
-
-    void clearHighlightedMotions()
-    {
-        rfcommon::SmallVector<int, 4> tableIdxs;
-        for (auto it : highlightedMotions_)
-            if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
-                tableIdxs.push(rowIdxToTableIdx_[row]);
-
-        highlightedMotions_.clear();
-
-        for (int tableIdx : tableIdxs)
-            emit dataChanged(index(tableIdx, 0), index(tableIdx, labels_->layerCount() + 2), { Qt::BackgroundRole });
-    }
-
-    void refreshHighlightedMotions()
-    {
-        for (auto it : highlightedMotions_)
-            if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
-            {
-                int tableIdx = rowIdxToTableIdx_[row];
-                emit dataChanged(index(tableIdx, 0), index(tableIdx, labels_->layerCount() + 2), { Qt::BackgroundRole });
-            }
-    }
-
-private:
-    Protocol* protocol_;
-    rfcommon::Reference<rfcommon::Metadata> mdata_;
-    rfcommon::MotionLabels* labels_;
-    rfcommon::Vector<Entry> table_;
-    rfcommon::Vector<int> rowIdxToTableIdx_;
-    rfcommon::SmallLinearMap<rfcommon::FighterMotion, char, 4> highlightedMotions_;
-    const rfcommon::MotionLabels::Category category_;
-    rfcommon::FighterID fighterID_;
-};
-
-class TableView : public QTableView
-{
-public:
-    void keyPressEvent(QKeyEvent* event) override
-    {
-        PROFILE(TableView, keyPressEvent);
-
-        // If Ctrl-C typed
-        // Or use event->matches(QKeySequence::Copy)
-        if (event->key() == Qt::Key_C && (event->modifiers() & Qt::ControlModifier))
-        {
-            QModelIndexList cells = selectedIndexes();
-            std::sort(cells.begin(), cells.end()); // Necessary, otherwise they are in column order
-
-            QString text;
-            int currentRow = 0; // To determine when to insert newlines
-            foreach(const QModelIndex & cell, cells) {
-
-                if (text.length() == 0) {
-                    // First item
-                }
-                else if (cell.row() != currentRow) {
-                    // New row
-                    text += '\n';
-                }
-                else {
-                    // Next cell
-                    text += '\t';
-                }
-                currentRow = cell.row();
-                text += cell.data().toString();
-            }
-
-            QApplication::clipboard()->setText(text);
-        }
-    }
-};
-
-}
 
 // ----------------------------------------------------------------------------
 MotionLabelsEditor::MotionLabelsEditor(
@@ -557,13 +39,20 @@ MotionLabelsEditor::MotionLabelsEditor(
 {
     ui_->setupUi(this);
 
-    setWindowTitle("Motion Labels Editor");
+    // Because the motion labels editor has the option to discard changes, which
+    // is implemented by reloading the motion labels file, it makes sense to
+    // save any pending changes when opening the editor, because otherwise
+    // we could discard data added outside of our control.
+    manager_->saveChanges();
 
     // Tabs with different categories
 #define X(category, name) \
-        tableViews_.push(new TableView); \
-        tableModels_.push(new TableModel(rfcommon::FighterID::fromValue(0), rfcommon::MotionLabels::category, manager_->motionLabels(), protocol)); \
-        tableViews_.back()->setModel(tableModels_.back()); \
+        tableViews_.push(new MotionLabelsTableView); \
+        tableViews_.back()->setModel(new MotionLabelsTableModel( \
+                rfcommon::FighterID::fromValue(0), \
+                rfcommon::MotionLabels::category, \
+                manager_->motionLabels(), \
+                protocol)); \
         ui_->tabWidget_categories->addTab(tableViews_.back(), name);
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
 #undef X
@@ -580,8 +69,8 @@ MotionLabelsEditor::MotionLabelsEditor(
     ui_->comboBox_fighters->setCurrentIndex(62);  // Pikachu
     if (ui_->comboBox_fighters->count() > 0)
     {
-        for (int i = 0; i != tableModels_.count(); ++i)
-            static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[62]);
+        for (int i = 0; i != tableViews_.count(); ++i)
+            static_cast<MotionLabelsTableModel*>(tableViews_[i]->model())->setFighter(indexToFighterID_[62]);
     }
 
     // Check if there are any merge conflicts
@@ -596,10 +85,13 @@ MotionLabelsEditor::MotionLabelsEditor(
         });
     }
 
-    //connect(closeButton, &QPushButton::released, this, &MotionLabelsEditor::close);
     connect(ui_->comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
     connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
     connect(ui_->pushButton_prevConflict, &QPushButton::released, [this] { highlightNextConflict(-1); });
+
+    connect(ui_->pushButton_cancel, &QPushButton::released, this, &MotionLabelsEditor::onCancelReleased);
+    connect(ui_->pushButton_save, &QPushButton::released, this, &MotionLabelsEditor::onSaveReleased);
+    connect(ui_->pushButton_saveAndClose, &QPushButton::released, this, &MotionLabelsEditor::onSaveAndCloseReleased);
 
     manager_->motionLabels()->dispatcher.addListener(this);
 }
@@ -608,6 +100,14 @@ MotionLabelsEditor::MotionLabelsEditor(
 MotionLabelsEditor::~MotionLabelsEditor()
 {
     manager_->motionLabels()->dispatcher.removeListener(this);
+
+    // Models are not deleted automatically with Qt's model-view
+    for (auto view : tableViews_)
+    {
+        auto model = view->model();
+        delete view;
+        delete model;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -682,7 +182,7 @@ void MotionLabelsEditor::populateFromSessions(rfcommon::Session** loadedSessions
                         manager_->motionLabels()->addUnknownMotion(mdata->playerFighterID(fighterIdx), motion);
                     }
 
-    auto model = static_cast<TableModel*>(tableModels_[rfcommon::MotionLabels::UNLABELED]);
+    auto model = static_cast<MotionLabelsTableModel*>(tableViews_[rfcommon::MotionLabels::UNLABELED]->model());
     if (const auto mdata = loadedSessions[0]->tryGetMetadata())
         model->setFighter(mdata->playerFighterID(0));
 }
@@ -701,8 +201,11 @@ void MotionLabelsEditor::onFighterSelected(int index)
 {
     PROFILE(MotionLabelsEditor, onFighterSelected);
 
-    for (int i = 0; i != tableModels_.count(); ++i)
-        static_cast<TableModel*>(tableModels_[i])->setFighter(indexToFighterID_[index]);
+    for (int i = 0; i != tableViews_.count(); ++i)
+    {
+        auto model = static_cast<MotionLabelsTableModel*>(tableViews_[i]->model());
+        model->setFighter(indexToFighterID_[index]);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -731,7 +234,7 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     QAction* setLabel = menu.addAction("Set label");
     QAction* changeCategory = menu.addAction("Change label category");
     changeCategory->setMenu(&categoryMenu);
-    QAction* propagateLabel = menu.addAction("Copy labels to other fighters");
+    QAction* propagateLabel = menu.addAction("Propagate labels to other fighters");
     menu.addSeparator();
     QAction* renameLayer = menu.addAction("Rename layers");
     QAction* mergeLayers = menu.addAction("Merge layers");
@@ -749,25 +252,28 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     // These are the cells we may be manipulating
     auto selectedIndexes = tableViews_[tabIdx]->selectionModel()->selectedIndexes();
 
-    QSet<int> selectedColumns;
+    QSet<int> selectedColumns, selectedRows;
     for (const auto& index : selectedIndexes)
-        selectedColumns.insert(index.column());
-    QSet<int> selectedRows;
-    for (const auto& index : selectedIndexes)
-        selectedRows.insert(index.row());
+        if (index.column() >= 2)  // Can't operate on hash40 or on string columns
+        {
+            selectedColumns.insert(index.column());
+            selectedRows.insert(index.row());
+        }
 
     // If nothing is selected, disable menu options accordingly
-    if (selectedIndexes.size() == 0)
+    if (selectedColumns.size() == 0)
     {
         setLabel->setEnabled(false);
-        changeCategory->setEnabled(false);
-        propagateLabel->setEnabled(false);
-
         renameLayer->setEnabled(false);
         mergeLayers->setEnabled(false);
         changeUsage->setEnabled(false);
         deleteLayer->setEnabled(false);
         exportLayer->setEnabled(false);
+    }
+    if (selectedRows.size() == 0)
+    {
+        changeCategory->setEnabled(false);
+        propagateLabel->setEnabled(false);
     }
     if (selectedColumns.size() != 2)
         mergeLayers->setEnabled(false);
@@ -782,15 +288,26 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         QString name = QInputDialog::getText(this, "Change selected labels", "Enter new label:");
         if (name.length() == 0)
             return;
-        static_cast<TableModel*>(tableModels_[tabIdx])->setLabels(selectedIndexes, name);
+        auto model = static_cast<MotionLabelsTableModel*>(tableViews_[tabIdx]->model());
+        model->setLabels(selectedIndexes, name);
     }
     else if (a == propagateLabel)
     {
-        QMessageBox::critical(this, "Error", "Feature not implemented yet");
+        PropagateLabelsDialog dialog(this);
+        dialog.setGeometry(calculatePopupGeometryKeepSize(this, &dialog, dialog.geometry()));
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+
+        auto model = static_cast<MotionLabelsTableModel*>(tableViews_[tabIdx]->model());
+        int updated = model->propagateLabels(selectedIndexes, dialog.overwriteExisting(), dialog.forceCreation());
+        QMessageBox::information(this, "Complete", "Updated " + QString::number(updated) + " labels");
     }
 #define X(name, str) \
     else if (a == cat##name) \
-        static_cast<TableModel*>(tableModels_[tabIdx])->setCategory(selectedRows, rfcommon::MotionLabels::name);
+    { \
+        auto model = static_cast<MotionLabelsTableModel*>(tableViews_[tabIdx]->model()); \
+        model->setCategory(selectedRows, rfcommon::MotionLabels::name); \
+    }
     RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
 #undef X
     else if (a == renameLayer)
@@ -851,6 +368,10 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         for (int column : selectedColumns)
             layerIdxs.push(column - 2);
         manager_->motionLabels()->deleteLayers(layerIdxs);
+
+        currentConflictTableIdx_ = -1;
+        if (highlightNextConflict(1) == false)
+            ui_->label_conflicts->setVisible(false);
     }
     else if (a == importLayer)
     {
@@ -858,7 +379,12 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         if (filePath.isEmpty())
             return;
 
-        if (manager_->motionLabels()->importLayers(filePath.toUtf8().constData()) < 0)
+        if (manager_->motionLabels()->importLayers(filePath.toUtf8().constData()) >= 0)
+        {
+            if (highlightNextConflict(1) == false)
+                ui_->label_conflicts->setVisible(false);
+        }
+        else
             QMessageBox::critical(this, "Error", "Failed to import layers");
     }
     else if (a == exportLayer)
@@ -887,6 +413,27 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     {
         QMessageBox::critical(this, "Error", "Feature not implemented yet");
     }
+}
+
+// ----------------------------------------------------------------------------
+void MotionLabelsEditor::onCancelReleased()
+{
+    // Should reload the file and overwrite any changes we made
+    manager_->discardChanges();
+    close();
+}
+
+// ----------------------------------------------------------------------------
+void MotionLabelsEditor::onSaveReleased()
+{
+    manager_->saveChanges();
+}
+
+// ----------------------------------------------------------------------------
+void MotionLabelsEditor::onSaveAndCloseReleased()
+{
+    manager_->saveChanges();
+    close();
 }
 
 // ----------------------------------------------------------------------------
@@ -930,8 +477,8 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
 
     while (1)
     {
-        auto view = static_cast<TableView*>(tableViews_[categoryIdx]);
-        auto model = static_cast<TableModel*>(view->model());
+        auto view = tableViews_[categoryIdx];
+        auto model = static_cast<MotionLabelsTableModel*>(view->model());
 
         currentConflictTableIdx_ = model->findNextConflict(currentConflictTableIdx_, direction);
         if (currentConflictTableIdx_ >= 0)
@@ -941,6 +488,9 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
             ui_->tabWidget_categories->setCurrentIndex(categoryIdx);
             view->selectionModel()->select(model->index(currentConflictTableIdx_, 0), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
             view->setFocus();
+
+            ui_->pushButton_nextConflict->setVisible(true);
+            ui_->pushButton_prevConflict->setVisible(true);
 
             ui_->label_conflicts->setText("Merge conflicts found");
             ui_->label_conflicts->setStyleSheet("color: red;");
@@ -959,7 +509,7 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
             onFighterSelected(fighterIdx);  // Trigger a fighter change without updating the UI
         }
 
-        model = static_cast<TableModel*>(tableViews_[categoryIdx]->model());
+        model = static_cast<MotionLabelsTableModel*>(tableViews_[categoryIdx]->model());
         if (fighterIdx == firstFighterIdx &&
             categoryIdx == firstCategoryIdx &&
             model->findNextConflict(currentConflictTableIdx_, direction) < 0)

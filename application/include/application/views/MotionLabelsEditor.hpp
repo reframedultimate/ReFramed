@@ -26,6 +26,7 @@ namespace rfapp {
 class MainWindow;
 class Protocol;
 class MotionLabelsManager;
+class MotionLabelsTableView;
 
 class MotionLabelsEditor
         : public QDialog
@@ -50,6 +51,10 @@ protected:
 private slots:
     void onFighterSelected(int index);
     void onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos);
+
+    void onCancelReleased();
+    void onSaveReleased();
+    void onSaveAndCloseReleased();
 
 private:
     void updateFightersDropdown(rfcommon::FighterID fighterID);
@@ -76,8 +81,7 @@ private:
     MotionLabelsManager* manager_;
     rfcommon::Reference<rfcommon::MappingInfo> globalMappingInfo_;
     rfcommon::Vector<rfcommon::FighterID> indexToFighterID_;
-    rfcommon::Vector<QAbstractTableModel*> tableModels_;
-    rfcommon::Vector<QTableView*> tableViews_;
+    rfcommon::Vector<MotionLabelsTableView*> tableViews_;
 
     int currentConflictTableIdx_ = -1;
 };

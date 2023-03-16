@@ -1,39 +1,74 @@
 #pragma once
 
+#include "rfcommon/FighterID.hpp"
 #include "rfcommon/FrameDataListener.hpp"
+#include "rfcommon/LinearMap.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/MotionLabelsListener.hpp"
 #include "rfcommon/ProtocolListener.hpp"
 #include "rfcommon/Reference.hpp"
 
+#include <QAbstractTableModel>
+
 namespace rfcommon {
-    class Hash40Strings;
     class Metadata;
-    class MotionLabels;
-    class Session;
 }
 
 namespace rfapp {
 
 class Protocol;
 
-/*!
- * \brief This class is responsible for loading and saving user layers
- * to and from disk, as well as updating the "rfcommon::MotionLabels"
- * structure with new motion values from live sessions as the data comes in.
- */
-class MotionLabelsManager
-        : public rfcommon::MotionLabelsListener
+class MotionLabelsTableModel
+        : public QAbstractTableModel
+        , public rfcommon::MotionLabelsListener
         , public rfcommon::ProtocolListener
         , public rfcommon::FrameDataListener
 {
 public:
-    MotionLabelsManager(Protocol* protocol, rfcommon::MotionLabels* motionLabels);
-    ~MotionLabelsManager();
+    struct Entry
+    {
+        int row;
+        QString hash40;
+        QString name;
+        QVector<QString> labels;
+    };
 
-    void discardChanges();
-    bool saveChanges();
+    MotionLabelsTableModel(
+        rfcommon::FighterID fighterID,
+        rfcommon::MotionLabels::Category category,
+        rfcommon::MotionLabels* labels,
+        Protocol* protocol);
 
-    rfcommon::MotionLabels* motionLabels() const;
+    ~MotionLabelsTableModel();
+
+    void setFighter(rfcommon::FighterID fighterID);
+
+    void setCategory(const QSet<int>& rows, rfcommon::MotionLabels::Category category);
+
+    void setLabels(const QModelIndexList& indexes, const QString& label);
+
+    int propagateLabels(const QModelIndexList& indexes, bool replaceExisting, bool forceCreation);
+
+    int findNextConflict(int tableIdx, int direction);
+
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+
+    bool setData(const QModelIndex& mindex, const QVariant& value, int role) override;
+
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+
+private:
+    void repopulateEntries();
+
+    void sortTable();
+
+    int findTableInsertIdx(const Entry& entry);
 
 private:
     void onMotionLabelsLoaded() override;
@@ -52,7 +87,8 @@ private:
 
 private:
     void setActiveSession(rfcommon::Session* session);
-    void clearActiveSession();
+    void clearActiveSession(rfcommon::Session* session);
+
     void onProtocolAttemptConnectToServer(const char* ipAddress, uint16_t port) override;
     void onProtocolFailedToConnectToServer(const char* errormsg, const char* ipAddress, uint16_t port) override;
     void onProtocolConnectedToServer(const char* ipAddress, uint16_t port) override;
@@ -70,12 +106,18 @@ private:
     void onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
+    void clearHighlightedMotions();
+    void refreshHighlightedMotions();
+
 private:
     Protocol* protocol_;
-    rfcommon::Reference<rfcommon::MotionLabels> motionLabels_;
-    rfcommon::Reference<rfcommon::Session> activeSession_;
-
-    bool pendingChanges_ = false;
+    rfcommon::Reference<rfcommon::Metadata> mdata_;
+    rfcommon::MotionLabels* labels_;
+    rfcommon::Vector<Entry> table_;
+    rfcommon::Vector<int> rowIdxToTableIdx_;
+    rfcommon::SmallLinearMap<rfcommon::FighterMotion, char, 4> highlightedMotions_;
+    const rfcommon::MotionLabels::Category category_;
+    rfcommon::FighterID fighterID_;
 };
 
 }
