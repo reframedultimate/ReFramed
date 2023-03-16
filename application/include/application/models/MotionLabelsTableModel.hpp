@@ -11,7 +11,7 @@
 #include <QAbstractTableModel>
 
 namespace rfcommon {
-    class Metadata;
+    class Session;
 }
 
 namespace rfapp {
@@ -45,7 +45,8 @@ public:
     void setCategory(const QSet<int>& rows, rfcommon::MotionLabels::Category category);
     void setLabels(const QModelIndexList& indexes, const QString& label);
     int propagateLabels(const QModelIndexList& indexes, bool replaceExisting, bool forceCreation);
-    int findNextConflict(int tableIdx, int direction);
+    int findNextConflict(int tableIdx, int direction) const;
+    int findHighlightedMotionRow() const;
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -100,7 +101,7 @@ private:
 
 private:
     Protocol* protocol_;
-    rfcommon::Reference<rfcommon::Metadata> mdata_;
+    rfcommon::Reference<rfcommon::Session> session_;
     rfcommon::MotionLabels* labels_;
     rfcommon::Vector<Entry> table_;
     rfcommon::Vector<int> rowIdxToTableIdx_;

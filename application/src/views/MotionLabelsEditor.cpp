@@ -96,6 +96,8 @@ MotionLabelsEditor::MotionLabelsEditor(
     connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
     connect(ui_->pushButton_prevConflict, &QPushButton::released, [this] { highlightNextConflict(-1); });
 
+    connect(ui_->pushButton_jumpCurrentState, &QPushButton::released, this, &MotionLabelsEditor::onShowActiveMotionReleased);
+
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &MotionLabelsEditor::onCancelReleased);
     connect(ui_->pushButton_save, &QPushButton::released, this, &MotionLabelsEditor::onSaveReleased);
     connect(ui_->pushButton_saveAndClose, &QPushButton::released, this, &MotionLabelsEditor::onSaveAndCloseReleased);
@@ -419,6 +421,23 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     else if (a == downloadHash40)
     {
         QMessageBox::critical(this, "Error", "Feature not implemented yet");
+    }
+}
+
+// ----------------------------------------------------------------------------
+void MotionLabelsEditor::onShowActiveMotionReleased()
+{
+    for (int categoryIdx = 0; categoryIdx != tableViews_.count(); ++categoryIdx)
+    {
+        auto view = tableViews_[categoryIdx];
+        auto model = static_cast<MotionLabelsTableModel*>(view->model());
+        int row = model->findHighlightedMotionRow();
+        if (row < 0)
+            continue;
+
+        ui_->tabWidget_categories->setCurrentIndex(categoryIdx);
+        view->scrollTo(model->index(row, 0));
+        return;
     }
 }
 

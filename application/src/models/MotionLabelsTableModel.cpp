@@ -32,6 +32,9 @@ MotionLabelsTableModel::MotionLabelsTableModel(
 // ----------------------------------------------------------------------------
 MotionLabelsTableModel::~MotionLabelsTableModel()
 {
+    if (session_.notNull())
+        session_->tryGetFrameData()->dispatcher.removeListener(this);
+
     labels_->dispatcher.removeListener(this);
     protocol_->dispatcher.removeListener(this);
 }
@@ -42,8 +45,8 @@ void MotionLabelsTableModel::setFighter(rfcommon::FighterID fighterID)
     PROFILE(MotionLabelsEditorGlobal, setFighter);
 
     beginResetModel();
-    fighterID_ = fighterID;
-    repopulateEntries();
+        fighterID_ = fighterID;
+        repopulateEntries();
     endResetModel();
 }
 
@@ -92,7 +95,7 @@ int MotionLabelsTableModel::propagateLabels(const QModelIndexList& indexes, bool
 }
 
 // ----------------------------------------------------------------------------
-int MotionLabelsTableModel::findNextConflict(int tableIdx, int direction)
+int MotionLabelsTableModel::findNextConflict(int tableIdx, int direction) const
 {
     if (direction > 0)
     {
@@ -111,6 +114,20 @@ int MotionLabelsTableModel::findNextConflict(int tableIdx, int direction)
                     return idx;
     }
     return -1;
+}
+
+// ----------------------------------------------------------------------------
+int MotionLabelsTableModel::findHighlightedMotionRow() const
+{
+    if (highlightedMotions_.count() == 0)
+        return -1;
+
+    rfcommon::FighterMotion motion = highlightedMotions_.begin()->key();
+    int row = labels_->lookupRow(fighterID_, motion);
+    if (row == -1)
+        return -1;
+
+    return rowIdxToTableIdx_[row];
 }
 
 // ----------------------------------------------------------------------------
@@ -237,25 +254,25 @@ void MotionLabelsTableModel::sort(int column, Qt::SortOrder order)
 
     emit layoutAboutToBeChanged({}, QAbstractItemModel::VerticalSortHint);
 
-    if (order == Qt::AscendingOrder)
-    {
-        std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
-            if (column == 0) return a.hash40 < b.hash40;
-            if (column == 1) return a.name < b.name;
-            return a.labels[column - 2] < b.labels[column - 2];
-        });
-    }
-    else
-    {
-        std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
-            if (column == 0) return a.hash40 > b.hash40;
-            if (column == 1) return a.name > b.name;
-            return a.labels[column - 2] > b.labels[column - 2];
-        });
-    }
+        if (order == Qt::AscendingOrder)
+        {
+            std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
+                if (column == 0) return a.hash40 < b.hash40;
+                if (column == 1) return a.name < b.name;
+                return a.labels[column - 2] < b.labels[column - 2];
+            });
+        }
+        else
+        {
+            std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
+                if (column == 0) return a.hash40 > b.hash40;
+                if (column == 1) return a.name > b.name;
+                return a.labels[column - 2] > b.labels[column - 2];
+            });
+        }
 
-    for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)
-        rowIdxToTableIdx_[table_[tableIdx].row] = tableIdx;
+        for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)
+            rowIdxToTableIdx_[table_[tableIdx].row] = tableIdx;
 
     emit layoutChanged({}, QAbstractItemModel::VerticalSortHint);
 }
@@ -311,7 +328,7 @@ int MotionLabelsTableModel::findTableInsertIdx(const Entry& entry)
 void MotionLabelsTableModel::onMotionLabelsLoaded()
 {
     beginResetModel();
-    repopulateEntries();
+        repopulateEntries();
     endResetModel();
 }
 
@@ -325,17 +342,17 @@ void MotionLabelsTableModel::onMotionLabelsHash40sUpdated()
 void MotionLabelsTableModel::onMotionLabelsLayerInserted(int layerIdx)
 {
     beginInsertColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
-    for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
-    {
-        if (labels_->categoryAt(fighterID_, rowIdx) != category_)
-            continue;
+        for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
+        {
+            if (labels_->categoryAt(fighterID_, rowIdx) != category_)
+                continue;
 
-        const char* label = labels_->labelAt(fighterID_, layerIdx, rowIdx);
-        int tableIdx = rowIdxToTableIdx_[rowIdx];
-        table_[tableIdx].labels.insert(layerIdx, QString::fromUtf8(label));
-    }
-    for (const Entry& entry : table_)
-        assert(entry.labels.size() == labels_->layerCount());
+            const char* label = labels_->labelAt(fighterID_, layerIdx, rowIdx);
+            int tableIdx = rowIdxToTableIdx_[rowIdx];
+            table_[tableIdx].labels.insert(layerIdx, QString::fromUtf8(label));
+        }
+        for (const Entry& entry : table_)
+            assert(entry.labels.size() == labels_->layerCount());
     endInsertColumns();
 }
 
@@ -343,10 +360,10 @@ void MotionLabelsTableModel::onMotionLabelsLayerInserted(int layerIdx)
 void MotionLabelsTableModel::onMotionLabelsLayerRemoved(int layerIdx)
 {
     beginResetModel();
-    for (auto& row : table_)
-        row.labels.erase(row.labels.begin() + layerIdx);
-    for (const Entry& entry : table_)
-        assert(entry.labels.size() == labels_->layerCount());
+        for (auto& row : table_)
+            row.labels.erase(row.labels.begin() + layerIdx);
+        for (const Entry& entry : table_)
+            assert(entry.labels.size() == labels_->layerCount());
     endResetModel();
 }
 
@@ -393,18 +410,18 @@ void MotionLabelsTableModel::onMotionLabelsRowInserted(rfcommon::FighterID fight
     const int tableIdx = findTableInsertIdx(entry);
 
     beginInsertRows(QModelIndex(), tableIdx, tableIdx);
-    table_.insert(tableIdx, std::move(entry));
+        table_.insert(tableIdx, std::move(entry));
 
-    // All table indices above insertion point need to be increased
-    for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
-        if (rowIdxToTableIdx_[i] >= tableIdx)
-            rowIdxToTableIdx_[i]++;
+        // All table indices above insertion point need to be increased
+        for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
+            if (rowIdxToTableIdx_[i] >= tableIdx)
+                rowIdxToTableIdx_[i]++;
 
-    rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
-    rowIdxToTableIdx_[row] = tableIdx;
+        rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
+        rowIdxToTableIdx_[row] = tableIdx;
 
-    for (const Entry& entry : table_)
-        assert(entry.labels.size() == labels_->layerCount());
+        for (const Entry& entry : table_)
+            assert(entry.labels.size() == labels_->layerCount());
     endInsertRows();
 }
 
@@ -419,6 +436,7 @@ void MotionLabelsTableModel::onMotionLabelsLabelChanged(rfcommon::FighterID figh
     const int tableIdx = rowIdxToTableIdx_[row];
     for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
         table_[tableIdx].labels[layerIdx] = labels_->labelAt(fighterID_, layerIdx, row);
+
     emit dataChanged(index(tableIdx, 2), index(tableIdx, labels_->layerCount() + 1));
 }
 
@@ -432,12 +450,12 @@ void MotionLabelsTableModel::onMotionLabelsCategoryChanged(rfcommon::FighterID f
     {
         const int tableIdx = rowIdxToTableIdx_[row];
         beginRemoveRows(QModelIndex(), tableIdx, tableIdx);
-        table_.erase(tableIdx);
+            table_.erase(tableIdx);
 
-        // All table indices above deletion point need to be decreased
-        for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
-            if (rowIdxToTableIdx_[i] > tableIdx)
-                rowIdxToTableIdx_[i]--;
+            // All table indices above deletion point need to be decreased
+            for (int i = 0; i != rowIdxToTableIdx_.count(); ++i)
+                if (rowIdxToTableIdx_[i] > tableIdx)
+                    rowIdxToTableIdx_[i]--;
         endRemoveRows();
     }
     else if (labels_->categoryAt(fighterID_, row) == category_)
@@ -449,13 +467,18 @@ void MotionLabelsTableModel::onMotionLabelsCategoryChanged(rfcommon::FighterID f
 // ----------------------------------------------------------------------------
 void MotionLabelsTableModel::setActiveSession(rfcommon::Session* session)
 {
-    session->tryGetFrameData()->dispatcher.addListener(this);
-    mdata_ = session->tryGetMetadata();
+    assert(session_.isNull());
+
+    session_ = session;
+    session_->tryGetFrameData()->dispatcher.addListener(this);
 }
 void MotionLabelsTableModel::clearActiveSession(rfcommon::Session* session)
 {
-    mdata_.drop();
-    session->tryGetFrameData()->dispatcher.removeListener(this);
+    assert(session_.notNull());
+    assert(session_ == session);
+
+    session_->tryGetFrameData()->dispatcher.removeListener(this);
+    session_.drop();
 
     clearHighlightedMotions();
 }
@@ -481,9 +504,22 @@ void MotionLabelsTableModel::onProtocolGameEnded(rfcommon::Session* game) { clea
 void MotionLabelsTableModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcommon::Frame<4>& frame)
 {
     clearHighlightedMotions();
+
+    // Add motion to list of highlighted motions if the fighterID and categories
+    // match our table model
     for (int fighterIdx = 0; fighterIdx != frame.count(); ++fighterIdx)
-        if (mdata_->playerFighterID(fighterIdx) == fighterID_)
+    {
+        if (session_->tryGetMetadata()->playerFighterID(fighterIdx) != fighterID_)
+            continue;
+
+        int row = labels_->lookupRow(fighterID_, frame[fighterIdx].motion());
+        if (row < 0)
+            continue;
+
+        if (labels_->categoryAt(fighterID_, row) == category_)
             highlightedMotions_.insertIfNew(frame[fighterIdx].motion(), 0);
+    }
+
     refreshHighlightedMotions();
 }
 void MotionLabelsTableModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) {}

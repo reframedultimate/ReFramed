@@ -52,6 +52,8 @@ private slots:
     void onFighterSelected(int index);
     void onCustomContextMenuRequested(int tabIdx, const QPoint& globalPos);
 
+    void onShowActiveMotionReleased();
+
     void onCancelReleased();
     void onSaveReleased();
     void onSaveAndCloseReleased();
