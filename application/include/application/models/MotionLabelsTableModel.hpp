@@ -42,32 +42,21 @@ public:
     ~MotionLabelsTableModel();
 
     void setFighter(rfcommon::FighterID fighterID);
-
     void setCategory(const QSet<int>& rows, rfcommon::MotionLabels::Category category);
-
     void setLabels(const QModelIndexList& indexes, const QString& label);
-
     int propagateLabels(const QModelIndexList& indexes, bool replaceExisting, bool forceCreation);
-
     int findNextConflict(int tableIdx, int direction);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-
     bool setData(const QModelIndex& mindex, const QVariant& value, int role) override;
-
+    void sort(int column, Qt::SortOrder order=Qt::AscendingOrder) override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
 private:
     void repopulateEntries();
-
-    void sortTable();
-
     int findTableInsertIdx(const Entry& entry);
 
 private:

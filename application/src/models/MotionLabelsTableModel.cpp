@@ -204,6 +204,7 @@ QVariant MotionLabelsTableModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
+// ----------------------------------------------------------------------------
 bool MotionLabelsTableModel::setData(const QModelIndex& mindex, const QVariant& value, int role)
 {
     switch (role)
@@ -227,6 +228,36 @@ bool MotionLabelsTableModel::setData(const QModelIndex& mindex, const QVariant& 
     }
 
     return false;
+}
+
+// ----------------------------------------------------------------------------
+void MotionLabelsTableModel::sort(int column, Qt::SortOrder order)
+{
+    PROFILE(MotionLabelsEditorGlobal, sortTable);
+
+    emit layoutAboutToBeChanged({}, QAbstractItemModel::VerticalSortHint);
+
+    if (order == Qt::AscendingOrder)
+    {
+        std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
+            if (column == 0) return a.hash40 < b.hash40;
+            if (column == 1) return a.name < b.name;
+            return a.labels[column - 2] < b.labels[column - 2];
+        });
+    }
+    else
+    {
+        std::sort(table_.begin(), table_.end(), [column](const Entry& a, const Entry& b) {
+            if (column == 0) return a.hash40 > b.hash40;
+            if (column == 1) return a.name > b.name;
+            return a.labels[column - 2] > b.labels[column - 2];
+        });
+    }
+
+    for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)
+        rowIdxToTableIdx_[table_[tableIdx].row] = tableIdx;
+
+    emit layoutChanged({}, QAbstractItemModel::VerticalSortHint);
 }
 
 // ----------------------------------------------------------------------------
@@ -258,18 +289,6 @@ void MotionLabelsTableModel::repopulateEntries()
         for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
             entry.labels.push_back(QString::fromUtf8(labels_->labelAt(fighterID_, layerIdx, row)));
     }
-
-    sortTable();
-}
-
-// ----------------------------------------------------------------------------
-void MotionLabelsTableModel::sortTable()
-{
-    PROFILE(MotionLabelsEditorGlobal, sortTable);
-
-    std::sort(table_.begin(), table_.end(), [](const Entry& a, const Entry& b) {
-        return a.name < b.name;
-        });
 
     rowIdxToTableIdx_.resize(labels_->rowCount(fighterID_));
     for (int tableIdx = 0; tableIdx != table_.count(); ++tableIdx)

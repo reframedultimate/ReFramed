@@ -12,6 +12,7 @@ namespace rfapp {
 MotionLabelsTableView::MotionLabelsTableView(QWidget* parent)
     : QTableView(parent)
 {
+    setSortingEnabled(true);
 }
 
 // ----------------------------------------------------------------------------

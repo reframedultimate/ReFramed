@@ -69,8 +69,15 @@ MotionLabelsEditor::MotionLabelsEditor(
     ui_->comboBox_fighters->setCurrentIndex(62);  // Pikachu
     if (ui_->comboBox_fighters->count() > 0)
     {
-        for (int i = 0; i != tableViews_.count(); ++i)
-            static_cast<MotionLabelsTableModel*>(tableViews_[i]->model())->setFighter(indexToFighterID_[62]);
+        for (auto view : tableViews_)
+            static_cast<MotionLabelsTableModel*>(view->model())->setFighter(indexToFighterID_[62]);
+    }
+
+    // Sort by hash40 string by default
+    if (ui_->comboBox_fighters->count() > 0)
+    {
+        for (auto view : tableViews_)
+            view->sortByColumn(1, Qt::AscendingOrder);
     }
 
     // Check if there are any merge conflicts
@@ -483,10 +490,17 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
         currentConflictTableIdx_ = model->findNextConflict(currentConflictTableIdx_, direction);
         if (currentConflictTableIdx_ >= 0)
         {
-            ui_->comboBox_fighters->setCurrentIndex(fighterIdx);
-            onFighterSelected(fighterIdx);
+            if (fighterIdx != ui_->comboBox_fighters->currentIndex())
+            {
+                ui_->comboBox_fighters->setCurrentIndex(fighterIdx);
+                onFighterSelected(fighterIdx);
+            }
+
             ui_->tabWidget_categories->setCurrentIndex(categoryIdx);
-            view->selectionModel()->select(model->index(currentConflictTableIdx_, 0), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            
+            QModelIndex index = model->index(currentConflictTableIdx_, 0);
+            view->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            view->scrollTo(index);
             view->setFocus();
 
             ui_->pushButton_nextConflict->setVisible(true);
