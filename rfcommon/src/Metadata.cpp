@@ -247,7 +247,7 @@ static Metadata* load_1_5(json& j)
             g->setScore(ScoreCount::fromGameNumber(gameNumber));
         }
 
-        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        for (int i = 0; i != (int)jPlayerInfo.size(); ++i)
         {
             json jName = jPlayerInfo[i]["name"];
             if (jName.is_string())
@@ -386,7 +386,7 @@ static Metadata* load_1_6(json& j)
         if (jFormat.is_string())
             g->setSetFormat(SetFormat::fromDescription(jFormat.get<std::string>().c_str()));
 
-        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        for (int i = 0; i != (int)jPlayerInfo.size(); ++i)
         {
             json jName = jPlayerInfo[i]["name"];
             if (jName.is_string())
@@ -568,7 +568,7 @@ static Metadata* load_1_7(json& j)
             ScoreCount::fromGameNumber(GameNumber::fromValue(1));
         g->setScore(score);
 
-        for (int i = 0; i != jPlayerInfo.size(); ++i)
+        for (int i = 0; i != (int)jPlayerInfo.size(); ++i)
         {
             json& jName = jPlayerInfo[i]["name"];
             if (jName.is_string())

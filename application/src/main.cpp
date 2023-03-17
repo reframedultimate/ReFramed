@@ -3,10 +3,11 @@
 #include "application/Util.hpp"
 
 #include "rfcommon/init.h"
-#include "rfcommon/Hash40Strings.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/Log.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <QApplication>
 #include <QStyleFactory>
@@ -33,12 +34,12 @@ int main(int argc, char** argv)
 #endif
 
     QApplication app(argc, argv);
+    QDir appLocalDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
 #if defined(RFCOMMON_LOGGING)
-    QDir logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    if (logPath.exists("logs") == false)
-        logPath.mkdir("logs");
-    QByteArray logPathUtf8 = logPath.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
+    if (appLocalDir.exists("logs") == false)
+        appLocalDir.mkdir("logs");
+    QByteArray logPathUtf8 = appLocalDir.absoluteFilePath("logs").replace("/", QDir::separator()).toUtf8();
     const char* logPathUtf8CStr = logPathUtf8.constData();
 #else
     const char* logPathUtf8CStr = "";
@@ -71,29 +72,16 @@ int main(int argc, char** argv)
         QIcon::setThemeName("feather-light");
     }
 
-    // Load hash40 strings. These are pretty much required for the
-    // plugin API to work, and for user motion labels to work.
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings;
-    {
-#if defined(_WIN32)
-        //const char* file = "share\\reframed\\data\\motion\\ParamLabels.csv";
-        const char* file = "share\\reframed\\data\\motion\\ParamLabels.dat";
-#else
-        //const char* file = "share/reframed/data/motion/ParamLabels.csv";
-        const char* file = "share/reframed/data/motion/ParamLabels.dat";
-#endif
-        hash40Strings = rfcommon::Hash40Strings::loadBinary(file);
-        if (hash40Strings == nullptr)
-        {
-            QMessageBox::critical(nullptr,
-                "Error", "Could not load file \"" + QString(file) + "\"\n\n"
-                "This is an essential file and ReFramed cannot run without it. Maybe try downloading it from here?\n"
-                "https://github.com/ultimate-research/param-labels");
-            return -1;
-        }
-    }
+    rfcommon::Reference<rfcommon::MotionLabels> motionLabels(
+                new rfcommon::MotionLabels(appLocalDir.absoluteFilePath("motionLabels.dat").replace("/", QDir::separator()).toUtf8().constData()));
+    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/1_Specific.json").replace("/", QDir::separator()).toUtf8().constData());
+    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/2_General.json").replace("/", QDir::separator()).toUtf8().constData());
+    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/3_English.json").replace("/", QDir::separator()).toUtf8().constData());
+    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/unlabeled.json").replace("/", QDir::separator()).toUtf8().constData());
+    //motionLabels->changeUsage(motionLabels->findLayer("English"), rfcommon::MotionLabels::READABLE);
+    //motionLabels->updateHash40FromCSV(appLocalDir.absoluteFilePath("motion/ParamLabels.csv").replace("/", QDir::separator()).toUtf8().constData());
 
-    rfapp::MainWindow mainWindow(std::move(config), hash40Strings);
+    rfapp::MainWindow mainWindow(std::move(config), motionLabels);
 
     // Make the main window as large as possible when not maximized
     mainWindow.setGeometry(rfapp::calculatePopupGeometryActiveScreen());
@@ -106,7 +94,7 @@ int main(int argc, char** argv)
     {
         NOPROFILE();
 
-        FILE* fp = fopen("profile.dot", "w");
+        FILE* fp = rfcommon::utf8_fopen_wb("profile.dot", sizeof("profile.dot"));
         if (fp)
             rfcommon::profiler->exportGraph(fp, rfcommon::Profiler::DOT);
     }

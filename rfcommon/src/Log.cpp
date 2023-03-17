@@ -2,6 +2,7 @@
 #include "rfcommon/BuildInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/String.hpp"
+#include "rfcommon/Utf8.hpp"
 
 #include <cstdarg>
 #include <ctime>
@@ -276,7 +277,7 @@ void Log::init(const char* logPath)
     rootLog->d_->absFileName = rootLog->d_->path + "/ReFramed.html";
 #endif
 
-    rootLog->d_->fp = fopen(rootLog->d_->absFileName.cStr(), "w");
+    rootLog->d_->fp = utf8_fopen_wb(rootLog->d_->absFileName.cStr(), rootLog->d_->absFileName.length());
     if (rootLog->d_->fp == nullptr)
     {
         fprintf(stderr, "Failed to open log \"%s\"", rootLog->d_->absFileName.cStr());
@@ -350,7 +351,7 @@ Log* Log::child(const char* logName)
     childLog->d_->absFileName += ".html";
     childLog->d_->name = logName;
 
-    childLog->d_->fp = fopen(childLog->d_->absFileName.cStr(), "w");
+    childLog->d_->fp = utf8_fopen_wb(childLog->d_->absFileName.cStr(), childLog->d_->absFileName.length());
     if (childLog->d_->fp == nullptr)
     {
         fprintf(stderr, "Failed to open log \"%s\"", childLog->d_->absFileName.cStr());

@@ -13,8 +13,8 @@
 namespace rfapp {
 
 // ----------------------------------------------------------------------------
-ReplayListModel::ReplayListModel(rfcommon::FilePathResolver* filePathResolver)
-    : replayPathResolver_(filePathResolver)
+ReplayListModel::ReplayListModel(ReplayMetadataCache* metadataCache)
+    : metadataCache_(metadataCache)
 {
 }
 
@@ -118,33 +118,19 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             }
             else
             {
-                const auto& day = days_[index.internalId()];
-                const auto& r = day.replays[index.row()];
+                const ReplaysOnDay& day = days_[index.internalId()];
+                const auto& replay = day.replays[index.row()];
 
-                if (r.hasMissingInfo())
+                switch (index.column())
                 {
-                    if (index.column() == 0)
-                        return QString::fromUtf8(r.originalFileName().cStr());
-                }
-                else if (r.playerCount() == 2)
-                {
-                    switch (index.column())
-                    {
-                        case Time: return QString::fromUtf8(r.time().cStr());
-                        case P1: return QString::fromUtf8(r.playerName(0).cStr());
-                        case P2: return QString::fromUtf8(r.playerName(1).cStr());
-                        case SetFormat: return QString::fromUtf8(r.setFormat().shortDescription());
-                        case SetNumber: return r.round().number().value();
-                        case GameNumber: return r.score().gameNumber().value();
-                        case Stage: return QString::fromUtf8(r.stage().cStr());
-
-                        case P1Char: return QString::fromUtf8(r.fighterName(0).cStr());
-                        case P2Char: return QString::fromUtf8(r.fighterName(1).cStr());
-                    }
-                }
-                else if (r.playerCount() == 4)
-                {
-                    // TODO
+                    case Time: return replay.cache.time;
+                    case P1: return replay.cache.p1name;
+                    case P2: return replay.cache.p2name;
+                    case Stage: return replay.cache.stage;
+                    case Round: return replay.cache.round;
+                    case Format: return replay.cache.format;
+                    case Score: return replay.cache.score;
+                    case Game: return replay.cache.game;
                 }
             }
         } break;
@@ -153,26 +139,14 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             if (index.internalId() == quintptr(-1))
                 break;
 
-            const auto& day = days_[index.internalId()];
-            const auto& r = day.replays[index.row()];
-            if (r.playerCount() == 2)
-            {
-                if (index.column() == P1)
-                    return FighterIcon::fromFighterName(r.fighterName(0).cStr(), 0).scaledToHeight(20);
-                if (index.column() == P2)
-                    return FighterIcon::fromFighterName(r.fighterName(1).cStr(), 0).scaledToHeight(20);
-            }
+            const ReplaysOnDay& day = days_[index.internalId()];
+            const auto& replay = day.replays[index.row()];
+
+            if (index.column() == P1)
+                return FighterIcon::fromFighterID(replay.cache.p1fighterID, replay.cache.p1costume).scaledToHeight(20);
+            if (index.column() == P2)
+                return FighterIcon::fromFighterID(replay.cache.p2fighterID, replay.cache.p2costume).scaledToHeight(20);
         } break;
-
-        case Qt::ForegroundRole: {
-            if (index.internalId() == quintptr(-1))
-                break;
-
-            const auto& day = days_[index.internalId()];
-            const auto& r = day.replays[index.row()];
-            if (r.hasMissingInfo())
-                return QBrush(QColor(Qt::red));
-        }
     }
 
     return QVariant();
@@ -193,10 +167,11 @@ QVariant ReplayListModel::headerData(int section, Qt::Orientation orientation, i
                     case Time: return "Time";
                     case P1: return "Player 1";
                     case P2: return "Player 2";
-                    case SetFormat: return "Format";
-                    case SetNumber: return "Set";
-                    case GameNumber: return "Game";
                     case Stage: return "Stage";
+                    case Round: return "Round";
+                    case Format: return "Format";
+                    case Score: return "Score";
+                    case Game: return "Game";
                 }
             }
         } break;
@@ -215,8 +190,8 @@ QString ReplayListModel::indexFileName(const QModelIndex& index) const
     if (index.internalId() == quintptr(-1))
         return "";
 
-    const auto& fileParts = days_[index.internalId()].replays[index.row()];
-    return QString::fromUtf8(fileParts.originalFileName().cStr());
+    const auto& replay = days_[index.internalId()].replays[index.row()];
+    return replay.fileName;
 }
 
 // ----------------------------------------------------------------------------
@@ -224,23 +199,10 @@ void ReplayListModel::addReplay(const QString& fileName)
 {
     PROFILE(ReplayListModel, addReplay);
 
-    auto parts = rfcommon::ReplayFileParts::fromFileName(fileName.toUtf8().constData());
-    //if (parts.hasMissingInfo())
-    {
-        rfcommon::String filePathUtf8 = replayPathResolver_->resolveGameFile(fileName.toUtf8().constData());
-        if (filePathUtf8.length() > 0)
-        {
-            rfcommon::Reference<rfcommon::Session> session = rfcommon::Session::load(replayPathResolver_, filePathUtf8.cStr());
-            if (session)
-                if (auto map = session->tryGetMappingInfo())
-                    if (auto mdata = session->tryGetMetadata())
-                        parts.updateFromMetadata(map, mdata);
-        }
-    }
+    const ReplayMetadataCache::Entry* entry = metadataCache_->lookupFilename(fileName);
 
     ReplaysOnDay day;
-    day.date = parts.date().cStr();
-
+    day.date = entry->date;
     auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
         return a.date > b.date;
     });
@@ -249,14 +211,14 @@ void ReplayListModel::addReplay(const QString& fileName)
     if (it == days_.end() || it->date != day.date)
     {
         beginInsertRows(QModelIndex(), rootRow, rootRow);
-        it = days_.insert(it, day);
-        it->replays.append(parts);
+            it = days_.insert(it, day);
+            it->replays.push_back(Replay{ fileName, *entry });
         endInsertRows();
     }
     else
     {
         beginInsertRows(index(rootRow, 0), it->replays.size(), it->replays.size());
-        it->replays.append(parts);
+            it->replays.push_back(Replay{ fileName, *entry });
         endInsertRows();
     }
 
@@ -267,31 +229,27 @@ void ReplayListModel::removeReplay(const QString& fileName)
 {
     PROFILE(ReplayListModel, removeReplay);
 
-    auto parts = rfcommon::ReplayFileParts::fromFileName(fileName.toUtf8().constData());
+    QVector<ReplaysOnDay>::iterator dayIt;
+    QVector<Replay>::iterator replayIt;
+    for (dayIt = days_.begin(); dayIt != days_.end(); ++dayIt)
+    {
+        for (replayIt = dayIt->replays.begin(); replayIt != dayIt->replays.end(); ++replayIt)
+            if (replayIt->fileName == fileName)
+                goto found;
+    }
+    return;
+found:;
 
-    ReplaysOnDay day;
-    day.date = parts.date().cStr();
-    auto it = std::lower_bound(days_.begin(), days_.end(), day, [](const ReplaysOnDay& a, const ReplaysOnDay& b) {
-        return a.date > b.date;
-    });
-    if (it == days_.end() || it->date != day.date)
-        return;
+    int rootRow = dayIt - days_.begin();
+    int replayRow = replayIt - dayIt->replays.begin();
+    beginRemoveRows(index(rootRow, 0), replayRow, replayRow);
+    dayIt->replays.erase(replayIt);
+    endRemoveRows();
 
-    int rootRow = it - days_.begin();
-    for (auto it2 = it->replays.begin(); it2 != it->replays.end(); ++it2)
-        if (it2->originalFileName() == parts.originalFileName())
-        {
-            int replayRow = it2 - it->replays.begin();
-            beginRemoveRows(index(rootRow, 0), replayRow, replayRow);
-            it->replays.erase(it2);
-            endRemoveRows();
-            break;
-        }
-
-    if (it->replays.size() == 0)
+    if (dayIt->replays.size() == 0)
     {
         beginRemoveRows(QModelIndex(), rootRow, rootRow);
-        days_.erase(it);
+        days_.erase(dayIt);
         endRemoveRows();
     }
 }

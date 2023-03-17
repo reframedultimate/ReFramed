@@ -57,7 +57,8 @@ static std::string decompressGZFile(const char* fileName)
     gzFile f;
     FILE* fp;
 
-    fp = fopen(fileName, "rb");
+#define fopen_nolint fopen
+    fp = fopen_nolint(fileName, "rb");
     if (fp == nullptr)
         goto fopen_failed;
 
@@ -112,7 +113,8 @@ static std::string decompressQtZFile(const char* fileName)
 
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName, "rb");
+#define fopen_nolint fopen
+    FILE* fp = fopen_nolint(fileName, "rb");
     if (fp == nullptr)
         return "";
 
@@ -181,7 +183,8 @@ static std::string readUncompressedFile(const char* fileName)
 
 #define CHUNK (256*1024)
     std::string out;
-    FILE* fp = fopen(fileName, "rb");
+#define fopen_nolint fopen
+    FILE* fp = fopen_nolint(fileName, "rb");
     if (fp == nullptr)
         goto open_failed;
 
@@ -926,7 +929,7 @@ bool Session::save(const char* utf8_filename, uint8_t saveFlags)
     log->beginDropdown("Saving session %s", utf8_filename);
 
     const int len = strlen(utf8_filename);
-    FILE* fp = utf8_fopen_write(utf8_filename, len);
+    FILE* fp = utf8_fopen_wb(utf8_filename, len);
     if (fp == nullptr)
     {
         log->error("Failed to open file %s: %s", utf8_filename, strerror(errno));

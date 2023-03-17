@@ -4,7 +4,7 @@
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/MetadataListener.hpp"
 #include "rfcommon/Reference.hpp"
-#include "rfcommon/UserMotionLabelsListener.hpp"
+#include "rfcommon/MotionLabelsListener.hpp"
 #include <QString>
 
 class PlayerMetaListener;
@@ -14,15 +14,15 @@ namespace rfcommon {
     class MappingInfo;
     class Metadata;
     class GameMetadata;
-    class UserMotionLabels;
+    class MotionLabels;
 }
 
 class PlayerMeta
         : public rfcommon::MetadataListener
-        , public rfcommon::UserMotionLabelsListener
+        , public rfcommon::MotionLabelsListener
 {
 public:
-    PlayerMeta(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    PlayerMeta(rfcommon::MotionLabels* labels);
     ~PlayerMeta();
 
     void setMetadata(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata);
@@ -50,15 +50,22 @@ private:
 
 private:
     // If motion labels are edited, we need to update the table (and possibly re-export data)
-    void onUserMotionLabelsLayerAdded(int layerIdx, const char* name) override;
-    void onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) override;
-    void onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) override;
-    void onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) override;
-    void onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) override;
+    void onMotionLabelsLoaded() override;
+    void onMotionLabelsHash40sUpdated() override;
+
+    void onMotionLabelsLayerInserted(int layerIdx) override;
+    void onMotionLabelsLayerRemoved(int layerIdx) override;
+    void onMotionLabelsLayerNameChanged(int layerIdx) override;
+    void onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) override;
+    void onMotionLabelsLayerMoved(int fromIdx, int toIdx) override;
+    void onMotionLabelsLayerMerged(int layerIdx) override;
+
+    void onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) override;
+    void onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) override;
+    void onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) override;
 
 private:
     rfcommon::Reference<rfcommon::Metadata> mdata_;
     rfcommon::Reference<rfcommon::MappingInfo> map_;
-    rfcommon::Reference<rfcommon::UserMotionLabels> userLabels_;
-    rfcommon::Reference<rfcommon::Hash40Strings> hash40Strings_;
+    rfcommon::Reference<rfcommon::MotionLabels> labels_;
 };

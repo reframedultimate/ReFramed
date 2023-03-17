@@ -25,7 +25,7 @@ VideoPlayerPlugin::~VideoPlayerPlugin()
 rfcommon::Plugin::UIInterface* VideoPlayerPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* VideoPlayerPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* VideoPlayerPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* VideoPlayerPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* VideoPlayerPlugin::visualizerInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* VideoPlayerPlugin::videoPlayerInterface() { return videoPlayer_.get(); }
 
 // ----------------------------------------------------------------------------

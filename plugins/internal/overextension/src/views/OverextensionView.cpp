@@ -2,16 +2,16 @@
 #include "overextension/views/OverextensionView.hpp"
 #include "overextension/models/OverextensionModel.hpp"
 
-#include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/MotionLabels.hpp"
 
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 
 // ----------------------------------------------------------------------------
-OverextensionView::OverextensionView(OverextensionModel* model, rfcommon::UserMotionLabels* userLabels)
+OverextensionView::OverextensionView(OverextensionModel* model, rfcommon::MotionLabels* labels)
     : ui_(new Ui::OverextensionView)
     , model_(model)
-    , userLabels_(userLabels)
+    , labels_(labels)
     , text_(new QPlainTextEdit)
 {
     ui_->setupUi(this);
@@ -81,6 +81,12 @@ void OverextensionView::onDataChanged()
     if (fighterIdx < 0)
         return;
 
+    auto motionToString = [this](rfcommon::FighterID fighterID, rfcommon::FighterMotion motion) -> QString {
+        if (const char* label = labels_->toPreferredNotation(fighterID, motion))
+            return QString::fromUtf8(label);
+        return QString::fromUtf8(labels_->lookupHash40(motion, "(unknown)"));
+    };
+
     text_->insertPlainText("true combos: " + QString::number(model_->moveCount(fighterIdx, OverextensionModel::TRUE_COMBO)) + "\n");
     text_->insertPlainText("combos: " + QString::number(model_->moveCount(fighterIdx, OverextensionModel::COMBO)) + "\n");
     text_->insertPlainText("winning: " + QString::number(model_->moveCount(fighterIdx, OverextensionModel::WINNING_OVEREXTENSION)) + "\n");
@@ -99,8 +105,8 @@ void OverextensionView::onDataChanged()
         {
             auto beforeMove = model_->moveBefore(fighterIdx, i, category);
             auto afterMove = model_->moveAfter(fighterIdx, i, category);
-            auto beforeName = QString::fromUtf8(userLabels_->toStringHighestLayer(fighterID, beforeMove));
-            auto afterName = QString::fromUtf8(userLabels_->toStringHighestLayer(fighterID, afterMove));
+            auto beforeName = motionToString(fighterID, beforeMove);
+            auto afterName = motionToString(fighterID, afterMove);
             auto frameStart = QString::number(model_->moveStart(fighterIdx, i, category).index());
             auto frameEnd = QString::number(model_->moveEnd(fighterIdx, i, category).index());
             auto gap = QString::number(model_->moveGap(fighterIdx, i, category));

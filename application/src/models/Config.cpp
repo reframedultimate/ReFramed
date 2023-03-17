@@ -73,7 +73,7 @@ void Config::save()
     }
 
     const std::string jsonStr = root.dump(2);
-    if (f.write(jsonStr.data(), jsonStr.length()) != jsonStr.length())
+    if (f.write(jsonStr.data(), jsonStr.length()) != (int)jsonStr.length())
     {
         log->error("Failed to write data to config.json");
         return;

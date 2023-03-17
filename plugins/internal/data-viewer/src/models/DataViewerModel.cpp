@@ -11,18 +11,16 @@
 
 #include "rfcommon/Frame.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/VideoMeta.hpp"
 
 // ----------------------------------------------------------------------------
-DataViewerModel::DataViewerModel(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
-    : userLabels_(userLabels)
-    , hash40Strings_(hash40Strings)
+DataViewerModel::DataViewerModel(rfcommon::MotionLabels* labels)
+    : labels_(labels)
     , baseStatusIDModel_(new BaseStatusIDModel)
     , fighterIDModel_(new FighterIDModel)
     , hitStatusIDModel_(new HitStatusIDModel)
@@ -68,8 +66,7 @@ void DataViewerModel::setSession(rfcommon::Session* session)
                     mappingInfo_,
                     i,
                     metadata_ ? metadata_->playerFighterID(i) : rfcommon::FighterID::makeInvalid(),
-                    userLabels_,
-                    hash40Strings_));
+                    labels_));
         frameData_->dispatcher.addListener(this);
     }
 

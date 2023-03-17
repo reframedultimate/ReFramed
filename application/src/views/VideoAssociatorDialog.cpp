@@ -9,7 +9,7 @@
 #include "rfcommon/Session.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/VideoEmbed.hpp"
-#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/PluginContext.hpp"
 
 #include <QShortcut>
 #include <QPushButton>
@@ -44,8 +44,8 @@ VideoAssociatorDialog::VideoAssociatorDialog(
     const auto availableVideoPlugins = pluginManager_->availableFactoryNames(RFPluginType::UI | RFPluginType::VIDEO_PLAYER);
     for (const auto& factoryName : availableVideoPlugins)
     {
-        rfcommon::Reference<rfcommon::VisualizerContext> visCtx(new rfcommon::VisualizerContext);
-        videoPlugin_ = pluginManager_->create(factoryName, visCtx);
+        rfcommon::Reference<rfcommon::PluginContext> pluginCtx(new rfcommon::PluginContext);
+        videoPlugin_ = pluginManager_->create(factoryName, pluginCtx);
         if (videoPlugin_)
             if (videoPlugin_->videoPlayerInterface())
                 if (auto i = videoPlugin_->uiInterface())

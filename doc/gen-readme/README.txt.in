@@ -1,0 +1,38 @@
+ReFramed version ${REFRAMED_VERSION}-${REFRAMED_VERSION_RC}
+============================
+
+Installation instructions:
+- Unzip this folder somewhere on your PC, for example to your documents folder. 
+  It doesn't matter where you put it as long as you can find it.
+- Copy the switch/libreframed-server.nro and other .nro files from
+  this folder on your PC into the skyline plugins folder on your Switch under 
+  sd:/atmosphere/contents/01006A800016E000/romfs/skyline/plugins
+- Start smash as normal and wait until you're past the title screen.
+- Double-click on ReFramed.exe on your PC. Click on File -> Connect and
+  enter your Switch's IP address. The port is always 42069.
+- Have fun!
+
+General tips:
+- All plots have these controls:
+  + Reset zoom with double-click
+  + Left-click drag to zoom into a rectangular aera
+  + Middle-click drag to pan
+  + Right-click drag to zoom continuously
+  + Right-click to open a context menu
+- VOD Review
+  + Use left+right arrows to jump 1 frame
+  + Use Ctrl+Left and Ctrl+right to jump 20 frames
+  + Use Space to pause/resume
+- Clicking on the vertical tab on the very left a second time hides the
+  side pane if you need more space
+
+FAQ
+===
+
+Q: How do I know my Switch's IP address?
+A: Go to your home menu and under system -> Internet you can see your current IP address
+
+Changelist
+==========
+
+

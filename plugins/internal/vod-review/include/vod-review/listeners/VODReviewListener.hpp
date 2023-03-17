@@ -3,5 +3,5 @@
 class VODReviewListener
 {
 public:
-    virtual void onVODReviewVisualizerDataChanged() = 0;
+    virtual void onVODReviewPluginSharedDataChanged() = 0;
 };

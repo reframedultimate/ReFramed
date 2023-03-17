@@ -21,6 +21,7 @@ public:
     uint32_t lower() const { return value_ & 0xFFFFFFFF; }
     Type value() const { return value_; }
     bool isValid() const { return value_ != 0; }
+    String toHex() const;
 
     bool operator==(FighterMotion other) const { return value_ == other.value_; }
     bool operator!=(FighterMotion other) const { return value_ != other.value_; }

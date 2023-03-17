@@ -39,7 +39,7 @@ private:
     void onPresentImage(const QImage& image) override final;
 
 private:
-    void onVODReviewVisualizerDataChanged() override final;
+    void onVODReviewPluginSharedDataChanged() override final;
 
 private:
     Ui::VODReviewView* ui_;

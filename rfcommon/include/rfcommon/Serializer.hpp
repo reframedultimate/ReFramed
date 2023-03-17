@@ -2,6 +2,7 @@
 
 #include "rfcommon/config.hpp"
 #include <cstdint>
+#include <cstdio>
 
 namespace rfcommon {
 
@@ -23,6 +24,7 @@ public:
     void write(const void* data, int bytes);
 
     void writeU8(uint8_t value);
+    void writeI8(int8_t value);
 
     void writeLU16(uint16_t value);
     void writeLU32(uint32_t value);

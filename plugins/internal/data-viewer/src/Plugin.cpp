@@ -5,14 +5,13 @@
 
 static rfcommon::Plugin* createPlugin(
     RFPluginFactory* factory,
-    rfcommon::VisualizerContext* visCtx,
+    rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
-    rfcommon::UserMotionLabels* userLabels,
-    rfcommon::Hash40Strings* hash40Strings)
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createPlugin);
 
-    return new DataViewerPlugin(factory, userLabels, hash40Strings);
+    return new DataViewerPlugin(factory, labels);
 }
 
 static void destroyPlugin(rfcommon::Plugin* model)

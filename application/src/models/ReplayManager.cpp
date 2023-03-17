@@ -9,6 +9,7 @@
 #include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/ReplayFilename.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TimeStamp.hpp"
 #include "rfcommon/TrainingMetadata.hpp"
@@ -412,12 +413,18 @@ bool ReplayManager::saveReplayOver(rfcommon::Session* session, const QString& ol
     QString tmpFileName = "." + oldFileName + ".tmp" + QString::number(tmpCounter++);
 
     // Determine new file name
-    auto newFileNameParts = rfcommon::ReplayFileParts::fromMetadata(session->tryGetMappingInfo(), session->tryGetMetadata());
-    QString newFileName = QString::fromUtf8(newFileNameParts.toFileName().cStr());
+    auto map = session->tryGetMappingInfo();
+    auto mdata = session->tryGetMetadata();
+    if (!map || !mdata)
+    {
+        log->error("Can't save replay \"%s\": %s is NULL", oldFilePathUtf8.cStr(), map ? "metadata" : "map");
+        return false;
+    }
+    QString newFileName = QString::fromUtf8(rfcommon::ReplayFilename::fromMetadata(map, mdata).cStr());
 
     if (allReplayGroup()->isInGroup(oldFileName) == false)
     {
-        log->error("Attempted to save replay over \"%s\", but file did not exist. Aborting", oldFileName.toUtf8().constData());
+        log->error("Attempted to save replay over \"%s\", but file did not exist. Aborting", oldFilePathUtf8.cStr());
         return false;
     }
 
@@ -534,9 +541,8 @@ bool ReplayManager::saveReplayWithDefaultSettings(rfcommon::Session* session)
     if (dir.exists() == false)
         dir.mkpath(".");
 
-    auto fileNameParts = rfcommon::ReplayFileParts::fromMetadata(map, mdata);
-    auto fileNameUtf8 = fileNameParts.toFileName();
-    auto fileName = QString::fromUtf8(fileNameUtf8.cStr());
+    auto fileName = QString::fromUtf8(
+        rfcommon::ReplayFilename::fromMetadata(map, mdata).cStr());
     auto filePath = dir.absoluteFilePath(fileName);
     if (session->save(filePath.toUtf8().constData()))
     {

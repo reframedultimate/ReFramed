@@ -13,8 +13,8 @@ struct RFPluginFactory;
 namespace rfcommon {
 
 class Session;
-class VisualizerContext;
-class VisualizerData;
+class PluginContext;
+class PluginSharedData;
 
 class RFCOMMON_PUBLIC_API Plugin
 {
@@ -38,24 +38,24 @@ public:
         virtual void onGameSessionSetUnloaded(rfcommon::Session** games, int numGames) = 0;
     };
 
-    class RFCOMMON_PUBLIC_API VisualizerInterface
+    class RFCOMMON_PUBLIC_API SharedDataInterface
     {
     public:
-        VisualizerInterface(VisualizerContext* visCtx, const RFPluginFactory* factory);
-        virtual ~VisualizerInterface();
+        SharedDataInterface(PluginContext* ctx, const RFPluginFactory* factory);
+        virtual ~SharedDataInterface();
 
-        int visualizerSourceCount() const;
+        int sharedDataSourceCount() const;
 
-        const char* visualizerName(int sourceIdx) const;
-        const VisualizerData& visualizerData(int sourceIdx) const;
+        const char* sharedDataName(int sourceIdx) const;
+        const PluginSharedData& sharedData(int sourceIdx) const;
 
-        void setVisualizerData(VisualizerData&& data);
-        void clearVisualizerData();
+        void setSharedData(PluginSharedData&& data);
+        void clearSharedData();
 
-        virtual void onVisualizerDataChanged() = 0;
+        virtual void onSharedDataChanged() = 0;
 
     private:
-        Reference<VisualizerContext> visCtx_;
+        Reference<PluginContext> pluginCtx_;
         const String name_;
     };
 
@@ -150,7 +150,7 @@ public:
     // convenient.
     virtual Plugin::UIInterface* uiInterface() = 0;
     virtual Plugin::ReplayInterface* replayInterface() = 0;
-    virtual Plugin::VisualizerInterface* visualizerInterface() = 0;
+    virtual Plugin::SharedDataInterface* sharedInterface() = 0;
     virtual Plugin::RealtimeInterface* realtimeInterface() = 0;
     virtual Plugin::VideoPlayerInterface* videoPlayerInterface() = 0;
 

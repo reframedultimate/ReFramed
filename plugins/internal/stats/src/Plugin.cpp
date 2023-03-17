@@ -12,14 +12,13 @@
 // Gets called when the main application wants to create your plugin
 static rfcommon::Plugin* createStatsPlugin(
     RFPluginFactory* factory,
-    rfcommon::VisualizerContext* visCtx,
+    rfcommon::PluginContext* pluginCtx,
     rfcommon::Log* log,
-    rfcommon::UserMotionLabels* userLabels,
-    rfcommon::Hash40Strings* hash40Strings)
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createStatsPlugin);
 
-    return new StatsPlugin(visCtx, factory, userLabels, hash40Strings);
+    return new StatsPlugin(pluginCtx, factory, labels);
 }
 
 // Gets called when the main application removes your plugin from its
@@ -72,7 +71,7 @@ static int start(uint32_t version, const char** error)
     // error message to *error so the main application can tell the user what
     // went wrong.
 
-    
+
     // Version Check
     // (This is no longer required since the plugin was made internal)
     /*
@@ -83,7 +82,7 @@ static int start(uint32_t version, const char** error)
         *error = "Stats version " PLUGIN_VERSION_STR " is incompatible with your current version of ReFramed.";
         return -1;
     }*/
-    
+
     if (ensureDataDirExists() == false)
     {
         *error = "Failed to create data directory";

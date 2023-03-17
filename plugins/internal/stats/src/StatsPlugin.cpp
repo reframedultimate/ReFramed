@@ -14,14 +14,14 @@
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/VisualizerContext.hpp"
-#include "rfcommon/VisualizerData.hpp"
+#include "rfcommon/PluginContext.hpp"
+#include "rfcommon/PluginSharedData.hpp"
 
 // ----------------------------------------------------------------------------
-StatsPlugin::StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+StatsPlugin::StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::MotionLabels* labels)
     : Plugin(factory)
-    , Plugin::VisualizerInterface(visCtx, factory)
-    , playerMeta_(new PlayerMeta(userLabels, hash40Strings))
+    , Plugin::SharedDataInterface(pluginCtx, factory)
+    , playerMeta_(new PlayerMeta(labels))
     , statsCalculator_(new StatsCalculator)
     , settingsModel_(new SettingsModel(dataDir().absoluteFilePath("settings.json")))
     , wsServer_(new WebSocketServer)
@@ -137,16 +137,16 @@ void StatsPlugin::exportToOtherPlugins()
 {
     PROFILE(StatsPlugin, exportToOtherPlugins);
 
-    rfcommon::VisualizerData data;
+    rfcommon::PluginSharedData data;
     for (int p = 0; p != playerMeta_->playerCount(); ++p)
     {
-        rfcommon::Vector<rfcommon::VisualizerData::TimeInterval> timeIntervals;
+        rfcommon::Vector<rfcommon::PluginSharedData::TimeInterval> timeIntervals;
         for (const auto& interval : statsCalculator_->advantageStateTimeIntervals(p))
             timeIntervals.emplace("String", interval.start, interval.end);
         auto name = playerMeta_->name(p) + " Strings";
         data.timeIntervalSets.insertAlways(name.toUtf8().constData(), std::move(timeIntervals));
     }
-    setVisualizerData(std::move(data));
+    setSharedData(std::move(data));
 }
 
 // ----------------------------------------------------------------------------
@@ -165,7 +165,7 @@ void StatsPlugin::sendWebSocketStats(bool gameStarted, bool gameEnded) const
 rfcommon::Plugin::UIInterface* StatsPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* StatsPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* StatsPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* StatsPlugin::visualizerInterface() { return this; }
+rfcommon::Plugin::SharedDataInterface* StatsPlugin::sharedInterface() { return this; }
 rfcommon::Plugin::VideoPlayerInterface* StatsPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

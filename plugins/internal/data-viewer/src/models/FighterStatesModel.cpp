@@ -2,10 +2,9 @@
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/MotionLabels.hpp"
 
 #include <algorithm>
 
@@ -22,9 +21,9 @@ enum ColumnType
     Shield,
     Status,
     StatusName,
-    Motion,
+    Hash40,
+    Hash40String,
     MotionLabel,
-    MotionUserLabel,
     HitStatus,
     HitStatusName,
     Stocks,
@@ -39,16 +38,14 @@ FighterStatesModel::FighterStatesModel(
         rfcommon::MappingInfo* mappingInfo,
         int fighterIdx,
         rfcommon::FighterID fighterID,
-        rfcommon::UserMotionLabels* userLabels,
-        rfcommon::Hash40Strings* hash40Strings)
+        rfcommon::MotionLabels* labels)
     : frameData_(frameData)
     , mappingInfo_(mappingInfo)
-    , userLabels_(userLabels)
-    , hash40Strings_(hash40Strings)
+    , labels_(labels)
     , fighterIdx_(fighterIdx)
     , fighterID_(fighterID)
 {
-    userLabels_->dispatcher.addListener(this);
+    labels_->dispatcher.addListener(this);
     frameData_->dispatcher.addListener(this);
 }
 
@@ -56,7 +53,7 @@ FighterStatesModel::FighterStatesModel(
 FighterStatesModel::~FighterStatesModel()
 {
     frameData_->dispatcher.removeListener(this);
-    userLabels_->dispatcher.removeListener(this);
+    labels_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -97,9 +94,9 @@ QVariant FighterStatesModel::headerData(int section, Qt::Orientation orientation
                 case Shield: return "Shield";
                 case Status: return "Status";
                 case StatusName: return "Status Name";
-                case Motion: return "Motion";
+                case Hash40: return "Hash40";
+                case Hash40String: return "String";
                 case MotionLabel: return "Motion Label";
-                case MotionUserLabel: return "User Label";
                 case HitStatus: return "Hit Status";
                 case HitStatusName: return "Hit Status Name";
                 case Stocks: return "Stocks";
@@ -155,6 +152,18 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 return mappingInfo_->hitStatus.toName(hitStatus);
             };
 
+            auto formatMotionLabels = [this](rfcommon::FighterID fighterID, rfcommon::FighterMotion motion) -> QString {
+                QString list;
+                for (int i = 0; i != labels_->layerCount(); ++i)
+                    if (const char* label = labels_->lookupLayer(fighterID, motion, i))
+                    {
+                        if (i != 0)
+                            list += ", ";
+                        list += label;
+                    }
+                return list;
+            };
+
             switch (index.column())
             {
                 case FrameIndex: return QString::number(state.frameIndex().index());
@@ -168,9 +177,9 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case Shield: return QString::number(state.shield(), 'f', 1);
                 case Status: return QString::number(state.status().value());
                 case StatusName: return statusName(state.status());
-                case Motion: return "0x" + QString::number(state.motion().value(), 16);
-                case MotionLabel: return hash40Strings_->toString(state.motion());
-                case MotionUserLabel: return QString(userLabels_->toStringAllLayers(fighterID_, state.motion()).cStr());
+                case Hash40: return "0x" + QString::number(state.motion().value(), 16);
+                case Hash40String: return labels_->lookupHash40(state.motion(), "(unknown)");
+                case MotionLabel: return formatMotionLabels(fighterID_, state.motion());
                 case HitStatus: return QString::number(state.hitStatus().value());
                 case HitStatusName: return formatHitStatusName(state.hitStatus());
                 case Stocks: return QString::number(state.stocks().count());
@@ -182,8 +191,8 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
             switch (index.column())
             {
                 case StatusName:
+                case Hash40String:
                 case MotionLabel:
-                case MotionUserLabel:
                 case HitStatusName:
                     return Qt::AlignLeft + Qt::AlignVCenter;
 
@@ -222,14 +231,28 @@ void FighterStatesModel::onFrameDataNewFrame(int frameIdx, const rfcommon::Frame
 }
 
 // ----------------------------------------------------------------------------
-void FighterStatesModel::updateMotionUserLabelsColumn()
+void FighterStatesModel::updateMotionLabelsColumn()
 {
     PROFILE(FighterStatesModel, updateMotionUserLabelsColumn);
 
-    emit dataChanged(index(0, MotionUserLabel), index(frameData_->frameCount() - 1, MotionUserLabel));
+    emit dataChanged(index(0, MotionLabel), index(frameData_->frameCount() - 1, MotionLabel));
 }
-void FighterStatesModel::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) { updateMotionUserLabelsColumn(); }
-void FighterStatesModel::onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) { updateMotionUserLabelsColumn(); }
+void FighterStatesModel::updateHash40StringsColumn()
+{
+    PROFILE(FighterStatesModel, updateHash40StringsColumn);
+
+    emit dataChanged(index(0, Hash40String), index(frameData_->frameCount() - 1, Hash40String));
+}
+void FighterStatesModel::onMotionLabelsLoaded() { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsHash40sUpdated() { updateHash40StringsColumn(); }
+
+void FighterStatesModel::onMotionLabelsLayerInserted(int layerIdx) { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsLayerRemoved(int layerIdx) { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsLayerNameChanged(int layerIdx) {}
+void FighterStatesModel::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}
+void FighterStatesModel::onMotionLabelsLayerMoved(int fromIdx, int toIdx) { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsLayerMerged(int layerIdx) { updateMotionLabelsColumn(); }
+
+void FighterStatesModel::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) { updateMotionLabelsColumn(); }
+void FighterStatesModel::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) {}

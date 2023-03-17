@@ -11,7 +11,7 @@
 #include "rfcommon/TimeStamp.hpp"
 #include "rfcommon/VideoEmbed.hpp"
 #include "rfcommon/VideoMeta.hpp"
-#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/PluginContext.hpp"
 
 #include <QDir>
 #include <QFileInfo>
@@ -22,7 +22,7 @@
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
 #   define WIN32_LEAN_AND_MEAN
 #   include <Windows.h>
-#   include "rfcommon/LastWindowsError.hpp"
+#   include "rfcommon/LastError.hpp"
 #   include "rfcommon/time.h"
 #   include "rfcommon/Utf8.hpp"
 #elif defined(RFCOMMON_PLATFORM_LINUX)
@@ -48,10 +48,10 @@ AutoAssociateVideoTask::AutoAssociateVideoTask(
     , vidDir_(vidDir)
     , frameCorrection_(frameOffsetCorrection)
 {
-    rfcommon::Reference<rfcommon::VisualizerContext> visCtx(new rfcommon::VisualizerContext);
+    rfcommon::Reference<rfcommon::PluginContext> pluginCtx(new rfcommon::PluginContext);
     for (const auto& factoryName : pluginManager_->availableFactoryNames(RFPluginType::VIDEO_PLAYER))
     {
-        videoPlugin_ = pluginManager_->create(factoryName, visCtx);
+        videoPlugin_ = pluginManager_->create(factoryName, pluginCtx);
         if (videoPlugin_)
         {
             if (videoPlugin_->videoPlayerInterface())
@@ -94,14 +94,14 @@ void AutoAssociateVideoTask::run()
         const char* utf8FilePath = filePathBA.constData();
 
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
-        wchar_t* utf16FilePath = rfcommon::utf8_to_utf16(utf8FilePath, strlen(utf8FilePath));
+        wchar_t* utf16FilePath = rfcommon::utf8_to_utf16(utf8FilePath, (int)strlen(utf8FilePath));
         if (utf8FilePath == nullptr)
             continue;
 
         WIN32_FILE_ATTRIBUTE_DATA fileAttributes;
         if (GetFileAttributesExW(utf16FilePath, GetFileExInfoStandard, (void*)&fileAttributes) == 0)
         {
-            log_->error("Failed to get file attributes for file \"%s\": %s", utf8FilePath, rfcommon::LastWindowsError().cStr());
+            log_->error("Failed to get file attributes for file \"%s\": %s", utf8FilePath, rfcommon::LastError().cStr());
             rfcommon::utf16_free(utf16FilePath);
             continue;
         }

@@ -4,7 +4,6 @@
 #include "rfcommon/HighresTimer.hpp"
 #include "rfcommon/Reference.hpp"
 #include "rfcommon/RefCounted.hpp"
-#include "rfcommon/DeltaTime.hpp"
 
 #include <string>
 #include <vector>

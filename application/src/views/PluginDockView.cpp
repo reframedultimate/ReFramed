@@ -7,7 +7,7 @@
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/VisualizerContext.hpp"
+#include "rfcommon/PluginContext.hpp"
 
 #include "ads/DockAreaWidget.h"
 #include "ads/DockAreaTitleBar.h"
@@ -27,7 +27,7 @@ PluginDockView::PluginDockView(ReplayManager* replayManager, PluginManager* plug
     , protocol_(nullptr)
     , replayManager_(replayManager)
     , pluginManager_(pluginManager)
-    , visCtx_(new rfcommon::VisualizerContext)
+    , pluginCtx_(new rfcommon::PluginContext)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
     , replayState_(NONE_LOADED)
@@ -49,7 +49,7 @@ PluginDockView::PluginDockView(Protocol* protocol, PluginManager* pluginManager,
     , protocol_(protocol)
     , replayManager_(nullptr)
     , pluginManager_(pluginManager)
-    , visCtx_(new rfcommon::VisualizerContext)
+    , pluginCtx_(new rfcommon::PluginContext)
     , sessionState_(DISCONNECTED)
     , activeSessionState_(NO_ACTIVE_SESSION)
     , replayState_(NONE_LOADED)
@@ -221,7 +221,7 @@ void PluginDockView::onAddNewPluginRequested(ads::CDockAreaWidget* dockArea)
     // Create plugin
     PluginData data;
     data.name = action->text();
-    data.plugin = pluginManager_->create(data.name, visCtx_);
+    data.plugin = pluginManager_->create(data.name, pluginCtx_);
     if (data.plugin == nullptr)
         return;
 

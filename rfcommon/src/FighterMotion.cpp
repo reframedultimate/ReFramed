@@ -64,4 +64,21 @@ FighterMotion::FighterMotion(Type value)
     : value_(value)
 {}
 
+// ----------------------------------------------------------------------------
+String FighterMotion::toHex() const
+{
+    char buf[13];
+    static const char* digits = "0123456789abcdef";
+    rfcommon::FighterMotion::Type value = value_;
+    for (int i = 11; i >= 2; i--)  // hash40 value is 40 bits, or 5 bytes, or 10 nibbles
+    {
+        buf[i] = digits[(value & 0x0F)];
+        value >>= 4;
+    }
+    buf[0] = '0';
+    buf[1] = 'x';
+    buf[12] = '\0';
+    return buf;
+}
+
 }

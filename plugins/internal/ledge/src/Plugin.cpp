@@ -4,11 +4,10 @@
 #include "rfcommon/Profiler.hpp"
 
 static rfcommon::Plugin* createLedgePlugin(
-    RFPluginFactory* factory, 
-    rfcommon::VisualizerContext* visCtx, 
-    rfcommon::Log* log, 
-    rfcommon::UserMotionLabels* userLabels, 
-    rfcommon::Hash40Strings* hash40Strings)
+    RFPluginFactory* factory,
+    rfcommon::PluginContext* pluginCtx,
+    rfcommon::Log* log,
+    rfcommon::MotionLabels* labels)
 {
     PROFILE(PluginGlobal, createLedgePlugin);
 
@@ -34,7 +33,7 @@ static RFPluginFactory factories[] = {
      "TheComet",
      "TheComet#5387, @TheComet93",
      "Analyzes options and timings chosen from ledge"}},
-     
+
     {nullptr}
 };
 

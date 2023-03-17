@@ -44,3 +44,4 @@ reframed_add_plugin (plugin-${PLUGIN_NAME}
 
 if (${REFRAMED_plugin-${PLUGIN_NAME}})
 endif ()
+

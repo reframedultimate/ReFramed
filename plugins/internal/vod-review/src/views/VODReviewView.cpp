@@ -6,7 +6,7 @@
 #include "vod-review/widgets/TimelineWidget.hpp"
 
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/VisualizerData.hpp"
+#include "rfcommon/PluginSharedData.hpp"
 #include "rfcommon/VideoMeta.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/FrameData.hpp"
@@ -60,7 +60,7 @@ VODReviewView::VODReviewView(VODReviewModel* vodReviewModel, VideoPlayerModel* v
 
     updateUITimer_.setInterval(200);
 
-    VODReviewView::onVODReviewVisualizerDataChanged();
+    VODReviewView::onVODReviewPluginSharedDataChanged();
 
     vodReviewModel_->dispatcher.addListener(this);
     videoPlayer_->dispatcher.addListener(this);
@@ -199,7 +199,7 @@ void VODReviewView::onPresentImage(const QImage& image)
 }
 
 // ----------------------------------------------------------------------------
-void VODReviewView::onVODReviewVisualizerDataChanged()
+void VODReviewView::onVODReviewPluginSharedDataChanged()
 {
     // QGridLayout::rowCount() only ever increases, so it does not reflect
     // the true number of rows
@@ -233,9 +233,9 @@ void VODReviewView::onVODReviewVisualizerDataChanged()
     timelineWidgets_.clear();
 
     int row = 0;
-    for (int i = 0; i != vodReviewModel_->visualizerSourceCount(); ++i)
+    for (int i = 0; i != vodReviewModel_->sharedDataSourceCount(); ++i)
     {
-        for (const auto& intervalSetIt : vodReviewModel_->visualizerData(i).timeIntervalSets)
+        for (const auto& intervalSetIt : vodReviewModel_->sharedData(i).timeIntervalSets)
         {
             TimelineWidget* timeline = new TimelineWidget;
             if (videoPlayer_->isVideoOpen())

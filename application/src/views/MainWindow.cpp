@@ -6,18 +6,17 @@
 #include "application/models/PluginManager.hpp"
 #include "application/models/Protocol.hpp"
 #include "application/models/ReplayManager.hpp"
-#include "application/models/UserMotionLabelsManager.hpp"
+#include "application/models/MotionLabelsManager.hpp"
 #include "application/views/CategoryTabsView.hpp"
 #include "application/views/ConnectView.hpp"
 #include "application/views/ImportReplayPackDialog.hpp"
 #include "application/views/MainWindow.hpp"
 #include "application/views/PathManagerDialog.hpp"
-#include "application/views/UserMotionLabelsEditor.hpp"
+#include "application/views/MotionLabelsEditor.hpp"
 #include "application/widgets/ConnectionStatusWidget.hpp"
 #include "application/Util.hpp"
 
 #include "rfcommon/BuildInfo.hpp"
-#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/Profiler.hpp"
 
@@ -36,17 +35,16 @@ namespace rfapp {
 using namespace nlohmann;
 
 // ----------------------------------------------------------------------------
-MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::Hash40Strings* hash40Strings, QWidget* parent)
+MainWindow::MainWindow(std::unique_ptr<Config>&& config, rfcommon::MotionLabels* labels, QWidget* parent)
     : QMainWindow(parent)
-    , hash40Strings_(hash40Strings)
     , config_(std::move(config))
     , playerDetails_(new PlayerDetails)
     , protocol_(new Protocol)
-    , userMotionLabelsManager_(new UserMotionLabelsManager(protocol_.get()))
-    , pluginManager_(new PluginManager(userMotionLabelsManager_->userMotionLabels(), hash40Strings_))
+    , motionLabelsManager_(new MotionLabelsManager(protocol_.get(), labels))
+    , pluginManager_(new PluginManager(labels))
     , replayManager_(new ReplayManager(config_.get()))
     , activeSessionManager_(new ActiveSessionManager(config_.get(), protocol_.get(), replayManager_.get(), pluginManager_.get()))
-    , categoryTabsView_(new CategoryTabsView(config_.get(), replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), playerDetails_.get(), userMotionLabelsManager_.get(), hash40Strings_.get()))
+    , categoryTabsView_(new CategoryTabsView(config_.get(), replayManager_.get(), pluginManager_.get(), activeSessionManager_.get(), playerDetails_.get(), motionLabelsManager_.get()))
     , ui_(new Ui::MainWindow)
 {
     ui_->setupUi(this);
@@ -301,7 +299,7 @@ void MainWindow::onUserLabelsEditorActionTriggered()
     popupGeometry.setHeight(popupGeometry.height() * 3 / 4);
 
     // NOTE: This editor manages its own deletion when it closes via deleteLater()
-    userMotionLabelsEditor_ = new UserMotionLabelsEditor(this, userMotionLabelsManager_.get(), hash40Strings_, map);
+    userMotionLabelsEditor_ = new MotionLabelsEditor(this, motionLabelsManager_.get(), protocol_.get(), map);
     userMotionLabelsEditor_->setGeometry(calculatePopupGeometryActiveScreen());
     userMotionLabelsEditor_->show();
     userMotionLabelsEditor_->raise();
@@ -394,9 +392,9 @@ void MainWindow::onProtocolDisconnectedFromServer()
 }
 
 // ----------------------------------------------------------------------------
-void MainWindow::onUserMotionLabelsEditorClosed()
+void MainWindow::onMotionLabelsEditorClosed()
 {
-    PROFILE(MainWindow, onUserMotionLabelsEditorClosed);
+    PROFILE(MainWindow, onMotionLabelsEditorClosed);
 
     ui_->action_userLabelsEditor->setEnabled(true);
     userMotionLabelsEditor_ = nullptr;

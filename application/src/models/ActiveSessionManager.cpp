@@ -8,6 +8,7 @@
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
+#include "rfcommon/ReplayFilename.hpp"
 #include "rfcommon/Session.hpp"
 #include "rfcommon/TrainingMetadata.hpp"
 
@@ -114,8 +115,8 @@ bool ActiveSessionManager::findFreeRoundAndGameNumbers(rfcommon::MappingInfo* ma
     const QDir& dir = replayManager_->defaultGamePath();
     while (true)
     {
-        QString fileName = rfcommon::ReplayFileParts::fromMetadata(map, mdata).toFileName().cStr();
-        if (fileName == "")
+        QString fileName = QString::fromUtf8(rfcommon::ReplayFilename::fromMetadata(map, mdata).cStr());
+        if (fileName.isEmpty())
             return false;
         if (QFileInfo::exists(dir.absoluteFilePath(fileName)) == false)
             return true;

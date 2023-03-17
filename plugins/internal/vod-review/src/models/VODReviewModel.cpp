@@ -8,8 +8,8 @@
 #include "rfcommon/FrameData.hpp"
 
 // ----------------------------------------------------------------------------
-VODReviewModel::VODReviewModel(VideoPlayerModel* videoPlayer, rfcommon::VisualizerContext* visCtx, const RFPluginFactory* factory)
-    : VisualizerInterface(visCtx, factory)
+VODReviewModel::VODReviewModel(VideoPlayerModel* videoPlayer, rfcommon::PluginContext* pluginCtx, const RFPluginFactory* factory)
+    : SharedDataInterface(pluginCtx, factory)
     , videoPlayer_(videoPlayer)
 {}
 
@@ -57,7 +57,7 @@ rfcommon::VideoMeta* VODReviewModel::vmeta() const
 }
 
 // ----------------------------------------------------------------------------
-void VODReviewModel::onVisualizerDataChanged()
+void VODReviewModel::onSharedDataChanged()
 {
-    dispatcher.dispatch(&VODReviewListener::onVODReviewVisualizerDataChanged);
+    dispatcher.dispatch(&VODReviewListener::onVODReviewPluginSharedDataChanged);
 }

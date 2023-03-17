@@ -1,15 +1,13 @@
 #pragma once
 
 #include "rfcommon/Vector.hpp"
-#include <cstring>
 #include <cstdlib>
-
 #include <cstdio>
 
 namespace rfcommon {
 
 template <int N, typename S=int32_t>
-class SmallString : protected SmallVector<char, N+1, S>
+class SmallString : public SmallVector<char, N+1, S>
 {
 public:
     char* begin() { return this->begin_; }
@@ -20,6 +18,8 @@ public:
     const char* data() const { return this->begin_; }
     const char* cStr() const { return this->begin_; }
     const S length() const { return this->count_ - 1; }
+    bool isEmpty() const { return this->count_ == 1; }
+    bool notEmpty() const { return this->count_ > 1; }
     S capacity() const { return this->capacity_ - 1; }
 
     char& operator[](S i) { return this->begin_[i]; }
@@ -117,6 +117,12 @@ public:
         return false;
     }
 
+    SmallString swapWith(SmallString other)
+    {
+        swap(*this, other);
+        return other;
+    }
+
     SmallString copy() const
     {
         return *this;
@@ -159,11 +165,12 @@ public:
         return *this;
     }
 
+    /*
     template <int N2, typename S2>
     friend inline bool operator==(const SmallString<N, S>& lhs, const SmallString<N2, S2>& rhs)
     {
         return lhs.count_ == rhs.count_ && (memcmp(lhs.begin_, rhs.begin_, lhs.count_) == 0);
-    }
+    }*/
 
     friend inline bool operator==(const SmallString<N, S>& lhs, const char* rhs)
     {

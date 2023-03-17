@@ -3,10 +3,6 @@
 #include "application/models/ConfigAccessor.hpp"
 #include <QTabWidget>
 
-namespace rfcommon {
-    class Hash40Strings;
-}
-
 namespace rfapp {
 
 class ActiveSessionManager;
@@ -15,7 +11,7 @@ class PlayerDetails;
 class PluginManager;
 class ReplayManager;
 class ReplayManagerView;
-class UserMotionLabelsManager;
+class MotionLabelsManager;
 
 class CategoryTabsView
         : public QTabWidget
@@ -29,8 +25,7 @@ public:
             PluginManager* pluginManager,
             ActiveSessionManager* activeSessionManager,
             PlayerDetails* playerDetails,
-            UserMotionLabelsManager* userMotionLabelsManager,
-            rfcommon::Hash40Strings* hash40Strings,
+            MotionLabelsManager* motionLabelsManager,
             QWidget* parent=nullptr);
     ~CategoryTabsView();
 

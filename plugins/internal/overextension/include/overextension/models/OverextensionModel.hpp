@@ -5,7 +5,7 @@
 #include "rfcommon/FrameIndex.hpp"
 #include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/LinearMap.hpp"
-#include "rfcommon/VisualizerData.hpp"
+#include "rfcommon/PluginSharedData.hpp"
 
 namespace rfcommon {
     class FrameData;

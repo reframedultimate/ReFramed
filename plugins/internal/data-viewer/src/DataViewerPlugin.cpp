@@ -4,9 +4,9 @@
 #include "data-viewer/views/DataViewerView.hpp"
 
 // ----------------------------------------------------------------------------
-DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
+DataViewerPlugin::DataViewerPlugin(RFPluginFactory* factory, rfcommon::MotionLabels* labels)
     : Plugin(factory)
-    , model_(new DataViewerModel(userLabels, hash40Strings))
+    , model_(new DataViewerModel(labels))
 {
 }
 
@@ -19,7 +19,7 @@ DataViewerPlugin::~DataViewerPlugin()
 rfcommon::Plugin::UIInterface* DataViewerPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* DataViewerPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* DataViewerPlugin::replayInterface() { return this; }
-rfcommon::Plugin::VisualizerInterface* DataViewerPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* DataViewerPlugin::sharedInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* DataViewerPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

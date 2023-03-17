@@ -1,17 +1,15 @@
 #include "stats/listeners/PlayerMetaListener.hpp"
 #include "stats/models/PlayerMeta.hpp"
-#include "rfcommon/Hash40Strings.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/GameMetadata.hpp"
 #include "rfcommon/Profiler.hpp"
-#include "rfcommon/UserMotionLabels.hpp"
+#include "rfcommon/MotionLabels.hpp"
 
 // ----------------------------------------------------------------------------
-PlayerMeta::PlayerMeta(rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings)
-    : userLabels_(userLabels)
-    , hash40Strings_(hash40Strings)
+PlayerMeta::PlayerMeta(rfcommon::MotionLabels* labels)
+    : labels_(labels)
 {
-    userLabels_->dispatcher.addListener(this);
+    labels_->dispatcher.addListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -20,7 +18,7 @@ PlayerMeta::~PlayerMeta()
     if (mdata_)
         mdata_->dispatcher.removeListener(this);
 
-    userLabels_->dispatcher.removeListener(this);
+    labels_->dispatcher.removeListener(this);
 }
 
 // ----------------------------------------------------------------------------
@@ -112,13 +110,14 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
     if (mdata_.notNull())
     {
         const auto fighterID = mdata_->playerFighterID(fighterIdx);
-        label = userLabels_->toStringHighestLayer(fighterID, motion, nullptr);
+        label = labels_->lookupLayer(fighterID, motion, labels_->findLayer("English"));
     }
 
+    // fallback to hash40 string
     if (label == nullptr)
-        label = hash40Strings_->toString(motion, "(unknown move)");
+        label = labels_->lookupHash40(motion, "(unknown move)");
 
-    return label;
+    return QString::fromUtf8(label);
 }
 
 // ----------------------------------------------------------------------------
@@ -137,8 +136,16 @@ void PlayerMeta::onMetadataWinnerChanged(int winnerPlayerIdx) {}
 void PlayerMeta::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber number) {}
 
 // ----------------------------------------------------------------------------
-void PlayerMeta::onUserMotionLabelsLayerAdded(int layerIdx, const char* name) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
-void PlayerMeta::onUserMotionLabelsLayerRemoved(int layerIdx, const char* name) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
-void PlayerMeta::onUserMotionLabelsNewEntry(rfcommon::FighterID fighterID, int entryIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
-void PlayerMeta::onUserMotionLabelsUserLabelChanged(rfcommon::FighterID fighterID, int entryIdx, const char* oldLabel, const char* newLabel) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
-void PlayerMeta::onUserMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int entryIdx, rfcommon::UserMotionLabelsCategory oldCategory, rfcommon::UserMotionLabelsCategory newCategory) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsLoaded() { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsHash40sUpdated() { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+
+void PlayerMeta::onMotionLabelsLayerInserted(int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsLayerRemoved(int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsLayerNameChanged(int layerIdx) {}
+void PlayerMeta::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}
+void PlayerMeta::onMotionLabelsLayerMoved(int fromIdx, int toIdx) {}
+void PlayerMeta::onMotionLabelsLayerMerged(int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+
+void PlayerMeta::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+void PlayerMeta::onMotionLabelsCategoryChanged(rfcommon::FighterID fighterID, int row, int oldCategory) {}

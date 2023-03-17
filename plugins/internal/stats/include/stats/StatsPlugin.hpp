@@ -2,8 +2,6 @@
 
 #include "stats/listeners/SettingsListener.hpp"
 #include "rfcommon/FrameDataListener.hpp"
-#include "rfcommon/MetadataListener.hpp"
-#include "rfcommon/ListenerDispatcher.hpp"
 #include "rfcommon/Plugin.hpp"
 #include "rfcommon/Reference.hpp"
 #include <memory>
@@ -13,7 +11,7 @@ namespace rfcommon {
     class Hash40Strings;
     class MappingInfo;
     class Metadata;
-    class UserMotionLabels;
+    class MotionLabels;
 }
 
 class PlayerMeta;
@@ -26,12 +24,12 @@ class StatsPlugin
         , public rfcommon::Plugin::UIInterface
         , public rfcommon::Plugin::RealtimeInterface
         , public rfcommon::Plugin::ReplayInterface
-        , public rfcommon::Plugin::VisualizerInterface
+        , public rfcommon::Plugin::SharedDataInterface
         , public rfcommon::FrameDataListener
         , public SettingsListener
 {
 public:
-    StatsPlugin(rfcommon::VisualizerContext* visCtx, RFPluginFactory* factory, rfcommon::UserMotionLabels* userLabels, rfcommon::Hash40Strings* hash40Strings);
+    StatsPlugin(rfcommon::PluginContext* pluginCtx, RFPluginFactory* factory, rfcommon::MotionLabels* labels);
     ~StatsPlugin();
 
     void resetStatsIfAppropriate(rfcommon::Session* session);
@@ -57,7 +55,7 @@ public:
 private:
     Plugin::UIInterface* uiInterface() override final;
     Plugin::ReplayInterface* replayInterface() override final;
-    Plugin::VisualizerInterface* visualizerInterface() override final;
+    Plugin::SharedDataInterface* sharedInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
     Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 
@@ -113,7 +111,7 @@ private:
     void onFrameDataNewFrame(int frameIdx, const rfcommon::Frame<4>& frame) override;
 
 private:
-    void onVisualizerDataChanged() override {}
+    void onSharedDataChanged() override {}
 
 private:
     // The export code is implemented in these callbacks

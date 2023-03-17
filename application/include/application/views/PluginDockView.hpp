@@ -12,7 +12,7 @@
 namespace rfcommon {
     class Session;
     class Plugin;
-    class VisualizerContext;
+    class PluginContext;
 }
 
 namespace rfapp {
@@ -128,7 +128,7 @@ private:
     ReplayManager* replayManager_;
     PluginManager* pluginManager_;
 
-    rfcommon::Reference<rfcommon::VisualizerContext> visCtx_;
+    rfcommon::Reference<rfcommon::PluginContext> pluginCtx_;
     QString ipAddress_;
     uint16_t port_;
     SessionState sessionState_;

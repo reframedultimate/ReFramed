@@ -12,10 +12,10 @@ namespace rfcommon {
     class VideoMeta;
 }
 
-class VODReviewModel : public rfcommon::Plugin::VisualizerInterface
+class VODReviewModel : public rfcommon::Plugin::SharedDataInterface
 {
 public:
-    VODReviewModel(VideoPlayerModel* videoPlayer, rfcommon::VisualizerContext* visCtx, const RFPluginFactory* factory);
+    VODReviewModel(VideoPlayerModel* videoPlayer, rfcommon::PluginContext* pluginCtx, const RFPluginFactory* factory);
     ~VODReviewModel();
 
     void setSession(rfcommon::Session* session);
@@ -27,7 +27,7 @@ public:
     rfcommon::ListenerDispatcher<VODReviewListener> dispatcher;
 
 private:
-    void onVisualizerDataChanged() override;
+    void onSharedDataChanged() override;
 
 private:
     VideoPlayerModel* videoPlayer_;

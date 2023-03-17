@@ -4,8 +4,11 @@
 
 # IDE files
 /CMakeLists.txt.user
+/CMakeSettings.json
 *.kdev4
 *.idea
+*.vs
+/out
 
 # Temporary files
 *.swp
