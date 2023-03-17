@@ -19,7 +19,7 @@ DamageTimePlotPlugin::~DamageTimePlotPlugin()
 rfcommon::Plugin::UIInterface* DamageTimePlotPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* DamageTimePlotPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* DamageTimePlotPlugin::replayInterface() { return this; }
-rfcommon::Plugin::SharedDataInterface* DamageTimePlotPlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* DamageTimePlotPlugin::sharedInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* DamageTimePlotPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

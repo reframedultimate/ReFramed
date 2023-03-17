@@ -55,7 +55,7 @@ public:
 private:
     Plugin::UIInterface* uiInterface() override final;
     Plugin::ReplayInterface* replayInterface() override final;
-    Plugin::SharedDataInterface* visualizerInterface() override final;
+    Plugin::SharedDataInterface* sharedInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
     Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 

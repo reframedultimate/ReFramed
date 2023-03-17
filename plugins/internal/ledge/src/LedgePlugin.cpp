@@ -17,7 +17,7 @@ LedgePlugin::~LedgePlugin()
 rfcommon::Plugin::UIInterface* LedgePlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* LedgePlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* LedgePlugin::replayInterface() { return this; }
-rfcommon::Plugin::SharedDataInterface* LedgePlugin::visualizerInterface() { return nullptr; }
+rfcommon::Plugin::SharedDataInterface* LedgePlugin::sharedInterface() { return nullptr; }
 rfcommon::Plugin::VideoPlayerInterface* LedgePlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

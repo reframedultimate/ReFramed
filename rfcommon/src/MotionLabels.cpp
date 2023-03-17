@@ -142,7 +142,7 @@ bool MotionLabels::save(const char* filePathUtf8) const
     Log* log = Log::root();
 
     log->info("Saving motion labels binary file \"%s\"", filePathUtf8);
-    FILE* fp = utf8_fopen_wb(filePathUtf8, strlen(filePathUtf8));
+    FILE* fp = utf8_fopen_wb(filePathUtf8, (int)strlen(filePathUtf8));
     if (fp == nullptr)
     {
         log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
@@ -199,7 +199,7 @@ bool MotionLabels::save(const char* filePathUtf8) const
     {
         // Write number of fighters and number of layers
         Serializer s(scratch, sizeof scratch);
-        s.writeU8(fighters_.count());
+        s.writeU8((uint8_t)fighters_.count());
         fwrite(s.data(), s.bytesWritten(), 1, fp);
     }
     for (const Fighter& fighter : fighters_)
@@ -343,7 +343,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
         for (const auto& [fighterIDStr, jFighter] : jFighters.items())
         {
             std::size_t pos;
-            const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+            const auto fighterID = FighterID::fromValue((FighterID::Type)std::stoul(fighterIDStr, &pos));
             if (pos != fighterIDStr.length())
                 continue;
 
@@ -360,6 +360,8 @@ int MotionLabels::importLayers(const char* filePathUtf8)
                 addUnknownMotionNoNotify(fighterID, motion);
             }
         }
+
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLoaded);
     }
     else if (j["version"] == "1.0")
     {
@@ -395,7 +397,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
         for (const auto& [fighterIDStr, jFighter] : jFighters.items())
         {
             std::size_t pos;
-            const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+            const auto fighterID = FighterID::fromValue((FighterID::Type)std::stoul(fighterIDStr, &pos));
             if (pos != fighterIDStr.length())
                 continue;
 
@@ -424,6 +426,8 @@ int MotionLabels::importLayers(const char* filePathUtf8)
                 addNewLabelNoNotify(fighterID, motion, category, layerIdx, label.c_str());
             }
         }
+
+        dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, int(layerIdx));
     }
     else if (j["version"] == "1.1")
     {
@@ -468,7 +472,7 @@ int MotionLabels::importLayers(const char* filePathUtf8)
             for (const auto& [fighterIDStr, jFighter] : jFighters.items())
             {
                 std::size_t pos;
-                const auto fighterID = FighterID::fromValue(std::stoul(fighterIDStr, &pos));
+                const auto fighterID = FighterID::fromValue((FighterID::Type)std::stoul(fighterIDStr, &pos));
                 if (pos != fighterIDStr.length())
                     continue;
 
@@ -573,7 +577,7 @@ bool MotionLabels::exportLayers(SmallVector<int, 4> layers, const char* filePath
     };
 
     const std::string jsonAsString = j.dump();
-    FILE* fp = utf8_fopen_wb(filePathUtf8, strlen(filePathUtf8));
+    FILE* fp = utf8_fopen_wb(filePathUtf8, (int)strlen(filePathUtf8));
     if (fp == nullptr)
     {
         log->error("Failed to open file \"%s\": %s", filePathUtf8, LastError().cStr());
@@ -654,7 +658,7 @@ bool MotionLabels::exportLayers(SmallVector<int, 4> layers, FighterID fighterID,
     };
 
     const std::string jsonAsString = j.dump();
-    FILE* fp = utf8_fopen_wb(fileNameUtf8, strlen(fileNameUtf8));
+    FILE* fp = utf8_fopen_wb(fileNameUtf8, (int)strlen(fileNameUtf8));
     if (fp == nullptr)
     {
         log->error("Failed to open file \"%s\": %s", fileNameUtf8, LastError().cStr());
@@ -670,6 +674,42 @@ bool MotionLabels::exportLayers(SmallVector<int, 4> layers, FighterID fighterID,
     fclose(fp);
     log->info("Exported layers to file \"%s\"", fileNameUtf8);
     return true;
+}
+
+// ----------------------------------------------------------------------------
+bool MotionLabels::setPreferredNotationLayer(const char* layerName)
+{
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+bool MotionLabels::setPreferredReadableLayer(const char* layerName)
+{
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+bool MotionLabels::setPreferredCategoryLayer(const char* layerName)
+{
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+const char* MotionLabels::toPreferredNotation(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
+{
+    return lookupGroup(fighterID, motion, NOTATION, "Pikacord", fallback);
+}
+
+// ----------------------------------------------------------------------------
+const char* MotionLabels::toPreferredReadable(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
+{
+    return lookupGroup(fighterID, motion, READABLE, "English", fallback);
+}
+
+// ----------------------------------------------------------------------------
+const char* MotionLabels::toPreferredCategory(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
+{
+    return lookupGroup(fighterID, motion, CATEGORIZATION, "Pikacord", fallback);
 }
 
 // ----------------------------------------------------------------------------
@@ -721,7 +761,7 @@ const char* MotionLabels::lookupLayer(FighterID fighterID, FighterMotion motion,
 }
 
 // ----------------------------------------------------------------------------
-const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, const char* layerName, const char* fallback) const
+const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, const char* layerName, const char* fallback) const
 {
     // Look up row for specified fighter
     const Fighter& fighter = fighters_[fighterID.value()];
@@ -730,9 +770,9 @@ const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion,
         return fallback;
     const int row = it->value();
 
-    for (int layerIdx = 0; layerIdx != layerUsages_.count(); ++layerIdx)
+    for (int layerIdx = 0; layerIdx != layerNames_.count(); ++layerIdx)
     {
-        if (layerNames_[layerIdx] != layerName)
+        if (layerUsages_[layerIdx] != usage || layerNames_[layerIdx] != layerName)
             continue;
 
         const Layer& layer = fighter.colLayer[layerIdx];
@@ -741,7 +781,6 @@ const char* MotionLabels::lookupGroup(FighterID fighterID, FighterMotion motion,
     }
 
     return fallback;
-
 }
 
 // ----------------------------------------------------------------------------

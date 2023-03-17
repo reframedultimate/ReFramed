@@ -150,7 +150,7 @@ public:
     // convenient.
     virtual Plugin::UIInterface* uiInterface() = 0;
     virtual Plugin::ReplayInterface* replayInterface() = 0;
-    virtual Plugin::SharedDataInterface* visualizerInterface() = 0;
+    virtual Plugin::SharedDataInterface* sharedInterface() = 0;
     virtual Plugin::RealtimeInterface* realtimeInterface() = 0;
     virtual Plugin::VideoPlayerInterface* videoPlayerInterface() = 0;
 

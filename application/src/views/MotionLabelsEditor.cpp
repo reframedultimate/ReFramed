@@ -66,11 +66,10 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     // This causes models to update their data for the current fighter
-    ui_->comboBox_fighters->setCurrentIndex(62);  // Pikachu
     if (ui_->comboBox_fighters->count() > 0)
     {
         for (auto view : tableViews_)
-            static_cast<MotionLabelsTableModel*>(view->model())->setFighter(indexToFighterID_[62]);
+            static_cast<MotionLabelsTableModel*>(view->model())->setFighter(indexToFighterID_[0]);
     }
 
     // Sort by hash40 string by default
@@ -96,7 +95,7 @@ MotionLabelsEditor::MotionLabelsEditor(
     connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
     connect(ui_->pushButton_prevConflict, &QPushButton::released, [this] { highlightNextConflict(-1); });
 
-    connect(ui_->pushButton_jumpCurrentState, &QPushButton::released, this, &MotionLabelsEditor::onShowActiveMotionReleased);
+    connect(ui_->pushButton_showActiveMotion, &QPushButton::released, this, &MotionLabelsEditor::onShowActiveMotionReleased);
 
     connect(ui_->pushButton_cancel, &QPushButton::released, this, &MotionLabelsEditor::onCancelReleased);
     connect(ui_->pushButton_save, &QPushButton::released, this, &MotionLabelsEditor::onSaveReleased);
@@ -413,8 +412,9 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         if (filePath.isEmpty())
             return;
 
-        if (int updated = manager_->motionLabels()->updateHash40FromCSV(filePath.toUtf8().constData()) >= 0)
-            QMessageBox::information(this, "Success", "Updated " + QString::number(updated) + "Hash40 strings");
+        int updated = manager_->motionLabels()->updateHash40FromCSV(filePath.toUtf8().constData());
+        if (updated >= 0)
+            QMessageBox::information(this, "Success", "Updated " + QString::number(updated) + " Hash40 strings");
         else
             QMessageBox::critical(this, "Error", "Failed to load file \"" + filePath + "\"");
     }
@@ -497,6 +497,9 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
     int fighterIdx = ui_->comboBox_fighters->currentIndex();
     int categoryIdx = ui_->tabWidget_categories->currentIndex();
 
+    if (fighterIdx < 0)
+        return false;
+
     QModelIndexList selectedIndexes = tableViews_[categoryIdx]->selectionModel()->selectedIndexes();
     if (selectedIndexes.size() > 0)
         currentConflictTableIdx_ = selectedIndexes[0].row();
@@ -559,10 +562,37 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
 }
 
 // ----------------------------------------------------------------------------
-void MotionLabelsEditor::onMotionLabelsLoaded() {}
-void MotionLabelsEditor::onMotionLabelsHash40sUpdated() {}
+void MotionLabelsEditor::onMotionLabelsLoaded()
+{
+    // Fill dropdown with characters that have a non-zero amount of data
+    for (auto fighterID : globalMappingInfo_->fighter.IDs())
+    {
+        if (manager_->motionLabels()->rowCount(fighterID) == 0)
+            continue;
+        updateFightersDropdown(fighterID);
+    }
+}
+void MotionLabelsEditor::onMotionLabelsHash40sUpdated()
+{
+    // Fill dropdown with characters that have a non-zero amount of data
+    for (auto fighterID : globalMappingInfo_->fighter.IDs())
+    {
+        if (manager_->motionLabels()->rowCount(fighterID) == 0)
+            continue;
+        updateFightersDropdown(fighterID);
+    }
+}
 
-void MotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx)
+{
+    // Fill dropdown with characters that have a non-zero amount of data
+    for (auto fighterID : globalMappingInfo_->fighter.IDs())
+    {
+        if (manager_->motionLabels()->rowCount(fighterID) == 0)
+            continue;
+        updateFightersDropdown(fighterID);
+    }
+}
 void MotionLabelsEditor::onMotionLabelsLayerRemoved(int layerIdx) {}
 void MotionLabelsEditor::onMotionLabelsLayerNameChanged(int layerIdx) {}
 void MotionLabelsEditor::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}

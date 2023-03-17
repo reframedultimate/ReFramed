@@ -165,7 +165,7 @@ void StatsPlugin::sendWebSocketStats(bool gameStarted, bool gameEnded) const
 rfcommon::Plugin::UIInterface* StatsPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* StatsPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* StatsPlugin::replayInterface() { return this; }
-rfcommon::Plugin::SharedDataInterface* StatsPlugin::visualizerInterface() { return this; }
+rfcommon::Plugin::SharedDataInterface* StatsPlugin::sharedInterface() { return this; }
 rfcommon::Plugin::VideoPlayerInterface* StatsPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

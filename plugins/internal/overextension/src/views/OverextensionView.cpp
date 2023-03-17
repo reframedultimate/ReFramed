@@ -82,7 +82,7 @@ void OverextensionView::onDataChanged()
         return;
 
     auto motionToString = [this](rfcommon::FighterID fighterID, rfcommon::FighterMotion motion) -> QString {
-        if (const char* label = labels_->lookupGroup(fighterID, motion, "Pikacord"))
+        if (const char* label = labels_->toPreferredNotation(fighterID, motion))
             return QString::fromUtf8(label);
         return QString::fromUtf8(labels_->lookupHash40(motion, "(unknown)"));
     };

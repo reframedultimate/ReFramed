@@ -319,7 +319,7 @@ int MotionLabelsTableModel::findTableInsertIdx(const Entry& entry)
 
     auto insertIt = std::lower_bound(table_.begin(), table_.end(), entry, [](const Entry& a, const Entry& b) {
         return a.name < b.name;
-        });
+    });
 
     return insertIt - table_.begin();
 }
@@ -335,12 +335,29 @@ void MotionLabelsTableModel::onMotionLabelsLoaded()
 // ----------------------------------------------------------------------------
 void MotionLabelsTableModel::onMotionLabelsHash40sUpdated()
 {
+    for (int row = 0; row != labels_->rowCount(fighterID_); ++row)
+        if (labels_->categoryAt(fighterID_, row) == category_)
+        {
+            auto motion = labels_->motionAt(fighterID_, row);
+            int tableIdx = rowIdxToTableIdx_[row];
+            table_[tableIdx].name = labels_->lookupHash40(motion);
+        }
+
     emit dataChanged(index(0, 1), index(table_.count(), 1));
 }
 
 // ----------------------------------------------------------------------------
 void MotionLabelsTableModel::onMotionLabelsLayerInserted(int layerIdx)
 {
+    // Row count could have changed
+    if (table_.count() != labels_->rowCount(fighterID_))
+    {
+        beginResetModel();
+            repopulateEntries();
+        endResetModel();
+        return;
+    }
+
     beginInsertColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
         for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
         {

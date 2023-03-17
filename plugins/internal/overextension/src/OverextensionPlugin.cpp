@@ -28,7 +28,7 @@ OverextensionPlugin::~OverextensionPlugin()
 rfcommon::Plugin::UIInterface* OverextensionPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* OverextensionPlugin::realtimeInterface() { return this; }
 rfcommon::Plugin::ReplayInterface* OverextensionPlugin::replayInterface() { return this; }
-rfcommon::Plugin::SharedDataInterface* OverextensionPlugin::visualizerInterface() { return this; }
+rfcommon::Plugin::SharedDataInterface* OverextensionPlugin::sharedInterface() { return this; }
 rfcommon::Plugin::VideoPlayerInterface* OverextensionPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

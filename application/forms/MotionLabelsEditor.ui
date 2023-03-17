@@ -91,7 +91,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_jumpCurrentState">
+      <widget class="QPushButton" name="pushButton_showActiveMotion">
        <property name="text">
         <string>Show Active Motion</string>
        </property>

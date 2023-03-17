@@ -38,7 +38,7 @@ public:
 private:
     Plugin::UIInterface* uiInterface() override { return this; }
     Plugin::ReplayInterface* replayInterface() override { return this; }
-    Plugin::SharedDataInterface* visualizerInterface() override { return nullptr; }
+    Plugin::SharedDataInterface* sharedInterface() override { return nullptr; }
     Plugin::RealtimeInterface* realtimeInterface() override { return this; }
     Plugin::VideoPlayerInterface* videoPlayerInterface() override { return nullptr; }
 

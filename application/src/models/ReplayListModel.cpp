@@ -211,14 +211,14 @@ void ReplayListModel::addReplay(const QString& fileName)
     if (it == days_.end() || it->date != day.date)
     {
         beginInsertRows(QModelIndex(), rootRow, rootRow);
-        it = days_.insert(it, day);
-        it->replays.push_back(Replay{ fileName, *entry });
+            it = days_.insert(it, day);
+            it->replays.push_back(Replay{ fileName, *entry });
         endInsertRows();
     }
     else
     {
         beginInsertRows(index(rootRow, 0), it->replays.size(), it->replays.size());
-        it->replays.push_back(Replay{ fileName, *entry });
+            it->replays.push_back(Replay{ fileName, *entry });
         endInsertRows();
     }
 

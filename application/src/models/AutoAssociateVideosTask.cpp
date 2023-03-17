@@ -92,7 +92,7 @@ void AutoAssociateVideoTask::run()
         const char* utf8FilePath = filePathBA.constData();
 
 #if defined(RFCOMMON_PLATFORM_WINDOWS)
-        wchar_t* utf16FilePath = rfcommon::utf8_to_utf16(utf8FilePath, strlen(utf8FilePath));
+        wchar_t* utf16FilePath = rfcommon::utf8_to_utf16(utf8FilePath, (int)strlen(utf8FilePath));
         if (utf8FilePath == nullptr)
             continue;
 

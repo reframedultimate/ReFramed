@@ -3,4 +3,10 @@ Enhancements
     + Replay metadata is cached instead of parsing every replay on startup
     + Hash40 strings are loaded from a binary format instead of parsing CSV each time
     + User motion labels are loaded from a binary format
-
+  - Motion label editor overhaul
+    + Users can import/export layers as well as merge layers
+    + Added a function to navigate layer merge conflicts to make resolving them easier
+    + If connected, the active motion of each player is highlighted, and you can jump to the highlighted line with a button
+    + It's possible to copy labels from one fighter to all other fighters
+    + Can sort by any column
+  - 

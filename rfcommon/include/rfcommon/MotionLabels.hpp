@@ -86,6 +86,14 @@ public:
     bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
     bool exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* filePathUtf8) const;
 
+    bool setPreferredNotationLayer(const char* layerName);
+    bool setPreferredReadableLayer(const char* layerName);
+    bool setPreferredCategoryLayer(const char* layerName);
+
+    const char* toPreferredNotation(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
+    const char* toPreferredReadable(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
+    const char* toPreferredCategory(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
+
     /*!
      * \brief Does a reverse-lookup for the original hash40 string.
      * \param[in] motion The motion value to convert.
@@ -138,7 +146,7 @@ public:
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* lookupGroup(FighterID fighterID, FighterMotion motion, const char* layerName, const char* fallback=nullptr) const;
+    const char* lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, const char* layerName, const char* fallback=nullptr) const;
 
     /*!
      * \brief Looks up all user labels matching the specified string for the
