@@ -44,6 +44,8 @@ private:
     void onMotionLabelsLoaded() override;
     void onMotionLabelsHash40sUpdated() override;
 
+    void onMotionLabelsPreferredLayerChanged(int usage) override;
+
     void onMotionLabelsLayerInserted(int layerIdx) override;
     void onMotionLabelsLayerRemoved(int layerIdx) override;
     void onMotionLabelsLayerNameChanged(int layerIdx) override;

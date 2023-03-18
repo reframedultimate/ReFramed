@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>793</width>
-    <height>596</height>
+    <width>1475</width>
+    <height>1018</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,14 +29,28 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Search:</string>
+        <string>Notation layer:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_search">
-       <property name="clearButtonEnabled">
-        <bool>true</bool>
+      <widget class="QComboBox" name="comboBox_preferredNotation">
+       <property name="placeholderText">
+        <string>Select...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Readable layer:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_preferredReadable">
+       <property name="placeholderText">
+        <string>Select...</string>
        </property>
       </widget>
      </item>

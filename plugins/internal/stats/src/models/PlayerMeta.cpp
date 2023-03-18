@@ -110,12 +110,14 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
     if (mdata_.notNull())
     {
         const auto fighterID = mdata_->playerFighterID(fighterIdx);
-        label = labels_->lookupLayer(fighterID, motion, labels_->findLayer("English"));
+        label = labels_->toPreferredReadable(fighterID, motion);
     }
 
     // fallback to hash40 string
     if (label == nullptr)
-        label = labels_->lookupHash40(motion, "(unknown move)");
+        label = labels_->lookupHash40(motion);
+    if (label == nullptr)
+        return motion.toHex().cStr();
 
     return QString::fromUtf8(label);
 }
@@ -138,6 +140,8 @@ void PlayerMeta::onMetadataTrainingSessionNumberChanged(rfcommon::SessionNumber 
 // ----------------------------------------------------------------------------
 void PlayerMeta::onMotionLabelsLoaded() { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
 void PlayerMeta::onMotionLabelsHash40sUpdated() { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
+
+void PlayerMeta::onMotionLabelsPreferredLayerChanged(int usage) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
 
 void PlayerMeta::onMotionLabelsLayerInserted(int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }
 void PlayerMeta::onMotionLabelsLayerRemoved(int layerIdx) { dispatcher.dispatch(&PlayerMetaListener::onPlayerMetaChanged); }

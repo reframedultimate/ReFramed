@@ -347,30 +347,17 @@ void MotionLabelsTableModel::onMotionLabelsHash40sUpdated()
 }
 
 // ----------------------------------------------------------------------------
+void MotionLabelsTableModel::onMotionLabelsPreferredLayerChanged(int usage)
+{}
+
+// ----------------------------------------------------------------------------
 void MotionLabelsTableModel::onMotionLabelsLayerInserted(int layerIdx)
 {
-    // Row count could have changed
-    if (table_.count() != labels_->rowCount(fighterID_))
-    {
-        beginResetModel();
-            repopulateEntries();
-        endResetModel();
-        return;
-    }
-
-    beginInsertColumns(QModelIndex(), layerIdx + 2, layerIdx + 2);
-        for (int rowIdx = 0; rowIdx != labels_->rowCount(fighterID_); ++rowIdx)
-        {
-            if (labels_->categoryAt(fighterID_, rowIdx) != category_)
-                continue;
-
-            const char* label = labels_->labelAt(fighterID_, layerIdx, rowIdx);
-            int tableIdx = rowIdxToTableIdx_[rowIdx];
-            table_[tableIdx].labels.insert(layerIdx, QString::fromUtf8(label));
-        }
-        for (const Entry& entry : table_)
-            assert(entry.labels.size() == labels_->layerCount());
-    endInsertColumns();
+    // Row count could have changed, and individual row categories could have
+    // changed. Easier to just rebuild everything
+    beginResetModel();
+        repopulateEntries();
+    endResetModel();
 }
 
 // ----------------------------------------------------------------------------

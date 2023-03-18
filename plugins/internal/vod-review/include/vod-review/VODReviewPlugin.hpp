@@ -1,8 +1,6 @@
 #pragma once
 
-#include "vod-review/listeners/VideoPlayerListener.hpp"
 #include "rfcommon/Plugin.hpp"
-#include "rfcommon/Reference.hpp"
 #include <memory>
 
 class AVDecoder;
@@ -26,7 +24,7 @@ public:
 
     Plugin::UIInterface* uiInterface() override final;
     Plugin::ReplayInterface* replayInterface() override final;
-    Plugin::SharedDataInterface* visualizerInterface() override final;
+    Plugin::SharedDataInterface* sharedInterface() override final;
     Plugin::RealtimeInterface* realtimeInterface() override final;
     Plugin::VideoPlayerInterface* videoPlayerInterface() override final;
 

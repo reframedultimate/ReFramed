@@ -60,11 +60,14 @@ private slots:
 
 private:
     void updateFightersDropdown(rfcommon::FighterID fighterID);
+    void updatePreferredDropdowns();
     bool highlightNextConflict(int direction);
 
 private:
     void onMotionLabelsLoaded() override;
     void onMotionLabelsHash40sUpdated() override;
+
+    void onMotionLabelsPreferredLayerChanged(int usage) override;
 
     void onMotionLabelsLayerInserted(int layerIdx) override;
     void onMotionLabelsLayerRemoved(int layerIdx) override;

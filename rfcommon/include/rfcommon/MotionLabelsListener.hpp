@@ -10,6 +10,8 @@ public:
     virtual void onMotionLabelsLoaded() = 0;
     virtual void onMotionLabelsHash40sUpdated() = 0;
 
+    virtual void onMotionLabelsPreferredLayerChanged(int usage) = 0;
+
     virtual void onMotionLabelsLayerInserted(int layerIdx) = 0;
     virtual void onMotionLabelsLayerRemoved(int layerIdx) = 0;
     virtual void onMotionLabelsLayerNameChanged(int layerIdx) = 0;

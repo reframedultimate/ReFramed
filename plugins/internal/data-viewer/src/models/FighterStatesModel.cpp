@@ -246,6 +246,8 @@ void FighterStatesModel::updateHash40StringsColumn()
 void FighterStatesModel::onMotionLabelsLoaded() { updateMotionLabelsColumn(); }
 void FighterStatesModel::onMotionLabelsHash40sUpdated() { updateHash40StringsColumn(); }
 
+void FighterStatesModel::onMotionLabelsPreferredLayerChanged(int usage) {}
+
 void FighterStatesModel::onMotionLabelsLayerInserted(int layerIdx) { updateMotionLabelsColumn(); }
 void FighterStatesModel::onMotionLabelsLayerRemoved(int layerIdx) { updateMotionLabelsColumn(); }
 void FighterStatesModel::onMotionLabelsLayerNameChanged(int layerIdx) {}

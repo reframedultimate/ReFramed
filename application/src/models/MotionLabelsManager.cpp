@@ -64,6 +64,8 @@ rfcommon::MotionLabels* MotionLabelsManager::motionLabels() const
 void MotionLabelsManager::onMotionLabelsLoaded() { NOPROFILE(); pendingChanges_ = false; }
 void MotionLabelsManager::onMotionLabelsHash40sUpdated() { NOPROFILE(); pendingChanges_ = true; }
 
+void MotionLabelsManager::onMotionLabelsPreferredLayerChanged(int usage) { NOPROFILE(); pendingChanges_ = true; }
+
 void MotionLabelsManager::onMotionLabelsLayerInserted(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
 void MotionLabelsManager::onMotionLabelsLayerRemoved(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }
 void MotionLabelsManager::onMotionLabelsLayerNameChanged(int layerIdx) { NOPROFILE(); pendingChanges_ = true; }

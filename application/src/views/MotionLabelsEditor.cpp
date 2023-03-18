@@ -10,7 +10,6 @@
 
 #include "rfcommon/FighterState.hpp"
 #include "rfcommon/FrameData.hpp"
-#include "rfcommon/Frame.hpp"
 #include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Metadata.hpp"
 #include "rfcommon/MotionLabels.hpp"
@@ -65,9 +64,13 @@ MotionLabelsEditor::MotionLabelsEditor(
         updateFightersDropdown(fighterID);
     }
 
+    // Fill in preferred layer dropdowns
+    updatePreferredDropdowns();
+
     // This causes models to update their data for the current fighter
     if (ui_->comboBox_fighters->count() > 0)
     {
+        ui_->comboBox_fighters->setCurrentIndex(0);
         for (auto view : tableViews_)
             static_cast<MotionLabelsTableModel*>(view->model())->setFighter(indexToFighterID_[0]);
     }
@@ -92,6 +95,14 @@ MotionLabelsEditor::MotionLabelsEditor(
     }
 
     connect(ui_->comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
+
+    connect(ui_->comboBox_preferredNotation, &QComboBox::currentTextChanged, [this](const QString& text){
+        manager_->motionLabels()->setPreferredLayer(rfcommon::MotionLabels::NOTATION, text.toUtf8().constData());
+    });
+    connect(ui_->comboBox_preferredReadable, &QComboBox::currentTextChanged, [this](const QString& text){
+        manager_->motionLabels()->setPreferredLayer(rfcommon::MotionLabels::READABLE, text.toUtf8().constData());
+    });
+
     connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
     connect(ui_->pushButton_prevConflict, &QPushButton::released, [this] { highlightNextConflict(-1); });
 
@@ -487,6 +498,40 @@ void MotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
 }
 
 // ----------------------------------------------------------------------------
+static void updatePreferredDropdown(QComboBox* cb, const rfcommon::MotionLabels* labels, rfcommon::MotionLabels::Usage usage)
+{
+    // Multiple layers can share the same name. Create sorted list of unique
+    // names
+    QSet<QString> names;
+    for (int layerIdx = 0; layerIdx != labels->layerCount(); ++layerIdx)
+        if (labels->layerUsage(layerIdx) == usage)
+            names.insert(QString::fromUtf8(labels->layerName(layerIdx)));
+
+    QStringList sorted = names.values();
+    std::sort(sorted.begin(), sorted.end(), std::less<QString>());
+
+    // Fill combo box with sorted list
+    QSignalBlocker block(cb);
+    cb->clear();
+    for (const auto& name : sorted)
+        cb->addItem(name);
+
+    // Try to set the current item to the preferred layer. It's possible the
+    // preferred doesn't exist, in which case we set an invalid index
+    auto preferred = QString::fromUtf8(labels->preferredLayer(usage));
+    if (names.contains(preferred))
+        cb->setCurrentText(preferred);
+    else
+        cb->setCurrentIndex(-1);
+}
+void MotionLabelsEditor::updatePreferredDropdowns()
+{
+    using Usage = rfcommon::MotionLabels::Usage;
+    updatePreferredDropdown(ui_->comboBox_preferredNotation, manager_->motionLabels(), Usage::NOTATION);
+    updatePreferredDropdown(ui_->comboBox_preferredReadable, manager_->motionLabels(), Usage::READABLE);
+}
+
+// ----------------------------------------------------------------------------
 bool MotionLabelsEditor::highlightNextConflict(int direction)
 {
     QSignalBlocker blockFighterChanges(ui_->comboBox_fighters);
@@ -519,7 +564,7 @@ bool MotionLabelsEditor::highlightNextConflict(int direction)
             }
 
             ui_->tabWidget_categories->setCurrentIndex(categoryIdx);
-            
+
             QModelIndex index = model->index(currentConflictTableIdx_, 0);
             view->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
             view->scrollTo(index);
@@ -583,6 +628,11 @@ void MotionLabelsEditor::onMotionLabelsHash40sUpdated()
     }
 }
 
+void MotionLabelsEditor::onMotionLabelsPreferredLayerChanged(int usage)
+{
+    updatePreferredDropdowns();
+}
+
 void MotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx)
 {
     // Fill dropdown with characters that have a non-zero amount of data
@@ -592,12 +642,14 @@ void MotionLabelsEditor::onMotionLabelsLayerInserted(int layerIdx)
             continue;
         updateFightersDropdown(fighterID);
     }
+
+    updatePreferredDropdowns();
 }
-void MotionLabelsEditor::onMotionLabelsLayerRemoved(int layerIdx) {}
-void MotionLabelsEditor::onMotionLabelsLayerNameChanged(int layerIdx) {}
-void MotionLabelsEditor::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) {}
+void MotionLabelsEditor::onMotionLabelsLayerRemoved(int layerIdx) { updatePreferredDropdowns(); }
+void MotionLabelsEditor::onMotionLabelsLayerNameChanged(int layerIdx) { updatePreferredDropdowns(); }
+void MotionLabelsEditor::onMotionLabelsLayerUsageChanged(int layerIdx, int oldUsage) { updatePreferredDropdowns(); }
 void MotionLabelsEditor::onMotionLabelsLayerMoved(int fromIdx, int toIdx) {}
-void MotionLabelsEditor::onMotionLabelsLayerMerged(int layerIdx) {}
+void MotionLabelsEditor::onMotionLabelsLayerMerged(int layerIdx) { updatePreferredDropdowns(); }
 
 void MotionLabelsEditor::onMotionLabelsRowInserted(rfcommon::FighterID fighterID, int row) { updateFightersDropdown(fighterID); }
 void MotionLabelsEditor::onMotionLabelsLabelChanged(rfcommon::FighterID fighterID, int row, int layerIdx) {}

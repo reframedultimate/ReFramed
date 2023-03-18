@@ -67,6 +67,13 @@ bool MotionLabels::load(const char* filePathUtf8)
     layerNames_.clear();
     layerUsages_.clear();
 
+    // Preferred layers
+    for (int i = 0; i != 3; ++i)
+    {
+        int len = d.readU8();
+        preferredLayers_[i] = String(static_cast<const char*>(d.readFromPtr(len)), len);
+    }
+
     // Load hash40 table
     const int hash40Count = d.readLU32();
     for (int i = 0; i != hash40Count; ++i)
@@ -157,6 +164,15 @@ bool MotionLabels::save(const char* filePathUtf8) const
         s.writeU8(1);  // major
         s.writeU8(0);  // minor
         fwrite(s.data(), s.bytesWritten(), 1, fp);
+    }
+
+    // Preferred layers
+    for (int i = 0; i != 3; ++i)
+    {
+        Serializer s(scratch, sizeof scratch);
+        s.writeU8(preferredLayers_[i].length());
+        fwrite(s.data(), s.bytesWritten(), 1, fp);
+        fwrite(preferredLayers_[i].cStr(), preferredLayers_[i].length(), 1, fp);
     }
 
     // Save hash40 <-> string map
@@ -677,39 +693,28 @@ bool MotionLabels::exportLayers(SmallVector<int, 4> layers, FighterID fighterID,
 }
 
 // ----------------------------------------------------------------------------
-bool MotionLabels::setPreferredNotationLayer(const char* layerName)
+void MotionLabels::setPreferredLayer(Usage usage, const char* layerName)
 {
-    return false;
-}
-
-// ----------------------------------------------------------------------------
-bool MotionLabels::setPreferredReadableLayer(const char* layerName)
-{
-    return false;
-}
-
-// ----------------------------------------------------------------------------
-bool MotionLabels::setPreferredCategoryLayer(const char* layerName)
-{
-    return false;
+    preferredLayers_[usage] = layerName;
+    dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsPreferredLayerChanged, usage);
 }
 
 // ----------------------------------------------------------------------------
 const char* MotionLabels::toPreferredNotation(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
 {
-    return lookupGroup(fighterID, motion, NOTATION, "Pikacord", fallback);
+    return lookupGroup(fighterID, motion, NOTATION, preferredLayers_[NOTATION].cStr(), fallback);
 }
 
 // ----------------------------------------------------------------------------
 const char* MotionLabels::toPreferredReadable(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
 {
-    return lookupGroup(fighterID, motion, READABLE, "English", fallback);
+    return lookupGroup(fighterID, motion, READABLE, preferredLayers_[READABLE].cStr(), fallback);
 }
 
 // ----------------------------------------------------------------------------
 const char* MotionLabels::toPreferredCategory(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback) const
 {
-    return lookupGroup(fighterID, motion, CATEGORIZATION, "Pikacord", fallback);
+    return lookupGroup(fighterID, motion, CATEGORIZATION, preferredLayers_[CATEGORIZATION].cStr(), fallback);
 }
 
 // ----------------------------------------------------------------------------
@@ -1056,6 +1061,7 @@ int MotionLabels::addNewLabelNoNotify(FighterID fighterID, FighterMotion motion,
 
     // Set user label for this layer
     fighter.colLayer[layerIdx].labels[row] = label;
+    fighter.colCategory[row] = category;
 
     // Create entry in layer map so label -> motion lookup works
     if (fighter.colLayer[layerIdx].labels[row].notEmpty())

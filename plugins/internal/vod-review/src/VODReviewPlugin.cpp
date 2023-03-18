@@ -7,9 +7,6 @@
 
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Session.hpp"
-#include "rfcommon/VideoEmbed.hpp"
-#include "rfcommon/VideoMeta.hpp"
-#include "rfcommon/FrameData.hpp"
 
 // ----------------------------------------------------------------------------
 VODReviewPlugin::VODReviewPlugin(RFPluginFactory* factory, rfcommon::PluginContext* pluginCtx, rfcommon::Log* log)
@@ -31,7 +28,7 @@ VODReviewPlugin::~VODReviewPlugin()
 rfcommon::Plugin::UIInterface* VODReviewPlugin::uiInterface() { return this; }
 rfcommon::Plugin::RealtimeInterface* VODReviewPlugin::realtimeInterface() { return nullptr; }
 rfcommon::Plugin::ReplayInterface* VODReviewPlugin::replayInterface() { return this; }
-rfcommon::Plugin::SharedDataInterface* VODReviewPlugin::visualizerInterface() { return vodReviewModel_.get(); }
+rfcommon::Plugin::SharedDataInterface* VODReviewPlugin::sharedInterface() { return vodReviewModel_.get(); }
 rfcommon::Plugin::VideoPlayerInterface* VODReviewPlugin::videoPlayerInterface() { return nullptr; }
 
 // ----------------------------------------------------------------------------

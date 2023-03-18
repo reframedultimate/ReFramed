@@ -86,9 +86,9 @@ public:
     bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
     bool exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* filePathUtf8) const;
 
-    bool setPreferredNotationLayer(const char* layerName);
-    bool setPreferredReadableLayer(const char* layerName);
-    bool setPreferredCategoryLayer(const char* layerName);
+    void setPreferredLayer(Usage usage, const char* layerName);
+    const char* preferredLayer(Usage usage) const
+            { return preferredLayers_[usage].cStr(); }
 
     const char* toPreferredNotation(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
     const char* toPreferredReadable(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
@@ -284,6 +284,7 @@ private:
         SmallVector<LayerMap, 8> layerMaps;
     };
 
+    String preferredLayers_[3];
     Vector<Fighter, int16_t> fighters_;
     Vector<String, int16_t> layerNames_;
     Vector<Usage, int16_t> layerUsages_;
