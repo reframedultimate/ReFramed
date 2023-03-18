@@ -1,0 +1,2 @@
+Stages outline in XY positions plot
+XY Positions plot: Add a way to replay the data over time

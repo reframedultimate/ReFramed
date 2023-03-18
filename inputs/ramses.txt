@@ -1,0 +1,46 @@
+Timing
+- option to select timings between specific moves
+- Want to know how quickly he was able to react after getting e.g. sheik ftilted
+
+Two main dimensions you can analyze in smash
+- Space
+- Time
+
+Sparg0 vs Tweek
+- How often does sparg0 whiff
+- How far away does he whiff
+- What moves does he whiff
+- Where does he whiff
+
+Want to see things like
+- Every time pikachu does an aerial out of corner, but
+  + only if he's in the corner
+  + and if opponent is close
+  + or if pikachu is in THIS area, and cloud is in THIS OTHER area
+  + and is at THIS percent
+
+To define positions (in UI):
+- Want to have a list of situations
+- See the stage, select an area, select a percentage range -> define this as a situation
+- Limit the search to this situation
+
+Want to query not only what I am doing, but what the opponent is doing at the same time
+
+Have a list of states (State List) for both players
+
+Be able to differentiate between rising and falling aerials
+
+Data analysis: Data Cascades (in eye tracking)
+
+Corner analysis very important
+
+Inclusive zones, but also define exclusive zones
+
+Ability to define your own zones, "zone editor"
+
+Have universal zones, but also have player specific and character specific zones.
+
+Big thing: Relate your searches to what the opponent is doing
+
+Idea: Left pane is for player 1, Right pane is for player 2
+- Combined search
