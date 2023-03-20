@@ -215,7 +215,9 @@ QPixmap FighterIcon::fromFighterName(const char* name, rfcommon::Costume costume
 // ---------------------------------------------------------------------------- 
 QPixmap FighterIcon::fromFighterID(rfcommon::FighterID fighterID, rfcommon::Costume costume)
 {
-    return QString(":/ssbu_icons/chara_2_") + files[fighterID.value()] + "_0" + QString::number(costume.value()) + ".png";
+    if (fighterID.isValid())
+        return QString(":/ssbu_icons/chara_2_") + files[fighterID.value()] + "_0" + QString::number(costume.value()) + ".png";
+    return QPixmap();
 }
 
 }

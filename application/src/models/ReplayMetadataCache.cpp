@@ -175,6 +175,10 @@ const ReplayMetadataCache::Entry* ReplayMetadataCache::newEntry(const QString& f
     {
     case rfcommon::Metadata::GAME: {
         rfcommon::GameMetadata* g = mdata->asGame();
+
+        assert(g->playerFighterID(0).isValid());
+        assert(g->playerFighterID(1).isValid());
+
         auto it = entries_.insert(filename, Entry{
             date, time,
             QString::fromUtf8(g->playerName(0).cStr()),

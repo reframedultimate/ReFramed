@@ -155,12 +155,26 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
             auto formatMotionLabels = [this](rfcommon::FighterID fighterID, rfcommon::FighterMotion motion) -> QString {
                 QString list;
                 for (int i = 0; i != labels_->layerCount(); ++i)
+                {
+                    if (fighterID.isValid() == false)
+                    {
+                        if (i != 0)
+                            list += ", ";
+                        if (const char* h40 = labels_->lookupHash40(motion))
+                            list += h40;
+                        else
+                            list += motion.toHex().cStr();
+                        continue;
+                    }
+
                     if (const char* label = labels_->lookupLayer(fighterID, motion, i))
                     {
                         if (i != 0)
                             list += ", ";
                         list += label;
                     }
+                }
+
                 return list;
             };
 
