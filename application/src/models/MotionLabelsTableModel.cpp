@@ -55,13 +55,20 @@ void MotionLabelsTableModel::setCategory(const QSet<int>& rows, rfcommon::Motion
 {
     PROFILE(MotionLabelsEditorGlobal, setCategory);
 
-    // Change categories
+    // Have to be careful here, because each call to changeCategory() modifies
+    // our underlying table. Looping + modifying = bugs
+    // The MotionLabels rows do not change when changing categories, so we
+    // can first create a list of mapped rows, then map them back
+    rfcommon::SmallVector<int, 16> motionRows;
     for (int row : rows)
+        motionRows.push(table_[row].row);  // Map to motion labels row
+
+    // Now change categories
+    for (int row : motionRows)
     {
         // Have to map from table row to motion labels row
-        const int motionRow = table_[row].row;
-        const auto motion = labels_->motionAt(fighterID_, motionRow);
-        labels_->changeCategory(fighterID_, motionRow, category);
+        const auto motion = labels_->motionAt(fighterID_, row);
+        labels_->changeCategory(fighterID_, row, category);
     }
 }
 

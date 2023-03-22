@@ -251,7 +251,7 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     // Main context menu
     QMenu menu;
     QAction* setLabel = menu.addAction("Set label");
-    QAction* changeCategory = menu.addAction("Change label category");
+    QAction* changeCategory = menu.addAction("Move lavel to category");
     changeCategory->setMenu(&categoryMenu);
     QAction* propagateLabel = menu.addAction("Propagate labels to other fighters");
     menu.addSeparator();
