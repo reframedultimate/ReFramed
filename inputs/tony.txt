@@ -1,0 +1,20 @@
+unknown stage
+
+Sparg0:
+- search of position for dashback
+
+grid pattern
+- if megaman is in such a spot, pikachu tends to get nair -> grab (for example)
+- 
+
+Tony grid
+- grid is not uniform but has specific spacings depending on the stage and character
+- vertical lines are spaced based on shorthop height and fullhop height, for example
+- horizontal lines positioned at distances for ledge options
+- distances from where are you going to go after a ledge roll (for example)
+- there will be some universal spots
+  + spot right beneath platform edges
+  + center stage
+
+high level players will focus on something different than toplevel
+

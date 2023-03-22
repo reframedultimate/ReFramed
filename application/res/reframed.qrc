@@ -5,6 +5,7 @@
         <file>icons/reframed-icon2.ico</file>
 		
         <file>icons/feather-light/index.theme</file>
+        <file>icons/feather-light/apps/scalable/arrow-left.svg</file>
         <file>icons/feather-light/apps/scalable/arrow-right.svg</file>
         <file>icons/feather-light/apps/scalable/chevron-left.svg</file>
 		<file>icons/feather-light/apps/scalable/chevron-right.svg</file>
@@ -12,6 +13,7 @@
         <file>icons/feather-light/apps/scalable/compare.svg</file>
         <file>icons/feather-light/apps/scalable/download-cloud.svg</file>
         <file>icons/feather-light/apps/scalable/edit.svg</file>
+        <file>icons/feather-light/apps/scalable/file.svg</file>
         <file>icons/feather-light/apps/scalable/file-text.svg</file>
         <file>icons/feather-light/apps/scalable/film.svg</file>
         <file>icons/feather-light/apps/scalable/globe.svg</file>
@@ -26,12 +28,14 @@
         <file>icons/feather-light/apps/scalable/power.svg</file>
         <file>icons/feather-light/apps/scalable/replay.svg</file>
         <file>icons/feather-light/apps/scalable/rotate-ccw.svg</file>
+        <file>icons/feather-light/apps/scalable/save.svg</file>
         <file>icons/feather-light/apps/scalable/smashball.svg</file>
         <file>icons/feather-light/apps/scalable/trash-2.svg</file>
         <file>icons/feather-light/apps/scalable/wifi.svg</file>
         <file>icons/feather-light/apps/scalable/x.svg</file>
 		
         <file>icons/feather-dark/index.theme</file>
+        <file>icons/feather-dark/apps/scalable/arrow-left.svg</file>
         <file>icons/feather-dark/apps/scalable/arrow-right.svg</file>
         <file>icons/feather-dark/apps/scalable/chevron-left.svg</file>
         <file>icons/feather-dark/apps/scalable/chevron-right.svg</file>
@@ -39,6 +43,7 @@
         <file>icons/feather-dark/apps/scalable/compare.svg</file>
         <file>icons/feather-dark/apps/scalable/download-cloud.svg</file>
         <file>icons/feather-dark/apps/scalable/edit.svg</file>
+        <file>icons/feather-dark/apps/scalable/file.svg</file>
         <file>icons/feather-dark/apps/scalable/file-text.svg</file>
         <file>icons/feather-dark/apps/scalable/film.svg</file>
         <file>icons/feather-dark/apps/scalable/globe.svg</file>
@@ -53,6 +58,7 @@
         <file>icons/feather-dark/apps/scalable/power.svg</file>
         <file>icons/feather-dark/apps/scalable/replay.svg</file>
         <file>icons/feather-dark/apps/scalable/rotate-ccw.svg</file>
+        <file>icons/feather-dark/apps/scalable/save.svg</file>
         <file>icons/feather-dark/apps/scalable/smashball.svg</file>
         <file>icons/feather-dark/apps/scalable/trash-2.svg</file>
         <file>icons/feather-dark/apps/scalable/wifi.svg</file>

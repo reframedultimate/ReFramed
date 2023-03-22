@@ -17,8 +17,6 @@ public:
     ~Costume();
 
     Type value() const { return value_; }
-    bool isValid() const { return value_ != Type(-1); }
-
     Type slot() const { return value_; }
 
 private:
