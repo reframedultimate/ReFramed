@@ -14,7 +14,7 @@ public:
     class RFCOMMON_PUBLIC_API TimeInterval
     {
     public:
-        TimeInterval(const char* name, FrameIndex start, FrameIndex end);
+        TimeInterval(const rfcommon::String& name, FrameIndex start, FrameIndex end);
         ~TimeInterval();
 
         const String name;

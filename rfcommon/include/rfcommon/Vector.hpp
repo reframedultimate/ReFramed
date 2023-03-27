@@ -64,14 +64,14 @@ public:
         }
     }
 
-    T& operator[](S i) { assert(i < this->count_); return begin_[i]; }
-    const T& operator[](S i) const { assert(i < this->count_); return begin_[i]; }
+    T& operator[](S i) { assert(i >= 0 && i < this->count_); return begin_[i]; }
+    const T& operator[](S i) const { assert(i >= 0 && i < this->count_); return begin_[i]; }
     T& front() { assert(this->count_ > 0); return begin_[0]; }
     const T& front() const { assert(this->count_ > 0); return begin_[0]; }
     T& back(S offset=1) { assert(this->count_ > 0); return begin_[count_ - offset]; }
     const T& back(S offset=1) const { assert(this->count_ > 0); return begin_[count_ - offset]; }
-    T& at(S pos) { assert(pos < this->count_); return begin_[pos]; }
-    const T& at(S pos) const { assert(pos < this->count_); return begin_[pos]; }
+    T& at(S pos) { assert(pos >= 0 && pos < this->count_); return begin_[pos]; }
+    const T& at(S pos) const { assert(pos >= 0 && pos < this->count_); return begin_[pos]; }
 
 protected:
     VectorBase()
