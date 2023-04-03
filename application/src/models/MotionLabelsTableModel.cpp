@@ -130,7 +130,7 @@ int MotionLabelsTableModel::findHighlightedMotionRow() const
         return -1;
 
     rfcommon::FighterMotion motion = highlightedMotions_.begin()->key();
-    int row = labels_->lookupRow(fighterID_, motion);
+    int row = labels_->toRow(fighterID_, motion);
     if (row == -1)
         return -1;
 
@@ -309,7 +309,7 @@ void MotionLabelsTableModel::repopulateEntries()
         auto& entry = table_.emplace();
         entry.row = row;
         entry.hash40 = "0x" + QString::number(motion.value(), 16);
-        entry.name = labels_->lookupHash40(motion);
+        entry.name = labels_->toHash40(motion);
         for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
             entry.labels.push_back(QString::fromUtf8(labels_->labelAt(fighterID_, layerIdx, row)));
     }
@@ -347,7 +347,7 @@ void MotionLabelsTableModel::onMotionLabelsHash40sUpdated()
         {
             auto motion = labels_->motionAt(fighterID_, row);
             int tableIdx = rowIdxToTableIdx_[row];
-            table_[tableIdx].name = labels_->lookupHash40(motion);
+            table_[tableIdx].name = labels_->toHash40(motion);
         }
 
     emit dataChanged(index(0, 1), index(table_.count(), 1));
@@ -415,7 +415,7 @@ void MotionLabelsTableModel::onMotionLabelsRowInserted(rfcommon::FighterID fight
     Entry entry;
     entry.row = row;
     entry.hash40 = "0x" + QString::number(motion.value(), 16);
-    entry.name = labels_->lookupHash40(motion);
+    entry.name = labels_->toHash40(motion);
     for (int layerIdx = 0; layerIdx != labels_->layerCount(); ++layerIdx)
         entry.labels.push_back(labels_->labelAt(fighterID_, layerIdx, row));
     const int tableIdx = findTableInsertIdx(entry);
@@ -523,7 +523,7 @@ void MotionLabelsTableModel::onFrameDataNewUniqueFrame(int frameIdx, const rfcom
         if (session_->tryGetMetadata()->playerFighterID(fighterIdx) != fighterID_)
             continue;
 
-        int row = labels_->lookupRow(fighterID_, frame[fighterIdx].motion());
+        int row = labels_->toRow(fighterID_, frame[fighterIdx].motion());
         if (row < 0)
             continue;
 
@@ -540,7 +540,7 @@ void MotionLabelsTableModel::clearHighlightedMotions()
 {
     rfcommon::SmallVector<int, 4> tableIdxs;
     for (auto it : highlightedMotions_)
-        if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
+        if (int row = labels_->toRow(fighterID_, it.key()) >= 0)
             tableIdxs.push(rowIdxToTableIdx_[row]);
 
     highlightedMotions_.clear();
@@ -553,7 +553,7 @@ void MotionLabelsTableModel::clearHighlightedMotions()
 void MotionLabelsTableModel::refreshHighlightedMotions()
 {
     for (auto it : highlightedMotions_)
-        if (int row = labels_->lookupRow(fighterID_, it.key()) >= 0)
+        if (int row = labels_->toRow(fighterID_, it.key()) >= 0)
         {
             int tableIdx = rowIdxToTableIdx_[row];
             emit dataChanged(index(tableIdx, 0), index(tableIdx, labels_->layerCount() + 2), { Qt::BackgroundRole });

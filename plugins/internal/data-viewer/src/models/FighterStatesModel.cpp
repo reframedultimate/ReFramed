@@ -160,14 +160,14 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                     {
                         if (i != 0)
                             list += ", ";
-                        if (const char* h40 = labels_->lookupHash40(motion))
+                        if (const char* h40 = labels_->toHash40(motion))
                             list += h40;
                         else
                             list += motion.toHex().cStr();
                         continue;
                     }
 
-                    if (const char* label = labels_->lookupLayer(fighterID, motion, i))
+                    if (const char* label = labels_->toLabel(fighterID, motion, i))
                     {
                         if (i != 0)
                             list += ", ";
@@ -192,7 +192,7 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case Status: return QString::number(state.status().value());
                 case StatusName: return statusName(state.status());
                 case Hash40: return "0x" + QString::number(state.motion().value(), 16);
-                case Hash40String: return labels_->lookupHash40(state.motion(), "(unknown)");
+                case Hash40String: return labels_->toHash40(state.motion(), "(unknown)");
                 case MotionLabel: return formatMotionLabels(fighterID_, state.motion());
                 case HitStatus: return QString::number(state.hitStatus().value());
                 case HitStatusName: return formatHitStatusName(state.hitStatus());

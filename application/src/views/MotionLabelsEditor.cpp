@@ -96,11 +96,31 @@ MotionLabelsEditor::MotionLabelsEditor(
 
     connect(ui_->comboBox_fighters, qOverload<int>(&QComboBox::currentIndexChanged), this, &MotionLabelsEditor::onFighterSelected);
 
-    connect(ui_->comboBox_preferredNotation, &QComboBox::currentTextChanged, [this](const QString& text){
-        manager_->motionLabels()->setPreferredLayer(rfcommon::MotionLabels::NOTATION, text.toUtf8().constData());
+    connect(ui_->comboBox_preferredNotation, &QComboBox::currentTextChanged, [this](const QString& text) {
+        rfcommon::MotionLabels* labels = manager_->motionLabels();
+        for (int layerIdx = 0; layerIdx != labels->layerCount(); ++layerIdx)
+            if (labels->layerUsage(layerIdx) == rfcommon::MotionLabels::NOTATION)
+            {
+                QString expectedEntry = QString::fromUtf8(labels->layerName(layerIdx)) + " - " + QString::fromUtf8(labels->layerGroup(layerIdx));
+                if (text == expectedEntry)
+                {
+                    labels->setPreferredLayer(rfcommon::MotionLabels::NOTATION, layerIdx);
+                    break;
+                }
+            }
     });
-    connect(ui_->comboBox_preferredReadable, &QComboBox::currentTextChanged, [this](const QString& text){
-        manager_->motionLabels()->setPreferredLayer(rfcommon::MotionLabels::READABLE, text.toUtf8().constData());
+    connect(ui_->comboBox_preferredReadable, &QComboBox::currentTextChanged, [this](const QString& text) {
+        rfcommon::MotionLabels* labels = manager_->motionLabels();
+        for (int layerIdx = 0; layerIdx != labels->layerCount(); ++layerIdx)
+            if (labels->layerUsage(layerIdx) == rfcommon::MotionLabels::READABLE)
+            {
+                QString expectedEntry = QString::fromUtf8(labels->layerName(layerIdx)) + " - " + QString::fromUtf8(labels->layerGroup(layerIdx));
+                if (text == expectedEntry)
+                {
+                    labels->setPreferredLayer(rfcommon::MotionLabels::READABLE, layerIdx);
+                    break;
+                }
+            }
     });
 
     connect(ui_->pushButton_nextConflict, &QPushButton::released, [this] { highlightNextConflict(1); });
@@ -366,7 +386,7 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
         if (name.length() == 0)
             return;
         QByteArray ba = name.toUtf8();
-        manager_->motionLabels()->newLayer(ba.constData(), rfcommon::MotionLabels::NOTATION);
+        manager_->motionLabels()->newLayer(ba.constData(), ba.constData(), rfcommon::MotionLabels::NOTATION);
     }
     else if (a == deleteLayer)
     {
@@ -500,29 +520,16 @@ void MotionLabelsEditor::updateFightersDropdown(rfcommon::FighterID fighterID)
 // ----------------------------------------------------------------------------
 static void updatePreferredDropdown(QComboBox* cb, const rfcommon::MotionLabels* labels, rfcommon::MotionLabels::Usage usage)
 {
-    // Multiple layers can share the same name. Create sorted list of unique
-    // names
-    QSet<QString> names;
-    for (int layerIdx = 0; layerIdx != labels->layerCount(); ++layerIdx)
-        if (labels->layerUsage(layerIdx) == usage)
-            names.insert(QString::fromUtf8(labels->layerName(layerIdx)));
-
-    QStringList sorted = names.values();
-    std::sort(sorted.begin(), sorted.end(), std::less<QString>());
-
-    // Fill combo box with sorted list
+    // Fill combo box with layer names/groups
     QSignalBlocker block(cb);
     cb->clear();
-    for (const auto& name : sorted)
-        cb->addItem(name);
-
-    // Try to set the current item to the preferred layer. It's possible the
-    // preferred doesn't exist, in which case we set an invalid index
-    auto preferred = QString::fromUtf8(labels->preferredLayer(usage));
-    if (names.contains(preferred))
-        cb->setCurrentText(preferred);
-    else
-        cb->setCurrentIndex(-1);
+    for (int layerIdx = 0; layerIdx != labels->layerCount(); ++layerIdx)
+        if (labels->layerUsage(layerIdx) == usage)
+        {
+            cb->addItem(QString::fromUtf8(labels->layerName(layerIdx)) + " - " + QString::fromUtf8(labels->layerGroup(layerIdx)));
+            if (labels->preferredLayer(usage) == layerIdx)
+                cb->setCurrentIndex(cb->count() - 1);
+        }
 }
 void MotionLabelsEditor::updatePreferredDropdowns()
 {

@@ -115,7 +115,7 @@ QString PlayerMeta::moveName(int fighterIdx, rfcommon::FighterMotion motion) con
 
     // fallback to hash40 string
     if (label == nullptr)
-        label = labels_->lookupHash40(motion);
+        label = labels_->toHash40(motion);
     if (label == nullptr)
         return motion.toHex().cStr();
 

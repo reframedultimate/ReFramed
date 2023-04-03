@@ -91,24 +91,24 @@ public:
      * lookupPreferredReadable() and lookupPreferredCategory().
      *
      * Application code often has the need to display motion values to the user.
-     * 
+     *
      * Sometimes, the value should be displayed in a readable form, such as when
      * showing the most common kill move in the statistics plugin. Setting the
      * preferred layer for usage READABLE to "English", for example, will cause
      * toPreferredReadable() to return a full English string of each move such
      * as "Neutral Aerial".
-     * 
+     *
      * Other times, the value should be displayed as a notation, such as when
      * rendering the graph in the "decision graph" plugin. Setting the preferred
      * layer for usage NOTATION to "Pikacord", for example, will cause
      * toPreferredNotation() to return strings such as "nair" or "uair". Other
      * character communities may use different notations for their moves. This
      * is why we try to group the moves into layers of notations.
-     * 
+     *
      * Lastly, the value may be displayed as a general category, such as "aerial",
      * or "normal", or "special". Setting the preferred layer for usage CATEGORIZATION
      * causes toPreferredCategory() to return such strings.
-     * 
+     *
      * \param[in] layerIdx The layer index to assign as the preferred layer for
      * this usage. You can use e.g. findLayer("Pikacord", "General") to get the
      * layer index.
@@ -119,6 +119,8 @@ public:
      * \brief Returns the index of the preferred layer for the specified usage.
      * The index can be used to get a layer name or group name using layerName()
      * and layerGroup().
+     * \note The index can be negative, indicating that the preferred layer has
+     * not been set.
      */
     int preferredLayer(Usage usage) const
             { return preferredLayers_[usage]; }
@@ -168,7 +170,7 @@ public:
      * \brief Converts a motion value into a string from any layer part of
      * the specified group. The search begins at startLayerIdx, and if the
      * layer contains an empty string, then the search continues to the next
-     * layer with a matching name, until a non-empty entry is found. If all
+     * layer with a matching group, until a non-empty entry is found. If all
      * layers are empty, then the fallback parameter is returned.
      * \param[in] fighterID The fighter ID this motion value belongs to.
      * \param[in] motion The motion value to convert.
@@ -196,44 +198,53 @@ public:
 
     //! Returns the total number of layers
     int layerCount() const
-        { return layerNames_.count(); }
+        { return layers_.count(); }
 
-    //! Returns the total number of unique groups
-    int groupCount() const
-        {  return groupNames_.count(); }
-
-    //! Returns the first layer index matching the specified name, or -1 if none is found
+    //! Returns the first layer index matching the specified group and name, or -1 if none is found
     int findLayer(const char* groupName, const char* layerName) const;
+
+    //! Returns the first layer index matching the specified group
+    int findGroup(const char* groupName) const;
 
     //! Returns the name of the specified layer
     const char* layerName(int layerIdx) const
-        { return layerNames_[layerIdx].cStr(); }
+        { return layers_[layerIdx].name.cStr(); }
 
     //! Returns the group of the specified layer
-    const char* layerGroup(int layerIdx) const;
+    const char* layerGroup(int layerIdx) const
+        { return layers_[layerIdx].group.cStr(); }
 
     //! Returns the layer's usage
     Usage layerUsage(int layerIdx) const
-        { return layerUsages_[layerIdx]; }
+        { return layers_[layerIdx].usage; }
 
     /*!
-     * \brief Creates a new layer with the specified name.
-     * \param[in] nameUtf8 Name of the layer. The name doesn't have to be unique.
+     * \brief Creates a new layer with the specified name and adds it to the
+     * group (if it exists), or creates a new group (if it doesn't exist).
+     * \param[in] groupName Name of the group. If the group does not exist it
+     * will be created, otherwise the layer will be assigned to the existing
+     * group.
+     * \param[in] layerName Name of the layer. The name doesn't have to be unique.
      * \param[in] usage Categorizes how the new layer will be used. This affects
      * where the layer will be inserted, and can possibly shift around other
      * existing layers.
      * \return Returns the index of the newly created layer. Operation will
      * never fail.
      */
-    int newLayer(const char* nameUtf8, Usage usage);
-    int newLayerNoNotify(const char* nameUtf8, Usage usage);
+    int newLayer(const char* layerName, const char* groupName, Usage usage);
+    int newLayerNoNotify(const char* layerName, const char* groupName, Usage usage);
 
-    //! Deletes the specified layer
+    /*!
+     * \brief Deletes the specified layer. If this layer is the last layer in
+     * a group, then that group will be removed as well.
+     */
     void deleteLayer(int layerIdx);
     void deleteLayers(rfcommon::SmallVector<int, 4> layerIdxs);
 
     //! Gives the specified layer a new name. The name doesn't have to be unique.
     void renameLayer(int layerIdx, const char* newNameUtf8);
+
+    void changeGroup(int layerIdx, const char* newGroupUtf8);
 
     void changeUsage(int layerIdx, Usage newUsage);
 
@@ -306,17 +317,16 @@ private:
     // to any particular fighter. This is why layer names are stored in an
     // outside vector "layerNames_". The UI can choose to hide layers who's
     // columns are all empty, if needed.
-    struct Layer
+    struct LayerColumn
     {
         Vector<SmallString<15, int8_t>> labels;  // Contains all rows of this layer column's labels in the table
-        int groupIdx;                            // Index into the groupNames_ vector
     };
 
     struct Fighter
     {
         Vector<FighterMotion> colMotionValue;    // Contains all rows of the "motion value" column in the table
         Vector<Category>      colCategory;       // Contains all rows of the "category" column in the table
-        SmallVector<Layer, 8> colLayer;          // Contains all rows of each layer in the table
+        SmallVector<LayerColumn, 8> colLayer;    // Contains all rows of each layer in the table
 
         struct LayerMap
         {
@@ -327,11 +337,16 @@ private:
         SmallVector<LayerMap, 8> layerMaps;
     };
 
+    struct Layer
+    {
+        String name;   // Name of the layer (utf-8)
+        String group;  // Name of the group (utf-8)
+        Usage usage;   // Usage of this layer
+    };
+
     int preferredLayers_[3] = { -1, -1, -1 };
     Vector<Fighter, int16_t> fighters_;
-    Vector<String, int16_t> layerNames_;
-    Vector<String, int16_t> groupNames_;
-    Vector<Usage, int16_t> layerUsages_;
+    Vector<Layer, int16_t> layers_;
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> hash40s_;
 };
 

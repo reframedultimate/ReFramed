@@ -84,7 +84,9 @@ void OverextensionView::onDataChanged()
     auto motionToString = [this](rfcommon::FighterID fighterID, rfcommon::FighterMotion motion) -> QString {
         if (const char* label = labels_->toPreferredNotation(fighterID, motion))
             return QString::fromUtf8(label);
-        return QString::fromUtf8(labels_->lookupHash40(motion, "(unknown)"));
+        if (const char* h40 = labels_->toHash40(motion))
+            return QString::fromUtf8(h40);
+        return motion.toHex().cStr();
     };
 
     text_->insertPlainText("true combos: " + QString::number(model_->moveCount(fighterIdx, OverextensionModel::TRUE_COMBO)) + "\n");

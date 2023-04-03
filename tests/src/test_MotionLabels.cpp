@@ -32,19 +32,19 @@ protected:
 TEST_F(NAME, load_hash40)
 {
     rfcommon::MotionLabels ml;
-    EXPECT_THAT(ml.lookupHash40(anair), IsNull());
-    EXPECT_THAT(ml.lookupHash40(lnair), IsNull());
-    EXPECT_THAT(ml.lookupHash40(qa1), IsNull());
+    EXPECT_THAT(ml.toHash40(anair), IsNull());
+    EXPECT_THAT(ml.toHash40(lnair), IsNull());
+    EXPECT_THAT(ml.toHash40(qa1), IsNull());
 
     ASSERT_THAT(ml.updateHash40FromCSV("share/reframed/data/tests/hash40_1.csv"), IsTrue());
-    EXPECT_THAT(ml.lookupHash40(anair), StrEq("attack_air_n"));
-    EXPECT_THAT(ml.lookupHash40(lnair), StrEq("landing_air_n"));
-    EXPECT_THAT(ml.lookupHash40(qa1), IsNull());
+    EXPECT_THAT(ml.toHash40(anair), StrEq("attack_air_n"));
+    EXPECT_THAT(ml.toHash40(lnair), StrEq("landing_air_n"));
+    EXPECT_THAT(ml.toHash40(qa1), IsNull());
 
     ASSERT_THAT(ml.updateHash40FromCSV("share/reframed/data/tests/hash40_2.csv"), IsTrue());
-    EXPECT_THAT(ml.lookupHash40(anair), StrEq("attack_air_n"));
-    EXPECT_THAT(ml.lookupHash40(lnair), StrEq("landing_air_n"));
-    EXPECT_THAT(ml.lookupHash40(qa1), StrEq("special_hi_start"));
+    EXPECT_THAT(ml.toHash40(anair), StrEq("attack_air_n"));
+    EXPECT_THAT(ml.toHash40(lnair), StrEq("landing_air_n"));
+    EXPECT_THAT(ml.toHash40(qa1), StrEq("special_hi_start"));
 }
 
 TEST_F(NAME, lookup_hash40_motion)
@@ -62,9 +62,9 @@ TEST_F(NAME, save_load_binary_hash40s)
     ASSERT_THAT(ml1.save("save_load_binary_hash40s.dat"), Eq(true));
 
     ASSERT_THAT(ml2.load("save_load_binary_hash40s.dat"), Eq(true));
-    EXPECT_THAT(ml2.lookupHash40(anair), StrEq("attack_air_n"));
-    EXPECT_THAT(ml2.lookupHash40(lnair), StrEq("landing_air_n"));
-    EXPECT_THAT(ml2.lookupHash40(qa1), StrEq("special_hi_start"));
+    EXPECT_THAT(ml2.toHash40(anair), StrEq("attack_air_n"));
+    EXPECT_THAT(ml2.toHash40(lnair), StrEq("landing_air_n"));
+    EXPECT_THAT(ml2.toHash40(qa1), StrEq("special_hi_start"));
 }
 
 TEST_F(NAME, create_layers_and_add_labels)
@@ -74,13 +74,13 @@ TEST_F(NAME, create_layers_and_add_labels)
     using Vec = rfcommon::SmallVector<rfcommon::FighterMotion, 4>;
     rfcommon::MotionLabels ml;
 
-    ASSERT_THAT(ml.newLayer("specific", U::NOTATION), Eq(0));
+    ASSERT_THAT(ml.newLayer("pikacord", "specific", U::NOTATION), Eq(0));
     EXPECT_THAT(ml.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 0, "anair"), Eq(0));
     EXPECT_THAT(ml.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 0, "lnair"), Eq(1));
     EXPECT_THAT(ml.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 0, "adair"), Eq(2));
     EXPECT_THAT(ml.addNewLabel(pika, ldair, C::AERIAL_ATTACKS, 0, "ldair"), Eq(3));
 
-    ASSERT_THAT(ml.newLayer("general", U::NOTATION), Eq(1));
+    ASSERT_THAT(ml.newLayer("pikacord", "general", U::NOTATION), Eq(1));
     EXPECT_THAT(ml.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 1, "nair"), Eq(0));
     EXPECT_THAT(ml.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 1, "nair"), Eq(1));
     EXPECT_THAT(ml.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 1, "fair"), Eq(2));  // wrong on purpose
@@ -92,15 +92,15 @@ TEST_F(NAME, create_layers_and_add_labels)
     ml.changeLabel(pika, 2, 1, "dair");
     ml.changeLabel(pika, 3, 1, "dair");
 
-    EXPECT_THAT(ml.lookupLayer(pika, anair, 0), StrEq("anair"));
-    EXPECT_THAT(ml.lookupLayer(pika, lnair, 0), StrEq("lnair"));
-    EXPECT_THAT(ml.lookupLayer(pika, adair, 0), StrEq("adair"));
-    EXPECT_THAT(ml.lookupLayer(pika, ldair, 0), StrEq("ldair"));
+    EXPECT_THAT(ml.toLabel(pika, anair, 0), StrEq("anair"));
+    EXPECT_THAT(ml.toLabel(pika, lnair, 0), StrEq("lnair"));
+    EXPECT_THAT(ml.toLabel(pika, adair, 0), StrEq("adair"));
+    EXPECT_THAT(ml.toLabel(pika, ldair, 0), StrEq("ldair"));
 
-    EXPECT_THAT(ml.lookupLayer(pika, anair, 1), StrEq("nair"));
-    EXPECT_THAT(ml.lookupLayer(pika, lnair, 1), StrEq("nair"));
-    EXPECT_THAT(ml.lookupLayer(pika, adair, 1), StrEq("dair"));
-    EXPECT_THAT(ml.lookupLayer(pika, ldair, 1), StrEq("dair"));
+    EXPECT_THAT(ml.toLabel(pika, anair, 1), StrEq("nair"));
+    EXPECT_THAT(ml.toLabel(pika, lnair, 1), StrEq("nair"));
+    EXPECT_THAT(ml.toLabel(pika, adair, 1), StrEq("dair"));
+    EXPECT_THAT(ml.toLabel(pika, ldair, 1), StrEq("dair"));
 
     EXPECT_THAT(ml.toMotions(pika, "anair"), Eq(Vec{anair}));
     EXPECT_THAT(ml.toMotions(pika, "lnair"), Eq(Vec{lnair}));
@@ -118,13 +118,13 @@ TEST_F(NAME, save_and_load_layers_binary)
     using Vec = rfcommon::SmallVector<rfcommon::FighterMotion, 4>;
     rfcommon::MotionLabels ml1, ml2;
 
-    ASSERT_THAT(ml1.newLayer("specific", U::NOTATION), Eq(0));
+    ASSERT_THAT(ml1.newLayer("pikacord", "specific", U::NOTATION), Eq(0));
     EXPECT_THAT(ml1.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 0, "anair"), Eq(0));
     //EXPECT_THAT(ml1.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 0, "lnair"), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 0, "adair"), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, ldair, C::AERIAL_ATTACKS, 0, "ldair"), Eq(2));
 
-    ASSERT_THAT(ml1.newLayer("general", U::NOTATION), Eq(1));
+    ASSERT_THAT(ml1.newLayer("pikacord", "general", U::NOTATION), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 1, "nair"), Eq(0));
     EXPECT_THAT(ml1.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 1, "nair"), Eq(3));
     EXPECT_THAT(ml1.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 1, "dair"), Eq(1));
@@ -133,15 +133,15 @@ TEST_F(NAME, save_and_load_layers_binary)
     ml1.save("save_and_load_layers_binary.dat");
     ml2.load("save_and_load_layers_binary.dat");
 
-    EXPECT_THAT(ml2.lookupLayer(pika, anair, 0), StrEq("anair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, lnair, 0), IsNull());
-    EXPECT_THAT(ml2.lookupLayer(pika, adair, 0), StrEq("adair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, ldair, 0), StrEq("ldair"));
+    EXPECT_THAT(ml2.toLabel(pika, anair, 0), StrEq("anair"));
+    EXPECT_THAT(ml2.toLabel(pika, lnair, 0), IsNull());
+    EXPECT_THAT(ml2.toLabel(pika, adair, 0), StrEq("adair"));
+    EXPECT_THAT(ml2.toLabel(pika, ldair, 0), StrEq("ldair"));
 
-    EXPECT_THAT(ml2.lookupLayer(pika, anair, 1), StrEq("nair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, lnair, 1), StrEq("nair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, adair, 1), StrEq("dair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, ldair, 1), StrEq("dair"));
+    EXPECT_THAT(ml2.toLabel(pika, anair, 1), StrEq("nair"));
+    EXPECT_THAT(ml2.toLabel(pika, lnair, 1), StrEq("nair"));
+    EXPECT_THAT(ml2.toLabel(pika, adair, 1), StrEq("dair"));
+    EXPECT_THAT(ml2.toLabel(pika, ldair, 1), StrEq("dair"));
 
     EXPECT_THAT(ml2.toMotions(pika, "anair"), Eq(Vec{anair}));
     EXPECT_THAT(ml2.toMotions(pika, "lnair"), Eq(Vec{}));
@@ -159,13 +159,13 @@ TEST_F(NAME, export_and_import_layers)
     using Vec = rfcommon::SmallVector<rfcommon::FighterMotion, 4>;
     rfcommon::MotionLabels ml1, ml2, ml3;
 
-    ASSERT_THAT(ml1.newLayer("specific", U::NOTATION), Eq(0));
+    ASSERT_THAT(ml1.newLayer("pikacord", "specific", U::NOTATION), Eq(0));
     EXPECT_THAT(ml1.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 0, "anair"), Eq(0));
     //EXPECT_THAT(ml1.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 0, "lnair"), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 0, "adair"), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, ldair, C::AERIAL_ATTACKS, 0, "ldair"), Eq(2));
 
-    ASSERT_THAT(ml1.newLayer("general", U::NOTATION), Eq(1));
+    ASSERT_THAT(ml1.newLayer("pikacord", "general", U::NOTATION), Eq(1));
     EXPECT_THAT(ml1.addNewLabel(pika, anair, C::AERIAL_ATTACKS, 1, "nair"), Eq(0));
     EXPECT_THAT(ml1.addNewLabel(pika, lnair, C::AERIAL_ATTACKS, 1, "nair"), Eq(3));
     EXPECT_THAT(ml1.addNewLabel(pika, adair, C::AERIAL_ATTACKS, 1, "dair"), Eq(1));
@@ -177,10 +177,10 @@ TEST_F(NAME, export_and_import_layers)
 
     ml2.importLayers("export_and_import_layers_1.json");
     ASSERT_THAT(ml2.layerCount(), Eq(1));
-    EXPECT_THAT(ml2.lookupLayer(pika, anair, 0), StrEq("anair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, lnair, 0), IsNull());
-    EXPECT_THAT(ml2.lookupLayer(pika, adair, 0), StrEq("adair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, ldair, 0), StrEq("ldair"));
+    EXPECT_THAT(ml2.toLabel(pika, anair, 0), StrEq("anair"));
+    EXPECT_THAT(ml2.toLabel(pika, lnair, 0), IsNull());
+    EXPECT_THAT(ml2.toLabel(pika, adair, 0), StrEq("adair"));
+    EXPECT_THAT(ml2.toLabel(pika, ldair, 0), StrEq("ldair"));
 
     EXPECT_THAT(ml2.toMotions(pika, "anair"), Eq(Vec{anair}));
     EXPECT_THAT(ml2.toMotions(pika, "lnair"), Eq(Vec{}));
@@ -192,15 +192,15 @@ TEST_F(NAME, export_and_import_layers)
 
     ml2.importLayers("export_and_import_layers_2.json");
     ASSERT_THAT(ml2.layerCount(), Eq(2));
-    EXPECT_THAT(ml2.lookupLayer(pika, anair, 0), StrEq("anair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, lnair, 0), IsNull());
-    EXPECT_THAT(ml2.lookupLayer(pika, adair, 0), StrEq("adair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, ldair, 0), StrEq("ldair"));
+    EXPECT_THAT(ml2.toLabel(pika, anair, 0), StrEq("anair"));
+    EXPECT_THAT(ml2.toLabel(pika, lnair, 0), IsNull());
+    EXPECT_THAT(ml2.toLabel(pika, adair, 0), StrEq("adair"));
+    EXPECT_THAT(ml2.toLabel(pika, ldair, 0), StrEq("ldair"));
 
-    EXPECT_THAT(ml2.lookupLayer(pika, anair, 1), StrEq("nair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, lnair, 1), StrEq("nair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, adair, 1), StrEq("dair"));
-    EXPECT_THAT(ml2.lookupLayer(pika, ldair, 1), StrEq("dair"));
+    EXPECT_THAT(ml2.toLabel(pika, anair, 1), StrEq("nair"));
+    EXPECT_THAT(ml2.toLabel(pika, lnair, 1), StrEq("nair"));
+    EXPECT_THAT(ml2.toLabel(pika, adair, 1), StrEq("dair"));
+    EXPECT_THAT(ml2.toLabel(pika, ldair, 1), StrEq("dair"));
 
     EXPECT_THAT(ml2.toMotions(pika, "anair"), Eq(Vec{anair}));
     EXPECT_THAT(ml2.toMotions(pika, "lnair"), Eq(Vec{}));
@@ -212,15 +212,15 @@ TEST_F(NAME, export_and_import_layers)
 
     ml3.importLayers("export_and_import_layers_3.json");
     ASSERT_THAT(ml3.layerCount(), Eq(2));
-    EXPECT_THAT(ml3.lookupLayer(pika, anair, 0), StrEq("anair"));
-    EXPECT_THAT(ml3.lookupLayer(pika, lnair, 0), IsNull());
-    EXPECT_THAT(ml3.lookupLayer(pika, adair, 0), StrEq("adair"));
-    EXPECT_THAT(ml3.lookupLayer(pika, ldair, 0), StrEq("ldair"));
+    EXPECT_THAT(ml3.toLabel(pika, anair, 0), StrEq("anair"));
+    EXPECT_THAT(ml3.toLabel(pika, lnair, 0), IsNull());
+    EXPECT_THAT(ml3.toLabel(pika, adair, 0), StrEq("adair"));
+    EXPECT_THAT(ml3.toLabel(pika, ldair, 0), StrEq("ldair"));
 
-    EXPECT_THAT(ml3.lookupLayer(pika, anair, 1), StrEq("nair"));
-    EXPECT_THAT(ml3.lookupLayer(pika, lnair, 1), StrEq("nair"));
-    EXPECT_THAT(ml3.lookupLayer(pika, adair, 1), StrEq("dair"));
-    EXPECT_THAT(ml3.lookupLayer(pika, ldair, 1), StrEq("dair"));
+    EXPECT_THAT(ml3.toLabel(pika, anair, 1), StrEq("nair"));
+    EXPECT_THAT(ml3.toLabel(pika, lnair, 1), StrEq("nair"));
+    EXPECT_THAT(ml3.toLabel(pika, adair, 1), StrEq("dair"));
+    EXPECT_THAT(ml3.toLabel(pika, ldair, 1), StrEq("dair"));
 
     EXPECT_THAT(ml3.toMotions(pika, "anair"), Eq(Vec{anair}));
     EXPECT_THAT(ml3.toMotions(pika, "lnair"), Eq(Vec{}));
