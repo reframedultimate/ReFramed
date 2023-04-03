@@ -86,9 +86,42 @@ public:
     bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
     bool exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* filePathUtf8) const;
 
-    void setPreferredLayer(Usage usage, const char* layerName);
-    const char* preferredLayer(Usage usage) const
-            { return preferredLayers_[usage].cStr(); }
+    /*!
+     * \brief This sets the behavior of the methods lookupPreferredNotation(),
+     * lookupPreferredReadable() and lookupPreferredCategory().
+     *
+     * Application code often has the need to display motion values to the user.
+     * 
+     * Sometimes, the value should be displayed in a readable form, such as when
+     * showing the most common kill move in the statistics plugin. Setting the
+     * preferred layer for usage READABLE to "English", for example, will cause
+     * toPreferredReadable() to return a full English string of each move such
+     * as "Neutral Aerial".
+     * 
+     * Other times, the value should be displayed as a notation, such as when
+     * rendering the graph in the "decision graph" plugin. Setting the preferred
+     * layer for usage NOTATION to "Pikacord", for example, will cause
+     * toPreferredNotation() to return strings such as "nair" or "uair". Other
+     * character communities may use different notations for their moves. This
+     * is why we try to group the moves into layers of notations.
+     * 
+     * Lastly, the value may be displayed as a general category, such as "aerial",
+     * or "normal", or "special". Setting the preferred layer for usage CATEGORIZATION
+     * causes toPreferredCategory() to return such strings.
+     * 
+     * \param[in] layerIdx The layer index to assign as the preferred layer for
+     * this usage. You can use e.g. findLayer("Pikacord", "General") to get the
+     * layer index.
+     */
+    void setPreferredLayer(Usage usage, int layerIdx);
+
+    /*!
+     * \brief Returns the index of the preferred layer for the specified usage.
+     * The index can be used to get a layer name or group name using layerName()
+     * and layerGroup().
+     */
+    int preferredLayer(Usage usage) const
+            { return preferredLayers_[usage]; }
 
     const char* toPreferredNotation(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
     const char* toPreferredReadable(rfcommon::FighterID fighterID, rfcommon::FighterMotion motion, const char* fallback=nullptr) const;
@@ -101,7 +134,7 @@ public:
      * \return If the motion value is unknown, then this method will return
      * the fallback parameter, which defaults to nullptr.
      */
-    const char* lookupHash40(FighterMotion motion, const char* fallback=nullptr) const;
+    const char* toHash40(FighterMotion motion, const char* fallback=nullptr) const;
 
     /*!
      * \brief Runs the string through @see hash40(), but only returns the
@@ -116,7 +149,7 @@ public:
      * \brief Searches the table for the specified motion and returns the row
      * number where it was found, or -1 if not found.
      */
-    int lookupRow(FighterID fighterID, FighterMotion motion) const;
+    int toRow(FighterID fighterID, FighterMotion motion) const;
 
     /*!
      * \brief Converts a motion value into a string from a specific layer. You
@@ -124,29 +157,31 @@ public:
      * \param[in] motion The motion value to convert.
      * \param[in] layerIdx The layer to search. If you specify a value of -1
      * then this method will always fail. This makes it possible to write:
-     *      toString(motion, findLayer("English"))
+     *      toLabel(motion, findLayer("Language", "English"))
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* lookupLayer(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
+    const char* toLabel(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback=nullptr) const;
 
     /*!
-     * \brief Converts a motion value into a string from any layer matching the
-     * specified name. If the a layer contains an empty string, then the search
-     * continues to the next layer with a matching name, until a non-empty
-     * entry is found. If all layers are empty, then the fallback parameter is
-     * returned.
+     * \brief Converts a motion value into a string from any layer part of
+     * the specified group. The search begins at startLayerIdx, and if the
+     * layer contains an empty string, then the search continues to the next
+     * layer with a matching name, until a non-empty entry is found. If all
+     * layers are empty, then the fallback parameter is returned.
+     * \param[in] fighterID The fighter ID this motion value belongs to.
      * \param[in] motion The motion value to convert.
-     * \param[in] preferredLayerIdx The layer to search initially. If you specify
-     * a value of -1 then all layers marked with the specified usage will be
-     * searched. This makes it possible to write:
-     *      toString(motion, NOTATION, findLayer("Pikacord"))
+     * \param[in] startLayerIdx The layer to search initially. If the start
+     * layer is -1, then the method always fails (fallback value is returned).
+     * This makes it possible to write:
+     *   toGroupLabel(fighterID, motion, findGroup("Pikacord"));
+     *   toGroupLabel(fighterID, motion, findLayer("Pikacord", "General"));
      * \param[in] fallback The string to return if the lookup fails.
      * \return Returns a string if found, or returns the fallback parameter,
      * which defaults to nullptr.
      */
-    const char* lookupGroup(FighterID fighterID, FighterMotion motion, Usage usage, const char* layerName, const char* fallback=nullptr) const;
+    const char* toGroupLabel(FighterID fighterID, FighterMotion motion, int startLayerIdx, const char* fallback=nullptr) const;
 
     /*!
      * \brief Looks up all user labels matching the specified string for the
@@ -163,12 +198,19 @@ public:
     int layerCount() const
         { return layerNames_.count(); }
 
+    //! Returns the total number of unique groups
+    int groupCount() const
+        {  return groupNames_.count(); }
+
     //! Returns the first layer index matching the specified name, or -1 if none is found
-    int findLayer(const char* layerName) const;
+    int findLayer(const char* groupName, const char* layerName) const;
 
     //! Returns the name of the specified layer
     const char* layerName(int layerIdx) const
         { return layerNames_[layerIdx].cStr(); }
+
+    //! Returns the group of the specified layer
+    const char* layerGroup(int layerIdx) const;
 
     //! Returns the layer's usage
     Usage layerUsage(int layerIdx) const
@@ -267,6 +309,7 @@ private:
     struct Layer
     {
         Vector<SmallString<15, int8_t>> labels;  // Contains all rows of this layer column's labels in the table
+        int groupIdx;                            // Index into the groupNames_ vector
     };
 
     struct Fighter
@@ -284,9 +327,10 @@ private:
         SmallVector<LayerMap, 8> layerMaps;
     };
 
-    String preferredLayers_[3];
+    int preferredLayers_[3] = { -1, -1, -1 };
     Vector<Fighter, int16_t> fighters_;
     Vector<String, int16_t> layerNames_;
+    Vector<String, int16_t> groupNames_;
     Vector<Usage, int16_t> layerUsages_;
     HashMap<FighterMotion, SmallString<31>, FighterMotion::Hasher> hash40s_;
 };
