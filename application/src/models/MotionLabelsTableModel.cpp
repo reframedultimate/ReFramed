@@ -163,7 +163,8 @@ QVariant MotionLabelsTableModel::headerData(int section, Qt::Orientation orienta
             case 0: return "Hash40";
             case 1: return "String";
             default:
-                return labels_->layerName(section - 2);
+                if (section - 2 < labels_->layerCount())
+                    return labels_->layerName(section - 2);
             }
             break;
 

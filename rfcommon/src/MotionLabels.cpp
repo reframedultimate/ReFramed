@@ -753,6 +753,9 @@ FighterMotion MotionLabels::toMotion(const char* hash40Str) const
 // ----------------------------------------------------------------------------
 int MotionLabels::toRow(FighterID fighterID, FighterMotion motion) const
 {
+    if (fighterID.value() >= fighters_.count())
+        return -1;
+
     const Fighter& fighter = fighters_[fighterID.value()];
     const auto it = fighter.motionToRow.find(motion);
     if (it == fighter.motionToRow.end())
@@ -763,7 +766,7 @@ int MotionLabels::toRow(FighterID fighterID, FighterMotion motion) const
 // ----------------------------------------------------------------------------
 const char* MotionLabels::toLabel(FighterID fighterID, FighterMotion motion, int layerIdx, const char* fallback) const
 {
-    if (layerIdx < 0)
+    if (layerIdx < 0 || fighterID.value() >= fighters_.count())
         return fallback;
 
     // Look up row for specified fighter
@@ -784,7 +787,7 @@ const char* MotionLabels::toLabel(FighterID fighterID, FighterMotion motion, int
 // ----------------------------------------------------------------------------
 const char* MotionLabels::toGroupLabel(FighterID fighterID, FighterMotion motion, int startLayerIdx, const char* fallback) const
 {
-    if (startLayerIdx < 0)
+    if (startLayerIdx < 0 || fighterID.value() >= fighters_.count())
         return fallback;
 
     // Look up row for specified fighter
@@ -815,6 +818,9 @@ const char* MotionLabels::toGroupLabel(FighterID fighterID, FighterMotion motion
 SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const char* label) const
 {
     SmallVector<FighterMotion, 4> result;
+
+    if (fighterID.value() >= fighters_.count())
+        return result;
 
     const Fighter& fighter = fighters_[fighterID.value()];
     for (int layerIdx = 0; layerIdx != fighter.layerMaps.count(); ++layerIdx)
@@ -889,6 +895,11 @@ void MotionLabels::deleteLayer(int layerIdx)
     }
 
     layers_.erase(layerIdx);
+
+    // Make sure preferred layer isn't pointing to an invalid index
+    for (int i = 0; i != 3; ++i)
+        if (preferredLayers_[i] == layerIdx)
+            preferredLayers_[i] = -1;
 
     dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerRemoved, layerIdx);
 }
