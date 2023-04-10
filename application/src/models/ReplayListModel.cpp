@@ -119,6 +119,11 @@ QVariant ReplayListModel::data(const QModelIndex& index, int role) const
             else
             {
                 const ReplaysOnDay& day = days_[index.internalId()];
+                if (index.row() >= day.replays.count())
+                {
+                    assert(false, "Should never happen but it does for some reason");
+                    break;
+                }
                 const auto& replay = day.replays[index.row()];
 
                 switch (index.column())

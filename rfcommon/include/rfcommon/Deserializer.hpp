@@ -14,6 +14,7 @@ public:
     uint8_t readU8();
 
     uint16_t readLU16();
+    int16_t readLI16();
     uint32_t readLU32();
     uint64_t readLU64();
     float readLF32();
@@ -37,7 +38,6 @@ public:
     void seekSet(int64_t offset);
     void seekCur(int64_t offset);
     void seekEnd(int64_t offset);
-    int64_t currentOffset() const;
 
 private:
     const unsigned char* readPtr_;

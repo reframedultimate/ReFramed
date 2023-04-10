@@ -27,6 +27,7 @@ public:
     void writeI8(int8_t value);
 
     void writeLU16(uint16_t value);
+    void writeLI16(int16_t value);
     void writeLU32(uint32_t value);
     void writeLU64(uint64_t value);
     void writeLF32(float value);

@@ -51,6 +51,20 @@ uint16_t Deserializer::readLU16()
 }
 
 // ----------------------------------------------------------------------------
+int16_t Deserializer::readLI16()
+{
+    NOPROFILE();
+
+    if (readPtr_ + 2 > end_)
+        return 0;
+
+    uint16_t le;
+    std::memcpy(&le, readPtr_, 2);
+    readPtr_ += 2;
+    return static_cast<int64_t>(fromLittleEndian16(le));
+}
+
+// ----------------------------------------------------------------------------
 uint32_t Deserializer::readLU32()
 {
     NOPROFILE();

@@ -63,6 +63,17 @@ void Serializer::writeLU16(uint16_t value)
 }
 
 // ----------------------------------------------------------------------------
+void Serializer::writeLI16(int16_t value)
+{
+    NOPROFILE();
+    assert(writePtr_ + 2 <= end_);
+
+    uint16_t le = toLittleEndian16(static_cast<uint16_t>(value));
+    std::memcpy(writePtr_, &le, 2);
+    writePtr_ += 2;
+}
+
+// ----------------------------------------------------------------------------
 void Serializer::writeLU32(uint32_t value)
 {
     NOPROFILE();

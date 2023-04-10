@@ -69,7 +69,7 @@ bool MotionLabels::load(const char* filePathUtf8)
     // Preferred layers
     for (int i = 0; i != 3; ++i)
     {
-        preferredLayers_[i] = d.readLU16();
+        preferredLayers_[i] = d.readLI16();
     }
 
     // Load hash40 table
@@ -174,7 +174,7 @@ bool MotionLabels::save(const char* filePathUtf8) const
     for (int i = 0; i != 3; ++i)
     {
         Serializer s(scratch, sizeof scratch);
-        s.writeLU16(preferredLayers_[i]);
+        s.writeLI16(preferredLayers_[i]);
         fwrite(s.data(), s.bytesWritten(), 1, fp);
     }
 
