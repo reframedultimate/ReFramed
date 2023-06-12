@@ -73,6 +73,7 @@ bool MappedFile::open(const char* utf8_filename)
 
     // Success, close previous mapping if any, then store new values
     close();
+    fileHandle_ = static_cast<void*>(hFile);
     address_ = address;
     size_ = liFileSize.QuadPart;
 
