@@ -21,7 +21,6 @@ public:
     uint64_t size() const { return size_; }
 
 private:
-    void* fileHandle_;
     void* address_;
     uint64_t size_;
 };
