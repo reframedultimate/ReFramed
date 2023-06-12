@@ -70,10 +70,11 @@ bool MappedFile::open(const char* utf8_filename)
 
     // The file mapping isn't required anymore
     CloseHandle(mapping);
+    CloseHandle(hFile);
+    utf16_free(utf16_filename);
 
     // Success, close previous mapping if any, then store new values
     close();
-    fileHandle_ = static_cast<void*>(hFile);
     address_ = address;
     size_ = liFileSize.QuadPart;
 
@@ -94,10 +95,6 @@ void MappedFile::close()
     if (address_)
         UnmapViewOfFile(address_);
     address_ = nullptr;
-
-    if (fileHandle_)
-        CloseHandle(static_cast<HANDLE>(fileHandle_));
-    fileHandle_ = nullptr;
 }
 
 // ----------------------------------------------------------------------------
