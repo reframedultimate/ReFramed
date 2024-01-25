@@ -28,6 +28,7 @@ public:
     void setMetadata(rfcommon::MappingInfo* map, rfcommon::Metadata* mdata);
     void clearMetadata();
 
+    rfcommon::MappingInfo* latestMappingInfo() const;
     rfcommon::GameMetadata* latestMetadata() const;
 
     int playerCount() const;

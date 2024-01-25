@@ -6,6 +6,7 @@
 #include "rfcommon/LinearMap.hpp"
 #include "rfcommon/Profiler.hpp"
 #include <limits>
+#include <inttypes.h>
 
 // TODO Extract this info from the global mapping info structure, once
 // ReFramed's refactoring is done and this is possible.
@@ -479,7 +480,7 @@ double StatsCalculator::earliestDeathPercentBeforeHit(int fighterIdx) const
         {
             if (i != 0)
                 printf(" -> ");
-            printf("0x%lx", string.moves[i].value());
+            printf("0x%" PRIu64, string.moves[i].value());
         }
         puts("");
     }

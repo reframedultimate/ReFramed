@@ -34,6 +34,7 @@
 namespace rfcommon {
 
 class MotionLabelsListener;
+class MappingInfo;
 
 /*!
  * \brief This class handles everything to do with converting hash40 motion
@@ -83,6 +84,7 @@ public:
     int updateHash40FromCSV(const char* filePathUtf8);
 
     int importLayers(const char* filePathUtf8);
+    int importGoogleDocCSV(const char* filePathUtf8, const rfcommon::MappingInfo* map);
     bool exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const;
     bool exportLayers(SmallVector<int, 4> layers, FighterID fighterID, const char* filePathUtf8) const;
 
@@ -201,7 +203,7 @@ public:
         { return layers_.count(); }
 
     //! Returns the first layer index matching the specified group and name, or -1 if none is found
-    int findLayer(const char* groupName, const char* layerName) const;
+    int findLayer(const char* layerName, const char* groupName) const;
 
     //! Returns the first layer index matching the specified group
     int findGroup(const char* groupName) const;

@@ -3,6 +3,8 @@
 #include "application/Util.hpp"
 
 #include "rfcommon/init.h"
+#include "rfcommon/MappingInfo.hpp"
+#include "rfcommon/MappedFile.hpp"
 #include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/Profiler.hpp"
 #include "rfcommon/Reference.hpp"
@@ -72,14 +74,27 @@ int main(int argc, char** argv)
         QIcon::setThemeName("feather-light");
     }
 
+    // Copy some files over to the config directory if necessary
+    if (appLocalDir.exists("mappingInfo.json") == false)
+        QFile::copy("./share/reframed/data/mappingInfo.json", appLocalDir.absoluteFilePath("mappingInfo.json"));
+
     rfcommon::Reference<rfcommon::MotionLabels> motionLabels(
                 new rfcommon::MotionLabels(appLocalDir.absoluteFilePath("motionLabels.dat").replace("/", QDir::separator()).toUtf8().constData()));
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/1_Specific.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/2_General.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/3_English.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->importLayers(appLocalDir.absoluteFilePath("motion/unlabeled.json").replace("/", QDir::separator()).toUtf8().constData());
-    //motionLabels->changeUsage(motionLabels->findLayer("English"), rfcommon::MotionLabels::READABLE);
-    //motionLabels->updateHash40FromCSV(appLocalDir.absoluteFilePath("motion/ParamLabels.csv").replace("/", QDir::separator()).toUtf8().constData());
+    if (motionLabels->layerCount() == 0)
+    {
+        rfcommon::MappedFile file;
+        if (file.open(appLocalDir.absoluteFilePath("mappingInfo.json").replace("/", QDir::separator()).toUtf8().constData()))
+        {
+            rfcommon::Reference<rfcommon::MappingInfo> map = rfcommon::MappingInfo::load(file.address(), file.size());
+            if (map.notNull())
+            {
+                motionLabels->importGoogleDocCSV(
+                    QDir("share/reframed/data").absoluteFilePath("ReFramed User Labels.csv")
+                        .replace("/", QDir::separator()).toUtf8().constData(), map);
+                motionLabels->save();
+            }
+        }
+    }
 
     rfapp::MainWindow mainWindow(std::move(config), motionLabels);
 

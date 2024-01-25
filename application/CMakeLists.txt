@@ -221,6 +221,9 @@ if (WIN32 OR CYGWIN)
         DESTINATION "${REFRAMED_INSTALL_BINDIR}/platforms")
 endif ()
 
+configure_file ("${PROJECT_SOURCE_DIR}/../data/mappingInfo.json" "${REFRAMED_BUILD_DATADIR}/mappingInfo.json")
+configure_file ("${PROJECT_SOURCE_DIR}/../data/ReFramed User Labels.csv" "${REFRAMED_BUILD_DATADIR}/ReFramed User Labels.csv")
+
 #install (
 #    DIRECTORY ${PROJECT_SOURCE_DIR}/data/
 #    DESTINATION ${REFRAMED_INSTALL_DATADIR})

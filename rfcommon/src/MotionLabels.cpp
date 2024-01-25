@@ -3,6 +3,7 @@
 #include "rfcommon/LastError.hpp"
 #include "rfcommon/Log.hpp"
 #include "rfcommon/MappedFile.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/MotionLabels.hpp"
 #include "rfcommon/MotionLabelsListener.hpp"
 #include "rfcommon/Serializer.hpp"
@@ -547,6 +548,142 @@ int MotionLabels::importLayers(const char* filePathUtf8)
 }
 
 // ----------------------------------------------------------------------------
+static MotionLabels::Category stringToCategory(const rfcommon::String& string)
+{
+#define X(name, cstr) if (string == cstr) return MotionLabels::Category::name;
+    RFCOMMON_MOTION_LABEL_CATEGORIES_LIST
+#undef X
+    return MotionLabels::Category::MISC;
+}
+
+// ----------------------------------------------------------------------------
+int MotionLabels::importGoogleDocCSV(const char* filePathUtf8, const rfcommon::MappingInfo* map)
+{
+    Log* log = Log::root();
+
+    MappedFile file;
+    log->info("Importing Google Docs CSV file \"%s\"", filePathUtf8);
+    if (file.open(filePathUtf8) == false)
+    {
+        log->error("Failed to map file \"%s\": %s", filePathUtf8, LastError().cStr());
+        return -1;
+    }
+
+    const int layerCountBeforeImport = layerCount();
+
+    int generalLayer = findLayer("General", "Pikacord");
+    int specificLayer = findLayer("Specific", "Pikacord");
+    int englishLayer = findLayer("English", "Pikacord");
+
+    if (generalLayer < 0)
+        generalLayer = newLayer("General", "Pikacord", Usage::NOTATION);
+    if (specificLayer < 0)
+        specificLayer = newLayer("Specific", "Pikacord", Usage::NOTATION);
+    if (englishLayer < 0)
+        englishLayer = newLayer("English", "Pikacord", Usage::READABLE);
+
+#define CSV_NEXT_COLUMN(name) \
+        while (c != end && *c != ',' && *c != '\n' && *c != '\r') \
+            ++c; \
+        if (c == end) { \
+            log->warning("CSV line %d: Unexpected EOF", line); \
+            break; \
+        } \
+        if (*c == '\n' || *c == '\r') { \
+            log->warning("CSV line %d: Expected ',' but got a newline", line); \
+            continue; \
+        } \
+        rfcommon::String name(begin, c - begin);
+#define CSV_NEXT_LINE(name) \
+        while (c != end && *c != ',' && *c != '\n' && *c != '\r') \
+            ++c; \
+        if (c == end) { \
+            log->warning("CSV line %d: Unexpected EOF", line); \
+            break; \
+        } \
+        if (*c == ',') { \
+            log->warning("CSV line %d: Expected newline, but got a ','. Skipping line...", line); \
+            CSV_EAT_NEWLINE() \
+            continue; \
+        } \
+        rfcommon::String name(begin, c - begin);
+#define CSV_EAT_DELIMITER() \
+        if (c != end && *c == ',') \
+            ++c; \
+        if (c == end) { \
+            log->warning("CSV line %d: Unexpected EOF", line); \
+            break; \
+        } \
+        begin = c;
+#define CSV_EAT_NEWLINE() \
+        while (c != end && (*c == '\r' || *c == '\n')) \
+            ++c; \
+        if (c == end) { \
+            log->warning("CSV line %d: Unexpected EOF", line); \
+            break; \
+        } \
+        begin = c;
+
+    const char* begin = static_cast<const char*>(file.address());
+    const char* end = static_cast<const char*>(file.address()) + file.size();
+    const char* c = begin;
+    int line = 0;
+
+    // Skip header
+    while (c != end && *c != '\n')
+        ++c;
+    do { CSV_EAT_NEWLINE(); } while (0);
+    line++;
+
+    while (c != end)
+    {
+        line++;
+
+        CSV_NEXT_COLUMN(character) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(category) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(hash40) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(string) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(specific) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(general) CSV_EAT_DELIMITER()
+        CSV_NEXT_COLUMN(english) CSV_EAT_DELIMITER()
+        CSV_NEXT_LINE(comments) CSV_EAT_NEWLINE()
+
+        const rfcommon::FighterID fighterID = map->fighter.toID(character.cStr());
+        const rfcommon::FighterMotion motion = rfcommon::FighterMotion::fromHexString(hash40.cStr());
+        
+        if (fighterID.isValid() == false)
+        {
+            log->warning("Unknown fighter \"%s\". Skipping...", character.cStr());
+            continue;
+        }
+
+        if (string.notEmpty() && motion != rfcommon::hash40(string.cStr()))
+        {
+            if (string == "(unknown)")
+            {
+                addUnknownMotion(fighterID, motion);
+                continue;
+            }
+
+            log->warning("String hash40(\"%s\") does not equal \"%s\". Skipping...", string.cStr(), hash40.cStr());
+            continue;
+        }
+
+        addNewLabel(fighterID, motion, stringToCategory(category), generalLayer, general.cStr());
+        addNewLabel(fighterID, motion, stringToCategory(category), specificLayer, specific.cStr());
+        addNewLabel(fighterID, motion, stringToCategory(category), englishLayer, english.cStr());
+    }
+
+    if (preferredLayer(Usage::NOTATION) < 0)
+        setPreferredLayer(Usage::NOTATION, generalLayer);
+    if (preferredLayer(Usage::READABLE) < 0)
+        setPreferredLayer(Usage::READABLE, englishLayer);
+
+    const int layerCountAfterImport = layerCount();
+    return layerCountAfterImport - layerCountBeforeImport;
+}
+
+// ----------------------------------------------------------------------------
 bool MotionLabels::exportLayers(SmallVector<int, 4> layers, const char* filePathUtf8) const
 {
     Log* log = Log::root();
@@ -839,7 +976,7 @@ SmallVector<FighterMotion, 4> MotionLabels::toMotions(FighterID fighterID, const
 }
 
 // ----------------------------------------------------------------------------
-int MotionLabels::findLayer(const char* groupName, const char* layerName) const
+int MotionLabels::findLayer(const char* layerName, const char* groupName) const
 {
     for (int i = 0; i != layers_.count(); ++i)
         if (layers_[i].name == layerName && layers_[i].group == groupName)
@@ -859,7 +996,7 @@ int MotionLabels::findGroup(const char* groupName) const
 // ----------------------------------------------------------------------------
 int MotionLabels::newLayer(const char* layerName, const char* groupName, Usage usage)
 {
-    int layerIdx = newLayerNoNotify(layerName, layerName, usage);
+    int layerIdx = newLayerNoNotify(layerName, groupName, usage);
     dispatcher.dispatch(&MotionLabelsListener::onMotionLabelsLayerInserted, layerIdx);
     return layerIdx;
 }

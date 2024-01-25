@@ -48,6 +48,14 @@ void PlayerMeta::clearMetadata()
 }
 
 // ----------------------------------------------------------------------------
+rfcommon::MappingInfo* PlayerMeta::latestMappingInfo() const
+{
+    PROFILE(PlayerMeta, latestMappingInfo);
+
+    return map_;
+}
+
+// ----------------------------------------------------------------------------
 rfcommon::GameMetadata* PlayerMeta::latestMetadata() const
 {
     PROFILE(PlayerMeta, latestMetadata);

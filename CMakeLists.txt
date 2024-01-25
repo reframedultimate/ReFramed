@@ -36,6 +36,7 @@ set (REFRAMED_BUILD_CMAKEDIR "${REFRAMED_BUILD_BINDIR}/share/reframed/cmake")
 set (REFRAMED_BUILD_DOCDIR "${REFRAMED_BUILD_BINDIR}/doc")
 
 set (REFRAMED_INSTALL_BINDIR ".")
+set (REFRAMED_INSTALL_LICENSEDIR ".")
 set (REFRAMED_INSTALL_LIBDIR "lib")
 set (REFRAMED_INSTALL_INCLUDEDIR "include")
 set (REFRAMED_INSTALL_DATADIR "share/reframed/data")
@@ -107,3 +108,18 @@ configure_package_config_file("cmake/ReFramedConfig.cmake.in"
 install(
     FILES "${REFRAMED_BUILD_CMAKEDIR}/ReFramedConfig.cmake"
     DESTINATION ${REFRAMED_INSTALL_CMAKEDIR})
+
+# Copy over license files
+install (
+    FILES "${PROJECT_SOURCE_DIR}/LICENSE"
+    DESTINATION "${REFRAMED_INSTALL_LICENSEDIR}")
+install (
+    FILES "${PROJECT_SOURCE_DIR}/Statistics Plugin License.txt"
+    DESTINATION "${REFRAMED_INSTALL_LICENSEDIR}")
+
+# Copy over additional resource files
+install (
+    FILES
+        "${PROJECT_SOURCE_DIR}/data/mappingInfo.json"
+        "${PROJECT_SOURCE_DIR}/data/ReFramed User Labels.csv"
+    DESTINATION "${REFRAMED_INSTALL_DATADIR}")

@@ -284,6 +284,7 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
     QAction* deleteLayer = menu.addAction("Delete layers");
     QAction* importLayer = menu.addAction("Import layers");
     QAction* exportLayer = menu.addAction("Export layers");
+    QAction* importLayerGoogleDocsCSV = menu.addAction("Import layers from Google Docs CSV");
     menu.addSeparator();
     QAction* updateHash40 = menu.addAction("Load Hash40 CSV");
     QAction* downloadHash40 = menu.addAction("Download latest ParamLabels.csv");
@@ -419,6 +420,20 @@ void MotionLabelsEditor::onCustomContextMenuRequested(int tabIdx, const QPoint& 
             return;
 
         if (manager_->motionLabels()->importLayers(filePath.toUtf8().constData()) >= 0)
+        {
+            if (highlightNextConflict(1) == false)
+                ui_->label_conflicts->setVisible(false);
+        }
+        else
+            QMessageBox::critical(this, "Error", "Failed to import layers");
+    }
+    else if (a == importLayerGoogleDocsCSV)
+    {
+        QString filePath = QFileDialog::getOpenFileName(this, "Import layers from Google Docs CSV", "", "CSV file (*.csv)");
+        if (filePath.isEmpty())
+            return;
+
+        if (manager_->motionLabels()->importGoogleDocCSV(filePath.toUtf8().constData(), globalMappingInfo_) >= 0)
         {
             if (highlightNextConflict(1) == false)
                 ui_->label_conflicts->setVisible(false);

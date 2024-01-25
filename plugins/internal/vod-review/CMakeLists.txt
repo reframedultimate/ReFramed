@@ -55,12 +55,8 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
 
     # On Windows we have to copy the DLLs to our binary directory
     if (WIN32 OR CYGWIN)
-        foreach (LIB ${FFMPEG_LIBRARIES})
-            get_filename_component (LIB_FILENAME ${LIB} NAME_WE)
-            get_filename_component (FFMPEG_BIN_DIR ${LIB} DIRECTORY)
-            get_filename_component (FFMPEG_BIN_DIR "${FFMPEG_BIN_DIR}/../bin" ABSOLUTE)
-
-            file (GLOB DLL_FILENAMES "${FFMPEG_BIN_DIR}/${LIB_FILENAME}*.dll")
+        macro (copy_dll _glob_expr)
+            file (GLOB DLL_FILENAMES ${_glob_expr})
             list (GET DLL_FILENAMES 0 DLL_FILENAME)
             if (NOT DLL_FILENAME)
                 message (FATAL_ERROR "Failed to find DLL matching library ${LIB}")
@@ -74,6 +70,21 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
 			install (
 				FILES ${DLL_FILENAME}
 				DESTINATION ${REFRAMED_INSTALL_PLUGINDEPSDIR})
+        endmacro ()
+            
+        foreach (LIB ${FFMPEG_LIBRARIES})
+            get_filename_component (LIB_FILENAME ${LIB} NAME_WE)
+            get_filename_component (FFMPEG_BIN_DIR ${LIB} DIRECTORY)
+            get_filename_component (FFMPEG_BIN_DIR "${FFMPEG_BIN_DIR}/../bin" ABSOLUTE)
+
+            copy_dll ("${FFMPEG_BIN_DIR}/${LIB_FILENAME}*.dll")
         endforeach ()
+        
+        # Copy additional DLLs
+        copy_dll ("${FFMPEG_BIN_DIR}/librist.dll")
+        copy_dll ("${FFMPEG_BIN_DIR}/srt.dll")
+        copy_dll ("${FFMPEG_BIN_DIR}/zlib.dll")
+        copy_dll ("${FFMPEG_BIN_DIR}/libx264*.dll")
     endif ()
+
 endif ()

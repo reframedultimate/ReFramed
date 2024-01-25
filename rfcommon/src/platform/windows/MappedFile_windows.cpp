@@ -9,8 +9,7 @@ namespace rfcommon {
 
 // ----------------------------------------------------------------------------
 MappedFile::MappedFile()
-    : fileHandle_(nullptr)
-    , address_(nullptr)
+    : address_(nullptr)
 {
 }
 
