@@ -6,6 +6,7 @@
 #include "stats/util/StatsFormatter.hpp"
 
 #include "rfcommon/GameMetadata.hpp"
+#include "rfcommon/MappingInfo.hpp"
 #include "rfcommon/Profiler.hpp"
 
 #include <QJsonObject>
@@ -65,13 +66,18 @@ void WSExporter::writeJSON(bool gameStarted, bool gameEnded) const
     }
 
     auto mdata = playerMeta_->latestMetadata();
-    QJsonObject jMetadata = mdata ? QJsonObject({
+    auto map = playerMeta_->latestMappingInfo();
+    QJsonObject jMetadata = mdata && map ? QJsonObject({
         {"started", qint64(mdata->timeStarted().millisSinceEpoch())},
         {"ended", qint64(mdata->timeEnded().millisSinceEpoch())},
         {"gamenumber", mdata->score().gameNumber().value()},
         {"setnumber", mdata->round().number().value()},
         {"format", mdata->setFormat().shortDescription()},
-        {"winner", mdata->winner()}
+        {"score1", mdata->score().left()},
+        {"score2", mdata->score().right()},
+        {"winner", mdata->winner()},
+        {"stageid", mdata->stageID().value()},
+        {"stage", QString::fromUtf8(map->stage.toName(mdata->stageID()))}
     }) : QJsonObject();
 
     QJsonObject jState = {
