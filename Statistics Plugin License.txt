@@ -1,0 +1,5 @@
+This version of the Statistics Plugin is intended for personal use only.
+
+If you wish to use the statistics plugin for a stream overlay -- personal or at an event --
+credit to both Vye (Vye#0547) and TheComet (TheComet#5387, twitter.com/TheComet93) must be visible
+in the overlay.

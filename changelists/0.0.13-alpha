@@ -9,4 +9,9 @@ Enhancements
     + If connected, the active motion of each player is highlighted, and you can jump to the highlighted line with a button
     + It's possible to copy labels from one fighter to all other fighters
     + Can sort by any column
-  - 
+  - Implemented correction offset when auto-associating videos
+  - Stats plugin now exports scores, stage ID, and winner over websocket
+Bugfixes
+  - States no longer desync in training mode, causing incorrect frame advantage calculations
+  - Fixed crash when closing app
+  - Fixed freeze when video file reaches EOF
