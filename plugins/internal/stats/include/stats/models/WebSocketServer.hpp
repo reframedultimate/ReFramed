@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QAbstractSocket>
 #include <QWebSocketProtocol>
+#include <QSslError> // Required by MOC
 
 class WebSocketServerListener;
 

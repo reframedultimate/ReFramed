@@ -86,7 +86,8 @@ void WebSocketServer::onAcceptError(QAbstractSocket::SocketError socketError)
 {
     PROFILE(WebSocketServer, onAcceptError);
 
-    dispatcher.dispatch(&WebSocketServerListener::onWSClientError, "Failed to accept client connection: " + QString(socketError));
+    QString error = "Failed to accept client connection: " + socketError;
+    dispatcher.dispatch(&WebSocketServerListener::onWSClientError, error);
 }
 
 // ----------------------------------------------------------------------------
@@ -134,7 +135,8 @@ void WebSocketServer::onServerError(QWebSocketProtocol::CloseCode closeCode)
 {
     PROFILE(WebSocketServer, onServerError);
 
-    dispatcher.dispatch(&WebSocketServerListener::onWSClientError, "Server error: " + QString(closeCode));
+    QString error = "Server error: " + closeCode;
+    dispatcher.dispatch(&WebSocketServerListener::onWSClientError, error);
 }
 
 // ----------------------------------------------------------------------------

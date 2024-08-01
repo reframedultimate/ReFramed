@@ -13,9 +13,9 @@ test_visibility_macros (
 
 configure_file ("cmake/templates/config.hpp.in" "include/rfplot/config.hpp")
 
-find_package (Qt5 COMPONENTS Core Widgets Gui REQUIRED)
+find_package (Qt6 COMPONENTS Core Widgets Gui REQUIRED)
 
-qt5_wrap_cpp (RFPLOT_SOURCES_MOC
+qt_wrap_cpp (RFPLOT_SOURCES_MOC
     "include/rfplot/DeltaPlotPicker.hpp"
     "include/rfplot/Panner.hpp"
     "include/rfplot/RectangleZoomer.hpp"
@@ -50,9 +50,9 @@ target_compile_features (rfplot
     PUBLIC cxx_std_17)
 target_link_libraries (rfplot
     PRIVATE
-        Qt5::Core
-        Qt5::Gui
-        Qt5::Widgets
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
         ReFramed::rfqwt
         ReFramed::rfcommon)
 set_target_properties (rfplot

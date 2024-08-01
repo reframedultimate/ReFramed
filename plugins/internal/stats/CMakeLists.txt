@@ -1,5 +1,4 @@
-
-cmake_minimum_required (VERSION 3.2)
+cmake_minimum_required (VERSION 3.25)
 
 set (PLUGIN_NAME "stats")
 
@@ -81,21 +80,21 @@ if (${REFRAMED_plugin-${PLUGIN_NAME}})
     # Qt Websockets library
     ###########################################################################
 
-    find_package (Qt5 COMPONENTS Network WebSockets REQUIRED)
+    find_package (Qt6 COMPONENTS Network WebSockets REQUIRED)
     target_link_libraries (plugin-${PLUGIN_NAME}
-        PRIVATE Qt5::Network
-        PRIVATE Qt5::WebSockets)
+        PRIVATE Qt6::Network
+        PRIVATE Qt6::WebSockets)
 
     if (WIN32 OR CYGWIN)
         add_custom_command (TARGET plugin-${PLUGIN_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory ${REFRAMED_BUILD_PLUGINDEPSDIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5Network$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_PLUGINDEPSDIR}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt5_DIR}/../../../bin/Qt5WebSockets$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_PLUGINDEPSDIR}
-            COMMENT "Copying Qt binaries from '${Qt5_DIR}/../../bin/' to '${REFRAMED_BUILD_PLUGINDIR}'"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt6_DIR}/../../../bin/Qt6Network$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_PLUGINDEPSDIR}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Qt6_DIR}/../../../bin/Qt6WebSockets$<$<CONFIG:Debug>:d>.dll ${REFRAMED_BUILD_PLUGINDEPSDIR}
+            COMMENT "Copying Qt binaries from '${Qt6_DIR}/../../bin/' to '${REFRAMED_BUILD_PLUGINDIR}'"
             VERBATIM)
         install (
-            FILES ${Qt5_DIR}/../../../bin/Qt5Network$<$<CONFIG:Debug>:d>.dll
-            FILES ${Qt5_DIR}/../../../bin/Qt5WebSockets$<$<CONFIG:Debug>:d>.dll
+            FILES ${Qt6_DIR}/../../../bin/Qt6Network$<$<CONFIG:Debug>:d>.dll
+            FILES ${Qt6_DIR}/../../../bin/Qt6WebSockets$<$<CONFIG:Debug>:d>.dll
             DESTINATION ${REFRAMED_INSTALL_PLUGINDEPSDIR})
     endif ()
 endif ()

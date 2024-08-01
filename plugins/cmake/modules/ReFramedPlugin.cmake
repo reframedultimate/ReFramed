@@ -20,12 +20,12 @@ macro (reframed_add_plugin PLUGIN)
             PLUGIN_API_IMPORT
             PLUGIN_API_LOCAL)
 
-        find_package (Qt5 COMPONENTS Widgets Gui Core PrintSupport Concurrent OpenGL REQUIRED)
+        find_package (Qt6 COMPONENTS Widgets Gui Core PrintSupport Concurrent OpenGL REQUIRED)
 
         string (REPLACE "plugin-" "" ${PLUGIN}_OUTPUT_NAME ${PLUGIN})
 
-        qt5_wrap_cpp (${PLUGIN}_MOC_SOURCES ${${PLUGIN}_MOC_HEADERS})
-        qt5_wrap_ui (${PLUGIN}_MOC_FORMS ${${PLUGIN}_FORMS})
+        qt_wrap_cpp (${PLUGIN}_MOC_SOURCES ${${PLUGIN}_MOC_HEADERS})
+        qt_wrap_ui (${PLUGIN}_MOC_FORMS ${${PLUGIN}_FORMS})
 
         configure_file ("${REFRAMED_PLUGIN_TEMPLATE_PATH}/PluginConfig.hpp.in"
             "${PROJECT_BINARY_DIR}/include/${${PLUGIN}_OUTPUT_NAME}/PluginConfig.hpp")
@@ -45,9 +45,9 @@ macro (reframed_add_plugin PLUGIN)
                 PLUGIN_BUILDING)
         target_link_libraries (${PLUGIN}
             PRIVATE
-                Qt5::Core
-                Qt5::Gui
-                Qt5::Widgets
+                Qt6::Core
+                Qt6::Gui
+                Qt6::Widgets
                 ReFramed::rfplot
                 ReFramed::rfqwt
                 ReFramed::rfcommon)

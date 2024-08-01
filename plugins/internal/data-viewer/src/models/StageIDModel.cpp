@@ -69,8 +69,8 @@ QVariant StageIDModel::data(const QModelIndex& index, int role) const
         case Qt::TextAlignmentRole:
             switch (index.column())
             {
-                case 0: return Qt::AlignHCenter + Qt::AlignVCenter;
-                case 1: return Qt::AlignLeft + Qt::AlignVCenter;
+                case 0: return static_cast<Qt::Alignment::Int>(Qt::AlignHCenter | Qt::AlignVCenter);
+                case 1: return static_cast<Qt::Alignment::Int>(Qt::AlignLeft | Qt::AlignVCenter);
             }
             break;
 

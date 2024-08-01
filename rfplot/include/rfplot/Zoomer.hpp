@@ -2,6 +2,7 @@
 
 #include "rfplot/config.hpp"
 #include "rfplot/DeltaPlotPicker.hpp"
+#include <QRectF>
 
 class QWidget;
 

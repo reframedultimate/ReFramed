@@ -104,7 +104,7 @@ following notable projects:
 
 ## Related Open Source Projects
 
-[GTest Runner](https://github.com/nholthaus/gtest-runner) is a Qt5 based
+[GTest Runner](https://github.com/nholthaus/gtest-runner) is a Qt6 based
 automated test-runner and Graphical User Interface with powerful features for
 Windows and Linux platforms.
 

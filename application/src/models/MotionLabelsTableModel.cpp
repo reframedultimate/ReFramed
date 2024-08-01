@@ -194,7 +194,7 @@ QVariant MotionLabelsTableModel::data(const QModelIndex& index, int role) const
         break;
 
     case Qt::TextAlignmentRole:
-        return Qt::AlignHCenter + Qt::AlignVCenter;
+        return static_cast<Qt::Alignment::Int>(Qt::AlignHCenter | Qt::AlignVCenter);
 
     case Qt::CheckStateRole:
     case Qt::DecorationRole:

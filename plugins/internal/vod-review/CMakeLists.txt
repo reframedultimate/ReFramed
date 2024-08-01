@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.2)
+cmake_minimum_required (VERSION 3.25)
 
 cmake_policy (SET CMP0074 NEW)
 set (PLUGIN_NAME "vod-review")

@@ -3,6 +3,7 @@
 #include "rfplot/config.hpp"
 #include "qwt_plot_picker.h"
 #include "qwt_scale_map.h"
+#include <QPoint>
 
 namespace rfplot {
 

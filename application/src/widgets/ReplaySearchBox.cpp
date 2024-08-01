@@ -1,7 +1,7 @@
 #include "rfcommon/Profiler.hpp"
 #include "application/widgets/ReplaySearchBox.hpp"
 
-#include <QDebug>
+#include <QRegularExpression>
 
 namespace rfapp {
     
@@ -27,7 +27,7 @@ void ReplaySearchBox::onTextChanged(const QString& text)
         return;
     }
 
-    QStringList terms = text.split(QRegExp("[ ,]"));
+    QStringList terms = text.split(QRegularExpression("[ ,]"));
     emit searchTextChanged(GENERIC, terms);
 }
 

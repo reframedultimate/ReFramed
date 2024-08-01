@@ -133,7 +133,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
 
         if (option == QMessageBox::Open)
         {
-            QFileInfo dirInfo = askForDir(gamesDir.path());
+            QFileInfo dirInfo(askForDir(gamesDir.path()));
             if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
             {
                 replayManager_->setDefaultGamePath(dirInfo.filePath());
@@ -165,7 +165,7 @@ void MainWindow::negotiateDefaultRecordingLocation()
 
                 if (option == QMessageBox::Yes)
                 {
-                    QFileInfo dirInfo = askForDir(gamesDir.path());
+                    QFileInfo dirInfo(askForDir(gamesDir.path()));
                     if (dirInfo.exists() && dirInfo.isDir() && dirInfo.isWritable())
                     {
                         replayManager_->setDefaultGamePath(dirInfo.filePath());

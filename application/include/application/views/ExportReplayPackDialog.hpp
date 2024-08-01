@@ -2,8 +2,6 @@
 
 #include <QDialog>
 
-class QStringList;
-
 namespace Ui {
     class ExportReplayPackDialog;
 }

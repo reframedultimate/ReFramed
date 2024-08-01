@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.25)
 project ("cpp-base64"
     VERSION 2.08
     LANGUAGES CXX)

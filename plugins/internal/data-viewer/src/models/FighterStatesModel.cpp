@@ -208,10 +208,10 @@ QVariant FighterStatesModel::data(const QModelIndex& index, int role) const
                 case Hash40String:
                 case MotionLabel:
                 case HitStatusName:
-                    return Qt::AlignLeft + Qt::AlignVCenter;
+                    return static_cast<Qt::Alignment::Int>(Qt::AlignLeft | Qt::AlignVCenter);
 
                 default:
-                    return Qt::AlignHCenter + Qt::AlignVCenter;
+                    return static_cast<Qt::Alignment::Int>(Qt::AlignHCenter | Qt::AlignVCenter);
             }
         } break;
 

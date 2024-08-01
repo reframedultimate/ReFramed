@@ -37,7 +37,7 @@ _Example from CouchwarriorsSmash:_
 ### On Windows
 
 In short:
-  1) Download and install Qt5.
+  1) Download and install Qt6.
   2) Build ReFramed and install it to a location that doesn't have spaces in the path (I'm sorry I don't know how CMAKE\_INSTALL\_PREFIX works)
   3) Build The plugin
 
@@ -50,7 +50,7 @@ In the Windows start menu, search for "VS" and you should see "x86\_x64 Cross To
 
 Change the directory to a location where you would like to build ReFramed and its plugins. For me, this was ```C:\Users\username\Documents\programming```.
 
-We have to tell CMake where it can find Qt5. Type ```set Qt5_DIR=C:\Qt\Qt5.15.11\msvc2019_64```. This path may be different on your installation, so change it if necessary. The important detail is that you tell it to use the 64-bit version (msvc2019\_64).
+We have to tell CMake where it can find Qt6. Type ```set Qt5_DIR=C:\Qt\Qt5.15.11\msvc2019_64```. This path may be different on your installation, so change it if necessary. The important detail is that you tell it to use the 64-bit version (msvc2019\_64).
 
 Now you can clone ReFramed. Type ```git clone https://github.com/reframedultimate/ReFramed```.
 
