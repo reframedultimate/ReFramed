@@ -650,5 +650,3 @@ void QwtPlotRescaler::updateScales(
         canvas->setPaintAttribute( QwtPlotCanvas::ImmediatePaint, true );
     }
 }
-
-#include "moc_qwt_plot_rescaler.cpp"

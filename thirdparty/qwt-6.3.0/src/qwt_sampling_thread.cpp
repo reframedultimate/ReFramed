@@ -106,5 +106,3 @@ void QwtSamplingThread::run()
         }
     }
 }
-
-#include "moc_qwt_sampling_thread.cpp"

@@ -829,5 +829,3 @@ int QwtLegend::scrollExtent( Qt::Orientation orientation ) const
 
     return extent;
 }
-
-#include "moc_qwt_legend.cpp"

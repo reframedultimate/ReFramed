@@ -872,5 +872,3 @@ void QwtDial::sliderChange()
 
     QwtAbstractSlider::sliderChange();
 }
-
-#include "moc_qwt_dial.cpp"

@@ -844,5 +844,3 @@ QSize QwtKnob::minimumSizeHint() const
 {
     return qwtKnobSizeHint( this, 20 );
 }
-
-#include "moc_qwt_knob.cpp"

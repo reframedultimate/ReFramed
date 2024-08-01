@@ -788,5 +788,3 @@ QSize QwtCounter::sizeHint() const
 
     return QSize( w, h );
 }
-
-#include "moc_qwt_counter.cpp"

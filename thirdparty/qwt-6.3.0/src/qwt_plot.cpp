@@ -1163,5 +1163,3 @@ QwtPlotItem* QwtPlot::infoToItem( const QVariant& itemInfo ) const
 
     return NULL;
 }
-
-#include "moc_qwt_plot.cpp"

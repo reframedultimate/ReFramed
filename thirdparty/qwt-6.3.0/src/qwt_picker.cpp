@@ -1607,5 +1607,3 @@ const QwtWidgetOverlay* QwtPicker::trackerOverlay() const
 {
     return m_data->trackerOverlay;
 }
-
-#include "moc_qwt_picker.cpp"

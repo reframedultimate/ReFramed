@@ -114,5 +114,3 @@ void QwtPolarPanner::widgetMousePressEvent( QMouseEvent* event )
             QwtPanner::widgetMousePressEvent( event );
     }
 }
-
-#include "moc_qwt_polar_panner.cpp"

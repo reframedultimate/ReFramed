@@ -468,5 +468,3 @@ void QwtAbstractScale::updateScaleDraw()
     rescale( m_data->scaleDraw->scaleDiv().lowerBound(),
         m_data->scaleDraw->scaleDiv().upperBound(), m_data->stepSize );
 }
-
-#include "moc_qwt_abstract_scale.cpp"

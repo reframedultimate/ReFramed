@@ -322,5 +322,3 @@ QPoint QwtPolarCanvas::transform( const QwtPointPolar& polarPos ) const
 
     return pos.toPoint();
 }
-
-#include "moc_qwt_polar_canvas.cpp"

@@ -1015,5 +1015,3 @@ QRect QwtSlider::sliderRect() const
 {
     return m_data->sliderRect;
 }
-
-#include "moc_qwt_slider.cpp"

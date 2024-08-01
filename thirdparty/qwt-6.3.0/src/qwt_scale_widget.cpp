@@ -976,5 +976,3 @@ const QwtColorMap* QwtScaleWidget::colorMap() const
 {
     return m_data->colorBar.colorMap;
 }
-
-#include "moc_qwt_scale_widget.cpp"

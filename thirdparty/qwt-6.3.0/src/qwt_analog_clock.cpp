@@ -249,5 +249,3 @@ void QwtAnalogClock::drawHand( QPainter* painter, Hand hd,
         needle->draw( painter, center, radius, direction, cg );
     }
 }
-
-#include "moc_qwt_analog_clock.cpp"

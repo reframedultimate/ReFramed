@@ -419,5 +419,3 @@ void QwtLegendLabel::keyReleaseEvent( QKeyEvent* e )
 
     QwtTextLabel::keyReleaseEvent( e );
 }
-
-#include "moc_qwt_legend_label.cpp"

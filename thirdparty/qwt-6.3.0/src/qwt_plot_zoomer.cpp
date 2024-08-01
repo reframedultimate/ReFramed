@@ -669,5 +669,3 @@ bool QwtPlotZoomer::end( bool ok )
 
     return true;
 }
-
-#include "moc_qwt_plot_zoomer.cpp"

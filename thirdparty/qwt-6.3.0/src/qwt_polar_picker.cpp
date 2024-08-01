@@ -238,5 +238,3 @@ QPainterPath QwtPolarPicker::pickArea() const
 
     return crPath.intersected( prPath );
 }
-
-#include "moc_qwt_polar_picker.cpp"

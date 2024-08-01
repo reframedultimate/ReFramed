@@ -597,5 +597,3 @@ uint QwtDynGridLayout::numColumns() const
 {
     return m_data->numColumns;
 }
-
-#include "moc_qwt_dyngrid_layout.cpp"
