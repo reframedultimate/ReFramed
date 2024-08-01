@@ -134,10 +134,10 @@ build_script:
 - if %use_cmake%==true mkdir build 
 - if %use_cmake%==true cd build
 - if %use_cmake%==true cmake --version
-- if %use_cmake%==true cmake -G %CMAKEGENERATOR% -DCMAKE_BUILD_TYPE=DEBUG -DADS_BUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DADS_BUILD_STATIC=%USESTATIC% -DCMAKE_INSTALL_PREFIX="./installed" ../
+- if %use_cmake%==true cmake -G %CMAKEGENERATOR% -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DBUILD_STATIC=%USESTATIC% -DCMAKE_INSTALL_PREFIX="./installed" ../
 - if %use_cmake%==true cmake --build .
 - if %use_cmake%==true cmake --build . --target install
-- if %use_cmake%==true cmake -G %CMAKEGENERATOR% -DCMAKE_BUILD_TYPE=RELEASE -DADS_BUILD_EXAMPLES=ON -DADS_BUILD_STATIC=%USESTATIC% -DCMAKE_INSTALL_PREFIX="./installed" ../
+- if %use_cmake%==true cmake -G %CMAKEGENERATOR% -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_EXAMPLES=ON -DBUILD_STATIC=%USESTATIC% -DCMAKE_INSTALL_PREFIX="./installed" ../
 - if %use_cmake%==true cmake --build .
 - if %use_cmake%==true cmake --build . --target install
 - if %use_cmake%==false if %use_static%==true qmake "CONFIG+=adsBuildStatic"

@@ -118,10 +118,10 @@ matrix:
         - mkdir ./build
         - cd ./build
         - cmake --version
-        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DADS_BUILD_STATIC=OFF -DADS_BUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_STATIC=OFF -DBUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
-        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DADS_BUILD_STATIC=OFF -DADS_BUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_STATIC=OFF -DBUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
   - name: Ubuntu CMake Static
@@ -154,10 +154,10 @@ matrix:
         - mkdir ./build
         - cd ./build
         - cmake --version
-        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DADS_BUILD_STATIC=ON -DADS_BUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_STATIC=ON -DBUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
-        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DADS_BUILD_STATIC=ON -DADS_BUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_STATIC=ON -DBUILD_EXAMPLES=ON -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
   - name: macOS CMake dll
@@ -174,10 +174,10 @@ matrix:
         - mkdir -p build
         - cd build
         - cmake --version
-        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=_debug -DADS_BUILD_EXAMPLES=ON -DADS_BUILD_STATIC=OFF -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=_debug -DBUILD_EXAMPLES=ON -DBUILD_STATIC=OFF -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
-        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DADS_BUILD_EXAMPLES=ON -DADS_BUILD_STATIC=OFF -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_EXAMPLES=ON -DBUILD_STATIC=OFF -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
   - name: macOS CMake static
@@ -194,10 +194,10 @@ matrix:
         - mkdir -p build
         - cd build
         - cmake --version
-        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=_debug -DADS_BUILD_EXAMPLES=ON -DADS_BUILD_STATIC=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_DEBUG_POSTFIX=_debug -DBUILD_EXAMPLES=ON -DBUILD_STATIC=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
-        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DADS_BUILD_EXAMPLES=ON -DADS_BUILD_STATIC=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
+        - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_EXAMPLES=ON -DBUILD_STATIC=ON -DCMAKE_INSTALL_PREFIX="./installed" ../
         - cmake --build .
         - cmake --build . --target install
   - name: macOS qmake dll
