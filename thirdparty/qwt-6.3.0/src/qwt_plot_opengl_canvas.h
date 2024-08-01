@@ -14,6 +14,7 @@
 #include "qwt_plot_abstract_canvas.h"
 
 #include <QOpenGLWidget>
+#include <QPainterPath>  // Required by MOC
 
 class QwtPlot;
 

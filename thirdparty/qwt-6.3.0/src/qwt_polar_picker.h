@@ -11,9 +11,10 @@
 
 #include "qwt_global.h"
 #include "qwt_picker.h"
+#include "qwt_point_polar.h"  // Required by MOC
 
-#include <qvector.h>
-#include <qpainterpath.h>
+#include <QVector>
+#include <QPainterPath>
 
 class QwtPolarPlot;
 class QwtPolarCanvas;

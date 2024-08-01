@@ -11,9 +11,9 @@
 #define QWT_ABSTRACT_LEGEND_H
 
 #include "qwt_global.h"
-#include <qframe.h>
+#include "qwt_legend_data.h"
+#include <QFrame>
 
-class QwtLegendData;
 template< typename T > class QList;
 class QVariant;
 

@@ -13,7 +13,8 @@
 #include "qwt_global.h"
 #include "qwt_plot_abstract_canvas.h"
 
-#include <qframe.h>
+#include <QFrame>
+#include <QPainterPath>  // Required by MOC
 
 class QwtPlot;
 class QPixmap;

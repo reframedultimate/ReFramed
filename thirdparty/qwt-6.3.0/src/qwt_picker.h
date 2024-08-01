@@ -13,7 +13,9 @@
 #include "qwt_global.h"
 #include "qwt_event_pattern.h"
 
-#include <qobject.h>
+#include <QObject>
+#include <QPen> // Required by MOC
+#include <QFont> // Required by MOC
 
 class QwtPickerMachine;
 class QwtWidgetOverlay;

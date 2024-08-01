@@ -30,19 +30,48 @@ configure_file ("templates/qwt_global.h.in" "src/qwt_global.h")
 
 find_package(Qt6 COMPONENTS Core Gui Widgets PrintSupport Concurrent)
 
-qt_wrap_cpp (QWT_CORE_SOURCES_MOC)
+qt_wrap_cpp (QWT_CORE_SOURCES_MOC
+    "src/qwt_dyngrid_layout.h"
+    "src/qwt_magnifier.h"
+    "src/qwt_text_label.h"
+    "src/qwt_widget_overlay.h")
 
 if (QWT_PLOT)
-	qt_wrap_cpp (QWT_PLOT_SOURCES_MOC)
+	qt_wrap_cpp (QWT_PLOT_SOURCES_MOC
+        "src/qwt_abstract_legend.h"
+        "src/qwt_legend.h"
+        "src/qwt_legend_label.h"
+        "src/qwt_panner.h"
+        "src/qwt_picker.h"
+        "src/qwt_plot.h"
+        "src/qwt_plot_canvas.h"
+	    # NOTE: qwt_plot_glcanvas.h needs to be used if Qt5
+        "src/qwt_plot_opengl_canvas.h"
+        "src/qwt_plot_magnifier.h"
+        "src/qwt_plot_panner.h"
+        "src/qwt_plot_picker.h"
+        "src/qwt_plot_renderer.h"
+        "src/qwt_plot_rescaler.h"
+        "src/qwt_plot_zoomer.h"
+        "src/qwt_sampling_thread.h"
+        "src/qwt_scale_widget.h")
 endif ()
 
 if (QWT_POLAR)
-	qt_wrap_cpp (QWT_POLAR_SOURCES_MOC)
+
+	qt_wrap_cpp (QWT_POLAR_SOURCES_MOC
+        "src/qwt_polar_canvas.h"
+        "src/qwt_polar_magnifier.h"
+        "src/qwt_polar_panner.h"
+        "src/qwt_polar_picker.h"
+        "src/qwt_polar_plot.h"
+        "src/qwt_polar_renderer.h")
 endif ()
 
 if (QWT_OPENGL)
     find_package (Qt6 COMPONENTS OpenGLWidgets REQUIRED)
-    qt_wrap_cpp (QWT_OPENGL_SOURCES_MOC)
+    qt_wrap_cpp (QWT_OPENGL_SOURCES_MOC
+        "src/qwt_plot_opengl_canvas.h")
 endif ()
 
 if (QWT_SVG)
@@ -51,7 +80,17 @@ endif ()
 
 if (QWT_WIDGETS)
 	find_package (Qt6 COMPONENTS Widgets REQUIRED)
-	qt_wrap_cpp (QWT_WIDGETS_SOURCES_MOC)
+	qt_wrap_cpp (QWT_WIDGETS_SOURCES_MOC
+        "src/qwt_abstract_scale.h"
+        "src/qwt_abstract_slider.h"
+        "src/qwt_analog_clock.h"
+        "src/qwt_compass.h"
+        "src/qwt_counter.h"
+        "src/qwt_dial.h"
+        "src/qwt_knob.h"
+        "src/qwt_slider.h"
+        "src/qwt_thermo.h"
+        "src/qwt_wheel.h")
 endif ()
 
 add_library (rfqwt ${QWT_LIB_TYPE}
