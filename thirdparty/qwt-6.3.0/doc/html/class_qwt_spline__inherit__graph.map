@@ -1,0 +1,19 @@
+<map id="QwtSpline" name="QwtSpline">
+<area shape="rect" id="Node000001" title="Base class for all splines." alt="" coords="100,5,183,31"/>
+<area shape="rect" id="Node000002" href="$class_qwt_spline_basis.html" title="An approximation using a basis spline." alt="" coords="5,79,120,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="120,42,77,80,74,76,117,38"/>
+<area shape="rect" id="Node000003" href="$class_qwt_spline_interpolating.html" title="Base class for a spline interpolation." alt="" coords="144,79,299,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="166,38,210,76,206,80,162,42"/>
+<area shape="rect" id="Node000004" href="$class_qwt_spline_g1.html" title="Base class for spline interpolations providing a first order geometric continuity ( G1 ) between adjo..." alt="" coords="172,152,271,177"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="224,118,224,152,219,152,219,118"/>
+<area shape="rect" id="Node000005" href="$class_qwt_spline_c1.html" title="Base class for spline interpolations providing a first order parametric continuity ( C1 ) between adj..." alt="" coords="103,225,201,251"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="202,189,165,227,161,223,199,185"/>
+<area shape="rect" id="Node000009" href="$class_qwt_spline_pleasing.html" title="A spline with G1 continuity." alt="" coords="226,225,358,251"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="245,185,282,223,279,227,241,189"/>
+<area shape="rect" id="Node000006" href="$class_qwt_spline_c2.html" title="Base class for spline interpolations providing a second order parametric continuity ( C2 ) between ad..." alt="" coords="37,299,136,324"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="134,263,99,300,95,297,130,259"/>
+<area shape="rect" id="Node000008" href="$class_qwt_spline_local.html" title="A spline with C1 continuity." alt="" coords="161,299,274,324"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="174,259,209,297,205,300,170,263"/>
+<area shape="rect" id="Node000007" href="$class_qwt_spline_cubic.html" title="A cubic spline." alt="" coords="29,372,145,397"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="89,338,89,372,84,372,84,338"/>
+</map>

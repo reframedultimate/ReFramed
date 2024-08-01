@@ -1,0 +1,17 @@
+<map id="QwtSplineInterpolating" name="QwtSplineInterpolating">
+<area shape="rect" id="Node000001" title="Base class for a spline interpolation." alt="" coords="121,79,275,104"/>
+<area shape="rect" id="Node000003" href="$class_qwt_spline_g1.html" title="Base class for spline interpolations providing a first order geometric continuity ( G1 ) between adjo..." alt="" coords="149,152,247,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="201,118,201,152,195,152,195,118"/>
+<area shape="rect" id="Node000002" href="$class_qwt_spline.html" title="Base class for all splines." alt="" coords="157,5,239,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="201,44,201,79,195,79,195,44"/>
+<area shape="rect" id="Node000004" href="$class_qwt_spline_c1.html" title="Base class for spline interpolations providing a first order parametric continuity ( C1 ) between adj..." alt="" coords="79,225,178,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="179,189,142,227,138,223,175,185"/>
+<area shape="rect" id="Node000008" href="$class_qwt_spline_pleasing.html" title="A spline with G1 continuity." alt="" coords="203,225,335,251"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="221,185,259,223,255,227,217,189"/>
+<area shape="rect" id="Node000005" href="$class_qwt_spline_c2.html" title="Base class for spline interpolations providing a second order parametric continuity ( C2 ) between ad..." alt="" coords="14,299,113,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="111,263,76,300,72,297,107,259"/>
+<area shape="rect" id="Node000007" href="$class_qwt_spline_local.html" title="A spline with C1 continuity." alt="" coords="137,299,251,324"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="151,259,185,297,181,300,147,263"/>
+<area shape="rect" id="Node000006" href="$class_qwt_spline_cubic.html" title="A cubic spline." alt="" coords="5,372,121,397"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="66,338,66,372,61,372,61,338"/>
+</map>

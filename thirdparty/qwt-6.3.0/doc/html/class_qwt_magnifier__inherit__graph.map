@@ -1,0 +1,9 @@
+<map id="QwtMagnifier" name="QwtMagnifier">
+<area shape="rect" id="Node000001" title="QwtMagnifier provides zooming, by magnifying in steps." alt="" coords="92,79,191,104"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_magnifier.html" title="QwtPlotMagnifier provides zooming, by magnifying in steps." alt="" coords="5,152,128,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="121,115,81,154,77,150,118,111"/>
+<area shape="rect" id="Node000004" href="$class_qwt_polar_magnifier.html" title="QwtPolarMagnifier provides zooming, by magnifying in steps." alt="" coords="153,152,282,177"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="165,111,207,150,203,154,162,115"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="106,5,177,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="144,44,144,79,139,79,139,44"/>
+</map>

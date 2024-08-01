@@ -1,0 +1,5 @@
+<map id="QwtPlotGrid" name="QwtPlotGrid">
+<area shape="rect" id="Node000001" title="A class which draws a coordinate grid." alt="" coords="6,79,99,104"/>
+<area shape="rect" id="Node000002" href="$class_qwt_plot_item.html" title="Base class for items on the plot canvas." alt="" coords="5,5,100,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="55,44,55,79,50,79,50,44"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="QwtPlot" name="QwtPlot">
+<area shape="rect" id="Node000001" title="A 2&#45;D plotting widget." alt="" coords="57,79,127,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,75,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="59,40,86,77,81,80,54,43"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_dict.html" title="A dictionary for plot items." alt="" coords="99,5,192,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="131,43,103,80,99,77,126,40"/>
+</map>

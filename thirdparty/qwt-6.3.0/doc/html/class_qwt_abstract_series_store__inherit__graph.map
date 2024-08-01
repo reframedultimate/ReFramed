@@ -1,0 +1,45 @@
+<map id="QwtAbstractSeriesStore" name="QwtAbstractSeriesStore">
+<area shape="rect" id="Node000001" title="Bridge between QwtSeriesStore and QwtPlotSeriesItem." alt="" coords="5,261,168,286"/>
+<area shape="rect" id="Node000002" href="$class_qwt_series_store.html" title=" " alt="" coords="244,41,431,66"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,248,146,180,178,142,214,108,255,82,296,64,298,69,258,87,218,112,182,145,150,183,104,251"/>
+<area shape="rect" id="Node000005" href="$class_qwt_series_store.html" title=" " alt="" coords="241,122,434,162"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="109,249,155,210,215,171,244,159,246,164,217,176,159,214,112,253"/>
+<area shape="rect" id="Node000008" href="$class_qwt_series_store.html" title=" " alt="" coords="507,394,733,420"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="108,295,154,343,184,367,217,385,294,407,375,418,453,421,522,417,522,422,453,426,374,424,293,413,215,390,181,371,150,347,104,299"/>
+<area shape="rect" id="Node000010" href="$class_qwt_series_store.html" title=" " alt="" coords="233,236,442,261"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="182,261,232,256,233,262,182,267"/>
+<area shape="rect" id="Node000012" href="$class_qwt_series_store.html" title=" " alt="" coords="216,285,459,310"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="182,280,216,283,216,289,181,285"/>
+<area shape="rect" id="Node000014" href="$class_qwt_series_store.html" title=" " alt="" coords="244,335,431,375"/>
+<area shape="poly" id="edge13_Node000001_Node000014" title=" " alt="" coords="132,289,217,321,256,332,255,337,215,326,130,294"/>
+<area shape="rect" id="Node000016" href="$class_qwt_plot_series_item.html" title="Base class for plot items representing a series of samples." alt="" coords="271,186,403,212"/>
+<area shape="poly" id="edge15_Node000001_Node000016" title=" " alt="" coords="127,253,215,220,270,207,271,212,217,226,129,258"/>
+<area shape="rect" id="Node000018" href="$class_qwt_series_store.html" title="Class storing a QwtSeriesData object." alt="" coords="264,450,411,476"/>
+<area shape="poly" id="edge25_Node000001_Node000018" title=" " alt="" coords="104,297,148,363,180,399,217,429,240,441,265,449,263,454,238,445,215,433,177,403,144,367,99,300"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_bar_chart.html" title="QwtPlotBarChart displays a series of a values as bars." alt="" coords="795,128,918,153"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="389,34,459,17,547,5,594,3,642,5,689,12,734,26,772,47,805,74,849,126,844,129,801,78,769,51,732,31,688,17,641,10,594,8,547,10,460,23,390,40"/>
+<area shape="rect" id="Node000004" href="$class_qwt_plot_curve.html" title="A plot item, that represents a series of points." alt="" coords="568,41,672,66"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="444,51,568,51,568,56,444,56"/>
+<area shape="rect" id="Node000006" href="$class_qwt_plot_histogram.html" title="QwtPlotHistogram represents a series of samples, where an interval is associated with a value ( &#160;)." alt="" coords="555,90,685,116"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="447,124,555,109,556,114,448,129"/>
+<area shape="rect" id="Node000007" href="$class_qwt_plot_interval_curve.html" title="QwtPlotIntervalCurve represents a series of samples, where each value is associated with an interval ..." alt="" coords="547,140,693,165"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="448,143,547,147,546,152,448,149"/>
+<area shape="rect" id="Node000009" href="$class_qwt_plot_multi_bar_chart.html" title="QwtPlotMultiBarChart displays a series of a samples that consist each of a set of values." alt="" coords="781,250,932,276"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="707,388,732,377,767,353,799,324,844,274,848,277,803,328,771,357,735,381,709,393"/>
+<area shape="rect" id="Node000011" href="$class_qwt_plot_spectro_curve.html" title="Curve that displays 3D points as dots, where the z coordinate is mapped to a color." alt="" coords="545,238,695,264"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="456,247,545,248,545,253,456,252"/>
+<area shape="rect" id="Node000013" href="$class_qwt_plot_trading_curve.html" title="QwtPlotTradingCurve illustrates movements in the price of a financial instrument over time." alt="" coords="547,288,693,313"/>
+<area shape="poly" id="edge12_Node000012_Node000013" title=" " alt="" coords="473,296,547,297,546,302,473,302"/>
+<area shape="rect" id="Node000015" href="$class_qwt_plot_vector_field.html" title="A plot item, that represents a vector field." alt="" coords="553,341,687,366"/>
+<area shape="poly" id="edge14_Node000014_Node000015" title=" " alt="" coords="444,352,552,351,552,357,444,357"/>
+<area shape="poly" id="edge19_Node000016_Node000004" title=" " alt="" coords="416,191,438,183,457,172,468,161,474,150,480,125,486,100,493,87,505,76,535,60,567,53,568,58,537,65,508,80,497,91,491,102,485,126,479,151,472,164,460,176,440,188,418,196"/>
+<area shape="poly" id="edge20_Node000016_Node000006" title=" " alt="" coords="416,187,457,171,472,161,481,149,490,136,505,125,554,108,556,113,508,129,494,140,485,152,475,164,460,176,418,192"/>
+<area shape="poly" id="edge21_Node000016_Node000007" title=" " alt="" coords="417,183,546,162,547,167,417,189"/>
+<area shape="poly" id="edge22_Node000016_Node000011" title=" " alt="" coords="417,211,551,236,550,241,416,216"/>
+<area shape="poly" id="edge23_Node000016_Node000013" title=" " alt="" coords="418,205,460,221,476,234,485,247,494,261,508,273,547,288,545,293,505,277,490,264,481,250,472,237,457,225,416,210"/>
+<area shape="poly" id="edge24_Node000016_Node000015" title=" " alt="" coords="418,201,440,209,460,221,473,233,480,247,486,273,491,300,497,312,508,324,529,337,553,345,552,350,527,341,505,328,493,315,486,301,480,275,475,249,468,237,457,225,438,214,416,206"/>
+<area shape="rect" id="Node000017" href="$class_qwt_plot_abstract_bar_chart.html" title="Abstract base class for bar chart items." alt="" coords="535,189,705,214"/>
+<area shape="poly" id="edge16_Node000016_Node000017" title=" " alt="" coords="417,197,534,198,534,204,417,202"/>
+<area shape="poly" id="edge17_Node000017_Node000003" title=" " alt="" coords="693,183,733,174,814,151,815,156,734,179,694,189"/>
+<area shape="poly" id="edge18_Node000017_Node000009" title=" " alt="" coords="699,215,734,223,817,248,816,253,733,228,698,220"/>
+</map>

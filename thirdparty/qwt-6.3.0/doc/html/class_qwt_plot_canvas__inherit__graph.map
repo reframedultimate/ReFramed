@@ -1,0 +1,7 @@
+<map id="QwtPlotCanvas" name="QwtPlotCanvas">
+<area shape="rect" id="Node000001" title="Canvas of a QwtPlot." alt="" coords="53,79,166,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,75,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="63,39,100,77,96,80,59,43"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_abstract_canvas.html" title="Base class for all type of plot canvases." alt="" coords="99,5,261,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="161,43,123,80,119,77,157,39"/>
+</map>

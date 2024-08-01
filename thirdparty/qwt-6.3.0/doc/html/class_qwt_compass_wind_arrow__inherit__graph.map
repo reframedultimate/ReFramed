@@ -1,0 +1,5 @@
+<map id="QwtCompassWindArrow" name="QwtCompassWindArrow">
+<area shape="rect" id="Node000001" title="An indicator for the wind direction." alt="" coords="5,79,172,104"/>
+<area shape="rect" id="Node000002" href="$class_qwt_dial_needle.html" title="Base class for needles that can be used in a QwtDial." alt="" coords="33,5,144,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,44,91,79,86,79,86,44"/>
+</map>

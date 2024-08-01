@@ -1,0 +1,9 @@
+<map id="QwtTransform" name="QwtTransform">
+<area shape="rect" id="Node000001" title="A transformation between coordinate systems." alt="" coords="167,5,271,31"/>
+<area shape="rect" id="Node000002" href="$class_qwt_log_transform.html" title="Logarithmic transformation." alt="" coords="5,79,131,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="183,39,94,81,92,76,181,34"/>
+<area shape="rect" id="Node000003" href="$class_qwt_null_transform.html" title="Null transformation." alt="" coords="155,79,282,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="221,44,221,79,216,79,216,44"/>
+<area shape="rect" id="Node000004" href="$class_qwt_power_transform.html" title="A transformation using pow()" alt="" coords="306,79,446,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="258,34,351,76,349,81,255,39"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="QwtPanner" name="QwtPanner">
+<area shape="rect" id="Node000001" title="QwtPanner provides panning of a widget." alt="" coords="87,79,173,104"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_panner.html" title="QwtPlotPanner provides panning of a plot canvas." alt="" coords="5,152,116,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="111,116,74,154,70,150,107,112"/>
+<area shape="rect" id="Node000004" href="$class_qwt_polar_panner.html" title="QwtPolarPanner provides panning of a polar plot canvas." alt="" coords="141,152,258,177"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="153,112,190,150,186,154,149,116"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="93,5,167,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="133,44,133,79,127,79,127,44"/>
+</map>

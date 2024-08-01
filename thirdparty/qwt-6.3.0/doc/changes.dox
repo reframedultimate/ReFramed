@@ -1,0 +1,34 @@
+/*!
+\page qwtchangelog What's new in Qwt 6.3
+
+\tableofcontents
+
+\section PAINTER QwtPainter
+
+QwtPainter::polylineSplitting has been reenabled. Unfortunately the Qt raster paint
+engine still has serious performance issues with rendering long polylines.
+
+\section CURVE QwtPlotCurve
+
+	- QwtPlotCurve::adjacentPoint
+	  for monotonic curves: using a binary search algo
+
+	- QwtPlotCurve::interpolatedValueAt
+	  for monotonic curves: using a binary search algo
+
+\section SERIESDATA QwtSeriesData
+
+    - wrong inheritances fixed
+	- firstSample, lastSample added
+
+\section INTERVALCURVE QwtPlotIntervalCurve
+
+	QwtPlotIntervalCurve::TubeAsLines mode added. A performance optimization
+    for rendering huge datasets.
+
+\section ADJUSTMENTS Bugfixes/Adjustments
+
+    Bugfixes/Adjustments - often needed because of new Qt developments
+ */
+
+   

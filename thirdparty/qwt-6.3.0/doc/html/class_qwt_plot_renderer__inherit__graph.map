@@ -1,0 +1,5 @@
+<map id="QwtPlotRenderer" name="QwtPlotRenderer">
+<area shape="rect" id="Node000001" title="Renderer for exporting a plot to a document, a printer or anything else, that is supported by QPainte..." alt="" coords="5,79,127,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="31,5,101,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="69,44,69,79,63,79,63,44"/>
+</map>

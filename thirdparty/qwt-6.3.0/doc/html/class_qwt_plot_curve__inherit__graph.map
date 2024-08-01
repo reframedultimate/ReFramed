@@ -1,0 +1,12 @@
+<map id="QwtPlotCurve" name="QwtPlotCurve">
+<area shape="rect" id="Node000001" title="A plot item, that represents a series of points." alt="" coords="111,152,215,177"/>
+<area shape="rect" id="Node000002" href="$class_qwt_plot_series_item.html" title="Base class for plot items representing a series of samples." alt="" coords="5,79,137,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="98,110,150,150,147,154,95,114"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_item.html" title="Base class for items on the plot canvas." alt="" coords="24,5,119,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="74,44,74,79,69,79,69,44"/>
+<area shape="rect" id="Node000004" href="$class_qwt_abstract_series_store.html" title="Bridge between QwtSeriesStore and QwtPlotSeriesItem." alt="" coords="158,5,321,31"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="201,38,100,81,98,76,199,34"/>
+<area shape="rect" id="Node000005" href="$class_qwt_series_store.html" title=" " alt="" coords="162,79,349,104"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="248,43,255,78,250,79,242,45"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="232,114,180,154,177,150,228,110"/>
+</map>

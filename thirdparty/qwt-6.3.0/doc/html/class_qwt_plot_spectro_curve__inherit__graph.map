@@ -1,0 +1,12 @@
+<map id="QwtPlotSpectroCurve" name="QwtPlotSpectroCurve">
+<area shape="rect" id="Node000001" title="Curve that displays 3D points as dots, where the z coordinate is mapped to a color." alt="" coords="94,152,243,177"/>
+<area shape="rect" id="Node000002" href="$class_qwt_plot_series_item.html" title="Base class for plot items representing a series of samples." alt="" coords="5,79,137,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,110,154,150,151,154,97,114"/>
+<area shape="rect" id="Node000003" href="$class_qwt_plot_item.html" title="Base class for items on the plot canvas." alt="" coords="24,5,119,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="74,44,74,79,69,79,69,44"/>
+<area shape="rect" id="Node000004" href="$class_qwt_abstract_series_store.html" title="Bridge between QwtSeriesStore and QwtPlotSeriesItem." alt="" coords="163,5,326,31"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="205,38,101,81,99,76,203,33"/>
+<area shape="rect" id="Node000005" href="$class_qwt_series_store.html" title=" " alt="" coords="161,79,371,104"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="255,43,265,78,260,79,250,45"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="241,114,186,154,183,150,238,110"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="QwtKnob" name="QwtKnob">
+<area shape="rect" id="Node000001" title="The Knob Widget." alt="" coords="31,225,107,251"/>
+<area shape="rect" id="Node000002" href="$class_qwt_abstract_slider.html" title="An abstract base class for slider widgets with a scale." alt="" coords="5,152,133,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="72,191,72,225,67,225,67,191"/>
+<area shape="rect" id="Node000003" href="$class_qwt_abstract_scale.html" title="An abstract base class for widgets having a scale." alt="" coords="5,79,133,104"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="72,118,72,152,67,152,67,118"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="33,5,106,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="72,44,72,79,67,79,67,44"/>
+</map>

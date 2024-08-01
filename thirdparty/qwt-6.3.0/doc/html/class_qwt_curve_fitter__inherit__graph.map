@@ -1,0 +1,9 @@
+<map id="QwtCurveFitter" name="QwtCurveFitter">
+<area shape="rect" id="Node000001" title="Abstract base class for a curve fitter." alt="" coords="154,5,265,31"/>
+<area shape="rect" id="Node000002" href="$class_qwt_polar_fitter.html" title="A simple curve fitter for polar points." alt="" coords="5,79,112,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="174,39,84,81,82,76,172,34"/>
+<area shape="rect" id="Node000003" href="$class_qwt_spline_curve_fitter.html" title="A curve fitter using a spline interpolation." alt="" coords="136,79,283,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="212,44,212,79,207,79,207,44"/>
+<area shape="rect" id="Node000004" href="$class_qwt_weeding_curve_fitter.html" title="A curve fitter implementing Douglas and Peucker algorithm." alt="" coords="307,79,469,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="251,33,360,76,358,81,250,38"/>
+</map>

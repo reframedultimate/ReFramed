@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$class_qwt_color_map.html" title="QwtColorMap is used to map values into colors." alt="" coords="5,80,108,105"/>
+<area shape="rect" id="Node000001" href="$class_qwt_alpha_color_map.html" title="QwtAlphaColorMap varies the alpha value of a color." alt="" coords="185,5,320,31"/>
+<area shape="poly" id="edge91_Node000000_Node000001" title=" " alt="" coords="90,71,155,40,191,28,192,33,157,44,92,76"/>
+<area shape="rect" id="Node000002" href="$class_qwt_hue_color_map.html" title="QwtHueColorMap varies the hue value of the HSV color model." alt="" coords="189,55,316,80"/>
+<area shape="poly" id="edge92_Node000000_Node000002" title=" " alt="" coords="122,82,189,73,190,78,122,87"/>
+<area shape="rect" id="Node000003" href="$class_qwt_linear_color_map.html" title="QwtLinearColorMap builds a color map from color stops." alt="" coords="184,104,321,129"/>
+<area shape="poly" id="edge93_Node000000_Node000003" title=" " alt="" coords="122,98,184,106,183,111,121,103"/>
+<area shape="rect" id="Node000004" href="$class_qwt_saturation_value_color_map.html" title="QwtSaturationValueColorMap varies the saturation and/or value for a given hue in the HSV color model." alt="" coords="156,153,349,179"/>
+<area shape="poly" id="edge94_Node000000_Node000004" title=" " alt="" coords="94,109,157,138,197,151,195,156,155,143,92,114"/>
+</map>

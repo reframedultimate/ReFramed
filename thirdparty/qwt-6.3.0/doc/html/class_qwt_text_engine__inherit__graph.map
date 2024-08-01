@@ -1,0 +1,7 @@
+<map id="QwtTextEngine" name="QwtTextEngine">
+<area shape="rect" id="Node000001" title="Abstract base class for rendering text strings." alt="" coords="101,5,211,31"/>
+<area shape="rect" id="Node000002" href="$class_qwt_plain_text_engine.html" title="A text engine for plain texts." alt="" coords="5,79,144,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="134,42,90,80,86,76,131,38"/>
+<area shape="rect" id="Node000003" href="$class_qwt_rich_text_engine.html" title="A text engine for Qt rich texts." alt="" coords="168,79,307,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="181,38,226,76,222,80,178,42"/>
+</map>

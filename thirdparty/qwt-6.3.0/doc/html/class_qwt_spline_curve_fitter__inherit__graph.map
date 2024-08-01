@@ -1,0 +1,5 @@
+<map id="QwtSplineCurveFitter" name="QwtSplineCurveFitter">
+<area shape="rect" id="Node000001" title="A curve fitter using a spline interpolation." alt="" coords="5,79,152,104"/>
+<area shape="rect" id="Node000002" href="$class_qwt_curve_fitter.html" title="Abstract base class for a curve fitter." alt="" coords="23,5,134,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="81,44,81,79,76,79,76,44"/>
+</map>

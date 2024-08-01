@@ -1,0 +1,7 @@
+<map id="QwtDateScaleEngine" name="QwtDateScaleEngine">
+<area shape="rect" id="Node000001" title="A scale engine for date/time values." alt="" coords="9,152,156,177"/>
+<area shape="rect" id="Node000002" href="$class_qwt_linear_scale_engine.html" title="A scale engine for linear scales." alt="" coords="5,79,160,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,118,85,152,80,152,80,118"/>
+<area shape="rect" id="Node000003" href="$class_qwt_scale_engine.html" title="Base class for scale engines." alt="" coords="23,5,142,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="85,44,85,79,80,79,80,44"/>
+</map>

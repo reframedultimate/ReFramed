@@ -1,0 +1,19 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$class_qwt_spline.html" title="Base class for all splines." alt="" coords="5,31,88,56"/>
+<area shape="rect" id="Node000001" href="$class_qwt_spline_basis.html" title="An approximation using a basis spline." alt="" coords="156,5,271,31"/>
+<area shape="poly" id="edge123_Node000000_Node000001" title=" " alt="" coords="101,32,155,24,156,29,102,38"/>
+<area shape="rect" id="Node000002" href="$class_qwt_spline_interpolating.html" title="Base class for a spline interpolation." alt="" coords="136,55,291,80"/>
+<area shape="poly" id="edge124_Node000000_Node000002" title=" " alt="" coords="102,49,136,54,135,59,101,54"/>
+<area shape="rect" id="Node000003" href="$class_qwt_spline_g1.html" title="Base class for spline interpolations providing a first order geometric continuity ( G1 ) between adjo..." alt="" coords="339,55,437,80"/>
+<area shape="poly" id="edge125_Node000002_Node000003" title=" " alt="" coords="305,65,339,65,339,70,305,70"/>
+<area shape="rect" id="Node000004" href="$class_qwt_spline_c1.html" title="Base class for spline interpolations providing a first order parametric continuity ( C1 ) between adj..." alt="" coords="502,29,601,55"/>
+<area shape="poly" id="edge126_Node000003_Node000004" title=" " alt="" coords="450,55,501,47,502,52,451,60"/>
+<area shape="rect" id="Node000008" href="$class_qwt_spline_pleasing.html" title="A spline with G1 continuity." alt="" coords="485,79,617,104"/>
+<area shape="poly" id="edge130_Node000003_Node000008" title=" " alt="" coords="451,74,486,79,485,84,451,79"/>
+<area shape="rect" id="Node000005" href="$class_qwt_spline_c2.html" title="Base class for spline interpolations providing a second order parametric continuity ( C2 ) between ad..." alt="" coords="673,5,771,31"/>
+<area shape="poly" id="edge127_Node000004_Node000005" title=" " alt="" coords="614,31,672,22,673,28,615,36"/>
+<area shape="rect" id="Node000007" href="$class_qwt_spline_local.html" title="A spline with C1 continuity." alt="" coords="665,55,779,80"/>
+<area shape="poly" id="edge129_Node000004_Node000007" title=" " alt="" coords="615,49,665,56,664,62,614,54"/>
+<area shape="rect" id="Node000006" href="$class_qwt_spline_cubic.html" title="A cubic spline." alt="" coords="827,5,943,31"/>
+<area shape="poly" id="edge128_Node000005_Node000006" title=" " alt="" coords="785,15,826,15,826,21,785,21"/>
+</map>

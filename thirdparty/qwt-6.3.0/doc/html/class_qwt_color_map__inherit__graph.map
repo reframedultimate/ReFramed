@@ -1,0 +1,11 @@
+<map id="QwtColorMap" name="QwtColorMap">
+<area shape="rect" id="Node000001" title="QwtColorMap is used to map values into colors." alt="" coords="253,5,356,31"/>
+<area shape="rect" id="Node000002" href="$class_qwt_alpha_color_map.html" title="QwtAlphaColorMap varies the alpha value of a color." alt="" coords="5,79,140,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="255,37,111,81,109,76,254,32"/>
+<area shape="rect" id="Node000003" href="$class_qwt_hue_color_map.html" title="QwtHueColorMap varies the hue value of the HSV color model." alt="" coords="164,79,291,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="284,42,242,80,238,76,280,38"/>
+<area shape="rect" id="Node000004" href="$class_qwt_linear_color_map.html" title="QwtLinearColorMap builds a color map from color stops." alt="" coords="315,79,452,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="329,38,372,76,369,80,326,42"/>
+<area shape="rect" id="Node000005" href="$class_qwt_saturation_value_color_map.html" title="QwtSaturationValueColorMap varies the saturation and/or value for a given hue in the HSV color model." alt="" coords="476,79,669,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="362,32,530,76,529,81,361,37"/>
+</map>
