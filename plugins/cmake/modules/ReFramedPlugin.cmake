@@ -20,7 +20,7 @@ macro (reframed_add_plugin PLUGIN)
             PLUGIN_API_IMPORT
             PLUGIN_API_LOCAL)
 
-        find_package (Qt6 COMPONENTS Widgets Gui Core PrintSupport Concurrent OpenGL REQUIRED)
+        find_package (Qt6 COMPONENTS Widgets Gui Core PrintSupport Concurrent OpenGLWidgets Svg REQUIRED)
 
         string (REPLACE "plugin-" "" ${PLUGIN}_OUTPUT_NAME ${PLUGIN})
 

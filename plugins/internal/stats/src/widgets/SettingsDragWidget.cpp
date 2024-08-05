@@ -109,7 +109,7 @@ void SettingsDragWidget::dropEvent(QDropEvent* e)
     {
         QLayoutItem* item = layout()->itemAt(insertIndex);
         QRect g = item->geometry();
-        int dropY = e->pos().y();
+        int dropY = e->position().toPoint().x();
         int itemHeight = g.height();
         int itemY = g.y() + itemHeight / 2;
 
